@@ -173,13 +173,14 @@ This MCP server can be integrated with MCP-compatible AI assistants (like Claude
 {
   "mcpServers": {
     "pymapdl": {
-      "command": "python",
-      "args": ["/path/to/pymapdl-mcp/src/ansys/mapdl/mcp/mpc.py"],
-      "cwd": "/path/to/pymapdl-mcp"
+      "command": "/path/to/venv/python",
+      "args": ["-m", "ansys.mapdl.mcp.mpc"],
     }
   }
 }
 ```
+The Python virtual environment should have `pymapdl-mcp` installed.
+
 ## Testing
 
 The project includes a comprehensive pytest-based testing suite with 40+ tests covering all functionality.
