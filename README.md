@@ -61,7 +61,7 @@ Execute arbitrary MAPDL commands.
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - Ansys MAPDL installation (local or Docker)
 - PyMAPDL library
 - FastMCP library
@@ -93,10 +93,17 @@ This will install the package in editable mode along with all dependencies defin
 
 ### Development Installation
 
-For development with additional tools (pytest, black, mypy, etc.):
+For development with additional tools (pytest, black, mypy, pre-commit, etc.):
 ```bash
 pip install -e ".[dev]"
 ```
+
+After installing development dependencies, set up pre-commit hooks:
+```bash
+pre-commit install
+```
+
+This will automatically run code quality checks (black, isort, flake8, mypy, etc.) before each commit.
 
 ## Usage
 
@@ -173,30 +180,142 @@ This MCP server can be integrated with MCP-compatible AI assistants (like Claude
   }
 }
 ```
-
 ## Testing
 
-The project includes several test scripts to verify functionality:
+The project includes a comprehensive pytest-based testing suite with 40+ tests covering all functionality.
 
-### Test MAPDL Docker Connection
+### Quick Start
+
+Run unit tests (fast, no MAPDL required):
 ```bash
-python test_docker_connection.py
+pytest -m "not integration"
 ```
-Tests connection to a MAPDL instance running in Docker.
 
-### Test MAPDL Launch
+Run all tests with coverage:
 ```bash
-python test_ansys.py
+pytest --cov=ansys.mapdl.mcp --cov-report=html
 ```
-Tests launching a local MAPDL instance.
 
-### Test MCP Server
+Run integration tests (requires MAPDL on localhost:50052):
 ```bash
-python test_mcp_server.py
+pytest -m integration
 ```
-Tests the MCP server lifespan and tool availability.
 
-### Test stdio Communication
+### Test Organization
+
+- **Unit Tests** (36 tests): Fast tests using mocks, no MAPDL required
+  - Basic package functionality
+  - All MCP tools (check_mapdl_status, write_comment, run_mapdl_command)
+  - Error handling and edge cases
+  - Lifespan management
+  - MCP protocol compliance
+
+- **Integration Tests** (4 tests): Tests with real MAPDL connection
+  - Real command execution
+  - Workflow validation
+  - Automatically skipped if MAPDL unavailable
+
+### Coverage
+
+Current test coverage: **66%**
+- Full coverage on package initialization
+- Comprehensive coverage on tool functions
+- Integration tests validate real-world usage
+
+### Test Commands Reference
+
+```bash
+# Run specific test file
+pytest tests/test_tools.py
+
+# Run with verbose output
+pytest -v
+
+# Generate HTML coverage report
+pytest --cov=ansys.mapdl.mcp --cov-report=html
+# Open htmlcov/index.html to view
+
+# Run specific test
+pytest tests/test_tools.py::TestWriteComment::test_write_comment_success
+```
+
+## Development
+
+### Quick Start for Developers
+
+1. **Clone and setup**
+```bash
+git clone https://github.com/ansys/pymapdl-mcp.git
+cd pymapdl-mcp
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+```
+
+2. **Install pre-commit hooks** (important!)
+```bash
+pre-commit install
+```
+
+3. **Make changes and test**
+```bash
+# Edit code...
+pytest -m "not integration"  # Run tests
+```
+
+4. **Commit** (pre-commit hooks run automatically)
+```bash
+git add .
+git commit -m "feat: your feature description"
+```
+
+### Code Quality
+
+## CI/CD
+
+GitHub Actions automatically run on pull requests and pushes:
+
+### Test Job
+- **Platforms**: Ubuntu, Windows (macOS only on tags)
+- **Python versions**: 3.10, 3.11, 3.12
+- **Coverage**: Unit tests with coverage reporting
+
+### Lint Job
+- Black formatting check
+- isort import sorting check
+- mypy type checking
+
+### Integration Job
+- Integration tests (gracefully skips if MAPDL unavailable)
+
+See `.github/workflows/test.yml` for full configuration.
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Install development dependencies: `pip install -e ".[dev]"`
+4. Install pre-commit hooks: `pre-commit install`
+5. Make your changes
+6. Add tests for new functionality (aim for >80% coverage)
+7. Run tests: `pytest -m "not integration"`
+8. Commit (pre-commit hooks will run automatically)
+9. Push and submit a pull request
+
+The pre-commit hooks and CI will ensure code quality. If hooks fail, review the changes, stage them with `git add .`, and commit again.
+pre-commit run --all-files
+
+# Run specific checks
+black src tests
+isort src tests
+mypy src/ansys/mapdl/mcp
+```
+
+### Package Structure
+
+The package follows the Ansys namespace convention (`ansys.mapdl.mcp`) and is configured using modern Python packaging standards with `pyproject.toml`.
 ```bash
 python test_stdio.py
 ```
