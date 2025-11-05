@@ -17,14 +17,31 @@ logging.info("Loading modules...")
 
 @dataclass
 class AppContext:
-    """Application context with typed dependencies."""
+    """Application context with typed dependencies.
+
+    Attributes
+    ----------
+    mapdl : Optional[Any]
+        MAPDL instance connection. Using Any to avoid type issues with MAPDL variants.
+    """
 
     mapdl: Optional[Any]  # Using Any to avoid type issues with MAPDL variants
 
 
 @asynccontextmanager
 async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
-    """Manage application lifecycle with type-safe context."""
+    """Manage application lifecycle with type-safe context.
+
+    Parameters
+    ----------
+    server : FastMCP
+        The FastMCP server instance.
+
+    Yields
+    ------
+    AppContext
+        Application context containing the MAPDL connection.
+    """
     mapdl = None
     try:
         # Connect to existing MAPDL instance running in Docker
@@ -73,7 +90,18 @@ mcp = FastMCP("PyMAPDL", lifespan=app_lifespan)
 # Access type-safe lifespan context in tools
 @mcp.tool()
 def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
-    """Check the status of MAPDL initialization."""
+    """Check the status of MAPDL initialization.
+
+    Parameters
+    ----------
+    ctx : Context[ServerSession, AppContext]
+        The MCP context containing server session and application context.
+
+    Returns
+    -------
+    str
+        Status message with MAPDL version information.
+    """
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     return f"MAPDL is available. Version: {mapdl.version}"  # type: ignore[union-attr]
@@ -81,7 +109,20 @@ def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
 
 @mcp.tool()
 def write_comment(ctx: Context[ServerSession, AppContext], comment: str) -> str:
-    """Tool that writes a comment in MAPDL."""
+    """Write a comment in the MAPDL session.
+
+    Parameters
+    ----------
+    ctx : Context[ServerSession, AppContext]
+        The MCP context containing server session and application context.
+    comment : str
+        The comment text to write in MAPDL.
+
+    Returns
+    -------
+    str
+        Confirmation message with the comment execution result.
+    """
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     print(f"Writing comment: {comment}", file=sys.stderr)
@@ -91,15 +132,55 @@ def write_comment(ctx: Context[ServerSession, AppContext], comment: str) -> str:
 
 @mcp.tool()
 def run_mapdl_command(ctx: Context[ServerSession, AppContext], cmd: str) -> str:
-    """Execute a MAPDL command and return the result."""
+    """Execute an arbitrary MAPDL command.
+
+    Parameters
+    ----------
+    ctx : Context[ServerSession, AppContext]
+        The MCP context containing server session and application context.
+    cmd : str
+        The MAPDL command to execute.
+
+    Returns
+    -------
+    str
+        Command execution result.
+    """
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     result = mapdl.run(cmd)  # type: ignore[union-attr]
     return f"MAPDL command executed successfully: {result}"
 
 
+@mcp.tool()
+def list_mapdl_instances() -> str:
+    """List all MAPDL instances running on the local machine.
+
+    This tool uses PyMAPDL CLI's list_instances function to discover
+    MAPDL instances running on the machine by scanning for active gRPC
+    servers and their associated metadata.
+
+    Returns
+    -------
+    str
+        Formatted table containing information about all running MAPDL instances
+        including their names, status, gRPC ports, IP addresses, PIDs, and
+        working directories.
+    """
+    print("Searching for MAPDL instances using PyMAPDL CLI...", file=sys.stderr)
+
+    from ansys.mapdl.mcp.helpers import list_instances
+
+    # Use PyMAPDL CLI's list_instances function with long=True for detailed output
+    return list_instances(long=True)
+
+
 def main():
-    """Start the MCP server and run it via stdio."""
+    """Entry point for the MCP server.
+
+    This function initializes and runs the FastMCP server using stdio
+    for communication with MCP clients.
+    """
     import asyncio
 
     asyncio.run(mcp.run_stdio_async())

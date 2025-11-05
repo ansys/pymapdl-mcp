@@ -42,6 +42,7 @@ def test_all_exports():
         "AppContext",
         "app_lifespan",
         "check_mapdl_status",
+        "list_mapdl_instances",
         "mcp",
         "run_mapdl_command",
         "write_comment",
