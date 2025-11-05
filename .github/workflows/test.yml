@@ -11,6 +11,10 @@ on:
     # * is a special character in YAML so you have to quote this string
     - cron:  '30 4 * * *'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
@@ -118,6 +122,8 @@ jobs:
             -e VERSION=252 \
             -e EXEC_PATH=/ansys_inc/v252/ansys/bin/mapdl \
             -e P_SCHEMA=/ansys_inc/v252/ansys/ac4/schema \
+            -e OMPI_ALLOW_RUN_AS_ROOT=1 \
+            -e OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
             -p ${{ env.PYMAPDL_PORT }}:50052 \
             --shm-size=2gb \
             -e I_MPI_SHM_LMT=shm \
