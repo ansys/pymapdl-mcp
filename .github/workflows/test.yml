@@ -115,7 +115,8 @@ jobs:
           docker run \
             --name mapdl \
             --restart always \
-            --entrypoint /bin/bash -c "/ansys_inc/v252/ansys/bin/mapdl -grpc -mpi openmpi -dir /jobs -np 2 -db -6000 -m -6000" \
+            --detach \
+            --entrypoint /bin/bash \
             -e ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} \
             -e ANSYS_LOCK="OFF" \
             -e VERSION=252 \
@@ -129,7 +130,20 @@ jobs:
             -u=0:0 \
             --memory=6656MB \
             --memory-swap=16896MB \
-            ${{ env.MAPDL_IMAGE }}
+            ${{ env.MAPDL_IMAGE }} \
+            /ansys_inc/v252/ansys/bin/mapdl -grpc -dir /jobs -dmp -np 2
+
+      - name: Wait for MAPDL to be ready
+        run: |
+          echo "Waiting for MAPDL to start..."
+          timeout 120 bash -c 'until docker logs mapdl 2>&1 | grep -q "Server listening on"; do sleep 2; done' || {
+            echo "MAPDL failed to start within timeout"
+            docker logs mapdl
+            exit 1
+          }
+          echo "MAPDL is ready!"
+          sleep 2
+          docker logs mapdl
 
       - name: Set up Python
         uses: actions/setup-python@v5
