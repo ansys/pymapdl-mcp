@@ -135,14 +135,7 @@ jobs:
 
       - name: Wait for MAPDL to be ready
         run: |
-          echo "Waiting for MAPDL to start..."
-          timeout 120 bash -c 'until docker logs mapdl 2>&1 | grep -q "Server listening on"; do sleep 2; done' || {
-            echo "MAPDL failed to start within timeout"
-            docker logs mapdl
-            exit 1
-          }
-          echo "MAPDL is ready!"
-          sleep 2
+          sleep 5
           docker logs mapdl
 
       - name: Set up Python
