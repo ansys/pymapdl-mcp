@@ -166,13 +166,11 @@ def list_mapdl_instances() -> str:
         including their names, status, gRPC ports, IP addresses, PIDs, and
         working directories.
     """
-    from ansys.mapdl.core.cli import list_instances
-    
     print("Searching for MAPDL instances using PyMAPDL CLI...", file=sys.stderr)
 
-    # Use PyMAPDL CLI's list_instances function       
+    from ansys.mapdl.mcp.helpers import list_instances
+    # Use PyMAPDL CLI's list_instances function with long=True for detailed output
     return list_instances(long=True)
-
 
 
 def main():
