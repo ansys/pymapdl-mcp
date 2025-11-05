@@ -106,49 +106,62 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull MAPDL Docker image
-        run: |
-          docker pull ${{ env.MAPDL_IMAGE }}
-
-      - name: Create entrypoint script
-        run: |
-          cat > entrypoint.sh << 'EOF'
-          #!/bin/bash
-          set -e
-          echo "Starting MAPDL server..."
-          /ansys_inc/v252/ansys/bin/mapdl -grpc -dir /jobs -smp -np 2
-          EOF
-          chmod +x entrypoint.sh
-          echo "=== Entrypoint script content ==="
-          cat entrypoint.sh
-
-      - name: Start MAPDL container
+      - name: "Pull, launch, and validate MAPDL service"
+        id: start_mapdl
         env:
-          MAPDL_IMAGE: ${{ env.MAPDL_IMAGE }}
           LICENSE_SERVER: ${{ secrets.LICENSE_SERVER }}
-          PYMAPDL_PORT: ${{ env.PYMAPDL_PORT }}
+          MAPDL_VERSION: 'v25.2-ubuntu-cicd'
+          DISTRIBUTED_MODE: "smp"
+          MAPDL_PACKAGE: ghcr.io/ansys/mapdl
+          DPF_PORT_INTERNAL: 50052
+        shell: bash
         run: |
-          chmod +x start_mapdl.sh
-          ./start_mapdl.sh
+          echo "Launching first MAPDL instance..."
+          .ci/start_mapdl.sh &> mapdl_launch_0.log
 
-      - name: Wait for MAPDL to be ready
-        run: |
-          echo "Waiting for MAPDL to start..."
-          for i in {1..30}; do
-            if docker logs mapdl 2>&1 | grep -q "Server listening on"; then
-              echo "MAPDL is ready!"
-              docker logs mapdl
-              exit 0
-            fi
-            echo "Attempt $i/30: MAPDL not ready yet, waiting..."
-            sleep 2
-          done
-          echo "MAPDL failed to start within 60 seconds"
-          echo "=== Container status ==="
-          docker ps -a
-          echo "=== Container logs ==="
-          docker logs mapdl
-          exit 1
+      # - name: Pull MAPDL Docker image
+      #   run: |
+      #     docker pull ${{ env.MAPDL_IMAGE }}
+
+      # - name: Create entrypoint script
+      #   run: |
+      #     cat > entrypoint.sh << 'EOF'
+      #     #!/bin/bash
+      #     set -e
+      #     echo "Starting MAPDL server..."
+      #     /ansys_inc/v252/ansys/bin/mapdl -grpc -dir /jobs -smp -np 2
+      #     EOF
+      #     chmod +x entrypoint.sh
+      #     echo "=== Entrypoint script content ==="
+      #     cat entrypoint.sh
+
+      # - name: Start MAPDL container
+      #   env:
+      #     MAPDL_IMAGE: ${{ env.MAPDL_IMAGE }}
+      #     LICENSE_SERVER: ${{ secrets.LICENSE_SERVER }}
+      #     PYMAPDL_PORT: ${{ env.PYMAPDL_PORT }}
+      #   run: |
+      #     chmod +x start_mapdl.sh
+      #     ./start_mapdl.sh
+
+      # - name: Wait for MAPDL to be ready
+      #   run: |
+      #     echo "Waiting for MAPDL to start..."
+      #     for i in {1..30}; do
+      #       if docker logs mapdl 2>&1 | grep -q "Server listening on"; then
+      #         echo "MAPDL is ready!"
+      #         docker logs mapdl
+      #         exit 0
+      #       fi
+      #       echo "Attempt $i/30: MAPDL not ready yet, waiting..."
+      #       sleep 2
+      #     done
+      #     echo "MAPDL failed to start within 60 seconds"
+      #     echo "=== Container status ==="
+      #     docker ps -a
+      #     echo "=== Container logs ==="
+      #     docker logs mapdl
+      #     exit 1
 
       - name: Set up Python
         uses: actions/setup-python@v5
