@@ -203,17 +203,22 @@ pytest -m integration
 
 ### Test Organization
 
-- **Unit Tests** (36 tests): Fast tests using mocks, no MAPDL required
-  - Basic package functionality
-  - All MCP tools (check_mapdl_status, write_comment, run_mapdl_command)
-  - Error handling and edge cases
-  - Lifespan management
-  - MCP protocol compliance
+The test suite is organized into focused test modules:
 
-- **Integration Tests** (4 tests): Tests with real MAPDL connection
-  - Real command execution
-  - Workflow validation
-  - Automatically skipped if MAPDL unavailable
+- **conftest.py** - Pytest configuration and shared fixtures (mock MAPDL, contexts)
+- **test_basic.py** - Package basics (version, imports, exports, AppContext)
+- **test_tools.py** - MCP tools functionality (12 tests)
+  - check_mapdl_status tool
+  - write_comment tool
+  - run_mapdl_command tool
+- **test_error_handling.py** - Error scenarios (7 tests)
+  - Command failures, timeouts, invalid inputs
+- **test_lifespan.py** - Server lifespan management (5 tests)
+- **test_mcp_protocol.py** - MCP protocol compliance (6 tests)
+- **test_main.py** - Entry point functionality (3 tests)
+- **test_integration.py** - Integration tests with real MAPDL (4 tests)
+  - Requires MAPDL on localhost:50052
+  - Automatically skipped if unavailable
 
 ### Coverage
 
@@ -325,20 +330,30 @@ Tests the stdio communication protocol.
 
 ```
 pymapdl-mcp/
+├── .github/
+│   └── workflows/
+│       └── test.yml                    # CI/CD workflow
 ├── src/
 │   └── ansys/
 │       └── mapdl/
 │           └── mcp/
-│               ├── __init__.py
-│               └── mpc.py      # Main MCP server implementation
-├── tests/                       # Test directory (for future test modules)
-├── test_ansys.py               # MAPDL launch test
-├── test_docker_connection.py   # Docker connection test
-├── test_mcp_server.py          # MCP server test
-├── test_stdio.py               # stdio protocol test
-├── pyproject.toml              # Package metadata and dependencies
-├── requirements.txt            # Additional requirements (legacy)
-└── README.md                   # This file
+│               ├── __init__.py         # Package initialization
+│               ├── mpc.py              # Main MCP server implementation
+│               └── py.typed            # PEP 561 type marker
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py                     # Pytest fixtures and configuration
+│   ├── test_basic.py                   # Basic package tests
+│   ├── test_tools.py                   # MCP tools tests
+│   ├── test_error_handling.py          # Error handling tests
+│   ├── test_lifespan.py                # Lifespan management tests
+│   ├── test_mcp_protocol.py            # MCP protocol tests
+│   ├── test_main.py                    # Entry point tests
+│   └── test_integration.py             # Integration tests (require MAPDL)
+├── .pre-commit-config.yaml             # Pre-commit hooks configuration
+├── pyproject.toml                      # Package metadata and dependencies
+├── LICENSE                             # MIT License
+└── README.md                           # This file
 ```
 
 ## Architecture
