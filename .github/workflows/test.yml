@@ -114,6 +114,7 @@ jobs:
           DISTRIBUTED_MODE: "smp"
           MAPDL_PACKAGE: ghcr.io/ansys/mapdl
           DPF_PORT_INTERNAL: 21001
+          INSTANCE_NAME: MAPDL_0
         shell: bash
         run: |
           echo "Launching MAPDL instance..."
