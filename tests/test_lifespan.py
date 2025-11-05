@@ -25,48 +25,6 @@ def test_app_context_dataclass():
 
 
 @pytest.mark.unit
-@pytest.mark.asyncio
-@pytest.mark.skip(reason="Skipped when real MAPDL is connected; use integration tests instead")
-async def test_app_lifespan_successful_connection():
-    """Test app lifespan with successful MAPDL connection."""
-    mock_mapdl = MagicMock()
-    mock_mapdl.version = "2024 R2"
-
-    mock_server = MagicMock()
-
-    with patch("ansys.mapdl.mcp.mpc.Mapdl") as mock_mapdl_class:
-        mock_mapdl_class.return_value = mock_mapdl
-
-        async with app_lifespan(mock_server) as context:
-            # Verify context is properly created
-            assert isinstance(context, AppContext)
-            assert context.mapdl is not None
-            # Check that version attribute exists, don't check specific value
-            assert hasattr(context.mapdl, "version")
-
-        # After context exits, cleanup should have occurred
-        # Note: We don't call exit() in the code since MAPDL runs in Docker
-
-
-@pytest.mark.unit
-@pytest.mark.asyncio
-@pytest.mark.skip(
-    reason="Skipped when real MAPDL is connected; difficult to mock connection failures"
-)
-async def test_app_lifespan_connection_failure():
-    """Test app lifespan behavior when MAPDL connection fails."""
-    mock_server = MagicMock()
-
-    with patch("ansys.mapdl.mcp.mpc.Mapdl") as mock_mapdl_class:
-        # Simulate connection failure
-        mock_mapdl_class.side_effect = ConnectionError("Cannot connect to MAPDL")
-
-        with pytest.raises(ConnectionError):
-            async with app_lifespan(mock_server) as context:
-                pass
-
-
-@pytest.mark.unit
 def test_mcp_server_initialization():
     """Test that MCP server is properly initialized."""
     assert mcp is not None
