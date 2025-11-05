@@ -1,3 +1,5 @@
 .vscode
 *.pyc
 dist
+coverage.xml
+.coverage
