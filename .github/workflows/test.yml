@@ -120,30 +120,14 @@ jobs:
           echo "Launching MAPDL instance..."
           .ci/start_mapdl.sh &> mapdl_launch.log
 
-      # - name: Pull MAPDL Docker image
-      #   run: |
-      #     docker pull ${{ env.MAPDL_IMAGE }}
+      - name: Pull MAPDL Docker image
+        run: |
+          docker pull ${{ env.MAPDL_IMAGE }}
 
-      # - name: Create entrypoint script
-      #   run: |
-      #     cat > entrypoint.sh << 'EOF'
-      #     #!/bin/bash
-      #     set -e
-      #     echo "Starting MAPDL server..."
-      #     /ansys_inc/v252/ansys/bin/mapdl -grpc -dir /jobs -smp -np 2
-      #     EOF
-      #     chmod +x entrypoint.sh
-      #     echo "=== Entrypoint script content ==="
-      #     cat entrypoint.sh
 
-      # - name: Start MAPDL container
-      #   env:
-      #     MAPDL_IMAGE: ${{ env.MAPDL_IMAGE }}
-      #     LICENSE_SERVER: ${{ secrets.LICENSE_SERVER }}
-      #     PYMAPDL_PORT: ${{ env.PYMAPDL_PORT }}
-      #   run: |
-      #     chmod +x start_mapdl.sh
-      #     ./start_mapdl.sh
+      - name: Start MAPDL container
+        run: |
+          docker run --name mapdl -d -p ${{ env.PYMAPDL_PORT }}:50052 -e ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} --env ANSYS_LOCK='OFF' ${{ env.MAPDL_IMAGE }}
 
       # - name: Wait for MAPDL to be ready
       #   run: |
