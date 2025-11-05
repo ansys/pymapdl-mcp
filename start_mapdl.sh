@@ -9,7 +9,7 @@ docker run \
     -e ANS_BYPASS_CHECK_NUM_PROCESSES=1 \
     -e OMPI_ALLOW_RUN_AS_ROOT=1 \
     -e OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
-    -p ${{ env.PYMAPDL_PORT }}:50052 \
+    -p ${PYMAPDL_PORT}:50052 \
     --shm-size=2gb \
     -e I_MPI_SHM_LMT=shm \
     -w /jobs \

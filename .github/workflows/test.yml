@@ -126,6 +126,7 @@ jobs:
         env:
           MAPDL_IMAGE: ${{ env.MAPDL_IMAGE }}
           LICENSE_SERVER: ${{ secrets.LICENSE_SERVER }}
+          PYMAPDL_PORT: ${{ env.PYMAPDL_PORT }}
         run: |
           chmod +x start_mapdl.sh
           ./start_mapdl.sh
