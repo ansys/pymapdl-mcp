@@ -113,10 +113,10 @@ jobs:
           MAPDL_VERSION: 'v25.2-ubuntu-cicd'
           DISTRIBUTED_MODE: "smp"
           MAPDL_PACKAGE: ghcr.io/ansys/mapdl
-          DPF_PORT_INTERNAL: 50052
+          DPF_PORT_INTERNAL: 21001
         shell: bash
         run: |
-          echo "Launching first MAPDL instance..."
+          echo "Launching MAPDL instance..."
           .ci/start_mapdl.sh &> mapdl_launch.log
 
       # - name: Pull MAPDL Docker image
@@ -181,12 +181,12 @@ jobs:
       - name: Collect MAPDL logs on failure
         if: failure()
         run: |
+          echo "=== Log file"
+          cat mapdl_launch.log
           echo "=== MAPDL Container Logs ==="
           docker logs mapdl || echo "Could not retrieve container logs"
           echo "=== Docker Container Status ==="
           docker ps -a
-          echo "=== Log file"
-          cat mapdl_launch.log
 
       - name: Stop MAPDL container
         if: always()
