@@ -124,7 +124,7 @@ jobs:
 
       - name: Start MAPDL container
         run: |
-          docker run -d \
+          docker run \
             --name mapdl \
             --restart always \
             -e ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} \
