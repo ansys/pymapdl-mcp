@@ -37,9 +37,10 @@ class TestErrorHandling:
 
     def test_none_mapdl_instance(self, mock_context_no_mapdl):
         """Test handling when MAPDL instance is None."""
-        # Should raise AttributeError when trying to access methods on None
-        with pytest.raises(AttributeError):
-            check_mapdl_status(mock_context_no_mapdl)
+        # Should return helpful error message instead of raising exception
+        result = check_mapdl_status(mock_context_no_mapdl)
+        assert isinstance(result, str)
+        assert "No MAPDL connection available" in result
 
     def test_invalid_context_structure(self):
         """Test handling of invalid context structure."""
