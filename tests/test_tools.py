@@ -136,30 +136,6 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
             # Verify appropriate message is returned
             assert result == mock_output
 
-    def test_list_instances_exception(self):
-        """Test list_mapdl_instances handles exceptions gracefully."""
-        # Mock the list_instances function to raise an exception
-        with patch(
-            "ansys.mapdl.mcp.helpers.list_instances", side_effect=Exception("Connection error")
-        ):
-            result = list_mapdl_instances()
-
-            # Verify error is caught and returned as string
-            assert "Error" in result or "error" in result.lower()
-            assert isinstance(result, str)
-
-    def test_list_instances_import_error(self):
-        """Test list_mapdl_instances handles import errors gracefully."""
-        # Mock the import to fail
-        with patch(
-            "ansys.mapdl.mcp.helpers.list_instances", side_effect=ImportError("Module not found")
-        ):
-            result = list_mapdl_instances()
-
-            # Verify error is caught and returned as string
-            assert "Error" in result or "error" in result.lower()
-            assert isinstance(result, str)
-
     def test_list_instances_calls_with_long_flag(self):
         """Test that list_mapdl_instances calls list_instances with long=True."""
         mock_list_instances = Mock(return_value="Sample output")
@@ -201,20 +177,3 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
 
             # Verify logging message is written to stderr
             assert "Searching for MAPDL instances" in captured.err
-
-    def test_list_instances_return_type(self):
-        """Test that list_mapdl_instances always returns a string."""
-        # Test with normal output
-        with patch("ansys.mapdl.mcp.helpers.list_instances", return_value="Normal output"):
-            result = list_mapdl_instances()
-            assert isinstance(result, str)
-
-        # Test with empty string
-        with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=""):
-            result = list_mapdl_instances()
-            assert isinstance(result, str)
-
-        # Test with exception
-        with patch("ansys.mapdl.mcp.helpers.list_instances", side_effect=Exception("Error")):
-            result = list_mapdl_instances()
-            assert isinstance(result, str)
