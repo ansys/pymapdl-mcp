@@ -115,7 +115,6 @@ jobs:
           docker run \
             --name mapdl \
             --restart always \
-            --detach \
             --entrypoint /bin/bash \
             -e ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} \
             -e ANSYS_LOCK="OFF" \
