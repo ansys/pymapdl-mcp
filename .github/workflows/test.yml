@@ -106,28 +106,27 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: "Pull, launch, and validate MAPDL service"
-        id: start_mapdl
-        env:
-          LICENSE_SERVER: ${{ secrets.LICENSE_SERVER }}
-          MAPDL_VERSION: 'v25.2-ubuntu-cicd'
-          DISTRIBUTED_MODE: "smp"
-          MAPDL_PACKAGE: ghcr.io/ansys/mapdl
-          DPF_PORT_INTERNAL: 21001
-          INSTANCE_NAME: MAPDL_0
-        shell: bash
-        run: |
-          echo "Launching MAPDL instance..."
-          .ci/start_mapdl.sh &> mapdl_launch.log
+      # - name: "Pull, launch, and validate MAPDL service"
+      #   id: start_mapdl
+      #   env:
+      #     LICENSE_SERVER: ${{ secrets.LICENSE_SERVER }}
+      #     MAPDL_VERSION: 'v25.2-ubuntu-cicd'
+      #     DISTRIBUTED_MODE: "smp"
+      #     MAPDL_PACKAGE: ghcr.io/ansys/mapdl
+      #     DPF_PORT_INTERNAL: 21001
+      #     INSTANCE_NAME: MAPDL_0
+      #   shell: bash
+      #   run: |
+      #     echo "Launching MAPDL instance..."
+      #     .ci/start_mapdl.sh &> mapdl_launch.log
 
       - name: Pull MAPDL Docker image
         run: |
           docker pull ${{ env.MAPDL_IMAGE }}
 
-
       - name: Start MAPDL container
         run: |
-          docker run --name mapdl -d -p ${{ env.PYMAPDL_PORT }}:50052 -e ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} --env ANSYS_LOCK='OFF' ${{ env.MAPDL_IMAGE }}
+          docker run --name mapdl -d -p ${{ env.PYMAPDL_PORT }}:50052 -e ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} --env ANSYS_LOCK='OFF' ${{ env.MAPDL_IMAGE }} &> mapdl_launch.log
 
       # - name: Wait for MAPDL to be ready
       #   run: |
