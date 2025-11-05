@@ -18,6 +18,19 @@ This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing 
 - **Multiple Tools**: Pre-built tools for common MAPDL operations
 - **Error Handling**: Graceful fallback and comprehensive error reporting
 
+## Quick Start
+
+```bash
+# 1. Make sure you have MAPDL
+/ansys_inc/vxXX/ansys/bin/ansysXXX -grpc
+
+# 2. Install the package
+pip install -e .
+
+# 3. Run the MCP server
+ansys-mapdl-mcp
+```
+
 ## Available Tools
 
 ### `check_mapdl_status`
@@ -55,6 +68,8 @@ Execute arbitrary MAPDL commands.
 
 ## Installation
 
+### From Source
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/ansys/pymapdl-mcp.git
@@ -69,32 +84,44 @@ source .venv/bin/activate  # On macOS/Linux
 .venv\Scripts\activate  # On Windows
 ```
 
-3. Install dependencies:
+3. Install the package:
 ```bash
-pip install .
+pip install -e .
+```
+
+This will install the package in editable mode along with all dependencies defined in `pyproject.toml`.
+
+### Development Installation
+
+For development with additional tools (pytest, black, mypy, etc.):
+```bash
+pip install -e ".[dev]"
 ```
 
 ## Usage
 
-### Running MAPDL in Docker
-
-The easiest way to use this MCP server is with MAPDL running in a Docker container:
-
-```bash
-docker run -p 50052:50052 --rm -it ghcr.io/ansys/mapdl:latest -grpc
-```
-
 ### Starting the MCP Server
 
-Run the server in stdio mode:
+After installation, you can run the server in multiple ways:
 
+**Option 1: Using the installed console script (recommended):**
 ```bash
-python src/mpc.py
+ansys-mapdl-mcp
+```
+
+**Option 2: Using Python module execution:**
+```bash
+python -m ansys.mapdl.mcp.mpc
+```
+
+**Option 3: Direct script execution:**
+```bash
+python src/ansys/mapdl/mcp/mpc.py
 ```
 
 ### Configuration
 
-By default, the server connects to MAPDL on `localhost:50052`. To modify the connection settings, edit the `app_lifespan` function in `src/mpc.py`:
+By default, the server connects to MAPDL on `localhost:50052`. To modify the connection settings, edit the `app_lifespan` function in `src/ansys/mapdl/mcp/mpc.py`:
 
 ```python
 mapdl = Mapdl(
@@ -111,12 +138,36 @@ mapdl = Mapdl(
 
 This MCP server can be integrated with MCP-compatible AI assistants (like Claude Desktop, etc.). Add the server configuration to your MCP settings file:
 
+**Using the installed package (recommended):**
+```json
+{
+  "mcpServers": {
+    "pymapdl": {
+      "command": "ansys-mapdl-mcp"
+    }
+  }
+}
+```
+
+**Using Python module execution:**
 ```json
 {
   "mcpServers": {
     "pymapdl": {
       "command": "python",
-      "args": ["/path/to/pymapdl-mcp/src/mpc.py"],
+      "args": ["-m", "ansys.mapdl.mcp.mpc"]
+    }
+  }
+}
+```
+
+**Using direct script execution (development):**
+```json
+{
+  "mcpServers": {
+    "pymapdl": {
+      "command": "python",
+      "args": ["/path/to/pymapdl-mcp/src/ansys/mapdl/mcp/mpc.py"],
       "cwd": "/path/to/pymapdl-mcp"
     }
   }
@@ -156,14 +207,19 @@ Tests the stdio communication protocol.
 ```
 pymapdl-mcp/
 ├── src/
-│   ├── __init__.py
-│   └── mpc.py              # Main MCP server implementation
-├── test_ansys.py           # MAPDL launch test
-├── test_docker_connection.py  # Docker connection test
-├── test_mcp_server.py      # MCP server test
-├── test_stdio.py           # stdio protocol test
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
+│   └── ansys/
+│       └── mapdl/
+│           └── mcp/
+│               ├── __init__.py
+│               └── mpc.py      # Main MCP server implementation
+├── tests/                       # Test directory (for future test modules)
+├── test_ansys.py               # MAPDL launch test
+├── test_docker_connection.py   # Docker connection test
+├── test_mcp_server.py          # MCP server test
+├── test_stdio.py               # stdio protocol test
+├── pyproject.toml              # Package metadata and dependencies
+├── requirements.txt            # Additional requirements (legacy)
+└── README.md                   # This file
 ```
 
 ## Architecture
@@ -179,9 +235,13 @@ The `AppContext` dataclass maintains the MAPDL connection throughout the server'
 
 ## Development
 
+### Package Structure
+
+The package follows the Ansys namespace convention (`ansys.mapdl.mcp`) and is configured using modern Python packaging standards with `pyproject.toml`.
+
 ### Adding New Tools
 
-To add new MAPDL tools, use the `@mcp.tool()` decorator:
+To add new MAPDL tools, edit `src/ansys/mapdl/mcp/mpc.py` and use the `@mcp.tool()` decorator:
 
 ```python
 @mcp.tool()
@@ -195,15 +255,28 @@ def your_new_tool(ctx: Context[ServerSession, AppContext], param: str) -> str:
     return f"Result: {result}"
 ```
 
+### Building the Package
+
+To build distribution packages:
+```bash
+pip install build
+python -m build
+```
+
+This creates both wheel and source distributions in the `dist/` directory.
+
 ## Contributing
 
 Contributions are welcome! Please:
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
+3. Install development dependencies: `pip install -e ".[dev]"`
+4. Make your changes
+5. Format code with `black` and `isort`
+6. Add tests for new functionality
+7. Run tests to ensure everything works
+8. Submit a pull request
 
 ## License
 
