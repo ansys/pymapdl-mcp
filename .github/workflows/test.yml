@@ -116,7 +116,7 @@ jobs:
           #!/bin/bash
           set -e
           echo "Starting MAPDL server..."
-          exec /ansys_inc/v252/ansys/bin/mapdl -grpc -dir /jobs -smp -np 2
+          /ansys_inc/v252/ansys/bin/mapdl -grpc -dir /jobs -smp -np 2
           EOF
           chmod +x entrypoint.sh
           echo "=== Entrypoint script content ==="
