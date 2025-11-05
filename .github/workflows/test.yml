@@ -91,7 +91,6 @@ jobs:
       MAPDL_VERSION: "v25.2-ubuntu-cicd"
       MAPDL_IMAGE: "ghcr.io/ansys/mapdl:v25.2-ubuntu-cicd"
       PYMAPDL_PORT: 50052
-      PYMAPDL_DB_PORT: 50056
 
     steps:
       - name: Checkout code
@@ -130,21 +129,10 @@ jobs:
             ${{ env.MAPDL_IMAGE }} \
             /ansys_inc/v252/ansys/bin/mapdl -grpc -mpi openmpi -dir /jobs -np 2 -db -6000 -m -6000
 
-      - name: Wait for MAPDL to be ready
-        run: |
-          echo "Waiting for MAPDL to start..."
-          timeout 120 bash -c 'until docker logs mapdl 2>&1 | grep -q "Server listening on"; do sleep 2; done' || {
-            echo "MAPDL failed to start within timeout"
-            docker logs mapdl
-            exit 1
-          }
-          echo "MAPDL is ready!"
-          docker logs mapdl
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.10"
           cache: 'pip'
 
       - name: Install dependencies
