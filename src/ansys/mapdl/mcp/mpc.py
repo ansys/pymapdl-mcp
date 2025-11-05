@@ -1,20 +1,19 @@
 """Example showing lifespan support for startup/shutdown with strong typing."""
 
+import logging
+import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Optional, Any
+from typing import Any, Optional
 
+from ansys.mapdl.core import Mapdl
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.session import ServerSession
-
-import sys
-import logging
 
 logging.basicConfig(level=logging.INFO)
 logging.info("Loading modules...")
 
-from ansys.mapdl.core import Mapdl
 
 @dataclass
 class AppContext:
@@ -45,10 +44,8 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     mapdl = None
     try:
         # Connect to existing MAPDL instance running in Docker
-        from ansys.mapdl.core import Mapdl
-
         print("Connecting to MAPDL instance on port 50052...", file=sys.stderr)
-        
+
         # Connect to existing MAPDL instance
         mapdl = Mapdl(
             start_instance=False,
@@ -56,18 +53,18 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
             port=50052,
             cleanup_on_exit=False,  # Don't clean up since we didn't launch it
             loglevel="DEBUG",
-            log_apdl="/Users/german.ayuso/Other_projects/pymapdl-mcp/mapdl.log"
+            log_apdl="/Users/german.ayuso/Other_projects/pymapdl-mcp/mapdl.log",
         )
-        
+
         print("Connected to MAPDL successfully!", file=sys.stderr)
         print(f"MAPDL version: {mapdl.version}", file=sys.stderr)
-        
+
         yield AppContext(mapdl=mapdl)
-        
+
     except Exception as e:
         print(f"Error during MAPDL initialization: {e}", file=sys.stderr)
         print(f"Exception type: {type(e).__name__}", file=sys.stderr)
-        
+
         # Create a dummy context if MAPDL fails to launch
         print("Creating fallback context without MAPDL", file=sys.stderr)
         raise e
@@ -106,7 +103,7 @@ def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
     """
     mapdl = ctx.request_context.lifespan_context.mapdl
 
-    return f"MAPDL is available. Version: {mapdl.version}"
+    return f"MAPDL is available. Version: {mapdl.version}"  # type: ignore[union-attr]
 
 
 @mcp.tool()
@@ -128,8 +125,9 @@ def write_comment(ctx: Context[ServerSession, AppContext], comment: str) -> str:
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     print(f"Writing comment: {comment}", file=sys.stderr)
-    result = mapdl.com(f"{comment}", mute=True)
+    result = mapdl.com(f"{comment}", mute=True)  # type: ignore[union-attr]
     return f"Comment written successfully: {result}"
+
 
 @mcp.tool()
 def run_mapdl_command(ctx: Context[ServerSession, AppContext], cmd: str) -> str:
@@ -149,7 +147,7 @@ def run_mapdl_command(ctx: Context[ServerSession, AppContext], cmd: str) -> str:
     """
     mapdl = ctx.request_context.lifespan_context.mapdl
 
-    result = mapdl.run(cmd)
+    result = mapdl.run(cmd)  # type: ignore[union-attr]
     return f"MAPDL command executed successfully: {result}"
 
 
@@ -184,6 +182,7 @@ def main():
     for communication with MCP clients.
     """
     import asyncio
+
     asyncio.run(mcp.run_stdio_async())
 
 
