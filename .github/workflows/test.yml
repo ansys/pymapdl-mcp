@@ -110,12 +110,23 @@ jobs:
         run: |
           docker pull ${{ env.MAPDL_IMAGE }}
 
+      - name: Create entrypoint script
+        run: |
+          cat > entrypoint.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          echo "Starting MAPDL server..."
+          exec /ansys_inc/v252/ansys/bin/mapdl -grpc -dir /jobs -dmp -np 2
+          EOF
+          chmod +x entrypoint.sh
+          echo "=== Entrypoint script content ==="
+          cat entrypoint.sh
+
       - name: Start MAPDL container
         run: |
-          docker run \
+          docker run -d \
             --name mapdl \
             --restart always \
-            --entrypoint /bin/bash \
             -e ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} \
             -e ANSYS_LOCK="OFF" \
             -e VERSION=252 \
@@ -129,13 +140,28 @@ jobs:
             -u=0:0 \
             --memory=6656MB \
             --memory-swap=16896MB \
+            --mount type=bind,source="$(pwd)/entrypoint.sh",target=/entrypoint.sh,readonly \
             ${{ env.MAPDL_IMAGE }} \
-            /ansys_inc/v252/ansys/bin/mapdl -grpc -dir /jobs -dmp -np 2
+            /bin/bash /entrypoint.sh
 
       - name: Wait for MAPDL to be ready
         run: |
-          sleep 5
+          echo "Waiting for MAPDL to start..."
+          for i in {1..30}; do
+            if docker logs mapdl 2>&1 | grep -q "Server listening on"; then
+              echo "MAPDL is ready!"
+              docker logs mapdl
+              exit 0
+            fi
+            echo "Attempt $i/30: MAPDL not ready yet, waiting..."
+            sleep 2
+          done
+          echo "MAPDL failed to start within 60 seconds"
+          echo "=== Container status ==="
+          docker ps -a
+          echo "=== Container logs ==="
           docker logs mapdl
+          exit 1
 
       - name: Set up Python
         uses: actions/setup-python@v5
