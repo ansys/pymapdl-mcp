@@ -115,11 +115,10 @@ jobs:
           docker run \
             --name mapdl \
             --restart always \
-            --entrypoint /bin/bash \
+            --entrypoint /bin/bash -c "/ansys_inc/v252/ansys/bin/mapdl -grpc -mpi openmpi -dir /jobs -np 2 -db -6000 -m -6000" \
             -e ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} \
             -e ANSYS_LOCK="OFF" \
             -e VERSION=252 \
-            -e EXEC_PATH=/ansys_inc/v252/ansys/bin/mapdl \
             -e P_SCHEMA=/ansys_inc/v252/ansys/ac4/schema \
             -e OMPI_ALLOW_RUN_AS_ROOT=1 \
             -e OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
@@ -130,8 +129,7 @@ jobs:
             -u=0:0 \
             --memory=6656MB \
             --memory-swap=16896MB \
-            ${{ env.MAPDL_IMAGE }} \
-            /ansys_inc/v252/ansys/bin/mapdl -grpc -mpi openmpi -dir /jobs -np 2 -db -6000 -m -6000
+            ${{ env.MAPDL_IMAGE }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
