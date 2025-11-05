@@ -92,7 +92,6 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
     env:
-      MAPDL_VERSION: "v25.2-ubuntu-cicd"
       MAPDL_IMAGE: "ghcr.io/ansys/mapdl:v25.2-ubuntu-cicd"
       PYMAPDL_PORT: 50052
 
