@@ -108,41 +108,6 @@ jobs:
         run: |
           docker pull ${{ env.MAPDL_IMAGE }}
 
-      - name: Create entrypoint script
-        run: |
-          cat > entrypoint.sh << 'EOF'
-          #!/bin/bash
-          export OMPI_ALLOW_RUN_AS_ROOT=1
-          export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
-
-          if [ -z "${VERSION}" ]; then
-              echo "VERSION environment variable is not set."
-              exit 1
-          fi
-
-          RUN_DPF_SERVER=${RUN_DPF_SERVER:-false}
-
-          if [ -n "${ANSYS_DPF_ACCEPT_LA}" ]; then
-              if [ "${ANSYS_DPF_ACCEPT_LA}" == "Y" ]; then
-                  RUN_DPF_SERVER=true
-              fi
-          fi
-
-          echo "RUN_DPF_SERVER: $RUN_DPF_SERVER"
-
-          if [ "$RUN_DPF_SERVER" == "true" ]; then
-              echo "Starting DPF server..."
-              "/ansys_inc/v${VERSION}/aisol/bin/linx64/Ans.Dpf.Grpc.sh" --port "${DPF_PORT_INTERNAL}" > log_dpf.log &
-              echo "DPF server started."
-          fi
-
-          echo "Starting MAPDL..."
-          echo "Using executable path: ${EXEC_PATH}"
-
-          $EXEC_PATH -grpc -dir /jobs -"${DISTRIBUTED_MODE}" -np 2 -db -6000 -m -6000
-          EOF
-          chmod +x entrypoint.sh
-
       - name: Start MAPDL container
         run: |
           docker run \
@@ -152,24 +117,18 @@ jobs:
             --entrypoint /bin/bash \
             -e ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} \
             -e ANSYS_LOCK="OFF" \
-            -e ANSYS_DPF_ACCEPT_LA=Y \
             -e VERSION=252 \
-            -e DPF_PORT_INTERNAL=50055 \
             -e EXEC_PATH=/ansys_inc/v252/ansys/bin/mapdl \
-            -e DISTRIBUTED_MODE=dmp \
             -e P_SCHEMA=/ansys_inc/v252/ansys/ac4/schema \
             -p ${{ env.PYMAPDL_PORT }}:50052 \
-            -p ${{ env.PYMAPDL_DB_PORT }}:50056 \
-            -p 50055:50055 \
             --shm-size=2gb \
             -e I_MPI_SHM_LMT=shm \
             -w /jobs \
             -u=0:0 \
             --memory=6656MB \
             --memory-swap=16896MB \
-            --mount type=bind,src=$PWD/entrypoint.sh,dst=/entrypoint.sh \
             ${{ env.MAPDL_IMAGE }} \
-            /entrypoint.sh
+            /ansys_inc/v252/ansys/bin/mapdl -grpc -mpi openmpi -dir /jobs -np 2 -db -6000 -m -6000
 
       - name: Wait for MAPDL to be ready
         run: |
