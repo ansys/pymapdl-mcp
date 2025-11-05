@@ -131,6 +131,7 @@ jobs:
             -e ANSYS_LOCK="OFF" \
             -e VERSION=252 \
             -e P_SCHEMA=/ansys_inc/v252/ansys/ac4/schema \
+            -e ANS_BYPASS_CHECK_NUM_PROCESSES=1 \
             -e OMPI_ALLOW_RUN_AS_ROOT=1 \
             -e OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
             -p ${{ env.PYMAPDL_PORT }}:50052 \
