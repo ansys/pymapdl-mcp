@@ -18,24 +18,25 @@ logging.info("Loading modules...")
 @dataclass
 class AppContext:
     """Application context with typed dependencies.
-    
+
     Attributes
     ----------
     mapdl : Optional[Any]
         MAPDL instance connection. Using Any to avoid type issues with MAPDL variants.
     """
+
     mapdl: Optional[Any]  # Using Any to avoid type issues with MAPDL variants
 
 
 @asynccontextmanager
 async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     """Manage application lifecycle with type-safe context.
-    
+
     Parameters
     ----------
     server : FastMCP
         The FastMCP server instance.
-        
+
     Yields
     ------
     AppContext
@@ -90,12 +91,12 @@ mcp = FastMCP("PyMAPDL", lifespan=app_lifespan)
 @mcp.tool()
 def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
     """Check the status of MAPDL initialization.
-    
+
     Parameters
     ----------
     ctx : Context[ServerSession, AppContext]
         The MCP context containing server session and application context.
-        
+
     Returns
     -------
     str
@@ -109,14 +110,14 @@ def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
 @mcp.tool()
 def write_comment(ctx: Context[ServerSession, AppContext], comment: str) -> str:
     """Write a comment in the MAPDL session.
-    
+
     Parameters
     ----------
     ctx : Context[ServerSession, AppContext]
         The MCP context containing server session and application context.
     comment : str
         The comment text to write in MAPDL.
-        
+
     Returns
     -------
     str
@@ -132,14 +133,14 @@ def write_comment(ctx: Context[ServerSession, AppContext], comment: str) -> str:
 @mcp.tool()
 def run_mapdl_command(ctx: Context[ServerSession, AppContext], cmd: str) -> str:
     """Execute an arbitrary MAPDL command.
-    
+
     Parameters
     ----------
     ctx : Context[ServerSession, AppContext]
         The MCP context containing server session and application context.
     cmd : str
         The MAPDL command to execute.
-        
+
     Returns
     -------
     str
@@ -154,11 +155,11 @@ def run_mapdl_command(ctx: Context[ServerSession, AppContext], cmd: str) -> str:
 @mcp.tool()
 def list_mapdl_instances() -> str:
     """List all MAPDL instances running on the local machine.
-    
+
     This tool uses PyMAPDL CLI's list_instances function to discover
     MAPDL instances running on the machine by scanning for active gRPC
     servers and their associated metadata.
-    
+
     Returns
     -------
     str
@@ -169,13 +170,14 @@ def list_mapdl_instances() -> str:
     print("Searching for MAPDL instances using PyMAPDL CLI...", file=sys.stderr)
 
     from ansys.mapdl.mcp.helpers import list_instances
+
     # Use PyMAPDL CLI's list_instances function with long=True for detailed output
     return list_instances(long=True)
 
 
 def main():
-    """Main entry point for the MCP server.
-    
+    """Entry point for the MCP server.
+
     This function initializes and runs the FastMCP server using stdio
     for communication with MCP clients.
     """

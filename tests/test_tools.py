@@ -4,7 +4,12 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from ansys.mapdl.mcp import check_mapdl_status, list_mapdl_instances, run_mapdl_command, write_comment
+from ansys.mapdl.mcp import (
+    check_mapdl_status,
+    list_mapdl_instances,
+    run_mapdl_command,
+    write_comment,
+)
 
 
 @pytest.mark.unit

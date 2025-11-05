@@ -1,10 +1,9 @@
-
-
 import sys
 from typing import Any, Callable
 
-def exception_wrapper(func: Callable[[], Any]) -> str:
-    """Wrapper to catch exceptions and return error messages."""
+
+def exception_wrapper(func: Callable[[], Any]) -> Any | str:
+    """Wrap to catch exceptions and return error messages."""
     try:
         return func()
     except ImportError as e:
@@ -17,7 +16,57 @@ def exception_wrapper(func: Callable[[], Any]) -> str:
         return error_msg
 
 
-def list_instances(instances:bool=False, long:bool=False, cmd:bool=False, location:bool=False) -> str:
+def list_instances(
+    instances: bool = False, long: bool = False, cmd: bool = False, location: bool = False
+) -> str:
+    """
+    List running MAPDL instances on the system.
+
+    This function scans all running processes to identify ANSYS MAPDL instances
+    that are using gRPC communication. It returns a formatted table with information
+    about each discovered instance.
+
+    Parameters
+    ----------
+    instances : bool, optional
+        If True, only show main MAPDL instances (exclude child processes).
+        If False, show all MAPDL-related processes. Default is False.
+    long : bool, optional
+        If True, enable verbose output including command line and working directory.
+        This automatically sets both `cmd` and `location` to True. Default is False.
+    cmd : bool, optional
+        If True, include the command line arguments in the output table.
+        Default is False.
+    location : bool, optional
+        If True, include the working directory path in the output table.
+        Default is False.
+
+    Returns
+    -------
+    str
+        A formatted table string containing information about MAPDL instances.
+        The table includes columns for process name, status, gRPC port, PID,
+        and optionally command line and working directory based on the parameters.
+
+    Notes
+    -----
+    - This function identifies MAPDL processes by looking for "ansys" or "mapdl"
+      in the process name and the presence of "-grpc" flag in command line arguments.
+    - Only processes with status RUNNING, IDLE, or SLEEPING are considered valid.
+    - Main instances are distinguished from child processes by counting their children.
+    - Processes that no longer exist or are zombies are silently skipped.
+
+    Examples
+    --------
+    >>> # List all MAPDL processes
+    >>> print(list_instances())
+
+    >>> # List only main instances with full details
+    >>> print(list_instances(instances=True, long=True))
+
+    >>> # List with command line information
+    >>> print(list_instances(cmd=True))
+    """
     import psutil
     from tabulate import tabulate
 
@@ -40,9 +89,7 @@ def list_instances(instances:bool=False, long:bool=False, cmd:bool=False, locati
             psutil.STATUS_IDLE,
             psutil.STATUS_SLEEPING,
         ]
-        valid_ansys_process = ("ansys" in proc.name().lower()) or (
-            "mapdl" in proc.name().lower()
-        )
+        valid_ansys_process = ("ansys" in proc.name().lower()) or ("mapdl" in proc.name().lower())
         return valid_status and valid_ansys_process and is_grpc_based(proc)
 
     for proc in psutil.process_iter():
@@ -57,7 +104,7 @@ def list_instances(instances:bool=False, long:bool=False, cmd:bool=False, locati
                     proc.ansys_instance = True
                 mapdl_instances.append(proc)
 
-        except (psutil.NoSuchProcess, psutil.ZombieProcess) as e:
+        except (psutil.NoSuchProcess, psutil.ZombieProcess):
             continue
 
     # printing
