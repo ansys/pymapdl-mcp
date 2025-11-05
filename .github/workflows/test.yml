@@ -117,7 +117,7 @@ jobs:
         shell: bash
         run: |
           echo "Launching first MAPDL instance..."
-          .ci/start_mapdl.sh &> mapdl_launch_0.log
+          .ci/start_mapdl.sh &> mapdl_launch.log
 
       # - name: Pull MAPDL Docker image
       #   run: |
@@ -185,6 +185,8 @@ jobs:
           docker logs mapdl || echo "Could not retrieve container logs"
           echo "=== Docker Container Status ==="
           docker ps -a
+          echo "=== Log file"
+          cat mapdl_launch.log
 
       - name: Stop MAPDL container
         if: always()
