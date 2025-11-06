@@ -63,23 +63,36 @@ jobs:
             echo "html_url=${github_html_url}" >> $GITHUB_OUTPUT
             echo "pull_request=${github_number}" >> $GITHUB_OUTPUT
             echo "commentid=${github_id}" >> $GITHUB_OUTPUT
-
           fi;
+
+          echo "On $event_name"
+          echo "user=${inputs_user}"
+          echo "html_url=${inputs_html_url}"
+          echo "pull_request=${inputs_pr}"
+          echo "commentid=${inputs_commentid}"
 
       - name: React to comment
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd #v8.0.0
         env:
           COMMENT_ID: ${{ steps.settings.outputs.commentid }}
         with:
-          github-token: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-              ${{ steps.settings.outputs.commentid }}
-              github.rest.reactions.createForIssueComment({
-                owner: 'ansys',
-                repo: 'pymapdl-mcp',
-                comment_id: process.env.COMMENT_ID,
-                content: '+1',
-              });
+              const commentId = parseInt(process.env.COMMENT_ID);
+              console.log(`Attempting to add reaction to comment ID: ${commentId}`);
+
+              try {
+                await github.rest.reactions.createForIssueComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: commentId,
+                  content: '+1',
+                });
+                console.log('Reaction added successfully');
+              } catch (error) {
+                console.log(`Failed to add reaction: ${error.message}`);
+                console.log('This may be expected if the comment was deleted or is inaccessible');
+              }
 
       - name: "Grab url for GIF"
         id: image_grabber
@@ -96,4 +109,4 @@ jobs:
             ${{ steps.image_grabber.outputs.IMG_MSG }}
 
           pull-request-number: ${{ steps.settings.outputs.pull_request }}
-          github-token: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
