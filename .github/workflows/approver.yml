@@ -63,16 +63,36 @@ jobs:
             echo "html_url=${github_html_url}" >> $GITHUB_OUTPUT
             echo "pull_request=${github_number}" >> $GITHUB_OUTPUT
             echo "commentid=${github_id}" >> $GITHUB_OUTPUT
-
           fi;
 
+          echo "On $event_name"
+          echo "user=${inputs_user}"
+          echo "html_url=${inputs_html_url}"
+          echo "pull_request=${inputs_pr}"
+          echo "commentid=${inputs_commentid}"
+
       - name: React to comment
-      #https://github.com/ansys/pymapdl/pull/2654#issuecomment-1889009514
-        uses: dkershner6/reaction-action@97ede302a1b145b3739dec3ca84a489a34ef48b5 #v2.2.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd #v8.0.0
+        env:
+          COMMENT_ID: ${{ steps.settings.outputs.commentid }}
         with:
-          token: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
-          commentId: ${{ steps.settings.outputs.commentid }} # Optional if the trigger is a comment. Use another action to find this otherwise.
-          reaction: "+1" # Optional
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+              const commentId = parseInt(process.env.COMMENT_ID);
+              console.log(`Attempting to add reaction to comment ID: ${commentId}`);
+
+              try {
+                await github.rest.reactions.createForIssueComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: commentId,
+                  content: '+1',
+                });
+                console.log('Reaction added successfully');
+              } catch (error) {
+                console.log(`Failed to add reaction: ${error.message}`);
+                console.log('This may be expected if the comment was deleted or is inaccessible');
+              }
 
       - name: "Grab url for GIF"
         id: image_grabber
@@ -89,4 +109,4 @@ jobs:
             ${{ steps.image_grabber.outputs.IMG_MSG }}
 
           pull-request-number: ${{ steps.settings.outputs.pull_request }}
-          github-token: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}

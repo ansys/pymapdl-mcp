@@ -82,8 +82,11 @@ def list_instances(
 
     def get_port(proc):
         cmdline = proc.cmdline()
-        ind_grpc = cmdline.index("-port")
-        return cmdline[ind_grpc + 1]
+        if "-port" in cmdline:
+            ind_grpc = cmdline.index("-port")
+            return cmdline[ind_grpc + 1]
+        else:
+            return "N/A"
 
     def is_valid_process(proc):
         valid_status = proc.status() in [
@@ -142,7 +145,10 @@ def list_instances(
             proc_line.append(" ".join(each_p.cmdline()))
 
         if location:
-            proc_line.append(each_p.cwd())
+            try:
+                proc_line.append(each_p.cwd())
+            except (psutil.NoSuchProcess, psutil.ZombieProcess, psutil.AccessDenied):
+                proc_line.append("N/A")
 
         table.append(proc_line)
 

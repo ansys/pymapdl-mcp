@@ -6,6 +6,8 @@ Run with: pytest -m integration
 To skip integration tests, run: pytest -m "not integration"
 """
 
+import os
+
 import pytest
 
 from ansys.mapdl.mcp import (
@@ -30,15 +32,9 @@ class TestMapdlIntegration:
         Skip these tests if MAPDL is not available.
         """
         try:
-            from ansys.mapdl.core import Mapdl
+            from ansys.mapdl.core import launch_mapdl
 
-            mapdl = Mapdl(
-                start_instance=False,
-                ip="localhost",
-                port=50052,
-                cleanup_on_exit=False,
-                loglevel="ERROR",
-            )
+            mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
 
             yield mapdl
 
@@ -46,7 +42,11 @@ class TestMapdlIntegration:
             # Don't exit since MAPDL is running externally
 
         except Exception as e:
-            pytest.skip(f"MAPDL not available: {e}")
+            # Not allow to skip if running on CICD
+            if os.getenv("ON_CI", False):
+                raise e
+            else:
+                pytest.skip(f"MAPDL not available: {e}")
 
     @pytest.fixture
     def real_context(self, real_mapdl):
@@ -135,19 +135,20 @@ class TestListMapdlInstancesIntegration:
         and verifies that list_mapdl_instances can detect it.
         """
         try:
-            from ansys.mapdl.core import Mapdl
+            from ansys.mapdl.core import launch_mapdl
 
             # Try to connect to verify MAPDL is running
-            mapdl = Mapdl(
-                start_instance=False,
-                ip="localhost",
-                port=50052,
+            mapdl = launch_mapdl(
                 cleanup_on_exit=False,
                 loglevel="ERROR",
             )
 
         except Exception as e:
-            pytest.skip(f"MAPDL not available on port 50052: {e}")
+            # Not allow to skip if running on CICD
+            if os.getenv("ON_CI", False):
+                raise e
+            else:
+                pytest.skip(f"MAPDL not available on port 50052: {e}")
 
         # If we get here, MAPDL is running
         result = list_mapdl_instances()
