@@ -76,7 +76,7 @@ jobs:
               ${{ steps.settings.outputs.commentid }}
               github.rest.reactions.createForIssueComment({
                 owner: 'ansys',
-                repo: 'pymapdl',
+                repo: 'pymapdl-mcp',
                 comment_id: process.env.COMMENT_ID,
                 content: '+1',
               });
