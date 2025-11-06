@@ -1,10 +1,13 @@
 """List of tools in PyMAPDL-MCP."""
 
+import base64
 import logging
+from pathlib import Path
 
 from ansys.mapdl.core import Mapdl
 from mcp.server.fastmcp import Context
 from mcp.server.session import ServerSession
+from mcp.types import ImageContent, TextContent
 
 from ansys.mapdl.mcp.mpc import AppContext, mcp
 
@@ -292,3 +295,81 @@ def list_mapdl_instances() -> str:
 
     # Use PyMAPDL CLI's list_instances function with long=True for detailed output
     return list_instances(long=True)
+
+
+@mcp.tool()
+def screenshot(
+    ctx: Context[ServerSession, AppContext],
+) -> list[TextContent | ImageContent]:
+    """Capture a screenshot of the current MAPDL graphics window.
+
+    This tool captures the current state of the MAPDL graphics window and returns
+    both the file path and the image data encoded in base64 format for display
+    in the MCP client.
+
+    Parameters
+    ----------
+    ctx : Context[ServerSession, AppContext]
+        The MCP context containing server session and application context.
+
+    Returns
+    -------
+    list[TextContent | ImageContent]
+        A list containing:
+        - TextContent with the screenshot file path
+        - ImageContent with the base64-encoded image data
+    """
+    mapdl = ctx.request_context.lifespan_context.mapdl
+
+    if mapdl is None:
+        return [
+            TextContent(
+                type="text",
+                text=(
+                    "No MAPDL connection available. "
+                    "Use connect_to_mapdl tool to establish a connection."
+                ),
+            )
+        ]
+
+    try:
+        logger.info("Capturing MAPDL screenshot...")
+
+        # Capture screenshot - returns the file path
+        screenshot_path = mapdl.screenshot(savefig=True)  # type: ignore[union-attr]
+
+        # Read the image file and encode as base64
+        image_path = Path(screenshot_path)
+        if not image_path.exists():
+            error_msg = f"Screenshot file not found: {screenshot_path}"
+            logger.error(error_msg)
+            return [TextContent(type="text", text=error_msg)]
+
+        # Read image data
+        with open(image_path, "rb") as f:
+            image_data = f.read()
+
+        # Encode to base64
+        base64_data = base64.b64encode(image_data).decode("utf-8")
+
+        # Determine mime type based on file extension
+        mime_type = "image/png"  # Default to PNG
+        if image_path.suffix.lower() in [".jpg", ".jpeg"]:
+            mime_type = "image/jpeg"
+        elif image_path.suffix.lower() == ".bmp":
+            mime_type = "image/bmp"
+        elif image_path.suffix.lower() == ".gif":
+            mime_type = "image/gif"
+
+        logger.info(f"Screenshot captured successfully: {screenshot_path}")
+
+        # Return both text (file path) and image content
+        return [
+            TextContent(type="text", text=f"Screenshot saved to: {screenshot_path}"),
+            ImageContent(type="image", data=base64_data, mimeType=mime_type),
+        ]
+
+    except Exception as e:
+        error_msg = f"Failed to capture screenshot: {str(e)}"
+        logger.error(error_msg)
+        return [TextContent(type="text", text=error_msg)]
