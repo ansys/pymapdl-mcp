@@ -129,13 +129,10 @@ class TestListMapdlInstancesIntegration:
         and verifies that list_mapdl_instances can detect it.
         """
         try:
-            from ansys.mapdl.core import Mapdl
+            from ansys.mapdl.core import launch_mapdl
 
             # Try to connect to verify MAPDL is running
-            mapdl = Mapdl(
-                start_instance=False,
-                ip="localhost",
-                port=50052,
+            mapdl = launch_mapdl(
                 cleanup_on_exit=False,
                 loglevel="ERROR",
             )
