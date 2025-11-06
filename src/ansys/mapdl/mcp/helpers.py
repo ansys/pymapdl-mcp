@@ -80,8 +80,11 @@ def list_instances(
 
     def get_port(proc):
         cmdline = proc.cmdline()
-        ind_grpc = cmdline.index("-port")
-        return cmdline[ind_grpc + 1]
+        if "-port" in cmdline:
+            ind_grpc = cmdline.index("-port")
+            return cmdline[ind_grpc + 1]
+        else:
+            return "N/A"
 
     def is_valid_process(proc):
         valid_status = proc.status() in [
