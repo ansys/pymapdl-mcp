@@ -164,6 +164,9 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Run integration tests
+        env:
+          PYMAPDL_START_INSTANCE: "false"
+          PYMAPDL_PORT: ${{ env.PYMAPDL_PORT }}
         run: |
           pytest -m integration -v --tb=short
 

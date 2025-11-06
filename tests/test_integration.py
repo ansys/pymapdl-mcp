@@ -30,15 +30,9 @@ class TestMapdlIntegration:
         Skip these tests if MAPDL is not available.
         """
         try:
-            from ansys.mapdl.core import Mapdl
+            from ansys.mapdl.core import launch_mapdl
 
-            mapdl = Mapdl(
-                start_instance=False,
-                ip="localhost",
-                port=50052,
-                cleanup_on_exit=False,
-                loglevel="ERROR",
-            )
+            mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
 
             yield mapdl
 
