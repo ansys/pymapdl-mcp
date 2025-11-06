@@ -139,7 +139,7 @@ jobs:
       - name: Wait for MAPDL to be ready
         run: |
           echo "Waiting for MAPDL to start..."
-          for i in {1..60}; do
+          for i in {1..5}; do
             if docker logs mapdl 2>&1 | grep -q "Server listening on"; then
               echo "MAPDL is ready!"
               docker logs mapdl
