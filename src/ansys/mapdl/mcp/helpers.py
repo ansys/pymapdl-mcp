@@ -1,5 +1,7 @@
-import sys
+import logging
 from typing import Any, Callable
+
+logger = logging.getLogger(__name__)
 
 
 def exception_wrapper(func: Callable[[], Any]) -> Any | str:
@@ -8,11 +10,11 @@ def exception_wrapper(func: Callable[[], Any]) -> Any | str:
         return func()
     except ImportError as e:
         error_msg = f"Error when running {str(func)}: {e}"
-        print(error_msg, file=sys.stderr)
+        logger.error(error_msg)
         return error_msg
     except Exception as e:
         error_msg = f"Error listing MAPDL instances: {e}"
-        print(error_msg, file=sys.stderr)
+        logger.error(error_msg)
         return error_msg
 
 

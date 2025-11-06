@@ -1,12 +1,14 @@
 """List of tools in PyMAPDL-MCP."""
 
-import sys
+import logging
 
 from ansys.mapdl.core import Mapdl
 from mcp.server.fastmcp import Context
 from mcp.server.session import ServerSession
 
 from ansys.mapdl.mcp.mpc import AppContext, mcp
+
+logger = logging.getLogger(__name__)
 
 
 # Access type-safe lifespan context in tools
@@ -53,7 +55,7 @@ def write_comment(ctx: Context[ServerSession, AppContext], comment: str) -> str:
     if mapdl is None:
         return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
 
-    print(f"Writing comment: {comment}", file=sys.stderr)
+    logger.info(f"Writing comment: {comment}")
     result = mapdl.com(f"{comment}", mute=True)  # type: ignore[union-attr]
     return f"Comment written successfully: {result}"
 
@@ -107,7 +109,7 @@ def connect_to_mapdl(
     str
         Connection status message with MAPDL version information.
     """
-    print(f"Connecting to MAPDL instance at {ip}:{port}...", file=sys.stderr)
+    logger.info(f"Connecting to MAPDL instance at {ip}:{port}...")
 
     try:
         # Check if there's already a connection
@@ -131,14 +133,14 @@ def connect_to_mapdl(
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
 
-        print(f"Connected to MAPDL successfully at {ip}:{port}!", file=sys.stderr)
+        logger.info(f"Connected to MAPDL successfully at {ip}:{port}!")
         return (
             f"Successfully connected to MAPDL at {ip}:{port}\n" f"MAPDL Version: {mapdl.version}\n"
         )
 
     except Exception as e:
         error_msg = f"Failed to connect to MAPDL at {ip}:{port}: {str(e)}"
-        print(error_msg, file=sys.stderr)
+        logger.error(error_msg)
         return error_msg
 
 
@@ -167,7 +169,7 @@ def disconnect_from_mapdl(ctx: Context[ServerSession, AppContext]) -> str:
     try:
         ip = mapdl._ip
         port = mapdl._port
-        print(f"Disconnecting from MAPDL at {ip}:{port}...", file=sys.stderr)
+        logger.info(f"Disconnecting from MAPDL at {ip}:{port}...")
 
         # Exit the MAPDL connection
         # Just disconnect the client
@@ -177,12 +179,12 @@ def disconnect_from_mapdl(ctx: Context[ServerSession, AppContext]) -> str:
         # Clear from context
         ctx.request_context.lifespan_context.mapdl = None
 
-        print("Disconnected successfully!", file=sys.stderr)
+        logger.info("Disconnected successfully!")
         return f"Successfully disconnected from MAPDL at {ip}:{port}"
 
     except Exception as e:
         error_msg = f"Error during disconnect: {str(e)}"
-        print(error_msg, file=sys.stderr)
+        logger.error(error_msg)
         # Still clear the reference even if disconnect failed
         ctx.request_context.lifespan_context.mapdl = None
         return error_msg
@@ -203,7 +205,7 @@ def list_mapdl_instances() -> str:
         including their names, status, gRPC ports, IP addresses, PIDs, and
         working directories.
     """
-    print("Searching for MAPDL instances using PyMAPDL CLI...", file=sys.stderr)
+    logger.info("Searching for MAPDL instances using PyMAPDL CLI...")
 
     from ansys.mapdl.mcp.helpers import list_instances
 

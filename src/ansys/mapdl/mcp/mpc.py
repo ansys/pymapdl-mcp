@@ -1,7 +1,6 @@
 """Example showing lifespan support for startup/shutdown with strong typing."""
 
 import logging
-import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -9,8 +8,7 @@ from typing import Any, Optional
 
 from mcp.server.fastmcp import FastMCP
 
-logging.basicConfig(level=logging.INFO)
-logging.info("Loading modules...")
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -42,21 +40,18 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     """
     context = AppContext()
     try:
-        print(
-            "MCP Server initialized. Use connect_to_mapdl to establish a connection.",
-            file=sys.stderr,
-        )
+        logger.info("MCP Server initialized. Use connect_to_mapdl to establish a connection.")
         yield context
 
     finally:
         # Cleanup on shutdown
         if context.mapdl is not None:
             try:
-                print("Disconnecting from MAPDL...", file=sys.stderr)
+                logger.info("Disconnecting from MAPDL...")
                 context.mapdl.exit()
-                print("MAPDL disconnect complete", file=sys.stderr)
+                logger.info("MAPDL disconnect complete")
             except Exception as e:
-                print(f"Error during MAPDL disconnect: {e}", file=sys.stderr)
+                logger.error(f"Error during MAPDL disconnect: {e}")
 
 
 # Pass lifespan to server

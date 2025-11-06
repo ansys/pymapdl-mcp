@@ -161,8 +161,8 @@ class TestConnectToMapdl:
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is not None
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl == mock_mapdl
 
-    def test_connect_stderr_logging(self, mock_context_no_mapdl, capsys):
-        """Test that connect_to_mapdl logs to stderr."""
+    def test_connect_stderr_logging(self, mock_context_no_mapdl, caplog):
+        """Test that connect_to_mapdl logs messages."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
         mock_mapdl._ip = "localhost"
@@ -171,12 +171,9 @@ class TestConnectToMapdl:
         with patch("ansys.mapdl.mcp.tools.Mapdl", return_value=mock_mapdl):
             connect_to_mapdl(mock_context_no_mapdl)
 
-            # Capture stderr output
-            captured = capsys.readouterr()
-
             # Verify logging messages
-            assert "Connecting to MAPDL instance at localhost:50052" in captured.err
-            assert "Connected to MAPDL successfully" in captured.err
+            assert "Connecting to MAPDL instance at localhost:50052" in caplog.text
+            assert "Connected to MAPDL successfully" in caplog.text
 
 
 @pytest.mark.unit
@@ -259,19 +256,16 @@ class TestDisconnectFromMapdl:
         # Context should still be cleared
         assert mock_context.request_context.lifespan_context.mapdl is None
 
-    def test_disconnect_stderr_logging(self, mock_context, capsys):
-        """Test that disconnect_from_mapdl logs to stderr."""
+    def test_disconnect_stderr_logging(self, mock_context, caplog):
+        """Test that disconnect_from_mapdl logs messages."""
         mock_context.request_context.lifespan_context.mapdl._ip = "localhost"
         mock_context.request_context.lifespan_context.mapdl._port = 50052
 
         disconnect_from_mapdl(mock_context)
 
-        # Capture stderr output
-        captured = capsys.readouterr()
-
         # Verify logging messages
-        assert "Disconnecting from MAPDL at localhost:50052" in captured.err
-        assert "Disconnected successfully" in captured.err
+        assert "Disconnecting from MAPDL at localhost:50052" in caplog.text
+        assert "Disconnected successfully" in caplog.text
 
     def test_disconnect_custom_ip_port(self, mock_context):
         """Test disconnecting from MAPDL with custom IP and port."""
