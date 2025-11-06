@@ -26,9 +26,12 @@ class TestCheckMapdlStatus:
 
     def test_check_status_without_mapdl(self, mock_context_no_mapdl):
         """Test checking MAPDL status when MAPDL is not available."""
-        with pytest.raises(AttributeError):
-            # Should raise AttributeError when trying to access version on None
-            check_mapdl_status(mock_context_no_mapdl)
+        result = check_mapdl_status(mock_context_no_mapdl)
+
+        # Should return helpful error message instead of raising exception
+        assert isinstance(result, str)
+        assert "No MAPDL connection available" in result
+        assert "connect_to_mapdl" in result
 
 
 @pytest.mark.unit
@@ -65,8 +68,12 @@ class TestWriteComment:
 
     def test_write_comment_without_mapdl(self, mock_context_no_mapdl):
         """Test writing a comment when MAPDL is not available."""
-        with pytest.raises(AttributeError):
-            write_comment(mock_context_no_mapdl, "Test comment")
+        result = write_comment(mock_context_no_mapdl, "Test comment")
+
+        # Should return helpful error message instead of raising exception
+        assert isinstance(result, str)
+        assert "No MAPDL connection available" in result
+        assert "connect_to_mapdl" in result
 
 
 @pytest.mark.unit
@@ -94,8 +101,12 @@ class TestRunMapdlCommand:
 
     def test_run_command_without_mapdl(self, mock_context_no_mapdl):
         """Test running a command when MAPDL is not available."""
-        with pytest.raises(AttributeError):
-            run_mapdl_command(mock_context_no_mapdl, "/PREP7")
+        result = run_mapdl_command(mock_context_no_mapdl, "/PREP7")
+
+        # Should return helpful error message instead of raising exception
+        assert isinstance(result, str)
+        assert "No MAPDL connection available" in result
+        assert "connect_to_mapdl" in result
 
     def test_run_multiple_commands(self, mock_context):
         """Test running multiple MAPDL commands sequentially."""
