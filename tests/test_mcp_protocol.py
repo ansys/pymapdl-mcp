@@ -32,9 +32,14 @@ class TestMCPProtocol:
     async def test_server_tools_registered(self):
         """Test that all tools are properly registered."""
         # Tools should be accessible through the MCP server
-        from ansys.mapdl.mcp import check_mapdl_status, run_mapdl_command, write_comment
+        from ansys.mapdl.mcp import (
+            check_mapdl_status,
+            launch_mapdl,
+            run_mapdl_command,
+            write_comment,
+        )
 
-        tools = [check_mapdl_status, run_mapdl_command, write_comment]
+        tools = [check_mapdl_status, launch_mapdl, run_mapdl_command, write_comment]
 
         for tool in tools:
             assert callable(tool)
@@ -42,9 +47,15 @@ class TestMCPProtocol:
 
     def test_tool_names(self):
         """Test that tools have correct names."""
-        from ansys.mapdl.mcp import check_mapdl_status, run_mapdl_command, write_comment
+        from ansys.mapdl.mcp import (
+            check_mapdl_status,
+            launch_mapdl,
+            run_mapdl_command,
+            write_comment,
+        )
 
         assert check_mapdl_status.__name__ == "check_mapdl_status"
+        assert launch_mapdl.__name__ == "launch_mapdl"
         assert run_mapdl_command.__name__ == "run_mapdl_command"
         assert write_comment.__name__ == "write_comment"
 
@@ -52,11 +63,24 @@ class TestMCPProtocol:
         """Test that tools have correct signatures."""
         import inspect
 
-        from ansys.mapdl.mcp import check_mapdl_status, run_mapdl_command, write_comment
+        from ansys.mapdl.mcp import (
+            check_mapdl_status,
+            launch_mapdl,
+            run_mapdl_command,
+            write_comment,
+        )
 
         # check_mapdl_status should take ctx parameter
         sig = inspect.signature(check_mapdl_status)
         assert "ctx" in sig.parameters
+
+        # launch_mapdl should take ctx and optional parameters
+        sig = inspect.signature(launch_mapdl)
+        assert "ctx" in sig.parameters
+        assert "exec_file" in sig.parameters
+        assert "run_location" in sig.parameters
+        assert "nproc" in sig.parameters
+        assert "additional_switches" in sig.parameters
 
         # write_comment should take ctx and comment parameters
         sig = inspect.signature(write_comment)
