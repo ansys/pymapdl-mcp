@@ -66,7 +66,7 @@ Repository = "https://github.com/ansys/pymapdl-mcp"
 Issues = "https://github.com/ansys/pymapdl-mcp/issues"
 
 [project.scripts]
-ansys-mapdl-mcp = "ansys.mapdl.mcp.mpc:main"
+ansys-mapdl-mcp = "ansys.mapdl.mcp.__main__:main"
 
 [tool.flit.module]
 name = "ansys.mapdl.mcp"
