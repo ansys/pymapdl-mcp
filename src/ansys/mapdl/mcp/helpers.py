@@ -143,7 +143,10 @@ def list_instances(
             proc_line.append(" ".join(each_p.cmdline()))
 
         if location:
-            proc_line.append(each_p.cwd())
+            try:
+                proc_line.append(each_p.cwd())
+            except (psutil.NoSuchProcess, psutil.ZombieProcess, psutil.AccessDenied):
+                proc_line.append("N/A")
 
         table.append(proc_line)
 
