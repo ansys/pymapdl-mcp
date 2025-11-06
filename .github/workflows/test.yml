@@ -126,7 +126,12 @@ jobs:
 
       - name: Start MAPDL container
         run: |
-          docker run --name mapdl -d -p ${{ env.PYMAPDL_PORT }}:50052 --env ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} --env ANSYS_LOCK='OFF' --env ANS_BYPASS_CHECK_NUM_PROCESSES=1 ${{ env.MAPDL_IMAGE }} &> mapdl_launch.log
+          docker run --name mapdl -d \
+            -p ${{ env.PYMAPDL_PORT }}:50052 \
+            --env ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} \
+            --env ANSYS_LOCK='OFF' \
+            --env ANS_BYPASS_CHECK_NUM_PROCESSES=1 \
+            ${{ env.MAPDL_IMAGE }} &> mapdl_launch.log
 
       # - name: Wait for MAPDL to be ready
       #   run: |
