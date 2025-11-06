@@ -128,13 +128,14 @@ jobs:
         run: |
           docker run --name mapdl -d \
             -p ${{ env.PYMAPDL_PORT }}:50052 \
+            --entrypoint /bin/bash \
             --env ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} \
             --env ANSYS_LOCK='OFF' \
             --env ANS_BYPASS_CHECK_NUM_PROCESSES=1 \
             --env ANSYS_MAPDL_GRPC_TRANSPORT=insecure \
             --shm-size=2gb \
             ${{ env.MAPDL_IMAGE }} \
-            -grpc -smp &> mapdl_launch.log
+            ansys -grpc -smp -np 2 &> mapdl_launch.log
 
       - name: Wait for MAPDL to be ready
         run: |
