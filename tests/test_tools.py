@@ -181,15 +181,12 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
             assert "50053" in result
             assert "50054" in result
 
-    def test_list_instances_stderr_logging(self, capsys):
-        """Test that list_mapdl_instances logs to stderr."""
+    def test_list_instances_stderr_logging(self, caplog):
+        """Test that list_mapdl_instances logs messages."""
         mock_output = "Sample output"
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
             result = list_mapdl_instances()
 
-            # Capture stderr output
-            captured = capsys.readouterr()
-
-            # Verify logging message is written to stderr
-            assert "Searching for MAPDL instances" in captured.err
+            # Verify logging messages
+            assert "Searching for MAPDL instances" in caplog.text
