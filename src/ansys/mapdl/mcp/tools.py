@@ -2,6 +2,8 @@
 
 import base64
 import logging
+import os
+import tempfile
 from pathlib import Path
 
 from ansys.mapdl.core import Mapdl
@@ -335,10 +337,16 @@ def screenshot(
     try:
         logger.info("Capturing MAPDL screenshot...")
 
-        # Capture screenshot - returns the file path
-        screenshot_path = mapdl.screenshot(savefig=True)  # type: ignore[union-attr]
+        # Create a temporary file with .png extension
+        temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix="mapdl_screenshot_")
 
-        # Read the image file and encode as base64
+        # Close the file descriptor as MAPDL will write to the path
+        os.close(temp_fd)
+
+        # Capture screenshot directly to the temporary location
+        screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
+
+        # Verify file was created
         image_path = Path(screenshot_path)
         if not image_path.exists():
             error_msg = f"Screenshot file not found: {screenshot_path}"
@@ -370,6 +378,11 @@ def screenshot(
         ]
 
     except Exception as e:
+        if (
+            "temp_path" in locals() and Path(temp_path).exists()
+        ):  # pyright: ignore[reportPossiblyUnboundVariable]
+            Path(temp_path).unlink()  # pyright: ignore[reportPossiblyUnboundVariable]
+
         error_msg = f"Failed to capture screenshot: {str(e)}"
         logger.error(error_msg)
         return [TextContent(type="text", text=error_msg)]
