@@ -163,7 +163,7 @@ jobs:
           pytest -m integration -v --tb=short
 
       - name: Collect MAPDL logs on failure
-        if: failure()
+        # if: failure()
         run: |
           echo "=== Log file"
           cat mapdl_launch.log
