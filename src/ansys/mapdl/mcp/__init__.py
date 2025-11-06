@@ -9,11 +9,13 @@ __version__ = "0.1.0"
 from ansys.mapdl.mcp.mpc import (
     AppContext,
     app_lifespan,
+    mcp,
+)
+from ansys.mapdl.mcp.tools import (
     check_mapdl_status,
     connect_to_mapdl,
     disconnect_from_mapdl,
     list_mapdl_instances,
-    mcp,
     run_mapdl_command,
     write_comment,
 )
