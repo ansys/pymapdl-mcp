@@ -5,49 +5,132 @@ A Model Context Protocol (MCP) server that provides AI assistants with the abili
 ## Overview
 
 This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing you to:
+- Discover and list running MAPDL instances on your system
+- Connect to and disconnect from MAPDL instances dynamically
 - Execute MAPDL commands through natural language
-- Check MAPDL instance status
-- Write comments and run preprocessing commands
-- Interact with MAPDL running locally or in Docker containers
+- Check MAPDL instance status and version information
+- Write comments and run custom commands
 
 ## Features
 
-- **Lifespan Management**: Automatic connection and disconnection from MAPDL instances
-- **Docker Support**: Connects to MAPDL instances running in Docker containers
+- **Dynamic Connection Management**: Connect to and disconnect from MAPDL instances on demand
+- **Instance Discovery**: Automatically discover running MAPDL instances on your system
+- **Flexible Deployment**: Supports MAPDL running locally, remotely, or in Docker containers
 - **Type-Safe Context**: Strongly typed application context for reliable operations
-- **Multiple Tools**: Pre-built tools for common MAPDL operations
-- **Error Handling**: Graceful fallback and comprehensive error reporting
+- **Comprehensive Tools**: Six specialized tools for MAPDL interaction
+
+## Prerequisites
+- Python 3.10 or higher
+- Ansys MAPDL installation (optional - can connect to remote instances)
+- PyMAPDL library (ansys-mapdl-core >= 0.68.0)
+- MCP library (mcp >= 0.1.0)
 
 ## Quick Start
 
-```bash
-# 1. Make sure you have MAPDL
-/ansys_inc/vxXX/ansys/bin/ansysXXX -grpc
+The quickest way to run the MCP server is to use [`uv`](https://docs.astral.sh/uv/) in your desired software:
 
-# 2. Install the package
-pip install -e .
+### VS Code integration
+You should add the following to your `.vscode/mcp.json` file in your project directory:
 
-# 3. Run the MCP server
-ansys-mapdl-mcp
+```json
+{
+	"servers": {
+		"pymapdl": {
+			"type": "stdio",
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/ansys/pymapdl-mcp", "ansys.mapdl.mcp.mcp"]
+		}
+	}
+}
 ```
+
+For more information visit [Use MCP servers in VS Code](https://code.visualstudio.com/docs/copilot/customization/mcp-servers). In this page, you can find information about adding an MCP server globaly to the user.
+
+### Claude Desktop
+
+Edit the file `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "pymapdl": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/ansys/pymapdl-mcp", "ansys-mapdl-mcp"]
+    }
+  }
+}
+```
+
+For more information, visit [Testing your server with Claude for Desktop](https://modelcontextprotocol.io/docs/develop/build-server#testing-your-server-with-claude-for-desktop).
+
+
+### Claude Code
+
+You can add PyMAPDL-MCP server to the project in an specific directory with the following commands:
+
+```bash
+cd my-project
+claude mcp add --transport stdio pymapdl -- uvx --from git+https://github.com/ansys/pymapdl-mcp ansys-mapdl-mcp
+```
+
+If you want to add the MCP-server globally on your user, use the following command:
+
+```bash
+claude mcp add --transport stdio --scope user pymapdl -- uvx --from git+https://github.com/ansys/pymapdl-mcp ansys-mapdl-mcp
+```
+
+For more information, visit [Claude Code Docs-Installing MCP servers](https://code.claude.com/docs/en/mcp#installing-mcp-servers)
+
+## Usage
+
+### Starting the MCP Server
+
+Use the `connect_to_mapdl` tool to establish connections dynamically:
+
+Through your AI assistant:
+
+> "Connect to MAPDL on localhost port 50052"
+
+or
+
+> "Connect to MAPDL on 192.168.1.100 port 50053"
+
+This flexible approach allows you to:
+- Connect to different MAPDL instances during a session
+- Discover available instances using `list_mapdl_instances` before connecting
+- Work with multiple MAPDL servers without restarting the MCP server.
+
+By default, the server connects to MAPDL on `localhost:50052`.
+
+## Run commands
+Use `run_mapdl_command` tool to run MAPDL commands. For instance:
+
+> Run `VPLOT` on the MAPDL instance.
+
 
 ## Available Tools
 
-### `check_mapdl_status`
-Check the status and version of the connected MAPDL instance.
+### `list_mapdl_instances`
+Discover all MAPDL instances running on the local machine.
 
-**Returns**: MAPDL version information
+**Returns**: Formatted table with instance information including names, status, gRPC ports, IP addresses, PIDs, and working directories
 
-### `say_hi`
-Test tool that executes the `prep7` preprocessor command.
-
-**Returns**: Result of the prep7 command execution
-
-### `write_comment`
-Write a comment in the MAPDL session.
+### `connect_to_mapdl`
+Connect to an existing MAPDL instance.
 
 **Parameters**:
-- `comment` (string): The comment text to write
+- `ip` (string, optional): IP address where MAPDL is running. Default: "localhost"
+- `port` (int, optional): gRPC port where MAPDL is listening. Default: 50052
+
+**Returns**: Connection status with MAPDL version information
+
+### `disconnect_from_mapdl`
+Disconnect from the currently connected MAPDL instance.
+
+**Returns**: Disconnection status message
+
+### `check_mapdl_status`
+Check the status and version of the connected MAPDL instance.
 
 **Returns**: Confirmation of comment execution
 
@@ -59,16 +142,9 @@ Execute arbitrary MAPDL commands.
 
 **Returns**: Command execution result
 
-## Prerequisites
 
-- Python 3.10 or higher
-- Ansys MAPDL installation (local or Docker)
-- PyMAPDL library
-- FastMCP library
-
-## Installation
-
-### From Source
+## Development
+### Installation From Source
 
 1. Clone the repository:
 ```bash
@@ -105,81 +181,119 @@ pre-commit install
 
 This will automatically run code quality checks (black, isort, flake8, mypy, etc.) before each commit.
 
-## Usage
-
-### Starting the MCP Server
-
-After installation, you can run the server in multiple ways:
-
-**Option 1: Using the installed console script (recommended):**
-```bash
-ansys-mapdl-mcp
-```
-
-**Option 2: Using Python module execution:**
-```bash
-python -m ansys.mapdl.mcp.mpc
-```
-
-**Option 3: Direct script execution:**
-```bash
-python src/ansys/mapdl/mcp/mpc.py
-```
-
-### Configuration
-
-By default, the server connects to MAPDL on `localhost:50052`. To modify the connection settings, edit the `app_lifespan` function in `src/ansys/mapdl/mcp/mpc.py`:
-
-```python
-mapdl = Mapdl(
-    start_instance=False,
-    ip="localhost",        # Change to your MAPDL host
-    port=50052,           # Change to your MAPDL port
-    cleanup_on_exit=False,
-    loglevel="DEBUG",
-    log_apdl="/path/to/your/mapdl.log"
-)
-```
-
 ### Integrating with AI Assistants
 
 This MCP server can be integrated with MCP-compatible AI assistants (like Claude Desktop, etc.). Add the server configuration to your MCP settings file:
 
-**Using the installed package (recommended):**
+
+#### From PyPI (Coming Soon)
+
+> **⚠️ Note:** The PyPI installation method described below is not yet available. This package has not been published to PyPI. For now, use the development installation methods shown in the sections below.
+
+Once published to PyPI, you'll be able to run the server directly using `uvx`:
+
+<details>
+<summary><b>VS Code integration</b></summary>
+
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "pymapdl": {
-      "command": "ansys-mapdl-mcp"
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["ansys-mapdl-mcp"]
     }
   }
 }
 ```
 
-**Using Python module execution:**
+</details>
+
+
+<details>
+<summary><b>Other tools like Claude Code</b></summary>
+
 ```json
 {
   "mcpServers": {
     "pymapdl": {
-      "command": "python",
-      "args": ["-m", "ansys.mapdl.mcp.mpc"]
+      "command": "uvx",
+      "args": ["ansys-mapdl-mcp"]
     }
   }
 }
 ```
 
-**Using direct script execution (development):**
+</details>
+
+#### From local installation
+
+If you are doing development, you can use the server as it is in the GitHub repository.
+To do that, you should clone to a directory.
+
+<details>
+<summary><b>VS Code integration</b></summary>
+
+You should add the following to your `.vscode/mcp.json` file:
+
+```json
+{
+  "servers": {
+    "pymapdl": {
+      "type": "stdio",
+      "command": "./.venv/bin/python",
+      "args": ["-m", "ansys.mapdl.mcp"]
+		}
+	}
+}
+```
+
+If you prefer `uv`:
+
+```json
+{
+  "servers": {
+    "pymapdl": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "python", "-m", "ansys.mapdl.mcp"]
+    }
+  }
+}
+```
+
+</details>
+
+
+<details>
+<summary><b>Other tools like Claude Code</b></summary>
+
 ```json
 {
   "mcpServers": {
     "pymapdl": {
       "command": "/path/to/venv/python",
-      "args": ["-m", "ansys.mapdl.mcp.mpc"],
+      "args": ["-m", "ansys.mapdl.mcp"],
     }
   }
 }
 ```
 The Python virtual environment should have `pymapdl-mcp` installed.
+
+Or if you prefer `uv`:
+```json
+{
+  "mcpServers": {
+    "pymapdl": {
+      "command": "uv",
+      "args": ["run", "--directory", "/path/to/pymapdl-mcp-2", "python", "-m", "ansys.mapdl.mcp"]
+    }
+  }
+}
+```
+
+</details>
+
 
 ## Testing
 
@@ -208,22 +322,24 @@ The test suite is organized into focused test modules:
 
 - **conftest.py** - Pytest configuration and shared fixtures (mock MAPDL, contexts)
 - **test_basic.py** - Package basics (version, imports, exports, AppContext)
-- **test_tools.py** - MCP tools functionality (12 tests)
+- **test_tools.py** - MCP tools functionality
   - check_mapdl_status tool
   - write_comment tool
   - run_mapdl_command tool
-- **test_error_handling.py** - Error scenarios (7 tests)
+- **test_connection_tools.py** - Connection management tools
+  - connect_to_mapdl tool
+  - disconnect_from_mapdl tool
+  - list_mapdl_instances tool
+- **test_integration.py** - MAPDL integration tests
+- **test_error_handling.py** - Error scenarios
   - Command failures, timeouts, invalid inputs
-- **test_lifespan.py** - Server lifespan management (5 tests)
-- **test_mcp_protocol.py** - MCP protocol compliance (6 tests)
-- **test_main.py** - Entry point functionality (3 tests)
-- **test_integration.py** - Integration tests with real MAPDL (4 tests)
-  - Requires MAPDL on localhost:50052
-  - Automatically skipped if unavailable
+- **test_lifespan.py** - Server lifespan management
+- **test_mcp_protocol.py** - MCP protocol compliance
+- **test_main.py** - Entry point functionality
 
 ### Coverage
 
-Current test coverage: **66%**
+Current test coverage: **70%**
 - Full coverage on package initialization
 - Comprehensive coverage on tool functions
 - Integration tests validate real-world usage
@@ -245,57 +361,6 @@ pytest --cov=ansys.mapdl.mcp --cov-report=html
 pytest tests/test_tools.py::TestWriteComment::test_write_comment_success
 ```
 
-## Development
-
-### Quick Start for Developers
-
-1. **Clone and setup**
-```bash
-git clone https://github.com/ansys/pymapdl-mcp.git
-cd pymapdl-mcp
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -e ".[dev]"
-```
-
-2. **Install pre-commit hooks** (important!)
-```bash
-pre-commit install
-```
-
-3. **Make changes and test**
-```bash
-# Edit code...
-pytest -m "not integration"  # Run tests
-```
-
-4. **Commit** (pre-commit hooks run automatically)
-```bash
-git add .
-git commit -m "feat: your feature description"
-```
-
-### Code Quality
-
-## CI/CD
-
-GitHub Actions automatically run on pull requests and pushes:
-
-### Test Job
-- **Platforms**: Ubuntu, Windows (macOS only on tags)
-- **Python versions**: 3.10, 3.11, 3.12
-- **Coverage**: Unit tests with coverage reporting
-
-### Lint Job
-- Black formatting check
-- isort import sorting check
-- mypy type checking
-
-### Integration Job
-- Integration tests (gracefully skips if MAPDL unavailable)
-
-See `.github/workflows/test.yml` for full configuration.
-
 ## Contributing
 
 Contributions are welcome! Please:
@@ -313,20 +378,6 @@ Contributions are welcome! Please:
 The pre-commit hooks and CI will ensure code quality. If hooks fail, review the changes, stage them with `git add .`, and commit again.
 pre-commit run --all-files
 
-# Run specific checks
-black src tests
-isort src tests
-mypy src/ansys/mapdl/mcp
-```
-
-### Package Structure
-
-The package follows the Ansys namespace convention (`ansys.mapdl.mcp`) and is configured using modern Python packaging standards with `pyproject.toml`.
-```bash
-python test_stdio.py
-```
-Tests the stdio communication protocol.
-
 ## Project Structure
 
 ```
@@ -338,14 +389,18 @@ pymapdl-mcp/
 │   └── ansys/
 │       └── mapdl/
 │           └── mcp/
-│               ├── __init__.py         # Package initialization
-│               ├── mpc.py              # Main MCP server implementation
+│               ├── __init__.py         # Package initialization & exports
+│               ├── mpc.py              # Main MCP server & lifecycle management
+│               ├── tools.py            # MCP tool implementations
+│               ├── helpers.py          # Helper functions (instance discovery)
+│               ├── prompts.py          # MCP prompts (future use)
 │               └── py.typed            # PEP 561 type marker
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py                     # Pytest fixtures and configuration
 │   ├── test_basic.py                   # Basic package tests
-│   ├── test_tools.py                   # MCP tools tests
+│   ├── test_tools.py                   # Core MCP tools tests
+│   ├── test_connection_tools.py        # Connection management tests
 │   ├── test_error_handling.py          # Error handling tests
 │   ├── test_lifespan.py                # Lifespan management tests
 │   ├── test_mcp_protocol.py            # MCP protocol tests
@@ -365,15 +420,6 @@ The server uses the FastMCP framework with lifespan management:
 2. **Runtime**: Exposes tools for MAPDL interaction
 3. **Shutdown**: Gracefully disconnects from MAPDL
 
-The `AppContext` dataclass maintains the MAPDL connection throughout the server's lifecycle, ensuring type-safe access to MAPDL functionality.
-
-
-## Development
-
-### Package Structure
-
-The package follows the Ansys namespace convention (`ansys.mapdl.mcp`) and is configured using modern Python packaging standards with `pyproject.toml`.
-
 ### Adding New Tools
 
 To add new MAPDL tools, edit `src/ansys/mapdl/mcp/mpc.py` and use the `@mcp.tool()` decorator:
@@ -390,28 +436,6 @@ def your_new_tool(ctx: Context[ServerSession, AppContext], param: str) -> str:
     return f"Result: {result}"
 ```
 
-### Building the Package
-
-To build distribution packages:
-```bash
-pip install build
-python -m build
-```
-
-This creates both wheel and source distributions in the `dist/` directory.
-
-## Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Install development dependencies: `pip install -e ".[dev]"`
-4. Make your changes
-5. Format code with `black` and `isort`
-6. Add tests for new functionality
-7. Run tests to ensure everything works
-8. Submit a pull request
 
 ## License
 
