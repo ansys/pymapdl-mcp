@@ -7,7 +7,7 @@ name = "ansys-mapdl-mcp"
 version = "0.0.1"
 description = "Model Context Protocol (MCP) server for Ansys MAPDL through PyMAPDL"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10,<3.14"
 license = { file = "LICENSE" }
 authors = [
     { name = "ANSYS, Inc.", email = "pyansys.core@ansys.com" }
