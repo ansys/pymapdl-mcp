@@ -46,7 +46,7 @@ You should add the following to your `.vscode/mcp.json` file in your project dir
 
 For more information visit [Use MCP servers in VS Code](https://code.visualstudio.com/docs/copilot/customization/mcp-servers). In this page, you can find information about adding an MCP server globaly to the user.
 
-### Claude Code
+### Claude Desktop
 
 Edit the file `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
@@ -55,7 +55,7 @@ Edit the file `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "pymapdl": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/ansys/pymapdl-mcp", "ansys.mapdl.mcp.mcp"]
+      "args": ["--from", "git+https://github.com/ansys/pymapdl-mcp", "ansys-mapdl-mcp"]
     }
   }
 }
@@ -63,6 +63,21 @@ Edit the file `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 For more information, visit [Testing your server with Claude for Desktop](https://modelcontextprotocol.io/docs/develop/build-server#testing-your-server-with-claude-for-desktop).
 
+
+### Claude Code
+
+You can add PyMAPDL-MCP server to the project in an specific directory with the following commands:
+
+```bash
+cd my-project
+claude mcp add --transport stdio pymapdl -- uvx --from git+https://github.com/ansys/pymapdl-mcp ansys-mapdl-mcp
+```
+
+If you want to add the MCP-server globally on your user, use the following command:
+
+```bash
+claude mcp add --transport stdio --scope user pymapdl -- uvx --from git+https://github.com/ansys/pymapdl-mcp ansys-mapdl-mcp
+```
 
 ## Usage
 
