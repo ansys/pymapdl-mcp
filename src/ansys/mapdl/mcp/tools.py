@@ -86,6 +86,87 @@ def run_mapdl_command(ctx: Context[ServerSession, AppContext], cmd: str) -> str:
 
 
 @mcp.tool()
+def launch_mapdl(
+    ctx: Context[ServerSession, AppContext],
+    exec_file: str | None = None,
+    run_location: str | None = None,
+    nproc: int = 2,
+    additional_switches: str = "",
+) -> str:
+    """Launch a new MAPDL instance.
+
+    This tool starts a new MAPDL instance using PyMAPDL's launch_mapdl function.
+    The launched instance will be automatically connected and stored in the context
+    for subsequent operations. The instance can be closed using the disconnect_from_mapdl tool.
+
+    Parameters
+    ----------
+    ctx : Context[ServerSession, AppContext]
+        The MCP context containing server session and application context.
+    exec_file : str, optional
+        The path to the MAPDL executable. If None, PyMAPDL will attempt to find
+        the MAPDL executable automatically.
+    run_location : str, optional
+        The directory where MAPDL will run and store files. If None, a temporary
+        directory will be created.
+    nproc : int, optional
+        Number of processors to use. Default is 2.
+    additional_switches : str, optional
+        Additional command line switches to pass to MAPDL. Default is empty string.
+
+    Returns
+    -------
+    str
+        Launch status message with MAPDL version and connection information.
+    """
+    from ansys.mapdl.core import launch_mapdl
+
+    logger.info("Launching new MAPDL instance...")
+
+    try:
+        # Check if there's already a connection
+        if ctx.request_context.lifespan_context.mapdl is not None:
+            return (
+                f"Already connected to MAPDL at "
+                f"{ctx.request_context.lifespan_context.mapdl._ip}:"
+                f"{ctx.request_context.lifespan_context.mapdl._port}. "
+                f"Please disconnect first using disconnect_from_mapdl tool."
+            )
+
+        # Launch new MAPDL instance
+        kwargs = {
+            "nproc": nproc,
+            "loglevel": "INFO",
+        }
+
+        if exec_file is not None:
+            kwargs["exec_file"] = exec_file
+
+        if run_location is not None:
+            kwargs["run_location"] = run_location
+
+        if additional_switches:
+            kwargs["additional_switches"] = additional_switches
+
+        mapdl = launch_mapdl(**kwargs)
+
+        # Store in context for later use
+        ctx.request_context.lifespan_context.mapdl = mapdl
+
+        logger.info(f"MAPDL launched successfully at {mapdl.ip}:{mapdl.port}!")
+        return (
+            f"Successfully launched MAPDL at {mapdl.ip}:{mapdl.port}\n"
+            f"MAPDL Version: {mapdl.version}\n"
+            f"Working Directory: {mapdl.directory}\n"
+        )
+
+    except Exception as e:
+        error_msg = f"Failed to launch MAPDL: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
+@mcp.tool()
 def connect_to_mapdl(
     ctx: Context[ServerSession, AppContext], port: int = 50052, ip: str = "localhost"
 ) -> str:
