@@ -27,7 +27,7 @@ This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing 
 
 ## Quick Start
 
-The quickest way to run the MCP server is to use `uvx` in your desired software:
+The quickest way to run the MCP server is to use [`uv`](https://docs.astral.sh/uv/) in your desired software:
 
 ### VS Code integration
 You should add the following to your `.vscode/mcp.json` file in your project directory:
@@ -78,6 +78,8 @@ If you want to add the MCP-server globally on your user, use the following comma
 ```bash
 claude mcp add --transport stdio --scope user pymapdl -- uvx --from git+https://github.com/ansys/pymapdl-mcp ansys-mapdl-mcp
 ```
+
+For more information, visit [Claude Code Docs-Installing MCP servers](https://code.claude.com/docs/en/mcp#installing-mcp-servers)
 
 ## Usage
 
