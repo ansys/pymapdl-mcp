@@ -12,7 +12,7 @@ from ansys.mapdl.mcp import (
     run_mapdl_command,
     write_comment,
 )
-from ansys.mapdl.mcp.tools import launch_mapdl
+from ansys.mapdl.mcp.tools import launch_mapdl, screenshot
 
 
 @pytest.mark.unit
@@ -862,3 +862,374 @@ class TestLaunchWorkflow:
         launch_result = launch_mapdl(mock_context_no_mapdl)
         assert "Already connected to MAPDL" in launch_result
         assert "disconnect first" in launch_result
+
+
+@pytest.mark.unit
+class TestScreenshot:
+    """Tests for screenshot tool."""
+
+    def test_screenshot_success_png(self, mock_context, tmp_path):
+        """Test capturing a screenshot successfully with PNG format."""
+        from mcp.types import ImageContent, TextContent
+
+        # Create a fake PNG image file
+        screenshot_path = tmp_path / "screenshot.png"
+        fake_image_data = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
+        screenshot_path.write_bytes(fake_image_data)
+
+        # Mock MAPDL screenshot method
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        result = screenshot(mock_context)
+
+        # Verify result is a list
+        assert isinstance(result, list)
+        assert len(result) == 2
+
+        # Verify text content
+        text_content = result[0]
+        assert isinstance(text_content, TextContent)
+        assert text_content.type == "text"
+        assert "Screenshot saved to:" in text_content.text
+        assert str(screenshot_path) in text_content.text
+
+        # Verify image content
+        image_content = result[1]
+        assert isinstance(image_content, ImageContent)
+        assert image_content.type == "image"
+        assert image_content.mimeType == "image/png"
+        assert image_content.data is not None
+        assert len(image_content.data) > 0
+
+        # Verify base64 encoding is correct
+        import base64
+
+        decoded_data = base64.b64decode(image_content.data)
+        assert decoded_data == fake_image_data
+
+    def test_screenshot_success_jpeg(self, mock_context, tmp_path):
+        """Test capturing a screenshot with JPEG format."""
+        from mcp.types import ImageContent, TextContent
+
+        # Create a fake JPEG image file
+        screenshot_path = tmp_path / "screenshot.jpg"
+        fake_image_data = b"\xff\xd8\xff\xe0\x00\x10JFIF"
+        screenshot_path.write_bytes(fake_image_data)
+
+        # Mock MAPDL screenshot method
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        result = screenshot(mock_context)
+
+        # Verify result structure
+        assert isinstance(result, list)
+        assert len(result) == 2
+
+        # Verify MIME type is correct for JPEG
+        image_content = result[1]
+        assert isinstance(image_content, ImageContent)
+        assert image_content.mimeType == "image/jpeg"
+
+    def test_screenshot_success_jpeg_extension(self, mock_context, tmp_path):
+        """Test capturing a screenshot with .jpeg extension."""
+        from mcp.types import ImageContent
+
+        # Create a fake image file with .jpeg extension
+        screenshot_path = tmp_path / "screenshot.jpeg"
+        fake_image_data = b"\xff\xd8\xff\xe0\x00\x10JFIF"
+        screenshot_path.write_bytes(fake_image_data)
+
+        # Mock MAPDL screenshot method
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        result = screenshot(mock_context)
+
+        # Verify MIME type is correct for .jpeg extension
+        image_content = result[1]
+        assert isinstance(image_content, ImageContent)
+        assert image_content.mimeType == "image/jpeg"
+
+    def test_screenshot_success_bmp(self, mock_context, tmp_path):
+        """Test capturing a screenshot with BMP format."""
+        from mcp.types import ImageContent
+
+        # Create a fake BMP image file
+        screenshot_path = tmp_path / "screenshot.bmp"
+        fake_image_data = b"BM\x00\x00\x00\x00\x00\x00\x00\x00"
+        screenshot_path.write_bytes(fake_image_data)
+
+        # Mock MAPDL screenshot method
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        result = screenshot(mock_context)
+
+        # Verify MIME type is correct for BMP
+        image_content = result[1]
+        assert isinstance(image_content, ImageContent)
+        assert image_content.mimeType == "image/bmp"
+
+    def test_screenshot_success_gif(self, mock_context, tmp_path):
+        """Test capturing a screenshot with GIF format."""
+        from mcp.types import ImageContent
+
+        # Create a fake GIF image file
+        screenshot_path = tmp_path / "screenshot.gif"
+        fake_image_data = b"GIF89a\x00\x00\x00\x00"
+        screenshot_path.write_bytes(fake_image_data)
+
+        # Mock MAPDL screenshot method
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        result = screenshot(mock_context)
+
+        # Verify MIME type is correct for GIF
+        image_content = result[1]
+        assert isinstance(image_content, ImageContent)
+        assert image_content.mimeType == "image/gif"
+
+    def test_screenshot_without_mapdl(self, mock_context_no_mapdl):
+        """Test screenshot when MAPDL is not available."""
+        from mcp.types import TextContent
+
+        result = screenshot(mock_context_no_mapdl)
+
+        # Verify error message is returned
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        assert "No MAPDL connection available" in result[0].text
+        assert "connect_to_mapdl" in result[0].text
+
+    def test_screenshot_file_not_found(self, mock_context):
+        """Test screenshot when the generated file is not found."""
+        from mcp.types import TextContent
+
+        # Mock MAPDL screenshot to return a non-existent path
+        nonexistent_path = "/tmp/nonexistent_screenshot.png"
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = (
+            nonexistent_path
+        )
+
+        result = screenshot(mock_context)
+
+        # Verify error message is returned
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        assert "Screenshot file not found" in result[0].text
+        assert nonexistent_path in result[0].text
+
+    def test_screenshot_mapdl_error(self, mock_context):
+        """Test screenshot when MAPDL raises an error."""
+        from mcp.types import TextContent
+
+        # Mock MAPDL screenshot to raise an exception
+        mock_context.request_context.lifespan_context.mapdl.screenshot.side_effect = Exception(
+            "Graphics window not available"
+        )
+
+        result = screenshot(mock_context)
+
+        # Verify error message is returned
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        assert "Failed to capture screenshot" in result[0].text
+        assert "Graphics window not available" in result[0].text
+
+    def test_screenshot_permission_error(self, mock_context, tmp_path):
+        """Test screenshot when file cannot be read due to permissions."""
+        from mcp.types import TextContent
+
+        # Create a screenshot file
+        screenshot_path = tmp_path / "screenshot.png"
+        screenshot_path.write_bytes(b"fake image data")
+
+        # Mock MAPDL screenshot method
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        # Mock the file open to raise PermissionError
+        with patch("builtins.open", side_effect=PermissionError("Permission denied")):
+            result = screenshot(mock_context)
+
+            # Verify error message is returned
+            assert isinstance(result, list)
+            assert len(result) == 1
+            assert isinstance(result[0], TextContent)
+            assert "Failed to capture screenshot" in result[0].text
+            assert "Permission denied" in result[0].text
+
+    def test_screenshot_base64_encoding(self, mock_context, tmp_path):
+        """Test that screenshot data is properly base64 encoded."""
+        import base64
+
+        from mcp.types import ImageContent
+
+        # Create a fake image with known content
+        screenshot_path = tmp_path / "screenshot.png"
+        original_data = b"This is test image data with special chars: \x00\x01\x02\xff"
+        screenshot_path.write_bytes(original_data)
+
+        # Mock MAPDL screenshot method
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        result = screenshot(mock_context)
+
+        # Get the image content
+        image_content = result[1]
+        assert isinstance(image_content, ImageContent)
+
+        # Verify base64 encoding
+        decoded_data = base64.b64decode(image_content.data)
+        assert decoded_data == original_data
+
+    def test_screenshot_large_image(self, mock_context, tmp_path):
+        """Test screenshot with a large image file."""
+        from mcp.types import ImageContent
+
+        # Create a larger fake image (1MB)
+        screenshot_path = tmp_path / "screenshot.png"
+        large_image_data = b"\x89PNG" + b"\x00" * (1024 * 1024)
+        screenshot_path.write_bytes(large_image_data)
+
+        # Mock MAPDL screenshot method
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        result = screenshot(mock_context)
+
+        # Verify screenshot succeeds with large file
+        assert isinstance(result, list)
+        assert len(result) == 2
+        image_content = result[1]
+        assert isinstance(image_content, ImageContent)
+        assert len(image_content.data) > 0
+
+    def test_screenshot_empty_file(self, mock_context, tmp_path):
+        """Test screenshot with an empty file."""
+        from mcp.types import ImageContent
+
+        # Create an empty file
+        screenshot_path = tmp_path / "screenshot.png"
+        screenshot_path.write_bytes(b"")
+
+        # Mock MAPDL screenshot method
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        result = screenshot(mock_context)
+
+        # Verify screenshot handles empty file
+        assert isinstance(result, list)
+        assert len(result) == 2
+        image_content = result[1]
+        assert isinstance(image_content, ImageContent)
+        # Empty file should produce empty base64 string
+        assert image_content.data == ""
+
+    def test_screenshot_calls_mapdl_method(self, mock_context, tmp_path):
+        """Test that screenshot actually calls MAPDL's screenshot method."""
+        # Create a fake image file
+        screenshot_path = tmp_path / "screenshot.png"
+        screenshot_path.write_bytes(b"fake image")
+
+        # Mock MAPDL screenshot method
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        screenshot(mock_context)
+
+        # Verify MAPDL's screenshot method was called
+        mock_context.request_context.lifespan_context.mapdl.screenshot.assert_called_once()
+
+    def test_screenshot_unknown_extension_defaults_to_png(self, mock_context, tmp_path):
+        """Test that unknown file extensions default to PNG MIME type."""
+        from mcp.types import ImageContent
+
+        # Create a file with unknown extension
+        screenshot_path = tmp_path / "screenshot.xyz"
+        screenshot_path.write_bytes(b"fake image data")
+
+        # Mock MAPDL screenshot method
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        result = screenshot(mock_context)
+
+        # Verify it defaults to PNG
+        image_content = result[1]
+        assert isinstance(image_content, ImageContent)
+        assert image_content.mimeType == "image/png"
+
+    def test_screenshot_case_insensitive_extension(self, mock_context, tmp_path):
+        """Test that file extension matching is case-insensitive."""
+        from mcp.types import ImageContent
+
+        # Create files with uppercase extensions
+        for ext, expected_mime in [
+            (".PNG", "image/png"),
+            (".JPG", "image/jpeg"),
+            (".JPEG", "image/jpeg"),
+            (".BMP", "image/bmp"),
+            (".GIF", "image/gif"),
+        ]:
+            screenshot_path = tmp_path / f"screenshot{ext}"
+            screenshot_path.write_bytes(b"fake image")
+
+            mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+                screenshot_path
+            )
+
+            result = screenshot(mock_context)
+            image_content = result[1]
+            assert isinstance(image_content, ImageContent)
+            assert image_content.mimeType == expected_mime
+
+    def test_screenshot_stderr_logging(self, mock_context, tmp_path, caplog):
+        """Test that screenshot logs messages."""
+        # Create a fake image file
+        screenshot_path = tmp_path / "screenshot.png"
+        screenshot_path.write_bytes(b"fake image")
+
+        # Mock MAPDL screenshot method
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        screenshot(mock_context)
+
+        # Verify logging messages
+        assert "Capturing MAPDL screenshot" in caplog.text
+        assert "Screenshot captured successfully" in caplog.text
+        assert str(screenshot_path) in caplog.text
+
+    def test_screenshot_error_logging(self, mock_context, caplog):
+        """Test that screenshot errors are logged."""
+        # Mock MAPDL screenshot to raise an exception
+        mock_context.request_context.lifespan_context.mapdl.screenshot.side_effect = Exception(
+            "Test error"
+        )
+
+        screenshot(mock_context)
+
+        # Verify error is logged
+        assert "Failed to capture screenshot" in caplog.text
+        assert "Test error" in caplog.text
