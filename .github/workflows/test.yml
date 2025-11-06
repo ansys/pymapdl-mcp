@@ -92,7 +92,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
     env:
-      MAPDL_IMAGE: "ghcr.io/ansys/mapdl:v25.2-ubuntu-cicd"
+      MAPDL_IMAGE: "ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd"
       PYMAPDL_PORT: 21000
 
     steps:
