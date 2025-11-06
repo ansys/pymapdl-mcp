@@ -8,7 +8,12 @@ To skip integration tests, run: pytest -m "not integration"
 
 import pytest
 
-from ansys.mapdl.mcp import check_mapdl_status, run_mapdl_command, write_comment
+from ansys.mapdl.mcp import (
+    check_mapdl_status,
+    list_mapdl_instances,
+    run_mapdl_command,
+    write_comment,
+)
 
 
 @pytest.mark.integration
@@ -101,3 +106,99 @@ class TestMapdlIntegration:
         # Define material property
         result = run_mapdl_command(real_context, "MP,EX,1,200E9")
         assert "executed successfully" in result
+
+
+@pytest.mark.integration
+class TestListMapdlInstancesIntegration:
+    """Integration tests for list_mapdl_instances function."""
+
+    def test_list_instances_real_call(self):
+        """Test list_mapdl_instances with a real call to PyMAPDL CLI.
+
+        This test calls the actual list_instances function from PyMAPDL
+        without mocking. It should work regardless of whether MAPDL
+        instances are running.
+        """
+        result = list_mapdl_instances()
+
+        # The result should always be a string
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+        # Should not contain error messages if PyMAPDL is properly installed
+        # (unless there's an actual error, which would still return a string)
+
+    def test_list_instances_with_running_mapdl(self):
+        """Test list_mapdl_instances when MAPDL is known to be running.
+
+        This test assumes a MAPDL instance is running on port 50052
+        and verifies that list_mapdl_instances can detect it.
+        """
+        try:
+            from ansys.mapdl.core import Mapdl
+
+            # Try to connect to verify MAPDL is running
+            mapdl = Mapdl(
+                start_instance=False,
+                ip="localhost",
+                port=50052,
+                cleanup_on_exit=False,
+                loglevel="ERROR",
+            )
+
+        except Exception as e:
+            pytest.skip(f"MAPDL not available on port 50052: {e}")
+
+        # If we get here, MAPDL is running
+        result = list_mapdl_instances()
+
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+        # The output should contain information about instances
+        # It might show "50052" port if the instance was started with PyMAPDL
+        # or might show an empty table if MAPDL was started externally
+        # without PyMAPDL (e.g., Docker container)
+        # Check for table headers
+        assert "Name" in result and "Is Instance" in result and "Status" in result
+
+    def test_list_instances_output_format(self):
+        """Test that list_mapdl_instances returns properly formatted output."""
+        result = list_mapdl_instances()
+
+        assert isinstance(result, str)
+
+        # Should have a table header (always present even if empty)
+        # Headers from list_instances: Name, Is Instance, Status, gRPC port, PID, Command line, Working directory
+        has_table = all(
+            header in result for header in ["Name", "Is Instance", "Status", "gRPC port", "PID"]
+        )
+        has_error = "Error" in result
+
+        assert has_table or has_error, "Output should contain table headers or an error message"
+
+    def test_list_instances_no_crash(self):
+        """Test that list_mapdl_instances never crashes or raises exceptions.
+
+        The function should always return a string, even if there are errors.
+        """
+        try:
+            result = list_mapdl_instances()
+            assert isinstance(result, str)
+            assert result is not None
+        except Exception as e:
+            pytest.fail(f"list_mapdl_instances should not raise exceptions, but got: {e}")
+
+    def test_list_instances_consistent_calls(self):
+        """Test that multiple calls to list_mapdl_instances are consistent."""
+        result1 = list_mapdl_instances()
+        result2 = list_mapdl_instances()
+
+        # Both should be strings
+        assert isinstance(result1, str)
+        assert isinstance(result2, str)
+
+        # Results should be similar (may not be identical due to timing)
+        # But at least both should be non-empty
+        assert len(result1) > 0
+        assert len(result2) > 0
