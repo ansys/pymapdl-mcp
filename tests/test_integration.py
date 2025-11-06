@@ -6,6 +6,8 @@ Run with: pytest -m integration
 To skip integration tests, run: pytest -m "not integration"
 """
 
+import os
+
 import pytest
 
 from ansys.mapdl.mcp import (
@@ -40,7 +42,11 @@ class TestMapdlIntegration:
             # Don't exit since MAPDL is running externally
 
         except Exception as e:
-            pytest.skip(f"MAPDL not available: {e}")
+            # Not allow to skip if running on CICD
+            if os.getenv("ON_CI", False):
+                raise e
+            else:
+                pytest.skip(f"MAPDL not available: {e}")
 
     @pytest.fixture
     def real_context(self, real_mapdl):
@@ -138,7 +144,11 @@ class TestListMapdlInstancesIntegration:
             )
 
         except Exception as e:
-            pytest.skip(f"MAPDL not available on port 50052: {e}")
+            # Not allow to skip if running on CICD
+            if os.getenv("ON_CI", False):
+                raise e
+            else:
+                pytest.skip(f"MAPDL not available on port 50052: {e}")
 
         # If we get here, MAPDL is running
         result = list_mapdl_instances()
