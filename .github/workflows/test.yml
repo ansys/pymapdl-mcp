@@ -106,85 +106,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: "Pull, launch, and validate MAPDL service"
-      #   id: start_mapdl
-      #   env:
-      #     LICENSE_SERVER: ${{ secrets.LICENSE_SERVER }}
-      #     MAPDL_VERSION: 'v25.2-ubuntu-cicd'
-      #     DISTRIBUTED_MODE: "smp"
-      #     MAPDL_PACKAGE: ghcr.io/ansys/mapdl
-      #     DPF_PORT_INTERNAL: 21001
-      #     INSTANCE_NAME: MAPDL_0
-      #   shell: bash
-      #   run: |
-      #     echo "Launching MAPDL instance..."
-      #     .ci/start_mapdl.sh &> mapdl_launch.log
-
       - name: Pull MAPDL Docker image
         run: |
           docker pull ${{ env.MAPDL_IMAGE }}
 
       - name: Start MAPDL container
+        env:
+          LICENSE_SERVER: ${{ secrets.LICENSE_SERVER }}
+          MAPDL_IMAGE: ${{ env.MAPDL_IMAGE }}
+          PYMAPDL_PORT: ${{ env.PYMAPDL_PORT }}
         run: |
-          echo "Starting MAPDL container with verbose logging..."
-          docker run --name mapdl -d \
-            -p ${{ env.PYMAPDL_PORT }}:50052 \
-            --entrypoint /bin/bash \
-            --env ANSYSLMD_LICENSE_FILE=1055@${{ secrets.LICENSE_SERVER }} \
-            --env ANSYS_LOCK='OFF' \
-            --env ANS_BYPASS_CHECK_NUM_PROCESSES=1 \
-            --env ANSYS_MAPDL_GRPC_TRANSPORT=insecure \
-            --shm-size=2gb \
-            ${{ env.MAPDL_IMAGE }} \
-            ansys -grpc -smp -np 2 > mapdl_launch.log 2>&1
-
-          echo "Container started. Container ID:"
-          docker ps -a --filter "name=mapdl" --format "{{.ID}} {{.Status}} {{.Command}}"
-
-          echo "Capturing initial container logs..."
-          docker logs mapdl > mapdl_initial.log 2>&1 || true
-          cat mapdl_initial.log
+          .ci/start_mapdl.sh
 
       - name: Wait for MAPDL to be ready
         run: |
-          echo "Waiting for MAPDL to start..."
-          for i in {1..5}; do
-            # Capture logs continuously for debugging
-            docker logs mapdl > "mapdl_logs_attempt_${i}.log" 2>&1 || true
-
-            # Check container status
-            CONTAINER_STATUS=$(docker inspect -f '{{.State.Status}}' mapdl 2>/dev/null || echo "not found")
-            echo "Attempt $i/5: Container status: $CONTAINER_STATUS"
-
-            if [ "$CONTAINER_STATUS" = "exited" ]; then
-              echo "ERROR: Container has exited!"
-              docker logs mapdl 2>&1
-              exit 1
-            fi
-
-            # Check for ready message in logs
-            if docker logs mapdl 2>&1 | grep -q "Server listening on"; then
-              echo "MAPDL is ready!"
-              echo "=== Final MAPDL logs ==="
-              docker logs mapdl 2>&1
-              exit 0
-            fi
-
-            # Show last 20 lines of logs for debugging
-            echo "Latest logs:"
-            docker logs --tail 20 mapdl 2>&1 || echo "No logs yet"
-
-            sleep 2
-          done
-
-          echo "MAPDL failed to start within 120 seconds"
-          echo "=== Container status ==="
-          docker ps -a
-          echo "=== Full container logs ==="
-          docker logs mapdl 2>&1
-          echo "=== Container inspection ==="
-          docker inspect mapdl
-          exit 1
+          .ci/wait_for_mapdl.sh
 
       - name: Set up Python
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c #v6.0.0
@@ -207,26 +143,7 @@ jobs:
       - name: Collect MAPDL logs on failure
         if: failure()
         run: |
-          echo "=== Initial launch log ==="
-          cat mapdl_launch.log 2>/dev/null || echo "No launch log found"
-
-          echo "=== Initial container log ==="
-          cat mapdl_initial.log 2>/dev/null || echo "No initial log found"
-
-          echo "=== All captured log files ==="
-          ls -la mapdl_*.log 2>/dev/null || echo "No log files found"
-
-          echo "=== Full MAPDL Container Logs (stdout + stderr) ==="
-          docker logs mapdl 2>&1 || echo "Could not retrieve container logs"
-
-          echo "=== Docker Container Status ==="
-          docker ps -a --filter "name=mapdl"
-
-          echo "=== Docker Container Inspection ==="
-          docker inspect mapdl 2>&1 || echo "Could not inspect container"
-
-          echo "=== Docker Container Stats (if running) ==="
-          docker stats mapdl --no-stream 2>&1 || echo "Container not running"
+          .ci/collect_mapdl_logs.sh
 
       - name: Stop MAPDL container
         if: always()
