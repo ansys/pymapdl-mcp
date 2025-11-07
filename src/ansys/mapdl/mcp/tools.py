@@ -91,6 +91,70 @@ def run_mapdl_command(ctx: Context[ServerSession, AppContext], cmd: str) -> str:
 
 
 @mcp.tool()
+def run_multiple_commands(ctx: Context[ServerSession, AppContext], commands: list[str]) -> str:
+    """Execute multiple MAPDL commands in sequence using input_strings.
+
+    This tool is optimized for running multiple commands efficiently by using
+    MAPDL's input_strings method, which processes commands in batch mode.
+    This is significantly faster than executing commands one by one.
+
+    Parameters
+    ----------
+    ctx : Context[ServerSession, AppContext]
+        The MCP context containing server session and application context.
+    commands : list[str]
+        List of MAPDL commands to execute in sequence.
+
+    Returns
+    -------
+    str
+        Execution result with summary of commands executed.
+    """
+    mapdl = ctx.request_context.lifespan_context.mapdl
+
+    if mapdl is None:
+        return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
+
+    if not commands:
+        return "No commands provided. Please provide a list of commands to execute."
+
+    if not isinstance(commands, list):
+        return "Commands must be provided as a list of strings."
+
+    # Filter out empty commands
+    valid_commands = [cmd.strip() for cmd in commands if cmd and cmd.strip()]
+
+    if not valid_commands:
+        return "No valid commands found after filtering empty entries."
+
+    try:
+        logger.info(f"Executing {len(valid_commands)} MAPDL commands using input_strings")
+
+        # Use input_strings for batch command execution
+        result = mapdl.input_strings(valid_commands)  # type: ignore[union-attr]
+
+        success_msg = (
+            f"Successfully executed {len(valid_commands)} MAPDL commands:\n"
+            f"Commands:\n" + "\n".join(f"  {i+1}. {cmd}" for i, cmd in enumerate(valid_commands))
+        )
+
+        if result:
+            success_msg += f"\n\nOutput:\n{result}"
+
+        return success_msg
+
+    except Exception as e:
+        error_msg = (
+            f"Error executing commands. Executed {len(valid_commands)} commands "
+            f"but encountered error: {str(e)}\n"
+            f"Commands that were attempted:\n"
+            + "\n".join(f"  {i+1}. {cmd}" for i, cmd in enumerate(valid_commands))
+        )
+        logger.error(error_msg)
+        return error_msg
+
+
+@mcp.tool()
 def launch_mapdl(
     ctx: Context[ServerSession, AppContext],
     exec_file: str | None = None,

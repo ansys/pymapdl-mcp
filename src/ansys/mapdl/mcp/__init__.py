@@ -18,6 +18,7 @@ from ansys.mapdl.mcp.tools import (
     launch_mapdl,
     list_mapdl_instances,
     run_mapdl_command,
+    run_multiple_commands,
     write_comment,
 )
 
@@ -31,6 +32,7 @@ __all__ = [
     "list_mapdl_instances",
     "mcp",
     "run_mapdl_command",
+    "run_multiple_commands",
     "write_comment",
     "__version__",
 ]

@@ -10,6 +10,7 @@ from ansys.mapdl.mcp import (
     disconnect_from_mapdl,
     list_mapdl_instances,
     run_mapdl_command,
+    run_multiple_commands,
     write_comment,
 )
 from ansys.mapdl.mcp.tools import launch_mapdl, screenshot
@@ -121,6 +122,239 @@ class TestRunMapdlCommand:
 
         # Verify all commands were called
         assert mock_context.request_context.lifespan_context.mapdl.run.call_count == len(commands)
+
+
+@pytest.mark.unit
+class TestRunMultipleCommands:
+    """Tests for run_multiple_commands tool."""
+
+    def test_run_multiple_commands_success(self, mock_context):
+        """Test running multiple MAPDL commands successfully."""
+        commands = ["/PREP7", "ET,1,SOLID185", "MP,EX,1,200E9"]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = (
+            "Commands executed"
+        )
+
+        result = run_multiple_commands(mock_context, commands)
+
+        assert isinstance(result, str)
+        assert "Successfully executed 3 MAPDL commands" in result
+        assert "/PREP7" in result
+        assert "ET,1,SOLID185" in result
+        assert "MP,EX,1,200E9" in result
+
+        # Verify that MAPDL's input_strings method was called
+        mock_context.request_context.lifespan_context.mapdl.input_strings.assert_called_once_with(
+            commands
+        )
+
+    def test_run_multiple_commands_with_output(self, mock_context):
+        """Test running multiple commands with MAPDL output."""
+        commands = ["/PREP7", "ET,1,SOLID185"]
+        output = "Element type 1 defined"
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = output
+
+        result = run_multiple_commands(mock_context, commands)
+
+        assert "Successfully executed 2 MAPDL commands" in result
+        assert "Output:" in result
+        assert output in result
+
+    def test_run_multiple_commands_empty_list(self, mock_context):
+        """Test running multiple commands with an empty list."""
+        result = run_multiple_commands(mock_context, [])
+
+        assert "No commands provided" in result
+
+    def test_run_multiple_commands_not_list(self, mock_context):
+        """Test running multiple commands with non-list input."""
+        result = run_multiple_commands(mock_context, "not a list")
+
+        assert "Commands must be provided as a list" in result
+
+    def test_run_multiple_commands_with_empty_strings(self, mock_context):
+        """Test running multiple commands with some empty strings."""
+        commands = ["/PREP7", "", "ET,1,SOLID185", "  ", "MP,EX,1,200E9"]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands)
+
+        # Should only execute non-empty commands
+        assert "Successfully executed 3 MAPDL commands" in result
+        assert "/PREP7" in result
+        assert "ET,1,SOLID185" in result
+        assert "MP,EX,1,200E9" in result
+
+        # Verify input_strings was called with filtered commands
+        call_args = mock_context.request_context.lifespan_context.mapdl.input_strings.call_args[0][
+            0
+        ]
+        assert len(call_args) == 3
+        assert "" not in call_args
+        assert "  " not in call_args
+
+    def test_run_multiple_commands_all_empty(self, mock_context):
+        """Test running multiple commands when all are empty."""
+        commands = ["", "  ", "\t", "\n"]
+
+        result = run_multiple_commands(mock_context, commands)
+
+        assert "No valid commands found" in result
+
+    def test_run_multiple_commands_without_mapdl(self, mock_context_no_mapdl):
+        """Test running multiple commands when MAPDL is not available."""
+        commands = ["/PREP7", "ET,1,SOLID185"]
+        result = run_multiple_commands(mock_context_no_mapdl, commands)
+
+        # Should return helpful error message instead of raising exception
+        assert isinstance(result, str)
+        assert "No MAPDL connection available" in result
+        assert "connect_to_mapdl" in result
+
+    def test_run_multiple_commands_single_command(self, mock_context):
+        """Test running a single command through multiple commands."""
+        commands = ["/PREP7"]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands)
+
+        assert "Successfully executed 1 MAPDL commands" in result
+        assert "/PREP7" in result
+
+    def test_run_multiple_commands_with_whitespace(self, mock_context):
+        """Test running commands with leading/trailing whitespace."""
+        commands = ["  /PREP7  ", "\tET,1,SOLID185\n", " MP,EX,1,200E9 "]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands)
+
+        assert "Successfully executed 3 MAPDL commands" in result
+
+        # Verify whitespace was stripped
+        call_args = mock_context.request_context.lifespan_context.mapdl.input_strings.call_args[0][
+            0
+        ]
+        assert call_args[0] == "/PREP7"
+        assert call_args[1] == "ET,1,SOLID185"
+        assert call_args[2] == "MP,EX,1,200E9"
+
+    def test_run_multiple_commands_error_handling(self, mock_context):
+        """Test error handling when command execution fails."""
+        commands = ["/PREP7", "INVALID_COMMAND", "ET,1,SOLID185"]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.side_effect = Exception(
+            "Invalid command syntax"
+        )
+
+        result = run_multiple_commands(mock_context, commands)
+
+        assert "Error executing commands" in result
+        assert "Invalid command syntax" in result
+        assert "Commands that were attempted:" in result
+        assert "/PREP7" in result
+        assert "INVALID_COMMAND" in result
+        assert "ET,1,SOLID185" in result
+
+    def test_run_multiple_commands_large_batch(self, mock_context):
+        """Test running a large batch of commands."""
+        # Create 100 commands
+        commands = [f"K,{i},0,0,0" for i in range(1, 101)]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands)
+
+        assert "Successfully executed 100 MAPDL commands" in result
+        # Verify input_strings was called with all commands
+        call_args = mock_context.request_context.lifespan_context.mapdl.input_strings.call_args[0][
+            0
+        ]
+        assert len(call_args) == 100
+
+    def test_run_multiple_commands_with_comments(self, mock_context):
+        """Test running multiple commands including comments."""
+        commands = [
+            "/COM, Starting analysis",
+            "/PREP7",
+            "/COM, Define element",
+            "ET,1,SOLID185",
+        ]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands)
+
+        assert "Successfully executed 4 MAPDL commands" in result
+        assert all(cmd in result for cmd in commands)
+
+    def test_run_multiple_commands_special_characters(self, mock_context):
+        """Test running commands with special characters."""
+        commands = [
+            "/PREP7",
+            "MP,EX,1,2.0E11",
+            "MP,PRXY,1,0.3",
+            "R,1,0.01,0.01,0.01",
+        ]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands)
+
+        assert "Successfully executed 4 MAPDL commands" in result
+        assert all(cmd in result for cmd in commands)
+
+    def test_run_multiple_commands_sequential_execution(self, mock_context):
+        """Test that commands are executed in the correct sequence."""
+        commands = ["CMD1", "CMD2", "CMD3"]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        run_multiple_commands(mock_context, commands)
+
+        # Verify input_strings was called with commands in correct order
+        call_args = mock_context.request_context.lifespan_context.mapdl.input_strings.call_args[0][
+            0
+        ]
+        assert call_args == commands
+
+    def test_run_multiple_commands_no_output(self, mock_context):
+        """Test running commands that produce no output."""
+        commands = ["/PREP7", "ET,1,SOLID185"]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands)
+
+        assert "Successfully executed 2 MAPDL commands" in result
+        # Should not have "Output:" section when result is empty
+        assert result.count("Output:") == 0
+
+    def test_run_multiple_commands_none_output(self, mock_context):
+        """Test running commands that return None."""
+        commands = ["/PREP7", "ET,1,SOLID185"]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = None
+
+        result = run_multiple_commands(mock_context, commands)
+
+        assert "Successfully executed 2 MAPDL commands" in result
+        # Should not have "Output:" section when result is None
+        assert "Output:" not in result
+
+    def test_run_multiple_commands_stderr_logging(self, mock_context, caplog):
+        """Test that run_multiple_commands logs messages."""
+        commands = ["/PREP7", "ET,1,SOLID185"]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        run_multiple_commands(mock_context, commands)
+
+        # Verify logging messages
+        assert "Executing 2 MAPDL commands using input_strings" in caplog.text
+
+    def test_run_multiple_commands_error_logging(self, mock_context, caplog):
+        """Test that command errors are logged."""
+        commands = ["/PREP7", "INVALID"]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.side_effect = Exception(
+            "Test error"
+        )
+
+        run_multiple_commands(mock_context, commands)
+
+        # Verify error is logged
+        assert "Error executing commands" in caplog.text
 
 
 @pytest.mark.unit

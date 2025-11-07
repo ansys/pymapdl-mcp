@@ -103,9 +103,15 @@ This flexible approach allows you to:
 By default, the server connects to MAPDL on `localhost:50052`.
 
 ## Run commands
-Use `run_mapdl_command` tool to run MAPDL commands. For instance:
+Use `run_mapdl_command` tool to run single MAPDL commands. For instance:
 
 > Run `VPLOT` on the MAPDL instance.
+
+For running multiple commands efficiently, use `run_multiple_commands` tool:
+
+> Run these commands: /PREP7, ET,1,SOLID185, MP,EX,1,200E9
+
+This tool uses MAPDL's `input_strings` method for batch command execution, which is significantly faster than running commands one by one.
 
 
 ## Available Tools
@@ -141,6 +147,16 @@ Execute arbitrary MAPDL commands.
 - `cmd` (string): The MAPDL command to execute
 
 **Returns**: Command execution result
+
+### `run_multiple_commands`
+Execute multiple MAPDL commands in sequence efficiently.
+
+**Parameters**:
+- `commands` (list of strings): List of MAPDL commands to execute
+
+**Returns**: Execution result with summary of commands executed
+
+**Note**: This tool uses MAPDL's `input_strings` method for batch processing, which is significantly faster than executing commands individually. Perfect for running multiple setup commands or creating complex geometries.
 
 
 ## Development
