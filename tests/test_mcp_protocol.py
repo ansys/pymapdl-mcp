@@ -36,10 +36,17 @@ class TestMCPProtocol:
             check_mapdl_status,
             launch_mapdl,
             run_mapdl_command,
+            run_multiple_commands,
             write_comment,
         )
 
-        tools = [check_mapdl_status, launch_mapdl, run_mapdl_command, write_comment]
+        tools = [
+            check_mapdl_status,
+            launch_mapdl,
+            run_mapdl_command,
+            run_multiple_commands,
+            write_comment,
+        ]
 
         for tool in tools:
             assert callable(tool)
@@ -51,12 +58,14 @@ class TestMCPProtocol:
             check_mapdl_status,
             launch_mapdl,
             run_mapdl_command,
+            run_multiple_commands,
             write_comment,
         )
 
         assert check_mapdl_status.__name__ == "check_mapdl_status"
         assert launch_mapdl.__name__ == "launch_mapdl"
         assert run_mapdl_command.__name__ == "run_mapdl_command"
+        assert run_multiple_commands.__name__ == "run_multiple_commands"
         assert write_comment.__name__ == "write_comment"
 
     def test_tool_signatures(self):
@@ -67,6 +76,7 @@ class TestMCPProtocol:
             check_mapdl_status,
             launch_mapdl,
             run_mapdl_command,
+            run_multiple_commands,
             write_comment,
         )
 
@@ -91,3 +101,8 @@ class TestMCPProtocol:
         sig = inspect.signature(run_mapdl_command)
         assert "ctx" in sig.parameters
         assert "cmd" in sig.parameters
+
+        # run_multiple_commands should take ctx and commands parameters
+        sig = inspect.signature(run_multiple_commands)
+        assert "ctx" in sig.parameters
+        assert "commands" in sig.parameters
