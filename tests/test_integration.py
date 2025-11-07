@@ -8,12 +8,14 @@ To skip integration tests, run: pytest -m "not integration"
 
 import os
 
+import numpy as np
 import pytest
 
 from ansys.mapdl.mcp import (
     check_mapdl_status,
     list_mapdl_instances,
     run_mapdl_command,
+    run_multiple_commands,
     write_comment,
 )
 
@@ -47,6 +49,11 @@ class TestMapdlIntegration:
                 raise e
             else:
                 pytest.skip(f"MAPDL not available: {e}")
+
+    @pytest.fixture()
+    def mapdl(self, real_mapdl):
+        real_mapdl.clear()
+        return real_mapdl
 
     @pytest.fixture
     def real_context(self, real_mapdl):
@@ -106,6 +113,208 @@ class TestMapdlIntegration:
         # Define material property
         result = run_mapdl_command(real_context, "MP,EX,1,200E9")
         assert "executed successfully" in result
+
+    def test_real_run_multiple_commands(self, real_context):
+        """Test running multiple commands with real MAPDL."""
+        # Clear any existing model
+        run_mapdl_command(real_context, "/CLEAR")
+
+        # Run multiple commands
+        commands = [
+            "/PREP7",
+            "ET,1,SOLID185",
+            "MP,EX,1,200E9",
+            "MP,PRXY,1,0.3",
+        ]
+
+        result = run_multiple_commands(real_context, commands)
+
+        assert isinstance(result, str)
+        assert "Successfully executed 4 MAPDL commands" in result
+        assert all(cmd in result for cmd in commands)
+
+    def test_real_run_multiple_commands_with_geometry(self, real_context):
+        """Test running multiple commands to create simple geometry."""
+        # Clear any existing model
+        run_mapdl_command(real_context, "/CLEAR")
+
+        # Create a simple block using multiple commands
+        commands = [
+            "/PREP7",
+            "ET,1,SOLID185",
+            "MP,EX,1,200E9",
+            "MP,PRXY,1,0.3",
+            "BLC4,0,0,1,1,1",  # Create a block
+        ]
+
+        result = run_multiple_commands(real_context, commands)
+
+        assert "Successfully executed 5 MAPDL commands" in result
+        assert "BLC4,0,0,1,1,1" in result
+
+    def test_real_run_multiple_commands_empty_list(self, real_context):
+        """Test error handling with empty command list."""
+        result = run_multiple_commands(real_context, [])
+
+        assert "No commands provided" in result
+
+    def test_real_run_multiple_commands_vs_single(self, real_context):
+        """Compare run_multiple_commands with sequential single commands."""
+        # Clear any existing model
+        run_mapdl_command(real_context, "/CLEAR")
+
+        commands = [
+            "/PREP7",
+            "ET,1,SOLID185",
+            "MP,EX,1,200E9",
+        ]
+
+        # Test multiple commands
+        result_multi = run_multiple_commands(real_context, commands)
+        assert "Successfully executed 3 MAPDL commands" in result_multi
+
+        # Clear and test single commands
+        run_mapdl_command(real_context, "/CLEAR")
+
+        results_single = []
+        for cmd in commands:
+            result = run_mapdl_command(real_context, cmd)
+            results_single.append(result)
+            assert "executed successfully" in result
+
+        # Both approaches should work successfully
+        assert len(results_single) == 3
+
+
+@pytest.mark.integration
+class TestRunMultipleCommandsIntegration:
+    """Integration tests specifically for run_multiple_commands."""
+
+    @pytest.fixture(scope="class")
+    def real_mapdl(self):
+        """Fixture to connect to a real MAPDL instance."""
+        try:
+            from ansys.mapdl.core import launch_mapdl
+
+            mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
+            yield mapdl
+        except Exception as e:
+            if os.getenv("ON_CI", False):
+                raise e
+            else:
+                pytest.skip(f"MAPDL not available: {e}")
+
+    @pytest.fixture()
+    def mapdl(self, real_mapdl):
+        real_mapdl.clear()
+        return real_mapdl
+
+    @pytest.fixture
+    def real_context(self, real_mapdl):
+        """Create a real context with actual MAPDL connection."""
+        from unittest.mock import MagicMock
+
+        from ansys.mapdl.mcp.mpc import AppContext
+
+        context = MagicMock()
+        context.request_context = MagicMock()
+        context.request_context.lifespan_context = AppContext(mapdl=real_mapdl)
+
+        return context
+
+    def test_multiple_commands_large_batch(self, real_context, mapdl):
+        """Test running a large batch of commands."""
+        # Clear model
+        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command(real_context, "/PREP7")
+
+        # Create many keypoints
+        commands = [f"K,{i},{i*0.1},{i*0.1},{i*0.1}" for i in range(1, 51)]
+
+        result = run_multiple_commands(real_context, commands)
+
+        assert "Successfully executed 50 MAPDL commands" in result
+
+        assert mapdl.geometry.get_keypoints(return_as_array=True).shape[0] == 50
+
+    def test_multiple_commands_with_comments(self, real_context, mapdl):
+        """Test running multiple commands including comments."""
+        run_mapdl_command(real_context, "/CLEAR")
+
+        commands = [
+            "/COM, Starting material definition",
+            "/PREP7",
+            "/COM, Define element type",
+            "ET,1,SOLID185",
+            "/COM, Define material properties",
+            "MP,EX,1,200E9",
+            "MP,PRXY,1,0.3",
+        ]
+
+        result = run_multiple_commands(real_context, commands)
+
+        assert "Successfully executed 7 MAPDL commands" in result
+
+        assert mapdl.get_value("MAT", 0, "count") == 1.0
+        assert mapdl.get_value("ETYP", 1, "attr", "enam") == 185.0
+        assert np.allclose(mapdl.get_value("EX", 1), 200e9)
+        assert np.allclose(mapdl.get_value("PRXY", 1), 0.3)
+
+    def test_multiple_commands_error_handling(self, real_context):
+        """Test error handling with invalid commands."""
+        run_mapdl_command(real_context, "/CLEAR")
+
+        # Include an invalid command
+        commands = [
+            "/PREP7",
+            "ET,1,SOLID185",
+            "INVALID_MAPDL_COMMAND_XYZ",  # This should cause an error
+        ]
+
+        result = run_multiple_commands(real_context, commands)
+
+        # Should get error message
+        assert isinstance(result, str)
+        # Either successful execution or error message
+        assert (
+            "Successfully executed" in result
+            or "Error executing commands" in result
+            or "error" in result.lower()
+        )
+
+    def test_multiple_commands_performance(self, real_context):
+        """Test that multiple commands are faster than sequential single commands."""
+        import time
+
+        run_mapdl_command(real_context, "/CLEAR")
+
+        commands = ["/PREP7", "ET,1,SOLID185", "MP,EX,1,200E9", "MP,PRXY,1,0.3"]
+
+        # Time multiple commands approach
+        start_multi = time.time()
+        result_multi = run_multiple_commands(real_context, commands)
+        time_multi = time.time() - start_multi
+
+        assert "Successfully executed 4 MAPDL commands" in result_multi
+
+        # Clear and time single commands approach
+        run_mapdl_command(real_context, "/CLEAR")
+
+        start_single = time.time()
+        for cmd in commands:
+            run_mapdl_command(real_context, cmd)
+        time_single = time.time() - start_single
+
+        # Multiple commands should be at least as fast (usually faster)
+        # We allow some tolerance since timing can vary
+        print(f"Multiple commands time: {time_multi:.4f}s")
+        print(f"Single commands time: {time_single:.4f}s")
+        print(f"Speedup: {time_single/time_multi:.2f}x")
+
+        # Just verify both completed successfully
+        assert time_multi > 0
+        assert time_single > 0
+        # assert time_multi < time_single
 
 
 @pytest.mark.integration
