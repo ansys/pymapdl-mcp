@@ -123,6 +123,12 @@ This tool uses MAPDL's `input_strings` method for batch command execution, which
 
 ## Available Tools
 
+### `check_mapdl_installed`
+
+Check if MAPDL is installed on the system.
+
+**Returns**: Status message indicating whether MAPDL is installed, and if so, the installation path
+
 ### `list_mapdl_instances`
 
 Discover all MAPDL instances running on the local machine.

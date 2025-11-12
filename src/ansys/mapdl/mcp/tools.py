@@ -6,7 +6,6 @@ import os
 import tempfile
 from pathlib import Path
 
-from ansys.mapdl.core import Mapdl
 from mcp.server.fastmcp import Context
 from mcp.server.session import ServerSession
 from mcp.types import ImageContent, TextContent
@@ -37,6 +36,42 @@ def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
         return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
 
     return f"MAPDL is available. Version: {mapdl.version}"  # type: ignore[union-attr]
+
+
+@mcp.tool()
+def check_mapdl_installed() -> str:
+    """Check if MAPDL is installed on the system.
+
+    This tool uses PyMAPDL's check_valid_ansys function to verify if a valid
+    ANSYS/MAPDL installation is available on the system.
+
+    Returns
+    -------
+    str
+        Status message indicating whether MAPDL is installed or not.
+    """
+    logger.info("Checking if MAPDL is installed...")
+
+    try:
+        from ansys.mapdl.core.launcher import check_valid_ansys, get_default_ansys_path
+
+        is_installed = check_valid_ansys()
+
+        if is_installed:
+            logger.info("MAPDL installation found")
+            return f"MAPDL is installed on this system in: {get_default_ansys_path()}"
+        else:
+            logger.info("MAPDL installation not found")
+            return (
+                "MAPDL is not installed on this system or cannot be found in the "
+                "standard locations. Please ensure ANSYS/MAPDL is properly installed "
+                "and the installation path is correct."
+            )
+
+    except Exception as e:
+        error_msg = f"Error checking MAPDL installation: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
 
 
 @mcp.tool()
@@ -259,6 +294,8 @@ def connect_to_mapdl(
     str
         Connection status message with MAPDL version information.
     """
+    from ansys.mapdl.core import Mapdl
+
     logger.info(f"Connecting to MAPDL instance at {ip}:{port}...")
 
     try:

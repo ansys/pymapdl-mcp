@@ -41,6 +41,7 @@ def test_all_exports():
     expected_exports = [
         "AppContext",
         "app_lifespan",
+        "check_mapdl_installed",
         "check_mapdl_status",
         "connect_to_mapdl",
         "disconnect_from_mapdl",
