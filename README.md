@@ -5,6 +5,7 @@ A Model Context Protocol (MCP) server that provides AI assistants with the abili
 ## Overview
 
 This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing you to:
+
 - Discover and list running MAPDL instances on your system
 - Connect to and disconnect from MAPDL instances dynamically
 - Execute MAPDL commands through natural language
@@ -20,6 +21,7 @@ This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing 
 - **Comprehensive Tools**: Six specialized tools for MAPDL interaction
 
 ## Prerequisites
+
 - Python 3.10 or higher
 - Ansys MAPDL installation (optional - can connect to remote instances)
 - PyMAPDL library (ansys-mapdl-core >= 0.68.0)
@@ -30,6 +32,7 @@ This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing 
 The quickest way to run the MCP server is to use [`uv`](https://docs.astral.sh/uv/) in your desired software:
 
 ### VS Code integration
+
 You should add the following to your `.vscode/mcp.json` file in your project directory:
 
 ```json
@@ -45,6 +48,9 @@ You should add the following to your `.vscode/mcp.json` file in your project dir
 ```
 
 For more information visit [Use MCP servers in VS Code](https://code.visualstudio.com/docs/copilot/customization/mcp-servers). In this page, you can find information about adding an MCP server globaly to the user.
+
+Make sure you enabled the access to MCPs in your VS Code settings as presented here:
+![VS Code settings](enable_mcp.png)
 
 ### Claude Desktop
 
@@ -62,7 +68,6 @@ Edit the file `~/Library/Application Support/Claude/claude_desktop_config.json`:
 ```
 
 For more information, visit [Testing your server with Claude for Desktop](https://modelcontextprotocol.io/docs/develop/build-server#testing-your-server-with-claude-for-desktop).
-
 
 ### Claude Code
 
@@ -96,6 +101,7 @@ or
 > "Connect to MAPDL on 192.168.1.100 port 50053"
 
 This flexible approach allows you to:
+
 - Connect to different MAPDL instances during a session
 - Discover available instances using `list_mapdl_instances` before connecting
 - Work with multiple MAPDL servers without restarting the MCP server.
@@ -103,6 +109,7 @@ This flexible approach allows you to:
 By default, the server connects to MAPDL on `localhost:50052`.
 
 ## Run commands
+
 Use `run_mapdl_command` tool to run single MAPDL commands. For instance:
 
 > Run `VPLOT` on the MAPDL instance.
@@ -117,58 +124,69 @@ This tool uses MAPDL's `input_strings` method for batch command execution, which
 ## Available Tools
 
 ### `list_mapdl_instances`
+
 Discover all MAPDL instances running on the local machine.
 
 **Returns**: Formatted table with instance information including names, status, gRPC ports, IP addresses, PIDs, and working directories
 
 ### `connect_to_mapdl`
+
 Connect to an existing MAPDL instance.
 
 **Parameters**:
+
 - `ip` (string, optional): IP address where MAPDL is running. Default: "localhost"
 - `port` (int, optional): gRPC port where MAPDL is listening. Default: 50052
 
 **Returns**: Connection status with MAPDL version information
 
 ### `disconnect_from_mapdl`
+
 Disconnect from the currently connected MAPDL instance.
 
 **Returns**: Disconnection status message
 
 ### `check_mapdl_status`
+
 Check the status and version of the connected MAPDL instance.
 
 **Returns**: Confirmation of comment execution
 
 ### `run_mapdl_command`
+
 Execute arbitrary MAPDL commands.
 
 **Parameters**:
+
 - `cmd` (string): The MAPDL command to execute
 
 **Returns**: Command execution result
 
 ### `run_multiple_commands`
+
 Execute multiple MAPDL commands in sequence efficiently.
 
 **Parameters**:
+
 - `commands` (list of strings): List of MAPDL commands to execute
 
 **Returns**: Execution result with summary of commands executed
 
 **Note**: This tool uses MAPDL's `input_strings` method for batch processing, which is significantly faster than executing commands individually. Perfect for running multiple setup commands or creating complex geometries.
 
-
 ## Development
+
 ### Installation From Source
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/ansys/pymapdl-mcp.git
 cd pymapdl-mcp
 ```
 
 2. Create and activate a virtual environment:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # On macOS/Linux
@@ -177,6 +195,7 @@ source .venv/bin/activate  # On macOS/Linux
 ```
 
 3. Install the package:
+
 ```bash
 pip install -e .
 ```
@@ -186,11 +205,13 @@ This will install the package in editable mode along with all dependencies defin
 ### Development Installation
 
 For development with additional tools (pytest, black, mypy, pre-commit, etc.):
+
 ```bash
 pip install -e ".[dev]"
 ```
 
 After installing development dependencies, set up pre-commit hooks:
+
 ```bash
 pre-commit install
 ```
@@ -224,7 +245,6 @@ Once published to PyPI, you'll be able to run the server directly using `uvx`:
 ```
 
 </details>
-
 
 <details>
 <summary><b>Other tools like Claude Code</b></summary>
@@ -310,24 +330,26 @@ Or if you prefer `uv`:
 
 </details>
 
-
 ## Testing
 
 The project includes a comprehensive pytest-based testing suite with 40+ tests covering all functionality.
 
-### Quick Start
+### Quick set up
 
 Run unit tests (fast, no MAPDL required):
+
 ```bash
 pytest -m "not integration"
 ```
 
 Run all tests with coverage:
+
 ```bash
 pytest --cov=ansys.mapdl.mcp --cov-report=html
 ```
 
 Run integration tests (requires MAPDL on localhost:50052):
+
 ```bash
 pytest -m integration
 ```
@@ -356,6 +378,7 @@ The test suite is organized into focused test modules:
 ### Coverage
 
 Current test coverage: **70%**
+
 - Full coverage on package initialization
 - Comprehensive coverage on tool functions
 - Integration tests validate real-world usage
@@ -467,6 +490,7 @@ This project is licensed under the MIT License. See the LICENSE file for details
 ## Support
 
 For issues and questions:
+
 - Open an issue on GitHub
 - Consult the PyMAPDL documentation
 - Check the Ansys Developer Portal
@@ -474,6 +498,7 @@ For issues and questions:
 ## Acknowledgments
 
 Built with:
+
 - [PyMAPDL](https://github.com/ansys/pymapdl) - Python interface for MAPDL
 - [FastMCP](https://github.com/jlowin/fastmcp) - Fast Model Context Protocol implementation
 - [Ansys MAPDL](https://www.ansys.com/) - Finite element analysis software
