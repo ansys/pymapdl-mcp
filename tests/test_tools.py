@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from ansys.mapdl.mcp import (
+    check_mapdl_installed,
     check_mapdl_status,
     connect_to_mapdl,
     disconnect_from_mapdl,
@@ -36,6 +37,101 @@ class TestCheckMapdlStatus:
         assert isinstance(result, str)
         assert "No MAPDL connection available" in result
         assert "connect_to_mapdl" in result
+
+
+@pytest.mark.unit
+class TestCheckMapdlInstalled:
+    """Tests for check_mapdl_installed tool."""
+
+    def test_check_installed_true(self):
+        """Test checking MAPDL installation when MAPDL is installed."""
+        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True), patch(
+            "ansys.mapdl.core.launcher.get_default_ansys_path",
+            return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
+        ):
+            result = check_mapdl_installed()
+
+            assert isinstance(result, str)
+            assert "MAPDL is installed" in result
+            assert "/usr/ansys_inc/v242/ansys/bin/ansys242" in result
+
+    def test_check_installed_false(self):
+        """Test checking MAPDL installation when MAPDL is not installed."""
+        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=False):
+            result = check_mapdl_installed()
+
+            assert isinstance(result, str)
+            assert "MAPDL is not installed" in result
+            assert "cannot be found" in result
+            assert "properly installed" in result
+
+    def test_check_installed_exception(self):
+        """Test error handling when checking MAPDL installation fails."""
+        with patch(
+            "ansys.mapdl.core.launcher.check_valid_ansys",
+            side_effect=Exception("System error"),
+        ):
+            result = check_mapdl_installed()
+
+            assert isinstance(result, str)
+            assert "Error checking MAPDL installation" in result
+            assert "System error" in result
+
+    def test_check_installed_no_ansys_env(self):
+        """Test checking installation when ANSYS environment variables not set."""
+        with patch(
+            "ansys.mapdl.core.launcher.check_valid_ansys",
+            side_effect=EnvironmentError("ANSYS environment not configured"),
+        ):
+            result = check_mapdl_installed()
+
+            assert isinstance(result, str)
+            assert "Error checking MAPDL installation" in result
+            assert "ANSYS environment not configured" in result
+
+    def test_check_installed_import_error(self):
+        """Test handling import errors gracefully."""
+        with patch(
+            "ansys.mapdl.core.launcher.check_valid_ansys",
+            side_effect=ImportError("Failed to import MAPDL module"),
+        ):
+            result = check_mapdl_installed()
+
+            assert isinstance(result, str)
+            assert "Error checking MAPDL installation" in result
+            assert "Failed to import MAPDL module" in result
+
+    def test_check_installed_with_custom_path(self):
+        """Test checking installation with custom ANSYS path."""
+        custom_path = "/opt/ansys/v251/ansys/bin/ansys251"
+        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True), patch(
+            "ansys.mapdl.core.launcher.get_default_ansys_path", return_value=custom_path
+        ):
+            result = check_mapdl_installed()
+
+            assert "MAPDL is installed" in result
+            assert custom_path in result
+
+    def test_check_installed_logging(self, caplog):
+        """Test that check_mapdl_installed logs messages."""
+        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True), patch(
+            "ansys.mapdl.core.launcher.get_default_ansys_path",
+            return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
+        ):
+            check_mapdl_installed()
+
+            # Verify logging messages
+            assert "Checking if MAPDL is installed" in caplog.text
+            assert "MAPDL installation found" in caplog.text
+
+    def test_check_not_installed_logging(self, caplog):
+        """Test that check_mapdl_installed logs when not installed."""
+        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=False):
+            check_mapdl_installed()
+
+            # Verify logging messages
+            assert "Checking if MAPDL is installed" in caplog.text
+            assert "MAPDL installation not found" in caplog.text
 
 
 @pytest.mark.unit
@@ -439,7 +535,7 @@ class TestConnectToMapdl:
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50052
 
-        with patch("ansys.mapdl.mcp.tools.Mapdl", return_value=mock_mapdl):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
             result = connect_to_mapdl(mock_context_no_mapdl)
 
             # Verify successful connection
@@ -458,7 +554,7 @@ class TestConnectToMapdl:
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50053
 
-        with patch("ansys.mapdl.mcp.tools.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
             result = connect_to_mapdl(mock_context_no_mapdl, port=50053)
 
             # Verify connection with custom port
@@ -481,7 +577,7 @@ class TestConnectToMapdl:
         mock_mapdl._ip = "192.168.1.100"
         mock_mapdl._port = 50052
 
-        with patch("ansys.mapdl.mcp.tools.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
             result = connect_to_mapdl(mock_context_no_mapdl, ip="192.168.1.100")
 
             # Verify connection with custom IP
@@ -504,7 +600,7 @@ class TestConnectToMapdl:
         mock_mapdl._ip = "10.0.0.50"
         mock_mapdl._port = 50099
 
-        with patch("ansys.mapdl.mcp.tools.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
             result = connect_to_mapdl(mock_context_no_mapdl, port=50099, ip="10.0.0.50")
 
             # Verify connection with custom parameters
@@ -531,7 +627,7 @@ class TestConnectToMapdl:
 
     def test_connect_connection_error(self, mock_context_no_mapdl):
         """Test handling connection errors."""
-        with patch("ansys.mapdl.mcp.tools.Mapdl", side_effect=Exception("Connection refused")):
+        with patch("ansys.mapdl.core.Mapdl", side_effect=Exception("Connection refused")):
             result = connect_to_mapdl(mock_context_no_mapdl, port=50052, ip="localhost")
 
             # Verify error message is returned
@@ -543,9 +639,7 @@ class TestConnectToMapdl:
 
     def test_connect_network_error(self, mock_context_no_mapdl):
         """Test handling network errors during connection."""
-        with patch(
-            "ansys.mapdl.mcp.tools.Mapdl", side_effect=ConnectionError("Network unreachable")
-        ):
+        with patch("ansys.mapdl.core.Mapdl", side_effect=ConnectionError("Network unreachable")):
             result = connect_to_mapdl(mock_context_no_mapdl, port=50052, ip="192.168.1.999")
 
             # Verify error message
@@ -554,7 +648,7 @@ class TestConnectToMapdl:
 
     def test_connect_timeout_error(self, mock_context_no_mapdl):
         """Test handling timeout errors during connection."""
-        with patch("ansys.mapdl.mcp.tools.Mapdl", side_effect=TimeoutError("Connection timed out")):
+        with patch("ansys.mapdl.core.Mapdl", side_effect=TimeoutError("Connection timed out")):
             result = connect_to_mapdl(mock_context_no_mapdl)
 
             # Verify timeout error is handled
@@ -571,7 +665,7 @@ class TestConnectToMapdl:
         # Verify context starts with no MAPDL
         assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is None
 
-        with patch("ansys.mapdl.mcp.tools.Mapdl", return_value=mock_mapdl):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
             result = connect_to_mapdl(mock_context_no_mapdl)
 
             # Verify successful connection
@@ -588,7 +682,7 @@ class TestConnectToMapdl:
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50052
 
-        with patch("ansys.mapdl.mcp.tools.Mapdl", return_value=mock_mapdl):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
             connect_to_mapdl(mock_context_no_mapdl)
 
             # Verify logging messages
@@ -943,7 +1037,7 @@ class TestConnectionLifecycle:
         mock_mapdl.run = MagicMock(return_value="Command executed")
 
         # Step 1: Connect
-        with patch("ansys.mapdl.mcp.tools.Mapdl", return_value=mock_mapdl):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
             result = connect_to_mapdl(mock_context_no_mapdl)
             assert "Successfully connected" in result
 
@@ -978,7 +1072,7 @@ class TestConnectionLifecycle:
         mock_mapdl2._port = 50053
 
         # First connection
-        with patch("ansys.mapdl.mcp.tools.Mapdl", return_value=mock_mapdl1):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl1):
             result = connect_to_mapdl(mock_context_no_mapdl, port=50052)
             assert "Successfully connected" in result
             assert "50052" in result
@@ -987,7 +1081,7 @@ class TestConnectionLifecycle:
         disconnect_from_mapdl(mock_context_no_mapdl)
 
         # Second connection with different parameters
-        with patch("ansys.mapdl.mcp.tools.Mapdl", return_value=mock_mapdl2):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl2):
             result = connect_to_mapdl(mock_context_no_mapdl, port=50053)
             assert "Successfully connected" in result
             assert "50053" in result
@@ -1088,7 +1182,7 @@ class TestLaunchWorkflow:
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50052
 
-        with patch("ansys.mapdl.mcp.tools.Mapdl", return_value=mock_mapdl):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
             connect_result = connect_to_mapdl(mock_context_no_mapdl)
             assert "Successfully connected" in connect_result
 

@@ -12,6 +12,7 @@ from ansys.mapdl.mcp.mpc import (
     mcp,
 )
 from ansys.mapdl.mcp.tools import (
+    check_mapdl_installed,
     check_mapdl_status,
     connect_to_mapdl,
     disconnect_from_mapdl,
@@ -25,6 +26,7 @@ from ansys.mapdl.mcp.tools import (
 __all__ = [
     "AppContext",
     "app_lifespan",
+    "check_mapdl_installed",
     "check_mapdl_status",
     "connect_to_mapdl",
     "disconnect_from_mapdl",
