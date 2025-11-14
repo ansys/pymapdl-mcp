@@ -1,8 +1,8 @@
-"""Resources for PyMAPDL MCP Server.
+"""Context tools for PyMAPDL MCP Server.
 
-This module defines MCP resources that provide context and guidance for
-PyMAPDL and Ansys MAPDL workflows. Resources are read-only documents that
-can be accessed by the MCP client to get help with various aspects of
+This module defines MCP tools that provide context and guidance for
+PyMAPDL and Ansys MAPDL workflows. These tools return context information
+that can be accessed by the LLM to get help with various aspects of
 MAPDL simulations.
 """
 
@@ -12,9 +12,9 @@ MAPDL simulations.
 from ansys.mapdl.mcp.mpc import mcp
 
 
-@mcp.resource("mapdl://workflow/overview")
-def workflow_overview() -> str:
-    """General MAPDL simulation workflow overview.
+@mcp.tool()
+def get_context_for_workflow_overview() -> str:
+    """Get general MAPDL simulation workflow overview context.
 
     Returns
     -------
@@ -67,9 +67,9 @@ Always follow this general simulation process when explaining or generating PyMA
 """
 
 
-@mcp.resource("mapdl://workflow/preprocessing/geometry")
-def preprocessing_geometry() -> str:
-    """Geometry and meshing guidelines for MAPDL preprocessing.
+@mcp.tool()
+def get_context_for_preprocessing_geometry() -> str:
+    """Get geometry and meshing guidelines for MAPDL preprocessing.
 
     Returns
     -------
@@ -105,9 +105,9 @@ mapdl.com("Creating geometry")
 """
 
 
-@mcp.resource("mapdl://workflow/preprocessing/elements")
-def preprocessing_elements() -> str:
-    """Element type selection and definition guidelines.
+@mcp.tool()
+def get_context_for_preprocessing_elements() -> str:
+    """Get element type selection and definition guidelines.
 
     Returns
     -------
@@ -175,9 +175,9 @@ The following element types are commonly used in MAPDL simulations:
 """
 
 
-@mcp.resource("mapdl://workflow/preprocessing/materials")
-def preprocessing_materials() -> str:
-    """Material model definition guidelines.
+@mcp.tool()
+def get_context_for_preprocessing_materials() -> str:
+    """Get material model definition guidelines.
 
     Returns
     -------
@@ -246,9 +246,9 @@ mapdl.mp("DENS", 1, 7850)   # Density in kg/m³
 """
 
 
-@mcp.resource("mapdl://workflow/preprocessing/mesh")
-def preprocessing_mesh() -> str:
-    """Mesh generation guidelines.
+@mcp.tool()
+def get_context_for_preprocessing_mesh() -> str:
+    """Get mesh generation guidelines.
 
     Returns
     -------
@@ -309,9 +309,9 @@ mapdl.vmesh("ALL")
 """
 
 
-@mcp.resource("mapdl://workflow/preprocessing/boundary-conditions")
-def preprocessing_boundary_conditions() -> str:
-    """Boundary conditions and loads application guidelines.
+@mcp.tool()
+def get_context_for_preprocessing_boundary_conditions() -> str:
+    """Get boundary conditions and loads application guidelines.
 
     Returns
     -------
@@ -403,9 +403,9 @@ mapdl.f(node_id, "FY", -1000)
 """
 
 
-@mcp.resource("mapdl://workflow/solution")
-def solution_phase() -> str:
-    """Solution phase guidelines for MAPDL analysis.
+@mcp.tool()
+def get_context_for_solution_phase() -> str:
+    """Get solution phase guidelines for MAPDL analysis.
 
     Returns
     -------
@@ -499,9 +499,9 @@ mapdl.solve()
 """
 
 
-@mcp.resource("mapdl://workflow/postprocessing")
-def postprocessing_phase() -> str:
-    """Postprocessing phase guidelines for MAPDL analysis.
+@mcp.tool()
+def get_context_for_postprocessing_phase() -> str:
+    """Get postprocessing phase guidelines for MAPDL analysis.
 
     Returns
     -------
@@ -651,9 +651,9 @@ mapdl.plot_element_solution("SEQV")
 """
 
 
-@mcp.resource("mapdl://workflow/general-rules")
-def general_rules() -> str:
-    """General rules and best practices for MAPDL workflows.
+@mcp.tool()
+def get_context_for_general_rules() -> str:
+    """Get general rules and best practices for MAPDL workflows.
 
     Returns
     -------
@@ -740,12 +740,12 @@ Keep the workflow structure consistent across all analysis types:
 """
 
 
-def register_all_resources():
-    """Register all workflow resources with the MCP server.
+def register_all_context_tools():
+    """Register all workflow context tools with the MCP server.
 
-    This function is called to ensure all resources are properly registered.
-    The actual registration happens via the @mcp.resource decorators above.
+    This function is called to ensure all context tools are properly registered.
+    The actual registration happens via the @mcp.tool decorators above.
     """
-    # Resources are registered via decorators
-    # This function serves as a marker that all resources are loaded
+    # Context tools are registered via decorators
+    # This function serves as a marker that all tools are loaded
     pass
