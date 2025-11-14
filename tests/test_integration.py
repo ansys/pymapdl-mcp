@@ -60,7 +60,7 @@ class TestMapdlIntegration:
         """Create a real context with actual MAPDL connection."""
         from unittest.mock import MagicMock
 
-        from ansys.mapdl.mcp.mpc import AppContext
+        from ansys.mapdl.mcp.mcp import AppContext
 
         context = MagicMock()
         context.request_context = MagicMock()
@@ -214,7 +214,7 @@ class TestRunMultipleCommandsIntegration:
         """Create a real context with actual MAPDL connection."""
         from unittest.mock import MagicMock
 
-        from ansys.mapdl.mcp.mpc import AppContext
+        from ansys.mapdl.mcp.mcp import AppContext
 
         context = MagicMock()
         context.request_context = MagicMock()

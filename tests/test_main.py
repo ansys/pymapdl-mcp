@@ -8,7 +8,7 @@ import pytest
 @pytest.mark.unit
 def test_main_function_exists():
     """Test that main function is defined."""
-    from ansys.mapdl.mcp.mpc import main
+    from ansys.mapdl.mcp.mcp import main
 
     assert callable(main)
 
@@ -19,10 +19,10 @@ def test_main_entry_point():
     import asyncio
 
     with patch.object(asyncio, "run") as mock_run:
-        with patch("ansys.mapdl.mcp.mpc.mcp") as mock_mcp:
+        with patch("ansys.mapdl.mcp.mcp.mcp") as mock_mcp:
             mock_mcp.run_stdio_async = AsyncMock()
 
-            from ansys.mapdl.mcp.mpc import main
+            from ansys.mapdl.mcp.mcp import main
 
             # Mock asyncio.run to avoid actually starting the server
             main()
@@ -36,7 +36,7 @@ def test_module_main_guard():
     """Test that the module can be imported without running main."""
     # This test verifies that importing the module doesn't automatically
     # start the server (due to if __name__ == "__main__" guard)
-    import ansys.mapdl.mcp.mpc
+    import ansys.mapdl.mcp.mcp
 
     # If we got here without hanging, the guard works correctly
-    assert hasattr(ansys.mapdl.mcp.mpc, "main")
+    assert hasattr(ansys.mapdl.mcp.mcp, "main")

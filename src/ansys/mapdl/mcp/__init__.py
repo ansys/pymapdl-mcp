@@ -8,7 +8,7 @@ __version__ = "0.1.0"
 
 # Import resources to register them with the MCP server
 from ansys.mapdl.mcp import resources  # noqa: F401
-from ansys.mapdl.mcp.mpc import (
+from ansys.mapdl.mcp.mcp import (
     AppContext,
     app_lifespan,
     mcp,

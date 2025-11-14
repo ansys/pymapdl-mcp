@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ansys.mapdl.mcp.mpc import AppContext, app_lifespan, mcp
+from ansys.mapdl.mcp.mcp import AppContext, app_lifespan, mcp
 
 
 @pytest.mark.unit

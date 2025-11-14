@@ -8,8 +8,8 @@ MAPDL simulations.
 
 # flake8: noqa: E501
 
-# Import the mcp instance from mpc.py
-from ansys.mapdl.mcp.mpc import mcp
+# Import the mcp instance from mcp.py
+from ansys.mapdl.mcp.mcp import mcp
 
 
 @mcp.resource("mapdl://workflow/overview")

@@ -6,7 +6,7 @@ import pytest
 @pytest.mark.asyncio
 async def test_resources_registered():
     """Test that all resources are registered with the MCP server."""
-    from ansys.mapdl.mcp.mpc import mcp
+    from ansys.mapdl.mcp.mcp import mcp
 
     # Get list of registered resources
     resource_list = await mcp.list_resources()
@@ -33,7 +33,7 @@ async def test_resources_registered():
 @pytest.mark.asyncio
 async def test_resources_readable_at_runtime():
     """Test that all registered resources can be read at runtime."""
-    from ansys.mapdl.mcp.mpc import mcp
+    from ansys.mapdl.mcp.mcp import mcp
 
     # Get list of all registered resources
     resource_list = await mcp.list_resources()
@@ -62,7 +62,7 @@ async def test_resources_readable_at_runtime():
 @pytest.mark.asyncio
 async def test_specific_resource_content_at_runtime():
     """Test that specific resources return expected content at runtime."""
-    from ansys.mapdl.mcp.mpc import mcp
+    from ansys.mapdl.mcp.mcp import mcp
 
     # Test workflow overview
     overview_list = await mcp.read_resource("mapdl://workflow/overview")
