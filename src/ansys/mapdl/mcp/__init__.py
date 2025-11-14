@@ -8,7 +8,7 @@ __version__ = "0.1.0"
 
 # Import contexts module to register context tools with the MCP server
 from ansys.mapdl.mcp import contexts  # noqa: F401
-from ansys.mapdl.mcp.mpc import (
+from ansys.mapdl.mcp.mcp import (
     AppContext,
     app_lifespan,
     mcp,

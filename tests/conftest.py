@@ -8,7 +8,7 @@ import pytest
 from mcp.server.fastmcp import FastMCP
 from mcp.server.session import ServerSession
 
-from ansys.mapdl.mcp.mpc import AppContext
+from ansys.mapdl.mcp.mcp import AppContext
 
 
 @pytest.fixture
@@ -68,7 +68,7 @@ def mock_context_no_mapdl(mock_server_session, app_context_no_mapdl):
 @pytest.fixture
 def mcp_server():
     """Create a FastMCP server instance for testing."""
-    from ansys.mapdl.mcp.mpc import mcp
+    from ansys.mapdl.mcp.mcp import mcp
 
     return mcp
 
