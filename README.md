@@ -40,8 +40,10 @@ You should add the following to your `.vscode/mcp.json` file in your project dir
 	"servers": {
 		"pymapdl": {
 			"type": "stdio",
-      "command": "uvx",
-      "args": ["--from", "git+https://github.com/ansys/pymapdl-mcp", "ansys.mapdl.mcp.mcp"]
+			"command": "uvx",
+      		"args": [
+				"--from", "git+https://github.com/ansys/pymapdl-mcp", "ansys-mapdl-mcp"
+			]
 		}
 	}
 }
