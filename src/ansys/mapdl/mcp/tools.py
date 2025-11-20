@@ -10,7 +10,7 @@ from mcp.server.fastmcp import Context
 from mcp.server.session import ServerSession
 from mcp.types import ImageContent, TextContent
 
-from ansys.mapdl.mcp.mpc import AppContext, mcp
+from ansys.mapdl.mcp.mcp import AppContext, mcp
 
 logger = logging.getLogger(__name__)
 
