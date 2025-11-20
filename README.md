@@ -40,8 +40,10 @@ You should add the following to your `.vscode/mcp.json` file in your project dir
 	"servers": {
 		"pymapdl": {
 			"type": "stdio",
-      "command": "uvx",
-      "args": ["--from", "git+https://github.com/ansys/pymapdl-mcp", "ansys.mapdl.mcp.mcp"]
+			"command": "uvx",
+      		"args": [
+				"--from", "git+https://github.com/ansys/pymapdl-mcp", "ansys-mapdl-mcp"
+			]
 		}
 	}
 }
@@ -61,7 +63,10 @@ Edit the file `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "pymapdl": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/ansys/pymapdl-mcp", "ansys-mapdl-mcp"]
+      "args": ["--from", "git+https://github.com/ansys/pymapdl-mcp", "ansys-mapdl-mcp"],
+      "description": "A simple MCP server to talk to MAPDL",
+      "version": "0.1.0",
+      "language": "python"
     }
   }
 }
@@ -435,7 +440,7 @@ pymapdl-mcp/
 │       └── mapdl/
 │           └── mcp/
 │               ├── __init__.py         # Package initialization & exports
-│               ├── mpc.py              # Main MCP server & lifecycle management
+│               ├── mcp.py              # Main MCP server & lifecycle management
 │               ├── tools.py            # MCP tool implementations
 │               ├── helpers.py          # Helper functions (instance discovery)
 │               ├── prompts.py          # MCP prompts (future use)
@@ -467,7 +472,7 @@ The server uses the FastMCP framework with lifespan management:
 
 ### Adding New Tools
 
-To add new MAPDL tools, edit `src/ansys/mapdl/mcp/mpc.py` and use the `@mcp.tool()` decorator:
+To add new MAPDL tools, edit `src/ansys/mapdl/mcp/mcp.py` and use the `@mcp.tool()` decorator:
 
 ```python
 @mcp.tool()
