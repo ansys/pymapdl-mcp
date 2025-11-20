@@ -47,6 +47,8 @@ repos:
       - id: mypy
         args: [--config-file=pyproject.toml]
         exclude: ^(tests/|\.venv/|venv/)
+        additional_dependencies:
+          - types-tabulate
 
   # Docstring checks
   - repo: https://github.com/PyCQA/pydocstyle

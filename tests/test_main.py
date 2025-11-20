@@ -36,7 +36,7 @@ def test_module_main_guard():
     """Test that the module can be imported without running main."""
     # This test verifies that importing the module doesn't automatically
     # start the server (due to if __name__ == "__main__" guard)
-    import ansys.mapdl.mcp.mcp
+    import ansys.mapdl.mcp
 
     # If we got here without hanging, the guard works correctly
-    assert hasattr(ansys.mapdl.mcp.mcp, "main")
+    assert hasattr(ansys.mapdl.mcp, "main")
