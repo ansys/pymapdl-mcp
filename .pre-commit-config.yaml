@@ -23,7 +23,6 @@ repos:
     rev: 25.9.0
     hooks:
       - id: black
-        language_version: python3
         args: ['--line-length=100']
 
   # Import sorting with isort
@@ -52,7 +51,7 @@ repos:
         exclude: ^(tests/|\.venv/|venv/)
         require_serial: true
         pass_filenames: false
-        args: [--ignore-missing-imports, --python-version=3.10, --namespace-packages, --explicit-package-bases, src/ansys/mapdl/mcp]
+        args: [--ignore-missing-imports, --namespace-packages, --explicit-package-bases, src/ansys/mapdl/mcp]
 
   # Docstring checks
   - repo: https://github.com/PyCQA/pydocstyle
