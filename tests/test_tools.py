@@ -26,8 +26,16 @@ class TestCheckMapdlStatus:
         result = check_mapdl_status(mock_context)
 
         assert isinstance(result, str)
-        assert "MAPDL is available" in result
-        assert "2024 R2" in result
+        # Check for JSON structure
+        import json
+
+        data = json.loads(result)
+        assert "connection" in data
+        assert "information" in data
+        assert "geometry" in data
+        assert "post_processing" in data
+        assert "mesh" in data
+        assert "version" in data["connection"]
 
     def test_check_status_without_mapdl(self, mock_context_no_mapdl):
         """Test checking MAPDL status when MAPDL is not available."""

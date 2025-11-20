@@ -1,6 +1,7 @@
 """List of tools in PyMAPDL-MCP."""
 
 import base64
+import json
 import logging
 import os
 import tempfile
@@ -20,6 +21,10 @@ logger = logging.getLogger(__name__)
 def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
     """Check the status of MAPDL initialization.
 
+    This tool executes the /STATUS command in MAPDL and extracts comprehensive
+    information from PyMAPDL's Information, Geometry, and Post_processing classes.
+    It also checks whether the MAPDL instance has exited or is exiting.
+
     Parameters
     ----------
     ctx : Context[ServerSession, AppContext]
@@ -28,14 +33,122 @@ def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
     Returns
     -------
     str
-        Status message with MAPDL version information.
+        JSON string containing comprehensive MAPDL status information including:
+        - connection: Basic connection info (version, port, ip, directory, is_alive)
+        - information: Data from Information class (title, jobname, routine, units, etc.)
+        - geometry: Geometry statistics (number of keypoints, lines, areas, volumes)
+        - post_processing: Post-processing availability and result sets
+        - mesh: Mesh statistics (number of nodes and elements)
+
+        Returns an error message if MAPDL is not available or has exited.
     """
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
         return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
 
-    return f"MAPDL is available. Version: {mapdl.version}"  # type: ignore[union-attr]
+    try:
+        # Check if MAPDL has exited
+        if hasattr(mapdl, "_exited") and mapdl._exited:
+            return "MAPDL instance has exited. Please reconnect or launch a new instance."
+
+        if hasattr(mapdl, "_exiting") and mapdl._exiting:
+            return "MAPDL instance is currently exiting. Please wait or launch a new instance."
+
+        # Execute /STATUS command to verify connection
+        mapdl.run("/STATUS")  # type: ignore[union-attr]
+
+        info: dict = {}
+
+        # Basic connection information
+        info["connection"] = {
+            "version": mapdl.version,
+            "is_alive": mapdl.is_alive,
+            "working_directory": mapdl.directory,
+            "port": mapdl.port,
+            "ip": mapdl.ip,
+        }
+
+        # Information class attributes
+        info_class: dict = {}
+        try:
+            info_class["title"] = (
+                mapdl.information.title if hasattr(mapdl.information, "title") else ""
+            )
+            info_class["jobname"] = (
+                mapdl.information.jobname if hasattr(mapdl.information, "jobname") else ""
+            )
+            info_class["routine"] = (
+                mapdl.information.routine if hasattr(mapdl.information, "routine") else ""
+            )
+            info_class["units"] = (
+                mapdl.information.units if hasattr(mapdl.information, "units") else ""
+            )
+            info_class["revision"] = (
+                mapdl.information.revision if hasattr(mapdl.information, "revision") else ""
+            )
+            info_class["product"] = (
+                mapdl.information.product if hasattr(mapdl.information, "product") else ""
+            )
+        except Exception as e:
+            logger.warning(f"Error extracting information class data: {e}")
+            info_class["error"] = str(e)
+        info["information"] = info_class
+
+        # Geometry class attributes
+        geometry_info: dict = {}
+        try:
+            # Try to get number of keypoints, lines, areas, volumes
+            geometry_info["n_keypoint"] = (
+                mapdl.geometry.n_keypoint if hasattr(mapdl.geometry, "n_keypoint") else 0
+            )
+            geometry_info["n_line"] = (
+                mapdl.geometry.n_line if hasattr(mapdl.geometry, "n_line") else 0
+            )
+            geometry_info["n_area"] = (
+                mapdl.geometry.n_area if hasattr(mapdl.geometry, "n_area") else 0
+            )
+            geometry_info["n_volu"] = (
+                mapdl.geometry.n_volu if hasattr(mapdl.geometry, "n_volu") else 0
+            )
+        except Exception as e:
+            logger.warning(f"Error extracting geometry data: {e}")
+            geometry_info["error"] = str(e)
+        info["geometry"] = geometry_info
+
+        # Post_processing class attributes
+        post_info: dict = {}
+        try:
+            # Try to get common post-processing information
+            if hasattr(mapdl, "post_processing"):
+                post_info["available"] = True
+                # Check for number of result sets
+                if hasattr(mapdl.post_processing, "nsets"):
+                    post_info["nsets"] = mapdl.post_processing.nsets
+            else:
+                post_info["available"] = False
+        except Exception as e:
+            logger.warning(f"Error extracting post_processing data: {e}")
+            post_info["error"] = str(e)
+        info["post_processing"] = post_info
+
+        # Mesh information
+        mesh_info: dict = {}
+        try:
+            mesh_info["n_node"] = mapdl.mesh.n_node if hasattr(mapdl.mesh, "n_node") else 0
+            mesh_info["n_elem"] = mapdl.mesh.n_elem if hasattr(mapdl.mesh, "n_elem") else 0
+        except Exception as e:
+            logger.warning(f"Error extracting mesh data: {e}")
+            mesh_info["error"] = str(e)
+        info["mesh"] = mesh_info
+
+        # Return as formatted JSON
+        return json.dumps(info, indent=2)
+
+    except Exception as e:
+        error_msg = f"Error checking MAPDL status: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
 
 
 @mcp.tool()

@@ -24,6 +24,36 @@ def mock_mapdl():
     mapdl.jobname = "file"
     mapdl.directory = "/tmp"
     mapdl.parameters = {}
+    mapdl.is_alive = True
+    mapdl.port = 50052
+    mapdl.ip = "127.0.0.1"
+    mapdl._exited = False
+    mapdl._exiting = False
+
+    # Mock Information class
+    mapdl.information = MagicMock()
+    mapdl.information.title = "Test Analysis"
+    mapdl.information.jobname = "file"
+    mapdl.information.routine = "PREP7"
+    mapdl.information.units = "SI"
+    mapdl.information.revision = "2024 R2"
+    mapdl.information.product = "ANSYS Mechanical Enterprise"
+
+    # Mock Geometry class
+    mapdl.geometry = MagicMock()
+    mapdl.geometry.n_keypoint = 0
+    mapdl.geometry.n_line = 0
+    mapdl.geometry.n_area = 0
+    mapdl.geometry.n_volu = 0
+
+    # Mock Post_processing class
+    mapdl.post_processing = MagicMock()
+    mapdl.post_processing.nsets = 0
+
+    # Mock Mesh class
+    mapdl.mesh = MagicMock()
+    mapdl.mesh.n_node = 0
+    mapdl.mesh.n_elem = 0
 
     return mapdl
 
