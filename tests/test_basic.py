@@ -48,6 +48,7 @@ def test_all_exports():
         "launch_mapdl",
         "list_mapdl_instances",
         "mcp",
+        "main",
         "run_mapdl_command",
         "run_multiple_commands",
         "write_comment",

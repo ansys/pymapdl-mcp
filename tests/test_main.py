@@ -18,16 +18,14 @@ def test_main_entry_point():
     """Test that main entry point can be called."""
     import asyncio
 
+    from ansys.mapdl.mcp.mcp import main, mcp
+
     with patch.object(asyncio, "run") as mock_run:
-        with patch("ansys.mapdl.mcp.mcp.mcp") as mock_mcp:
-            mock_mcp.run_stdio_async = AsyncMock()
-
-            from ansys.mapdl.mcp.mcp import main
-
+        with patch.object(mcp, "run_stdio_async", new_callable=AsyncMock):
             # Mock asyncio.run to avoid actually starting the server
             main()
 
-            # Verify that asyncio.run was called
+            # Verify that asyncio.run was called with mcp.run_stdio_async()
             mock_run.assert_called_once()
 
 
@@ -36,7 +34,7 @@ def test_module_main_guard():
     """Test that the module can be imported without running main."""
     # This test verifies that importing the module doesn't automatically
     # start the server (due to if __name__ == "__main__" guard)
-    import ansys.mapdl.mcp.mcp
+    import ansys.mapdl.mcp
 
     # If we got here without hanging, the guard works correctly
-    assert hasattr(ansys.mapdl.mcp.mcp, "main")
+    assert hasattr(ansys.mapdl.mcp, "main")
