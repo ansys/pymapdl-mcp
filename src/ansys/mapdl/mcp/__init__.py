@@ -6,6 +6,8 @@ AI assistants to interact with Ansys MAPDL through PyMAPDL.
 
 __version__ = "0.1.0"
 
+# Import contexts module to register context tools with the MCP server
+from ansys.mapdl.mcp import contexts  # noqa: F401
 from ansys.mapdl.mcp.mpc import (
     AppContext,
     app_lifespan,
