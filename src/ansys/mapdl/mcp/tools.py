@@ -6,6 +6,7 @@ import logging
 import os
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from mcp.server.fastmcp import Context
 from mcp.server.session import ServerSession
@@ -58,19 +59,19 @@ def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
         # Execute /STATUS command to verify connection
         mapdl.run("/STATUS")  # type: ignore[union-attr]
 
-        info: dict = {}
+        info: dict[str, str | dict[str, Any]] = {}
 
         # Basic connection information
         info["connection"] = {
             "version": mapdl.version,
             "is_alive": mapdl.is_alive,
-            "working_directory": mapdl.directory,
+            "working_directory": str(mapdl.directory),
             "port": mapdl.port,
             "ip": mapdl.ip,
         }
 
         # Information class attributes
-        info_class: dict = {}
+        info_class: dict[str, str] = {}
         try:
             info_class["title"] = (
                 mapdl.information.title if hasattr(mapdl.information, "title") else ""
@@ -96,7 +97,7 @@ def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
         info["information"] = info_class
 
         # Geometry class attributes
-        geometry_info: dict = {}
+        geometry_info: dict[str, int | str] = {}
         try:
             # Try to get number of keypoints, lines, areas, volumes
             geometry_info["n_keypoint"] = (
@@ -117,7 +118,7 @@ def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
         info["geometry"] = geometry_info
 
         # Post_processing class attributes
-        post_info: dict = {}
+        post_info: dict[str, str | int | bool] = {}
         try:
             # Try to get common post-processing information
             if hasattr(mapdl, "post_processing"):
@@ -133,7 +134,7 @@ def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
         info["post_processing"] = post_info
 
         # Mesh information
-        mesh_info: dict = {}
+        mesh_info: dict[str, int | str] = {}
         try:
             mesh_info["n_node"] = mapdl.mesh.n_node if hasattr(mapdl.mesh, "n_node") else 0
             mesh_info["n_elem"] = mapdl.mesh.n_elem if hasattr(mapdl.mesh, "n_elem") else 0
@@ -166,7 +167,10 @@ def check_mapdl_installed() -> str:
     logger.info("Checking if MAPDL is installed...")
 
     try:
-        from ansys.mapdl.core.launcher import check_valid_ansys, get_default_ansys_path
+        from ansys.mapdl.core.launcher import (  # type: ignore
+            check_valid_ansys,
+            get_default_ansys_path,
+        )
 
         is_installed = check_valid_ansys()
 
@@ -266,7 +270,7 @@ def run_multiple_commands(ctx: Context[ServerSession, AppContext], commands: lis
     if not commands:
         return "No commands provided. Please provide a list of commands to execute."
 
-    if not isinstance(commands, list):
+    if not isinstance(commands, list):  # type: ignore
         return "Commands must be provided as a list of strings."
 
     # Filter out empty commands
@@ -336,7 +340,7 @@ def launch_mapdl(
     str
         Launch status message with MAPDL version and connection information.
     """
-    from ansys.mapdl.core import launch_mapdl
+    from ansys.mapdl.core import launch_mapdl  # pyright: ignore[reportMissingTypeStubs]
 
     logger.info("Launching new MAPDL instance...")
 
@@ -351,7 +355,7 @@ def launch_mapdl(
             )
 
         # Launch new MAPDL instance
-        kwargs = {
+        kwargs: dict[str, Any] = {
             "nproc": nproc,
             "loglevel": "INFO",
         }
@@ -407,7 +411,7 @@ def connect_to_mapdl(
     str
         Connection status message with MAPDL version information.
     """
-    from ansys.mapdl.core import Mapdl
+    from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
 
     logger.info(f"Connecting to MAPDL instance at {ip}:{port}...")
 
@@ -592,9 +596,7 @@ def screenshot(
         ]
 
     except Exception as e:
-        if (
-            "temp_path" in locals() and Path(temp_path).exists()
-        ):  # pyright: ignore[reportPossiblyUnboundVariable]
+        if "temp_path" in locals() and Path(temp_path).exists():  # type: ignore
             Path(temp_path).unlink()  # pyright: ignore[reportPossiblyUnboundVariable]
 
         error_msg = f"Failed to capture screenshot: {str(e)}"
