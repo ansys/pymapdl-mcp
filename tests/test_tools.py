@@ -1,20 +1,22 @@
 """Tests for MCP tools functionality."""
 
+import json
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from ansys.mapdl.mcp import (
+from ansys.mapdl.mcp.tools import (
     check_mapdl_installed,
     check_mapdl_status,
     connect_to_mapdl,
     disconnect_from_mapdl,
+    launch_mapdl,
     list_mapdl_instances,
     run_mapdl_command,
     run_multiple_commands,
+    screenshot,
     write_comment,
 )
-from ansys.mapdl.mcp.tools import launch_mapdl, screenshot
 
 
 @pytest.mark.unit
@@ -26,8 +28,16 @@ class TestCheckMapdlStatus:
         result = check_mapdl_status(mock_context)
 
         assert isinstance(result, str)
-        assert "MAPDL is available" in result
-        assert "2024 R2" in result
+        # Check for JSON structure
+        import json
+
+        data = json.loads(result)
+        assert "connection" in data
+        assert "information" in data
+        assert "geometry" in data
+        assert "post_processing" in data
+        assert "mesh" in data
+        assert "version" in data["connection"]
 
     def test_check_status_without_mapdl(self, mock_context_no_mapdl):
         """Test checking MAPDL status when MAPDL is not available."""
@@ -37,6 +47,188 @@ class TestCheckMapdlStatus:
         assert isinstance(result, str)
         assert "No MAPDL connection available" in result
         assert "connect_to_mapdl" in result
+
+    def test_check_status_with_exited_mapdl(self, mock_context):
+        """Test checking status when MAPDL has exited."""
+        mock_context.request_context.lifespan_context.mapdl._exited = True
+
+        result = check_mapdl_status(mock_context)
+
+        assert isinstance(result, str)
+        assert "MAPDL instance has exited" in result
+        assert "reconnect or launch" in result
+
+    def test_check_status_with_exiting_mapdl(self, mock_context):
+        """Test checking status when MAPDL is exiting."""
+        mock_context.request_context.lifespan_context.mapdl._exiting = True
+
+        result = check_mapdl_status(mock_context)
+
+        assert isinstance(result, str)
+        assert "MAPDL instance is currently exiting" in result
+
+    def test_check_status_missing_information_attributes(self, mock_context):
+        """Test status extraction when information class attributes are missing."""
+        import json
+
+        # Remove some information attributes
+        delattr(mock_context.request_context.lifespan_context.mapdl.information, "title")
+        delattr(mock_context.request_context.lifespan_context.mapdl.information, "product")
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with default values
+        data = json.loads(result)
+        assert "information" in data
+        assert data["information"]["title"] == ""
+        assert data["information"]["product"] == ""
+
+    def test_check_status_missing_geometry_attributes(self, mock_context):
+        """Test status extraction when geometry class attributes are missing."""
+        import json
+
+        # Remove geometry attributes
+        delattr(mock_context.request_context.lifespan_context.mapdl.geometry, "n_keypoint")
+        delattr(mock_context.request_context.lifespan_context.mapdl.geometry, "n_line")
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with default values
+        data = json.loads(result)
+        assert "geometry" in data
+        assert data["geometry"]["n_keypoint"] == 0
+        assert data["geometry"]["n_line"] == 0
+
+    def test_check_status_missing_mesh_attributes(self, mock_context):
+        """Test status extraction when mesh class attributes are missing."""
+        import json
+
+        # Remove mesh attributes
+        delattr(mock_context.request_context.lifespan_context.mapdl.mesh, "n_node")
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with default values
+        data = json.loads(result)
+        assert "mesh" in data
+        assert data["mesh"]["n_node"] == 0
+
+    def test_check_status_missing_post_processing(self, mock_context):
+        """Test status extraction when post_processing is not available."""
+        import json
+
+        # Remove post_processing attribute
+        delattr(mock_context.request_context.lifespan_context.mapdl, "post_processing")
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON
+        data = json.loads(result)
+        assert "post_processing" in data
+        assert data["post_processing"]["available"] == False
+
+    def test_check_status_information_class_exception(self, mock_context):
+        """Test status extraction when information class raises exception."""
+        import json
+
+        # Make information.title raise an exception
+        type(mock_context.request_context.lifespan_context.mapdl.information).title = property(
+            lambda self: (_ for _ in ()).throw(RuntimeError("Information error"))
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with error field
+        data = json.loads(result)
+        assert "information" in data
+        assert "error" in data["information"]
+
+    def test_check_status_geometry_class_exception(self, mock_context):
+        """Test status extraction when geometry class raises exception."""
+        import json
+
+        # Make geometry raise an exception
+        type(mock_context.request_context.lifespan_context.mapdl.geometry).n_keypoint = property(
+            lambda self: (_ for _ in ()).throw(RuntimeError("Geometry error"))
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with error field
+        data = json.loads(result)
+        assert "geometry" in data
+        assert "error" in data["geometry"]
+
+    def test_check_status_mesh_class_exception(self, mock_context):
+        """Test status extraction when mesh class raises exception."""
+        import json
+
+        # Make mesh raise an exception
+        type(mock_context.request_context.lifespan_context.mapdl.mesh).n_node = property(
+            lambda self: (_ for _ in ()).throw(RuntimeError("Mesh error"))
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with error field
+        data = json.loads(result)
+        assert "mesh" in data
+        assert "error" in data["mesh"]
+
+    def test_check_status_post_processing_exception(self, mock_context):
+        """Test status extraction when post_processing raises exception."""
+        import json
+
+        # Make post_processing.nsets raise an exception
+        type(mock_context.request_context.lifespan_context.mapdl.post_processing).nsets = property(
+            lambda self: (_ for _ in ()).throw(RuntimeError("Post error"))
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with error field
+        data = json.loads(result)
+        assert "post_processing" in data
+        assert "error" in data["post_processing"]
+
+    def test_check_status_all_data_present(self, mock_context):
+        """Test status extraction when all data is properly available."""
+        import json
+
+        result = check_mapdl_status(mock_context)
+
+        data = json.loads(result)
+
+        # Verify all sections are present
+        assert "connection" in data
+        assert "information" in data
+        assert "geometry" in data
+        assert "post_processing" in data
+        assert "mesh" in data
+
+        # Verify connection data
+        assert data["connection"]["version"] == "2024 R2"
+        assert "directory" in data["connection"]
+        assert "port" in data["connection"]
+        assert "ip" in data["connection"]
+
+        # Verify information data
+        assert "title" in data["information"]
+        assert "jobname" in data["information"]
+        assert "routine" in data["information"]
+
+        # Verify geometry data
+        assert "n_keypoint" in data["geometry"]
+        assert "n_line" in data["geometry"]
+        assert "n_area" in data["geometry"]
+        assert "n_volu" in data["geometry"]
+
+        # Verify mesh data
+        assert "n_node" in data["mesh"]
+        assert "n_elem" in data["mesh"]
+
+        # Verify post_processing data
+        assert "available" in data["post_processing"]
 
 
 @pytest.mark.unit
@@ -1030,11 +1222,42 @@ class TestConnectionLifecycle:
         """Test complete workflow: connect, use, disconnect."""
         # Create mock MAPDL
         mock_mapdl = MagicMock()
-        mock_mapdl.version = "2024 R2"
+        mock_mapdl.name = "MAPDL"
+        mock_mapdl.status = "Running"
+        mock_mapdl.version = 24.2
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50052
+        mock_mapdl.is_alive = True
+        mock_mapdl.is_local = True
+        mock_mapdl.port = 50052
+        mock_mapdl.ip = "localhost"
+        mock_mapdl.directory = "/tmp/test"
+        mock_mapdl.platform = "linux"
+        mock_mapdl.jobname = "file"
+        mock_mapdl.check_status = "running"
+        mock_mapdl._exited = False
+        mock_mapdl._exiting = False
+
         mock_mapdl.com = MagicMock(return_value="Comment written")
         mock_mapdl.run = MagicMock(return_value="Command executed")
+        # Add required class mocks
+        mock_mapdl.information = MagicMock()
+        mock_mapdl.information.title = ""
+        mock_mapdl.information.jobname = ""
+        mock_mapdl.information.routine = ""
+        mock_mapdl.information.units = ""
+        mock_mapdl.information.revision = ""
+        mock_mapdl.information.product = ""
+        mock_mapdl.geometry = MagicMock()
+        mock_mapdl.geometry.n_keypoint = 0
+        mock_mapdl.geometry.n_line = 0
+        mock_mapdl.geometry.n_area = 0
+        mock_mapdl.geometry.n_volu = 0
+        mock_mapdl.post_processing = MagicMock()
+        mock_mapdl.post_processing.nsets = 0
+        mock_mapdl.mesh = MagicMock()
+        mock_mapdl.mesh.n_node = 0
+        mock_mapdl.mesh.n_elem = 0
 
         # Step 1: Connect
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
@@ -1043,7 +1266,9 @@ class TestConnectionLifecycle:
 
         # Step 2: Use MAPDL
         status = check_mapdl_status(mock_context_no_mapdl)
-        assert "MAPDL is available" in status
+        status_data = json.loads(status)
+        assert "connection" in status_data
+        assert status_data["connection"]["version"] == 24.2
 
         comment_result = write_comment(mock_context_no_mapdl, "Test comment")
         assert "Comment written successfully" in comment_result
@@ -1109,14 +1334,39 @@ class TestLaunchWorkflow:
         """Test complete workflow: launch, use, disconnect."""
         # Create mock MAPDL
         mock_mapdl = MagicMock()
+        mock_mapdl.name = "MAPDL"
+        mock_mapdl.check_status = "Running"
         mock_mapdl.version = "2024 R2"
-        mock_mapdl._ip = "127.0.0.1"
-        mock_mapdl._port = 50052
         mock_mapdl.ip = "127.0.0.1"
         mock_mapdl.port = 50052
+        mock_mapdl.jobname = "file"
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
+        mock_mapdl.is_alive = True
+        mock_mapdl.is_local = True
+        mock_mapdl._exited = False
+        mock_mapdl._exiting = False
+        mock_mapdl.platform = "linux"
+
         mock_mapdl.com = MagicMock(return_value="Comment written")
         mock_mapdl.run = MagicMock(return_value="Command executed")
+        # Add required class mocks
+        mock_mapdl.information = MagicMock()
+        mock_mapdl.information.title = ""
+        mock_mapdl.information.jobname = ""
+        mock_mapdl.information.routine = ""
+        mock_mapdl.information.units = ""
+        mock_mapdl.information.revision = ""
+        mock_mapdl.information.product = ""
+        mock_mapdl.geometry = MagicMock()
+        mock_mapdl.geometry.n_keypoint = 0
+        mock_mapdl.geometry.n_line = 0
+        mock_mapdl.geometry.n_area = 0
+        mock_mapdl.geometry.n_volu = 0
+        mock_mapdl.post_processing = MagicMock()
+        mock_mapdl.post_processing.nsets = 0
+        mock_mapdl.mesh = MagicMock()
+        mock_mapdl.mesh.n_node = 0
+        mock_mapdl.mesh.n_elem = 0
 
         # Step 1: Launch
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
@@ -1125,7 +1375,9 @@ class TestLaunchWorkflow:
 
         # Step 2: Use MAPDL
         status = check_mapdl_status(mock_context_no_mapdl)
-        assert "MAPDL is available" in status
+        status_data = json.loads(status)
+        assert "connection" in status_data
+        assert status_data["connection"]["version"] == "2024 R2"
 
         comment_result = write_comment(mock_context_no_mapdl, "Test comment")
         assert "Comment written successfully" in comment_result

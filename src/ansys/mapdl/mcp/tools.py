@@ -1,10 +1,12 @@
 """List of tools in PyMAPDL-MCP."""
 
 import base64
+import json
 import logging
 import os
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from mcp.server.fastmcp import Context
 from mcp.server.session import ServerSession
@@ -20,6 +22,10 @@ logger = logging.getLogger(__name__)
 def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
     """Check the status of MAPDL initialization.
 
+    This tool executes the /STATUS command in MAPDL and extracts comprehensive
+    information from PyMAPDL's Information, Geometry, and Post_processing classes.
+    It also checks whether the MAPDL instance has exited or is exiting.
+
     Parameters
     ----------
     ctx : Context[ServerSession, AppContext]
@@ -28,14 +34,39 @@ def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
     Returns
     -------
     str
-        Status message with MAPDL version information.
+        JSON string containing comprehensive MAPDL status information including:
+        - connection: Basic connection info (version, port, ip, directory, is_alive)
+        - information: Data from Information class (title, jobname, routine, units, etc.)
+        - geometry: Geometry statistics (number of keypoints, lines, areas, volumes)
+        - post_processing: Post-processing availability and result sets
+        - mesh: Mesh statistics (number of nodes and elements)
+
+        Returns an error message if MAPDL is not available or has exited.
     """
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
         return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
 
-    return f"MAPDL is available. Version: {mapdl.version}"  # type: ignore[union-attr]
+    try:
+        from ansys.mapdl.mcp.helpers import get_info
+
+        # Check if MAPDL has exited
+        if hasattr(mapdl, "_exited") and mapdl._exited:
+            return "MAPDL instance has exited. Please reconnect or launch a new instance."
+
+        if hasattr(mapdl, "_exiting") and mapdl._exiting:
+            return "MAPDL instance is currently exiting. Please wait or launch a new instance."
+
+        info = get_info(mapdl)
+
+        # Return as formatted JSON
+        return json.dumps(info, indent=2)
+
+    except Exception as e:
+        error_msg = f"Error checking MAPDL status: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
 
 
 @mcp.tool()
@@ -53,7 +84,10 @@ def check_mapdl_installed() -> str:
     logger.info("Checking if MAPDL is installed...")
 
     try:
-        from ansys.mapdl.core.launcher import check_valid_ansys, get_default_ansys_path
+        from ansys.mapdl.core.launcher import (  # type: ignore
+            check_valid_ansys,
+            get_default_ansys_path,
+        )
 
         is_installed = check_valid_ansys()
 
@@ -153,7 +187,7 @@ def run_multiple_commands(ctx: Context[ServerSession, AppContext], commands: lis
     if not commands:
         return "No commands provided. Please provide a list of commands to execute."
 
-    if not isinstance(commands, list):
+    if not isinstance(commands, list):  # type: ignore
         return "Commands must be provided as a list of strings."
 
     # Filter out empty commands
@@ -223,7 +257,7 @@ def launch_mapdl(
     str
         Launch status message with MAPDL version and connection information.
     """
-    from ansys.mapdl.core import launch_mapdl
+    from ansys.mapdl.core import launch_mapdl  # pyright: ignore[reportMissingTypeStubs]
 
     logger.info("Launching new MAPDL instance...")
 
@@ -238,7 +272,7 @@ def launch_mapdl(
             )
 
         # Launch new MAPDL instance
-        kwargs = {
+        kwargs: dict[str, Any] = {
             "nproc": nproc,
             "loglevel": "INFO",
         }
@@ -294,7 +328,7 @@ def connect_to_mapdl(
     str
         Connection status message with MAPDL version information.
     """
-    from ansys.mapdl.core import Mapdl
+    from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
 
     logger.info(f"Connecting to MAPDL instance at {ip}:{port}...")
 
@@ -479,9 +513,7 @@ def screenshot(
         ]
 
     except Exception as e:
-        if (
-            "temp_path" in locals() and Path(temp_path).exists()
-        ):  # pyright: ignore[reportPossiblyUnboundVariable]
+        if "temp_path" in locals() and Path(temp_path).exists():  # type: ignore
             Path(temp_path).unlink()  # pyright: ignore[reportPossiblyUnboundVariable]
 
         error_msg = f"Failed to capture screenshot: {str(e)}"

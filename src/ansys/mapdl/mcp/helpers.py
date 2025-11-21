@@ -1,21 +1,10 @@
 import logging
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
 
 logger = logging.getLogger(__name__)
-
-
-def exception_wrapper(func: Callable[[], Any]) -> Any | str:
-    """Wrap to catch exceptions and return error messages."""
-    try:
-        return func()
-    except ImportError as e:
-        error_msg = f"Error when running {str(func)}: {e}"
-        logger.error(error_msg)
-        return error_msg
-    except Exception as e:
-        error_msg = f"Error listing MAPDL instances: {e}"
-        logger.error(error_msg)
-        return error_msg
 
 
 def list_instances(
@@ -153,3 +142,98 @@ def list_instances(
         table.append(proc_line)
 
     return str(tabulate(table, headers))
+
+
+def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
+    """
+    Get information from the MAPDL instance.
+
+    Parameters
+    ----------
+    mapdl : Mapdl
+        MAPDL instance
+
+    Returns
+    -------
+    dict[str, str | dict[str, Any]]
+        Dictionary containing MAPDL information
+    """
+    info: dict[str, str | dict[str, Any]] = {}
+
+    # Basic connection information
+    info["connection"] = {
+        "name": mapdl.name,
+        "ip": mapdl.ip,
+        "port": mapdl.port,
+        "version": mapdl.version,
+        "directory": str(mapdl.directory),
+        "status": mapdl.check_status.title(),
+        "is_local": mapdl.is_local,
+        "jobname": mapdl.jobname,
+        "platform": mapdl.platform,
+    }
+
+    # Information class attributes
+    info_class: dict[str, str] = {}
+    try:
+        info_class["title"] = mapdl.information.title if hasattr(mapdl.information, "title") else ""
+        info_class["jobname"] = (
+            mapdl.information.jobname if hasattr(mapdl.information, "jobname") else ""
+        )
+        info_class["routine"] = (
+            mapdl.information.routine if hasattr(mapdl.information, "routine") else ""
+        )
+        info_class["units"] = mapdl.information.units if hasattr(mapdl.information, "units") else ""
+        info_class["revision"] = (
+            mapdl.information.revision if hasattr(mapdl.information, "revision") else ""
+        )
+        info_class["product"] = (
+            mapdl.information.product if hasattr(mapdl.information, "product") else ""
+        )
+    except Exception as e:
+        logger.warning(f"Error extracting information class data: {e}")
+        info_class["error"] = str(e)
+    info["information"] = info_class
+
+    # Geometry class attributes
+    geometry_info: dict[str, int | str] = {}
+    try:
+        # Try to get number of keypoints, lines, areas, volumes
+        geometry_info["n_keypoint"] = (
+            mapdl.geometry.n_keypoint if hasattr(mapdl.geometry, "n_keypoint") else 0
+        )
+        geometry_info["n_line"] = mapdl.geometry.n_line if hasattr(mapdl.geometry, "n_line") else 0
+        geometry_info["n_area"] = mapdl.geometry.n_area if hasattr(mapdl.geometry, "n_area") else 0
+        geometry_info["n_volu"] = mapdl.geometry.n_volu if hasattr(mapdl.geometry, "n_volu") else 0
+    except Exception as e:
+        logger.warning(f"Error extracting geometry data: {e}")
+        geometry_info["error"] = str(e)
+    info["geometry"] = geometry_info
+
+    # Post_processing class attributes
+    post_info: dict[str, str | int | bool] = {}
+    try:
+        # Try to get common post-processing information
+        if hasattr(mapdl, "post_processing"):
+            post_info["available"] = True
+            # Check for number of result sets
+            if hasattr(mapdl.post_processing, "nsets"):
+                post_info["nsets"] = mapdl.post_processing.nsets
+        else:
+            post_info["available"] = False
+    except Exception as e:
+        logger.warning(f"Error extracting post_processing data: {e}")
+        post_info["error"] = str(e)
+    info["post_processing"] = post_info
+
+    # Mesh information
+    mesh_info: dict[str, int | str] = {}
+    try:
+        mesh_info["n_node"] = mapdl.mesh.n_node if hasattr(mapdl.mesh, "n_node") else 0
+        mesh_info["n_elem"] = mapdl.mesh.n_elem if hasattr(mapdl.mesh, "n_elem") else 0
+    except Exception as e:
+        logger.warning(f"Error extracting mesh data: {e}")
+        mesh_info["error"] = str(e)
+    info["mesh"] = mesh_info
+
+    return info
