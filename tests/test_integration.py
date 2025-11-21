@@ -70,11 +70,16 @@ class TestMapdlIntegration:
 
     def test_real_check_mapdl_status(self, real_context):
         """Test checking MAPDL status with a real connection."""
+        import json
+
         result = check_mapdl_status(real_context)
 
         assert isinstance(result, str)
-        assert "MAPDL is available" in result
-        assert "Version" in result
+        # Check for JSON structure
+        data = json.loads(result)
+        assert "connection" in data
+        assert "version" in data["connection"]
+        assert data["connection"]["status"] == "Running"
 
     def test_real_write_comment(self, real_context):
         """Test writing a comment with a real MAPDL connection."""
