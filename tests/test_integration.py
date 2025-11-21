@@ -79,7 +79,7 @@ class TestMapdlIntegration:
         data = json.loads(result)
         assert "connection" in data
         assert "version" in data["connection"]
-        assert data["connection"]["is_alive"] is True
+        assert data["connection"]["status"] == "Running"
 
     def test_real_write_comment(self, real_context):
         """Test writing a comment with a real MAPDL connection."""

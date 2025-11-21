@@ -1,20 +1,22 @@
 """Tests for MCP tools functionality."""
 
+import json
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from ansys.mapdl.mcp import (
+from ansys.mapdl.mcp.tools import (
     check_mapdl_installed,
     check_mapdl_status,
     connect_to_mapdl,
     disconnect_from_mapdl,
+    launch_mapdl,
     list_mapdl_instances,
     run_mapdl_command,
     run_multiple_commands,
+    screenshot,
     write_comment,
 )
-from ansys.mapdl.mcp.tools import launch_mapdl, screenshot
 
 
 @pytest.mark.unit
@@ -206,8 +208,7 @@ class TestCheckMapdlStatus:
 
         # Verify connection data
         assert data["connection"]["version"] == "2024 R2"
-        assert data["connection"]["is_alive"] == True
-        assert "working_directory" in data["connection"]
+        assert "directory" in data["connection"]
         assert "port" in data["connection"]
         assert "ip" in data["connection"]
 
@@ -1221,6 +1222,8 @@ class TestConnectionLifecycle:
         """Test complete workflow: connect, use, disconnect."""
         # Create mock MAPDL
         mock_mapdl = MagicMock()
+        mock_mapdl.name = "MAPDL"
+        mock_mapdl.status = "Running"
         mock_mapdl.version = "2024 R2"
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50052
@@ -1230,6 +1233,7 @@ class TestConnectionLifecycle:
         mock_mapdl.directory = "/tmp/test"
         mock_mapdl._exited = False
         mock_mapdl._exiting = False
+
         mock_mapdl.com = MagicMock(return_value="Comment written")
         mock_mapdl.run = MagicMock(return_value="Command executed")
         # Add required class mocks
@@ -1252,17 +1256,15 @@ class TestConnectionLifecycle:
         mock_mapdl.mesh.n_elem = 0
 
         # Step 1: Connect
-        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
+        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
             result = connect_to_mapdl(mock_context_no_mapdl)
             assert "Successfully connected" in result
 
         # Step 2: Use MAPDL
-        import json
-
         status = check_mapdl_status(mock_context_no_mapdl)
         status_data = json.loads(status)
         assert "connection" in status_data
-        assert status_data["connection"]["version"] == "2024 R2"
+        assert status_data["connection"]["version"] == 24.2
 
         comment_result = write_comment(mock_context_no_mapdl, "Test comment")
         assert "Comment written successfully" in comment_result
@@ -1328,15 +1330,19 @@ class TestLaunchWorkflow:
         """Test complete workflow: launch, use, disconnect."""
         # Create mock MAPDL
         mock_mapdl = MagicMock()
+        mock_mapdl.name = "MAPDL"
+        mock_mapdl.check_status = "Running"
         mock_mapdl.version = "2024 R2"
-        mock_mapdl._ip = "127.0.0.1"
-        mock_mapdl._port = 50052
         mock_mapdl.ip = "127.0.0.1"
         mock_mapdl.port = 50052
+        mock_mapdl.jobname = "file"
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
         mock_mapdl.is_alive = True
+        mock_mapdl.is_local = True
         mock_mapdl._exited = False
         mock_mapdl._exiting = False
+        mock_mapdl.platform = "linux"
+
         mock_mapdl.com = MagicMock(return_value="Comment written")
         mock_mapdl.run = MagicMock(return_value="Command executed")
         # Add required class mocks
@@ -1364,8 +1370,6 @@ class TestLaunchWorkflow:
             assert "Successfully launched MAPDL" in result
 
         # Step 2: Use MAPDL
-        import json
-
         status = check_mapdl_status(mock_context_no_mapdl)
         status_data = json.loads(status)
         assert "connection" in status_data

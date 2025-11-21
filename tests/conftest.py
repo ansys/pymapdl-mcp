@@ -22,13 +22,17 @@ def mock_mapdl():
 
     # Mock common MAPDL attributes
     mapdl.jobname = "file"
+    mapdl.name = "MAPDL instance 0"
+    mapdl.check_status = "RUNNING"
     mapdl.directory = "/tmp"
     mapdl.parameters = {}
     mapdl.is_alive = True
+    mapdl.is_local = True
     mapdl.port = 50052
     mapdl.ip = "127.0.0.1"
     mapdl._exited = False
     mapdl._exiting = False
+    mapdl.platform = "linux"
 
     # Mock Information class
     mapdl.information = MagicMock()
