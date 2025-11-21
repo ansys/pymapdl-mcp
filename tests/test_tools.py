@@ -46,6 +46,189 @@ class TestCheckMapdlStatus:
         assert "No MAPDL connection available" in result
         assert "connect_to_mapdl" in result
 
+    def test_check_status_with_exited_mapdl(self, mock_context):
+        """Test checking status when MAPDL has exited."""
+        mock_context.request_context.lifespan_context.mapdl._exited = True
+
+        result = check_mapdl_status(mock_context)
+
+        assert isinstance(result, str)
+        assert "MAPDL instance has exited" in result
+        assert "reconnect or launch" in result
+
+    def test_check_status_with_exiting_mapdl(self, mock_context):
+        """Test checking status when MAPDL is exiting."""
+        mock_context.request_context.lifespan_context.mapdl._exiting = True
+
+        result = check_mapdl_status(mock_context)
+
+        assert isinstance(result, str)
+        assert "MAPDL instance is currently exiting" in result
+
+    def test_check_status_missing_information_attributes(self, mock_context):
+        """Test status extraction when information class attributes are missing."""
+        import json
+
+        # Remove some information attributes
+        delattr(mock_context.request_context.lifespan_context.mapdl.information, "title")
+        delattr(mock_context.request_context.lifespan_context.mapdl.information, "product")
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with default values
+        data = json.loads(result)
+        assert "information" in data
+        assert data["information"]["title"] == ""
+        assert data["information"]["product"] == ""
+
+    def test_check_status_missing_geometry_attributes(self, mock_context):
+        """Test status extraction when geometry class attributes are missing."""
+        import json
+
+        # Remove geometry attributes
+        delattr(mock_context.request_context.lifespan_context.mapdl.geometry, "n_keypoint")
+        delattr(mock_context.request_context.lifespan_context.mapdl.geometry, "n_line")
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with default values
+        data = json.loads(result)
+        assert "geometry" in data
+        assert data["geometry"]["n_keypoint"] == 0
+        assert data["geometry"]["n_line"] == 0
+
+    def test_check_status_missing_mesh_attributes(self, mock_context):
+        """Test status extraction when mesh class attributes are missing."""
+        import json
+
+        # Remove mesh attributes
+        delattr(mock_context.request_context.lifespan_context.mapdl.mesh, "n_node")
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with default values
+        data = json.loads(result)
+        assert "mesh" in data
+        assert data["mesh"]["n_node"] == 0
+
+    def test_check_status_missing_post_processing(self, mock_context):
+        """Test status extraction when post_processing is not available."""
+        import json
+
+        # Remove post_processing attribute
+        delattr(mock_context.request_context.lifespan_context.mapdl, "post_processing")
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON
+        data = json.loads(result)
+        assert "post_processing" in data
+        assert data["post_processing"]["available"] == False
+
+    def test_check_status_information_class_exception(self, mock_context):
+        """Test status extraction when information class raises exception."""
+        import json
+
+        # Make information.title raise an exception
+        type(mock_context.request_context.lifespan_context.mapdl.information).title = property(
+            lambda self: (_ for _ in ()).throw(RuntimeError("Information error"))
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with error field
+        data = json.loads(result)
+        assert "information" in data
+        assert "error" in data["information"]
+
+    def test_check_status_geometry_class_exception(self, mock_context):
+        """Test status extraction when geometry class raises exception."""
+        import json
+
+        # Make geometry raise an exception
+        type(mock_context.request_context.lifespan_context.mapdl.geometry).n_keypoint = property(
+            lambda self: (_ for _ in ()).throw(RuntimeError("Geometry error"))
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with error field
+        data = json.loads(result)
+        assert "geometry" in data
+        assert "error" in data["geometry"]
+
+    def test_check_status_mesh_class_exception(self, mock_context):
+        """Test status extraction when mesh class raises exception."""
+        import json
+
+        # Make mesh raise an exception
+        type(mock_context.request_context.lifespan_context.mapdl.mesh).n_node = property(
+            lambda self: (_ for _ in ()).throw(RuntimeError("Mesh error"))
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with error field
+        data = json.loads(result)
+        assert "mesh" in data
+        assert "error" in data["mesh"]
+
+    def test_check_status_post_processing_exception(self, mock_context):
+        """Test status extraction when post_processing raises exception."""
+        import json
+
+        # Make post_processing.nsets raise an exception
+        type(mock_context.request_context.lifespan_context.mapdl.post_processing).nsets = property(
+            lambda self: (_ for _ in ()).throw(RuntimeError("Post error"))
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        # Should still return valid JSON with error field
+        data = json.loads(result)
+        assert "post_processing" in data
+        assert "error" in data["post_processing"]
+
+    def test_check_status_all_data_present(self, mock_context):
+        """Test status extraction when all data is properly available."""
+        import json
+
+        result = check_mapdl_status(mock_context)
+
+        data = json.loads(result)
+
+        # Verify all sections are present
+        assert "connection" in data
+        assert "information" in data
+        assert "geometry" in data
+        assert "post_processing" in data
+        assert "mesh" in data
+
+        # Verify connection data
+        assert data["connection"]["version"] == "2024 R2"
+        assert data["connection"]["is_alive"] == True
+        assert "working_directory" in data["connection"]
+        assert "port" in data["connection"]
+        assert "ip" in data["connection"]
+
+        # Verify information data
+        assert "title" in data["information"]
+        assert "jobname" in data["information"]
+        assert "routine" in data["information"]
+
+        # Verify geometry data
+        assert "n_keypoint" in data["geometry"]
+        assert "n_line" in data["geometry"]
+        assert "n_area" in data["geometry"]
+        assert "n_volu" in data["geometry"]
+
+        # Verify mesh data
+        assert "n_node" in data["mesh"]
+        assert "n_elem" in data["mesh"]
+
+        # Verify post_processing data
+        assert "available" in data["post_processing"]
+
 
 @pytest.mark.unit
 class TestCheckMapdlInstalled:
