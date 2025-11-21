@@ -1224,13 +1224,17 @@ class TestConnectionLifecycle:
         mock_mapdl = MagicMock()
         mock_mapdl.name = "MAPDL"
         mock_mapdl.status = "Running"
-        mock_mapdl.version = "2024 R2"
+        mock_mapdl.version = 24.2
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50052
         mock_mapdl.is_alive = True
+        mock_mapdl.is_local = True
         mock_mapdl.port = 50052
         mock_mapdl.ip = "localhost"
         mock_mapdl.directory = "/tmp/test"
+        mock_mapdl.platform = "linux"
+        mock_mapdl.jobname = "file"
+        mock_mapdl.check_status = "running"
         mock_mapdl._exited = False
         mock_mapdl._exiting = False
 
@@ -1256,7 +1260,7 @@ class TestConnectionLifecycle:
         mock_mapdl.mesh.n_elem = 0
 
         # Step 1: Connect
-        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
             result = connect_to_mapdl(mock_context_no_mapdl)
             assert "Successfully connected" in result
 
