@@ -48,6 +48,7 @@ class TestMapdlIntegration:
             if os.getenv("ON_CI", False):
                 raise e
             else:
+                raise e
                 pytest.skip(f"MAPDL not available: {e}")
 
     @pytest.fixture()
@@ -201,7 +202,7 @@ class TestRunMultipleCommandsIntegration:
         try:
             from ansys.mapdl.core import launch_mapdl
 
-            mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
+            mapdl = launch_mapdl(loglevel="ERROR")
             yield mapdl
         except Exception as e:
             if os.getenv("ON_CI", False):
@@ -353,7 +354,6 @@ class TestListMapdlInstancesIntegration:
 
             # Try to connect to verify MAPDL is running
             mapdl = launch_mapdl(
-                cleanup_on_exit=False,
                 loglevel="ERROR",
             )
 

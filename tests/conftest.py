@@ -63,15 +63,56 @@ def mock_mapdl():
 
 
 @pytest.fixture
-def app_context(mock_mapdl):
-    """Create an AppContext with a mock MAPDL instance."""
-    return AppContext(mapdl=mock_mapdl)
+def mock_pool(mock_mapdl):
+    """Create a mock MapdlPool instance."""
+    pool = MagicMock()
+    pool._instances = [mock_mapdl]
+    pool._n_instances = 1
+    pool._ips = ["127.0.0.1"]
+    pool._ports = [50052]
+    pool.__len__ = MagicMock(return_value=1)
+    pool.__getitem__ = MagicMock(return_value=mock_mapdl)
+    pool.exit = MagicMock()
+    return pool
+
+
+def create_mock_pool_with_mapdl():
+    """Helper function to create a mock pool with MAPDL instance for patching."""
+    mock_mapdl = MagicMock()
+    mock_mapdl.version = "2024 R2"
+    mock_mapdl.ip = "127.0.0.1"
+    mock_mapdl.port = 50052
+    mock_mapdl.directory = "/tmp/ansys_mapdl"
+    mock_mapdl._exited = False
+    mock_mapdl._exiting = False
+    mock_mapdl.com = MagicMock(return_value="Comment written")
+    mock_mapdl.run = MagicMock(return_value="Command executed")
+    mock_mapdl.exit = MagicMock()
+
+    mock_pool = MagicMock()
+    mock_pool._instances = [mock_mapdl]
+    mock_pool._n_instances = 1
+    mock_pool._ips = ["127.0.0.1"]
+    mock_pool._ports = [50052]
+    mock_pool.__getitem__ = MagicMock(return_value=mock_mapdl)
+    mock_pool.__len__ = MagicMock(return_value=1)
+    mock_pool.exit = MagicMock()
+
+    return mock_pool
+
+
+@pytest.fixture
+def app_context(mock_pool):
+    """Create an AppContext with a mock MAPDL instance in a pool."""
+    ctx = AppContext()
+    ctx.pool = mock_pool
+    return ctx
 
 
 @pytest.fixture
 def app_context_no_mapdl():
     """Create an AppContext without MAPDL (simulating connection failure)."""
-    return AppContext(mapdl=None)
+    return AppContext()
 
 
 @pytest.fixture
