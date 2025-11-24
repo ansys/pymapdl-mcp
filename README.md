@@ -91,9 +91,22 @@ claude mcp add --transport stdio --scope user pymapdl -- uvx --from git+https://
 
 For more information, visit [Claude Code Docs-Installing MCP servers](https://code.claude.com/docs/en/mcp#installing-mcp-servers)
 
+### As a standalone Application
+
+You can start the PyMAPDL MCP server as a standalone Python application using `uvx`:
+
+```console
+uvx --from git+https://github.com/ansys/pymapdl-mcp ansys-mapdl-mcp			]
+```
+You can also use your python virtual environment if you have pip installed PyMAPDL MCP server:
+
+```console
+./.venv/bin/python -m ansys.mapdl.mcp
+```
+
 ## Usage
 
-### Starting the MCP Server
+### Connect to an MAPDL instance
 
 Use the `connect_to_mapdl` tool to establish connections dynamically:
 
