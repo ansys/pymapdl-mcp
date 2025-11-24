@@ -203,7 +203,7 @@ class TestRunMultipleCommandsIntegration:
             from ansys.mapdl.core import launch_mapdl
 
             mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
-            
+
             yield mapdl
 
             mapdl.exit()
