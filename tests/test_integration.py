@@ -42,6 +42,7 @@ class TestMapdlIntegration:
 
             # Cleanup after tests
             # Don't exit since MAPDL is running externally
+            mapdl.exit()
 
         except Exception as e:
             # Not allow to skip if running on CICD
@@ -204,6 +205,8 @@ class TestRunMultipleCommandsIntegration:
 
             mapdl = launch_mapdl(loglevel="ERROR")
             yield mapdl
+
+            mapdl.exit()
         except Exception as e:
             if os.getenv("ON_CI", False):
                 raise e
@@ -376,6 +379,8 @@ class TestListMapdlInstancesIntegration:
         # without PyMAPDL (e.g., Docker container)
         # Check for table headers
         assert "Name" in result and "Is Instance" in result and "Status" in result
+
+        mapdl.exit()
 
     def test_list_instances_output_format(self):
         """Test that list_mapdl_instances returns properly formatted output."""
