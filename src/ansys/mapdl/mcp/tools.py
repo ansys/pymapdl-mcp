@@ -556,9 +556,9 @@ def list_pool_instances(ctx: Context[ServerSession, AppContext]) -> str:
         else:
             try:
                 # Determine status
-                if hasattr(instance, "_exited") and instance._exited:
+                if instance.exited:
                     status = "EXITED"
-                elif hasattr(instance, "_exiting") and instance._exiting:
+                elif instance.exiting:
                     status = "EXITING"
                 else:
                     status = "ACTIVE"

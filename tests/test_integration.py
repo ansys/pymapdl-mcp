@@ -49,7 +49,6 @@ class TestMapdlIntegration:
             if os.getenv("ON_CI", False):
                 raise e
             else:
-                raise e
                 pytest.skip(f"MAPDL not available: {e}")
 
     @pytest.fixture()

@@ -335,46 +335,25 @@ def create_pool(
             return "Error: Duplicate nicknames are not allowed"
 
     try:
-        # Build kwargs for MapdlPool
-        kwargs: dict[str, Any] = {
-            "n_instances": n_instances,
-            "nproc": nproc,
-            "start_instance": start_instance,
-            "clear_on_connect": clear_on_connect,
-            "remove_temp_dir_on_exit": remove_temp_dir_on_exit,
-            "start_timeout": start_timeout,
-            "restart_failed": True,  # Enable auto-restart for failed instances
-        }
-
-        if exec_file is not None:
-            kwargs["exec_file"] = exec_file
-
-        if run_location is not None:
-            kwargs["run_location"] = run_location
-
-        if jobname != "file":
-            kwargs["jobname"] = jobname
-
-        if ram is not None:
-            kwargs["ram"] = ram
-
-        if override:
-            kwargs["override"] = override
-
-        if additional_switches:
-            kwargs["additional_switches"] = additional_switches
-
-        if ip is not None:
-            kwargs["ip"] = ip
-
-        if port is not None:
-            kwargs["port"] = port
-
-        if not start_instance:
-            kwargs["cleanup_on_exit"] = cleanup_on_exit
-
-        # Create the pool
-        pool = MapdlPool(**kwargs)
+        # Create the pool - MapdlPool handles validation and defaults
+        pool = MapdlPool(
+            n_instances=n_instances,
+            exec_file=exec_file,
+            run_location=run_location,
+            jobname=jobname,
+            nproc=nproc,
+            ram=ram,
+            override=override,
+            additional_switches=additional_switches,
+            start_instance=start_instance,
+            clear_on_connect=clear_on_connect,
+            remove_temp_dir_on_exit=remove_temp_dir_on_exit,
+            start_timeout=start_timeout,
+            ip=ip,
+            port=port,
+            cleanup_on_exit=cleanup_on_exit,
+            restart_failed=True,  # Enable auto-restart for failed instances
+        )
 
         # Store pool in context
         ctx.request_context.lifespan_context.pool = pool
@@ -569,10 +548,10 @@ def get_mapdl_instance(
         mapdl_instance = pool[idx]
 
         # Check if instance has exited
-        if hasattr(mapdl_instance, "_exited") and mapdl_instance._exited:
+        if mapdl_instance.exited:
             return None, f"Instance {idx} has exited. Please reconnect or launch a new instance."
 
-        if hasattr(mapdl_instance, "_exiting") and mapdl_instance._exiting:
+        if mapdl_instance.exiting:
             return (
                 None,
                 f"Instance {idx} is currently exiting. Please wait or launch a new instance.",
@@ -619,7 +598,7 @@ def list_available_instances(ctx: "Context[ServerSession, AppContext]") -> str:
             nickname = find_nickname(ctx, idx)
             nickname_str = f' ("{nickname}")' if nickname else ""
             try:
-                status = "active" if not pool._instances[idx]._exited else "exited"
+                status = "active" if not pool._instances[idx].exited else "exited"
             except AttributeError:
                 status = "active"
             lines.append(f"  {idx}{nickname_str}: {status}")
