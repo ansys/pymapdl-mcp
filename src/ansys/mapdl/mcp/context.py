@@ -22,10 +22,4 @@ class PyMAPDLContext(PyAnsysBaseAppContext):
     Examples
     --------
     >>> context = PyMAPDLContext()
-    >>> # The mapdl instance will be set when connected
-    >>> context.mapdl = launch_mapdl()
-    >>> # Set product_instance to reference the same MAPDL instance
-    >>> context.product_instance = context.mapdl
     """
-    
-    mapdl: Optional[Any] = None

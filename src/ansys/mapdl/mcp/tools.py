@@ -120,7 +120,7 @@ def register_tools(mcp: PyMAPDLMCPServer):
                                 f"MAPDL session crashed and reconnection failed.\n\n"
                                 f"Original error: {error_msg}\n"
                                 f"Reconnection error: {reconnect_msg}\n\n"
-                                f"Please use 'launch_mapdl' or 'connect_to_mapdl' tool to establish a new connection.\n"
+                                f"Please use 'launch_new_mapdl' or 'connect_to_mapdl' tool to establish a new connection.\n"
                                 f"The system has stored {len(app_context.command_history)} previous commands "
                                 f"that will be automatically replayed after reconnection."
                             )
@@ -184,7 +184,7 @@ def register_tools(mcp: PyMAPDLMCPServer):
             return error_msg
     
     @mcp.tool()
-    def launch_mapdl(
+    def launch_new_mapdl(
         exec_file: str | None = None,
         run_location: str | None = None,
         nproc: int = 2,
@@ -278,8 +278,6 @@ def register_tools(mcp: PyMAPDLMCPServer):
 
         Parameters
         ----------
-        ctx : Context[ServerSession, PyMAPDLContext]
-            The MCP context containing server session and application context.
         port : int, optional
             The gRPC port where MAPDL is listening. Default is 50052.
         ip : str, optional
@@ -325,8 +323,8 @@ def register_tools(mcp: PyMAPDLMCPServer):
                 }
                 logger.info("Stored connection parameters for crash recovery")
                 
-                output = result.get("stdout", "MAPDL launched successfully")
-                logger.info(f"MAPDL launched successfully")
+                output = result.get("stdout", "MAPDL connected successfully")
+                logger.info(f"MAPDL connected successfully")
                 return output
 
             else:
@@ -345,11 +343,6 @@ def register_tools(mcp: PyMAPDLMCPServer):
 
         This tool disconnects from the currently connected MAPDL instance
         and cleans up the connection in the persistent Python session.
-
-        Parameters
-        ----------
-        ctx : Context[ServerSession, PyMAPDLContext]
-            The MCP context containing server session and application context.
 
         Returns
         -------
@@ -392,11 +385,6 @@ def register_tools(mcp: PyMAPDLMCPServer):
     def get_command_history() -> str:
         """Retrieve the command history executed in the current MAPDL session.
 
-        Parameters
-        ----------
-        ctx : Context[ServerSession, PyMAPDLContext]
-            The MCP context containing server session and application context.
-
         Returns
         -------
         str
@@ -421,11 +409,6 @@ def register_tools(mcp: PyMAPDLMCPServer):
     def clear_command_history() -> str:
         """Clear the command history executed in the current MAPDL session.
 
-        Parameters
-        ----------
-        ctx : Context[ServerSession, PyMAPDLContext]
-            The MCP context containing server session and application context.
-
         Returns
         -------
         str
@@ -444,11 +427,6 @@ def register_tools(mcp: PyMAPDLMCPServer):
     @mcp.tool()
     def undo_last_command() -> str:
         """Undo the last command executed in the current MAPDL session.
-
-        Parameters
-        ----------
-        ctx : Context[ServerSession, PyMAPDLContext]
-            The MCP context containing server session and application context.
 
         Returns
         -------
