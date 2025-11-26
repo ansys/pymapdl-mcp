@@ -1,521 +1,470 @@
-"""List of tools in PyMAPDL-MCP."""
-
-import base64
-import json
+from .server import PyMAPDLMCPServer
 import logging
-import os
-import tempfile
-from pathlib import Path
-from typing import Any
-
-from mcp.server.fastmcp import Context
-from mcp.server.session import ServerSession
-from mcp.types import ImageContent, TextContent
-
-from ansys.mapdl.mcp.mcp import AppContext, mcp
-
+from fastmcp.server.dependencies import get_context
 logger = logging.getLogger(__name__)
 
 
-# Access type-safe lifespan context in tools
-@mcp.tool()
-def check_mapdl_status(ctx: Context[ServerSession, AppContext]) -> str:
-    """Check the status of MAPDL initialization.
-
-    This tool executes the /STATUS command in MAPDL and extracts comprehensive
-    information from PyMAPDL's Information, Geometry, and Post_processing classes.
-    It also checks whether the MAPDL instance has exited or is exiting.
+def register_tools(mcp: PyMAPDLMCPServer):
+    """Register PyMAPDL-specific tools with the MCP server.
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
-
-    Returns
-    -------
-    str
-        JSON string containing comprehensive MAPDL status information including:
-        - connection: Basic connection info (version, port, ip, directory, is_alive)
-        - information: Data from Information class (title, jobname, routine, units, etc.)
-        - geometry: Geometry statistics (number of keypoints, lines, areas, volumes)
-        - post_processing: Post-processing availability and result sets
-        - mesh: Mesh statistics (number of nodes and elements)
-
-        Returns an error message if MAPDL is not available or has exited.
+    server : PyMAPDLMCPServer
+        The MCP server instance to register tools with.
     """
-    mapdl = ctx.request_context.lifespan_context.mapdl
 
-    if mapdl is None:
-        return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
+    @mcp.tool()
+    def execute_python_code(
+        code: str,
+        timeout: float = 30.0,
+    ) -> str:
+        """Execute Python code in the persistent Python session.
 
-    try:
-        from ansys.mapdl.mcp.helpers import get_info
+        This tool executes Python code using PyMAPDL in a persistent Python session.
+        The code should use PyMAPDL methods (e.g., mapdl.prep7(), mapdl.et(), etc.)
+        and assume that the 'mapdl' object is already available and connected.
 
-        # Check if MAPDL has exited
-        if hasattr(mapdl, "_exited") and mapdl._exited:
-            return "MAPDL instance has exited. Please reconnect or launch a new instance."
+        If the MAPDL session crashes during execution, this tool will automatically:
+        1. Attempt to reconnect to the existing MAPDL instance
+        2. If reconnection fails, launch a new MAPDL instance
+        3. Replay all previous commands from history
+        4. Execute the current command
 
-        if hasattr(mapdl, "_exiting") and mapdl._exiting:
-            return "MAPDL instance is currently exiting. Please wait or launch a new instance."
+        Parameters
+        ----------
+        code : str
+            Python code to execute. The code should use PyMAPDL methods.
+        timeout : float, optional
+            Maximum execution time in seconds. Default is 30.0.
 
-        info = get_info(mapdl)
-
-        # Return as formatted JSON
-        return json.dumps(info, indent=2)
-
-    except Exception as e:
-        error_msg = f"Error checking MAPDL status: {str(e)}"
-        logger.error(error_msg)
-        return error_msg
-
-
-@mcp.tool()
-def check_mapdl_installed() -> str:
-    """Check if MAPDL is installed on the system.
-
-    This tool uses PyMAPDL's check_valid_ansys function to verify if a valid
-    ANSYS/MAPDL installation is available on the system.
-
-    Returns
-    -------
-    str
-        Status message indicating whether MAPDL is installed or not.
-    """
-    logger.info("Checking if MAPDL is installed...")
-
-    try:
-        from ansys.mapdl.core.launcher import (  # type: ignore
-            check_valid_ansys,
-            get_default_ansys_path,
+        Returns
+        -------
+        str
+            Execution result containing stdout, stderr, and any error messages.
+            If recovery was needed, includes recovery status information.
+        """
+        from ansys.mapdl.mcp.helpers import (
+            check_mapdl_connection,
+            attempt_reconnect_mapdl,
+            replay_command_history,
         )
 
-        is_installed = check_valid_ansys()
-
-        if is_installed:
-            logger.info("MAPDL installation found")
-            return f"MAPDL is installed on this system in: {get_default_ansys_path()}"
-        else:
-            logger.info("MAPDL installation not found")
-            return (
-                "MAPDL is not installed on this system or cannot be found in the "
-                "standard locations. Please ensure ANSYS/MAPDL is properly installed "
-                "and the installation path is correct."
-            )
-
-    except Exception as e:
-        error_msg = f"Error checking MAPDL installation: {str(e)}"
-        logger.error(error_msg)
-        return error_msg
-
-
-@mcp.tool()
-def write_comment(ctx: Context[ServerSession, AppContext], comment: str) -> str:
-    """Write a comment in the MAPDL session.
-
-    Parameters
-    ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
-    comment : str
-        The comment text to write in MAPDL.
-
-    Returns
-    -------
-    str
-        Confirmation message with the comment execution result.
-    """
-    mapdl = ctx.request_context.lifespan_context.mapdl
-
-    if mapdl is None:
-        return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
-
-    logger.info(f"Writing comment: {comment}")
-    result = mapdl.com(f"{comment}", mute=True)  # type: ignore[union-attr]
-    return f"Comment written successfully: {result}"
-
-
-@mcp.tool()
-def run_mapdl_command(ctx: Context[ServerSession, AppContext], cmd: str) -> str:
-    """Execute an arbitrary MAPDL command.
-
-    Parameters
-    ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
-    cmd : str
-        The MAPDL command to execute.
-
-    Returns
-    -------
-    str
-        Command execution result.
-    """
-    mapdl = ctx.request_context.lifespan_context.mapdl
-
-    if mapdl is None:
-        return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
-
-    result = mapdl.run(cmd)  # type: ignore[union-attr]
-    return f"MAPDL command executed successfully: {result}"
-
-
-@mcp.tool()
-def run_multiple_commands(ctx: Context[ServerSession, AppContext], commands: list[str]) -> str:
-    """Execute multiple MAPDL commands in sequence using input_strings.
-
-    This tool is optimized for running multiple commands efficiently by using
-    MAPDL's input_strings method, which processes commands in batch mode.
-    This is significantly faster than executing commands one by one.
-
-    Parameters
-    ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
-    commands : list[str]
-        List of MAPDL commands to execute in sequence.
-
-    Returns
-    -------
-    str
-        Execution result with summary of commands executed.
-    """
-    mapdl = ctx.request_context.lifespan_context.mapdl
-
-    if mapdl is None:
-        return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
-
-    if not commands:
-        return "No commands provided. Please provide a list of commands to execute."
-
-    if not isinstance(commands, list):  # type: ignore
-        return "Commands must be provided as a list of strings."
-
-    # Filter out empty commands
-    valid_commands = [cmd.strip() for cmd in commands if cmd and cmd.strip()]
-
-    if not valid_commands:
-        return "No valid commands found after filtering empty entries."
-
-    try:
-        logger.info(f"Executing {len(valid_commands)} MAPDL commands using input_strings")
-
-        # Use input_strings for batch command execution
-        result = mapdl.input_strings(valid_commands)  # type: ignore[union-attr]
-
-        success_msg = (
-            f"Successfully executed {len(valid_commands)} MAPDL commands:\n"
-            f"Commands:\n" + "\n".join(f"  {i+1}. {cmd}" for i, cmd in enumerate(valid_commands))
-        )
-
-        if result:
-            success_msg += f"\n\nOutput:\n{result}"
-
-        return success_msg
-
-    except Exception as e:
-        error_msg = (
-            f"Error executing commands. Executed {len(valid_commands)} commands "
-            f"but encountered error: {str(e)}\n"
-            f"Commands that were attempted:\n"
-            + "\n".join(f"  {i+1}. {cmd}" for i, cmd in enumerate(valid_commands))
-        )
-        logger.error(error_msg)
-        return error_msg
-
-
-@mcp.tool()
-def launch_mapdl(
-    ctx: Context[ServerSession, AppContext],
-    exec_file: str | None = None,
-    run_location: str | None = None,
-    nproc: int = 2,
-    additional_switches: str = "",
-) -> str:
-    """Launch a new MAPDL instance.
-
-    This tool starts a new MAPDL instance using PyMAPDL's launch_mapdl function.
-    The launched instance will be automatically connected and stored in the context
-    for subsequent operations. The instance can be closed using the disconnect_from_mapdl tool.
-
-    Parameters
-    ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
-    exec_file : str, optional
-        The path to the MAPDL executable. If None, PyMAPDL will attempt to find
-        the MAPDL executable automatically.
-    run_location : str, optional
-        The directory where MAPDL will run and store files. If None, a temporary
-        directory will be created.
-    nproc : int, optional
-        Number of processors to use. Default is 2.
-    additional_switches : str, optional
-        Additional command line switches to pass to MAPDL. Default is empty string.
-
-    Returns
-    -------
-    str
-        Launch status message with MAPDL version and connection information.
-    """
-    from ansys.mapdl.core import launch_mapdl  # pyright: ignore[reportMissingTypeStubs]
-
-    logger.info("Launching new MAPDL instance...")
-
-    try:
-        # Check if there's already a connection
-        if ctx.request_context.lifespan_context.mapdl is not None:
-            return (
-                f"Already connected to MAPDL at "
-                f"{ctx.request_context.lifespan_context.mapdl._ip}:"
-                f"{ctx.request_context.lifespan_context.mapdl._port}. "
-                f"Please disconnect first using disconnect_from_mapdl tool."
-            )
-
-        # Launch new MAPDL instance
-        kwargs: dict[str, Any] = {
-            "nproc": nproc,
-            "loglevel": "INFO",
-        }
-
-        if exec_file is not None:
-            kwargs["exec_file"] = exec_file
-
-        if run_location is not None:
-            kwargs["run_location"] = run_location
-
-        if additional_switches:
-            kwargs["additional_switches"] = additional_switches
-
-        mapdl = launch_mapdl(**kwargs)
-
-        # Store in context for later use
-        ctx.request_context.lifespan_context.mapdl = mapdl
-
-        logger.info(f"MAPDL launched successfully at {mapdl.ip}:{mapdl.port}!")
-        return (
-            f"Successfully launched MAPDL at {mapdl.ip}:{mapdl.port}\n"
-            f"MAPDL Version: {mapdl.version}\n"
-            f"Working Directory: {mapdl.directory}\n"
-        )
-
-    except Exception as e:
-        error_msg = f"Failed to launch MAPDL: {str(e)}"
-        logger.error(error_msg)
-        return error_msg
-
-
-@mcp.tool()
-def connect_to_mapdl(
-    ctx: Context[ServerSession, AppContext], port: int = 50052, ip: str = "localhost"
-) -> str:
-    """Connect to an existing MAPDL instance.
-
-    This tool establishes a connection to a running MAPDL instance using the
-    provided port and IP address. The connection is stored for subsequent
-    operations and can be closed using the disconnect_from_mapdl tool.
-
-    Parameters
-    ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
-    port : int, optional
-        The gRPC port where MAPDL is listening. Default is 50052.
-    ip : str, optional
-        The IP address where MAPDL is running. Default is "localhost".
-
-    Returns
-    -------
-    str
-        Connection status message with MAPDL version information.
-    """
-    from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
-
-    logger.info(f"Connecting to MAPDL instance at {ip}:{port}...")
-
-    try:
-        # Check if there's already a connection
-        if ctx.request_context.lifespan_context.mapdl is not None:
-            return (
-                f"Already connected to MAPDL at "
-                f"{ctx.request_context.lifespan_context.mapdl._ip}:"
-                f"{ctx.request_context.lifespan_context.mapdl._port}. "
-                f"Please disconnect first using disconnect_from_mapdl tool."
-            )
-
-        # Connect to existing MAPDL instance
-        mapdl = Mapdl(
-            start_instance=False,
-            ip=ip,
-            port=port,
-            cleanup_on_exit=False,  # Don't clean up since we didn't launch it
-            loglevel="INFO",
-        )
-
-        # Store in context for later use
-        ctx.request_context.lifespan_context.mapdl = mapdl
-
-        logger.info(f"Connected to MAPDL successfully at {ip}:{port}!")
-        return (
-            f"Successfully connected to MAPDL at {ip}:{port}\n" f"MAPDL Version: {mapdl.version}\n"
-        )
-
-    except Exception as e:
-        error_msg = f"Failed to connect to MAPDL at {ip}:{port}: {str(e)}"
-        logger.error(error_msg)
-        return error_msg
-
-
-@mcp.tool()
-def disconnect_from_mapdl(ctx: Context[ServerSession, AppContext]) -> str:
-    """Disconnect from the dynamically connected MAPDL instance.
-
-    This tool closes the connection to the MAPDL instance that was established
-    using the connect_to_mapdl tool and releases the associated resources.
-
-    Parameters
-    ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
-
-    Returns
-    -------
-    str
-        Disconnection status message.
-    """
-    mapdl = ctx.request_context.lifespan_context.mapdl
-
-    if mapdl is None:
-        return "No MAPDL connection to disconnect."
-
-    try:
-        ip = mapdl._ip
-        port = mapdl._port
-        logger.info(f"Disconnecting from MAPDL at {ip}:{port}...")
-
-        # Exit the MAPDL connection
-        # Just disconnect the client
-        mapdl.exit()
-        del mapdl
-
-        # Clear from context
-        ctx.request_context.lifespan_context.mapdl = None
-
-        logger.info("Disconnected successfully!")
-        return f"Successfully disconnected from MAPDL at {ip}:{port}"
-
-    except Exception as e:
-        error_msg = f"Error during disconnect: {str(e)}"
-        logger.error(error_msg)
-        # Still clear the reference even if disconnect failed
-        ctx.request_context.lifespan_context.mapdl = None
-        return error_msg
-
-
-@mcp.tool()
-def list_mapdl_instances() -> str:
-    """List all MAPDL instances running on the local machine.
-
-    This tool uses PyMAPDL CLI's list_instances function to discover
-    MAPDL instances running on the machine by scanning for active gRPC
-    servers and their associated metadata.
-
-    Returns
-    -------
-    str
-        Formatted table containing information about all running MAPDL instances
-        including their names, status, gRPC ports, IP addresses, PIDs, and
-        working directories.
-    """
-    logger.info("Searching for MAPDL instances using PyMAPDL CLI...")
-
-    from ansys.mapdl.mcp.helpers import list_instances
-
-    # Use PyMAPDL CLI's list_instances function with long=True for detailed output
-    return list_instances(long=True)
-
-
-@mcp.tool()
-def screenshot(
-    ctx: Context[ServerSession, AppContext],
-) -> list[TextContent | ImageContent]:
-    """Capture a screenshot of the current MAPDL graphics window.
-
-    This tool captures the current state of the MAPDL graphics window and returns
-    both the file path and the image data encoded in base64 format for display
-    in the MCP client.
-
-    Parameters
-    ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
-
-    Returns
-    -------
-    list[TextContent | ImageContent]
-        A list containing:
-        - TextContent with the screenshot file path
-        - ImageContent with the base64-encoded image data
-    """
-    mapdl = ctx.request_context.lifespan_context.mapdl
-
-    if mapdl is None:
-        return [
-            TextContent(
-                type="text",
-                text=(
-                    "No MAPDL connection available. "
-                    "Use connect_to_mapdl tool to establish a connection."
-                ),
-            )
-        ]
-
-    try:
-        logger.info("Capturing MAPDL screenshot...")
-
-        # Create a temporary file with .png extension
-        temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix="mapdl_screenshot_")
-
-        # Close the file descriptor as MAPDL will write to the path
-        os.close(temp_fd)
-
-        # Capture screenshot directly to the temporary location
-        screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
-
-        # Verify file was created
-        image_path = Path(screenshot_path)
-        if not image_path.exists():
-            error_msg = f"Screenshot file not found: {screenshot_path}"
+        # Get context via dependency injection
+        ctx = get_context()
+        app_context = ctx.fastmcp._lifespan_result
+        python_session = app_context.python_session
+
+        if python_session is None:
+            return "No Python session available. Python session should be initialized automatically."
+
+        if not python_session.is_running():
+            return "Python session is not running. Please restart the server."
+
+        logger.info(f"Executing Python code in persistent session...")
+        logger.debug(f"Code to execute:\n{code}")
+
+        try:
+            # Execute the code in the persistent Python session
+            result = python_session.execute(code, timeout=timeout)
+
+            # Check if execution was successful
+            if result["success"]:
+                # Add to command history only if successful
+                app_context.command_history.append(code)
+                
+                output_parts = []
+                if result.get("stdout"):
+                    output_parts.append(f"Output:\n{result['stdout']}")
+                if result.get("stderr"):
+                    output_parts.append(f"Warnings/Info:\n{result['stderr']}")
+                
+                if output_parts:
+                    return "\n\n".join(output_parts)
+                else:
+                    return "Code executed successfully (no output)"
+            else:
+                # Check if this might be a connection error
+                error_msg = result.get('error', 'Unknown error')
+                stderr = result.get('stderr', '')
+                
+                # Common indicators of MAPDL crash/connection loss
+                connection_errors = [
+                    'connection', 'grpc', 'channel', 'unavailable',
+                    'broken pipe', 'closed', 'timeout', 'refused'
+                ]
+                
+                is_connection_error = any(
+                    err_keyword in error_msg.lower() or err_keyword in stderr.lower()
+                    for err_keyword in connection_errors
+                )
+                
+                if is_connection_error:
+                    logger.warning("Detected potential MAPDL connection failure. Attempting recovery...")
+                    
+                    # Check connection status
+                    is_connected, conn_error = check_mapdl_connection(python_session)
+                    
+                    if not is_connected:
+                        logger.warning(f"MAPDL connection lost: {conn_error}")
+                        logger.info("Initiating recovery process...")
+                        
+                        # Step 1: Attempt reconnection
+                        reconnect_success, reconnect_msg = attempt_reconnect_mapdl(
+                            python_session, app_context
+                        )
+                        
+                        if not reconnect_success:
+                            logger.warning(f"Reconnection failed: {reconnect_msg}")
+                            logger.info("Reconnection will be attempted when next MAPDL command is executed")
+                            return (
+                                f"MAPDL session crashed and reconnection failed.\n\n"
+                                f"Original error: {error_msg}\n"
+                                f"Reconnection error: {reconnect_msg}\n\n"
+                                f"Please use 'launch_mapdl' or 'connect_to_mapdl' tool to establish a new connection.\n"
+                                f"The system has stored {len(app_context.command_history)} previous commands "
+                                f"that will be automatically replayed after reconnection."
+                            )
+                        
+                        logger.info("Reconnection successful. Replaying command history...")
+                        
+                        # Step 2: Replay command history
+                        replay_success, replay_msg = replay_command_history(
+                            python_session, app_context.command_history
+                        )
+                        
+                        if not replay_success:
+                            logger.warning(f"History replay had issues: {replay_msg}")
+                            return (
+                                f"MAPDL session recovered but history replay encountered errors.\n\n"
+                                f"Reconnection: {reconnect_msg}\n"
+                                f"History replay: {replay_msg}\n\n"
+                                f"You may need to manually verify the MAPDL state."
+                            )
+                        
+                        # Step 3: Retry the current command
+                        logger.info("Retrying original command after recovery...")
+                        retry_result = python_session.execute(code, timeout=timeout)
+                        
+                        if retry_result["success"]:
+                            # Add to history after successful retry
+                            app_context.command_history.append(code)
+                            
+                            output_parts = [
+                                "⚠️  MAPDL session was recovered after a crash",
+                                f"Reconnection: {reconnect_msg}",
+                                f"Replayed: {len(app_context.command_history)-1} previous commands",
+                                "",
+                                "Command Output:"
+                            ]
+                            
+                            if retry_result.get("stdout"):
+                                output_parts.append(retry_result['stdout'])
+                            if retry_result.get("stderr"):
+                                output_parts.append(f"Warnings/Info:\n{retry_result['stderr']}")
+                            
+                            return "\n".join(output_parts)
+                        else:
+                            return (
+                                f"MAPDL session recovered but command still failed.\n\n"
+                                f"Recovery: {reconnect_msg}\n"
+                                f"History replay: {replay_msg}\n"
+                                f"Retry error: {retry_result.get('error', 'Unknown error')}"
+                            )
+                
+                # Not a connection error, return original error
+                error_msg = f"Error executing Python code:\n{error_msg}"
+                if stderr:
+                    error_msg += f"\n\nStderr:\n{stderr}"
+                logger.error(error_msg)
+                return error_msg
+
+        except Exception as e:
+            error_msg = f"Exception while executing Python code: {str(e)}"
             logger.error(error_msg)
-            return [TextContent(type="text", text=error_msg)]
+            return error_msg
+    
+    @mcp.tool()
+    def launch_mapdl(
+        exec_file: str | None = None,
+        run_location: str | None = None,
+        nproc: int = 2,
+        additional_switches: str = "",
+    ) -> str:
+        """Launch a new MAPDL instance.
 
-        # Read image data
-        with open(image_path, "rb") as f:
-            image_data = f.read()
+        This tool starts a new MAPDL instance using PyMAPDL's launch_mapdl function.
+        The launched instance will be automatically connected and stored in the context
+        for subsequent operations. The instance can be closed using the disconnect_from_mapdl tool.
 
-        # Encode to base64
-        base64_data = base64.b64encode(image_data).decode("utf-8")
+        Parameters
+        ----------
+        exec_file : str, optional
+            The path to the MAPDL executable. If None, PyMAPDL will attempt to find
+            the MAPDL executable automatically.
+        run_location : str, optional
+            The directory where MAPDL will run and store files. If None, a temporary
+            directory will be created.
+        nproc : int, optional
+            Number of processors to use. Default is 2.
+        additional_switches : str, optional
+            Additional command line switches to pass to MAPDL. Default is empty string.
 
-        # Determine mime type based on file extension
-        mime_type = "image/png"  # Default to PNG
-        if image_path.suffix.lower() in [".jpg", ".jpeg"]:
-            mime_type = "image/jpeg"
-        elif image_path.suffix.lower() == ".bmp":
-            mime_type = "image/bmp"
-        elif image_path.suffix.lower() == ".gif":
-            mime_type = "image/gif"
+        Returns
+        -------
+        str
+            Launch status message with MAPDL version and connection information.
+        """
+        logger.info("Launching new MAPDL instance...")
 
-        logger.info(f"Screenshot captured successfully: {screenshot_path}")
+        # Get context via dependency injection
+        ctx = get_context()
+        app_context = ctx.fastmcp._lifespan_result
+        python_session = app_context.python_session
 
-        # Return both text (file path) and image content
-        return [
-            TextContent(type="text", text=f"Screenshot saved to: {screenshot_path}"),
-            ImageContent(type="image", data=base64_data, mimeType=mime_type),
-        ]
+        if python_session is None or not python_session.is_running():
+            return "Python session is not available. Please restart the server."
 
-    except Exception as e:
-        if "temp_path" in locals() and Path(temp_path).exists():  # type: ignore
-            Path(temp_path).unlink()  # pyright: ignore[reportPossiblyUnboundVariable]
+        try:
+            # Check if there's already a connection in the Python session
+            check_code = "mapdl is not None"
+            check_result = python_session.execute(check_code, timeout=5.0)
+            
+            if check_result["success"] and "True" in str(check_result.get("stdout", "")):
+                return (
+                    "Already connected to MAPDL in the Python session. "
+                    "Please disconnect first using disconnect_from_mapdl tool."
+                )
 
-        error_msg = f"Failed to capture screenshot: {str(e)}"
-        logger.error(error_msg)
-        return [TextContent(type="text", text=error_msg)]
+            # Build the launch command
+            args = [f"nproc={nproc}"]
+            if exec_file is not None:
+                args.append(f'exec_file="{exec_file}"')
+            if run_location is not None:
+                args.append(f'run_location="{run_location}"')
+            if additional_switches:
+                args.append(f'additional_switches="{additional_switches}"')
+            
+            launch_code = f"from ansys.mapdl.core import launch_mapdl\nmapdl = launch_mapdl({', '.join(args)})\nprint(mapdl)"
+            
+            logger.info(f"Executing launch command in Python session")
+            result = python_session.execute(launch_code, timeout=60.0)
+
+            if result["success"]:
+                output = result.get("stdout", "MAPDL launched successfully")
+                logger.info(f"MAPDL launched successfully")
+                return output
+
+            else:
+                error_msg = f"Failed to launch MAPDL: {result.get('error', 'Unknown error')}"
+                logger.error(error_msg)
+                return error_msg
+
+        except Exception as e:
+            error_msg = f"Failed to launch MAPDL: {str(e)}"
+            logger.error(error_msg)
+            return error_msg
+
+
+    @mcp.tool()
+    def connect_to_mapdl(
+        port: int = 50052,
+        ip: str = "localhost",
+    ) -> str:
+        """Connect to an existing MAPDL instance.
+
+        This tool establishes a connection to a running MAPDL instance using the
+        provided port and IP address. The connection is stored for subsequent
+        operations and can be closed using the disconnect_from_mapdl tool.
+
+        Parameters
+        ----------
+        ctx : Context[ServerSession, PyMAPDLContext]
+            The MCP context containing server session and application context.
+        port : int, optional
+            The gRPC port where MAPDL is listening. Default is 50052.
+        ip : str, optional
+            The IP address where MAPDL is running. Default is "localhost".
+
+        Returns
+        -------
+        str
+            Connection status message with MAPDL version information.
+        """
+        logger.info(f"Connecting to MAPDL instance at {ip}:{port}...")
+
+        # Get context via dependency injection
+        ctx = get_context()
+        app_context = ctx.fastmcp._lifespan_result
+        python_session = app_context.python_session
+
+        if python_session is None or not python_session.is_running():
+            return "Python session is not available. Please restart the server."
+
+        try:
+            # Check if there's already a connection in the Python session
+            check_code = "mapdl is not None"
+            check_result = python_session.execute(check_code, timeout=5.0)
+            
+            if check_result["success"] and "True" in str(check_result.get("stdout", "")):
+                return (
+                    "Already connected to MAPDL in the Python session. "
+                    "Please disconnect first using disconnect_from_mapdl tool."
+                )
+
+            connect_code = f"from ansys.mapdl.core import launch_mapdl\nmapdl = launch_mapdl(ip='{ip}', port={port})\nprint(mapdl)"
+            
+            logger.info(f"Executing command to connect to the MAPDL instance in Python session")
+            result = python_session.execute(connect_code, timeout=60.0)
+
+            if result["success"]:
+                # Store connection parameters for recovery
+                app_context.metadata["mapdl_connection_params"] = {
+                    "type": "connect",
+                    "port": port,
+                    "ip": ip,
+                }
+                logger.info("Stored connection parameters for crash recovery")
+                
+                output = result.get("stdout", "MAPDL launched successfully")
+                logger.info(f"MAPDL launched successfully")
+                return output
+
+            else:
+                error_msg = f"Failed to launch MAPDL: {result.get('error', 'Unknown error')}"
+                logger.error(error_msg)
+                return error_msg
+
+        except Exception as e:
+            error_msg = f"Failed to launch MAPDL: {str(e)}"
+            logger.error(error_msg)
+            return error_msg
+    
+    @mcp.tool()
+    def disconnect_from_mapdl() -> str:
+        """Disconnect from the current MAPDL instance.
+
+        This tool disconnects from the currently connected MAPDL instance
+        and cleans up the connection in the persistent Python session.
+
+        Parameters
+        ----------
+        ctx : Context[ServerSession, PyMAPDLContext]
+            The MCP context containing server session and application context.
+
+        Returns
+        -------
+        str
+            Disconnection status message.
+        """
+        logger.info("Disconnecting from MAPDL instance...")
+
+        # Get context via dependency injection
+        ctx = get_context()
+        app_context = ctx.fastmcp._lifespan_result
+        python_session = app_context.python_session
+
+        if python_session is None or not python_session.is_running():
+            return "Python session is not available. Please restart the server."
+
+        try:
+            disconnect_code = "mapdl.exit()\nmapdl = None"
+            result = python_session.execute(disconnect_code, timeout=10.0)
+
+            if result["success"]:
+                # Clear stored connection parameters
+                if "mapdl_connection_params" in app_context.metadata:
+                    del app_context.metadata["mapdl_connection_params"]
+                
+                logger.info("Disconnected from MAPDL successfully")
+                return "Disconnected from MAPDL successfully."
+
+            else:
+                error_msg = f"Failed to disconnect from MAPDL: {result.get('error', 'Unknown error')}"
+                logger.error(error_msg)
+                return error_msg
+
+        except Exception as e:
+            error_msg = f"Failed to disconnect from MAPDL: {str(e)}"
+            logger.error(error_msg)
+            return error_msg
+
+    @mcp.tool()
+    def get_command_history() -> str:
+        """Retrieve the command history executed in the current MAPDL session.
+
+        Parameters
+        ----------
+        ctx : Context[ServerSession, PyMAPDLContext]
+            The MCP context containing server session and application context.
+
+        Returns
+        -------
+        str
+            A formatted string of the command history.
+        """
+        logger.info("Retrieving MAPDL command history...")
+
+        # Get context via dependency injection
+        ctx = get_context()
+        app_context = ctx.fastmcp._lifespan_result
+        command_history = app_context.command_history
+
+        if not command_history:
+            return "No commands have been executed in this session."
+
+        history_str = "\n".join(f"{idx + 1}: {cmd}" for idx, cmd in enumerate(command_history))
+        logger.info("Command history retrieved successfully")
+        return history_str
+
+
+    @mcp.tool()
+    def clear_command_history() -> str:
+        """Clear the command history executed in the current MAPDL session.
+
+        Parameters
+        ----------
+        ctx : Context[ServerSession, PyMAPDLContext]
+            The MCP context containing server session and application context.
+
+        Returns
+        -------
+        str
+            Confirmation message indicating the command history has been cleared.
+        """
+        logger.info("Clearing MAPDL command history...")
+
+        # Get context via dependency injection
+        ctx = get_context()
+        app_context = ctx.fastmcp._lifespan_result
+        app_context.command_history.clear()
+
+        logger.info("Command history cleared successfully")
+        return "Command history cleared successfully."
+
+    @mcp.tool()
+    def undo_last_command() -> str:
+        """Undo the last command executed in the current MAPDL session.
+
+        Parameters
+        ----------
+        ctx : Context[ServerSession, PyMAPDLContext]
+            The MCP context containing server session and application context.
+
+        Returns
+        -------
+        str
+            Confirmation message indicating the last command has been undone.
+        """
+        logger.info("Undoing last MAPDL command...")
+
+        # Get context via dependency injection
+        ctx = get_context()
+        app_context = ctx.fastmcp._lifespan_result
+        command_history = app_context.command_history
+
+        if not command_history:
+            return "No commands to undo in this session."
+
+        last_command = command_history.pop()
+        logger.info(f"Undid last command: {last_command}")
+        return f"Undid last command: {last_command}"
