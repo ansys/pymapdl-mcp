@@ -24,6 +24,9 @@ def register_tools(mcp: PyMAPDLMCPServer):
         The code should use PyMAPDL methods (e.g., mapdl.prep7(), mapdl.et(), etc.)
         and assume that the 'mapdl' object is already available and connected.
 
+        No need to import PyMAPDL, launch MAPDL or create the 'mapdl' object;
+        these should already be handled before calling this tool.
+
         If the MAPDL session crashes during execution, this tool will automatically:
         1. Attempt to reconnect to the existing MAPDL instance
         2. If reconnection fails, launch a new MAPDL instance
