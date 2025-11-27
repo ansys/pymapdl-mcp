@@ -1,6 +1,6 @@
 
 
-from asyncio import subprocess
+import subprocess
 from typing import Any
 from .tools import logger
 from .context import PyMAPDLContext
