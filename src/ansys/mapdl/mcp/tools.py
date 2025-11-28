@@ -1,7 +1,6 @@
 from .server import PyMAPDLMCPServer
-import logging
 from fastmcp.server.dependencies import get_context
-logger = logging.getLogger(__name__)
+from ansys.common.mcp.helpers import logger
 
 
 def register_tools(mcp: PyMAPDLMCPServer):
@@ -199,6 +198,10 @@ def register_tools(mcp: PyMAPDLMCPServer):
         The launched instance will be automatically connected and stored in the context
         for subsequent operations. The instance can be closed using the disconnect_from_mapdl tool.
 
+        Before launching, this tool checks:
+        1. If there's already an active MAPDL connection in the session
+        2. If there are running MAPDL instances that could be reused
+
         Parameters
         ----------
         exec_file : str, optional
@@ -217,6 +220,11 @@ def register_tools(mcp: PyMAPDLMCPServer):
         str
             Launch status message with MAPDL version and connection information.
         """
+        from ansys.mapdl.mcp.helpers import (
+            check_mapdl_connection,
+            get_mapdl_instances_from_cli,
+        )
+
         logger.info("Launching new MAPDL instance...")
 
         # Get context via dependency injection
@@ -228,15 +236,37 @@ def register_tools(mcp: PyMAPDLMCPServer):
             return "Python session is not available. Please restart the server."
 
         try:
-            # Check if there's already a connection in the Python session
-            check_code = "mapdl is not None"
-            check_result = python_session.execute(check_code, timeout=5.0)
+            # Check if there's already an active and responsive connection
+            is_connected, conn_msg = check_mapdl_connection(python_session)
             
-            if check_result["success"] and "True" in str(check_result.get("stdout", "")):
+            if is_connected:
                 return (
-                    "Already connected to MAPDL in the Python session. "
-                    "Please disconnect first using disconnect_from_mapdl tool."
+                    "Already connected to an active MAPDL session. "
+                    "Use the connect_to_mapdl tool to connect to it."
                 )
+            
+            # Check for running MAPDL instances that could be reused
+            logger.info("Checking for running MAPDL instances...")
+            running_instances = get_mapdl_instances_from_cli(python_session)
+            
+            if running_instances:
+                instance_details = []
+                for inst in running_instances:
+                    if inst.get('status') == 'running' and inst.get('port'):
+                        instance_details.append(
+                            f"  - Port {inst['port']}, PID {inst['pid']} ({inst['name']})"
+                        )
+                
+                if instance_details:
+                    instances_str = "\n".join(instance_details)
+                    return (
+                        f"Found {len(instance_details)} running MAPDL instance(s):\n"
+                        f"{instances_str}\n\n"
+                        f"Consider using connect_to_mapdl tool to connect to an existing instance "
+                        f"instead of launching a new one. This saves resources and startup time.\n\n"
+                        f"If you still want to launch a new instance, please disconnect any existing "
+                        f"connections first, or stop the running instances."
+                    )
 
             # Build the launch command
             args = [f"nproc={nproc}"]
@@ -253,6 +283,16 @@ def register_tools(mcp: PyMAPDLMCPServer):
             result = python_session.execute(launch_code, timeout=60.0)
 
             if result["success"]:
+                # Store launch parameters for potential recovery
+                app_context.metadata["mapdl_connection_params"] = {
+                    "type": "launch",
+                    "exec_file": exec_file,
+                    "run_location": run_location,
+                    "nproc": nproc,
+                    "additional_switches": additional_switches,
+                }
+                logger.info("Stored launch parameters for crash recovery")
+                
                 output = result.get("stdout", "MAPDL launched successfully")
                 logger.info(f"MAPDL launched successfully")
                 return output
@@ -279,6 +319,9 @@ def register_tools(mcp: PyMAPDLMCPServer):
         provided port and IP address. The connection is stored for subsequent
         operations and can be closed using the disconnect_from_mapdl tool.
 
+        Before connecting, this tool checks if there's already an active connection.
+        It also verifies that a MAPDL instance is actually running on the specified port.
+
         Parameters
         ----------
         port : int, optional
@@ -291,6 +334,11 @@ def register_tools(mcp: PyMAPDLMCPServer):
         str
             Connection status message with MAPDL version information.
         """
+        from ansys.mapdl.mcp.helpers import (
+            check_mapdl_connection,
+            get_mapdl_instances_from_cli,
+        )
+
         logger.info(f"Connecting to MAPDL instance at {ip}:{port}...")
 
         # Get context via dependency injection
@@ -302,15 +350,46 @@ def register_tools(mcp: PyMAPDLMCPServer):
             return "Python session is not available. Please restart the server."
 
         try:
-            # Check if there's already a connection in the Python session
-            check_code = "mapdl is not None"
-            check_result = python_session.execute(check_code, timeout=5.0)
+            # Check if there's already an active and responsive connection
+            is_connected, conn_msg = check_mapdl_connection(python_session)
             
-            if check_result["success"] and "True" in str(check_result.get("stdout", "")):
+            if is_connected:
                 return (
-                    "Already connected to MAPDL in the Python session. "
-                    "Please disconnect first using disconnect_from_mapdl tool."
+                    "Already connected to an active MAPDL session. "
+                    "Please disconnect first using disconnect_from_mapdl tool if you want to connect to a different instance."
                 )
+            
+            # If connecting to localhost, verify the instance is actually running on that port
+            if ip in ("localhost", "127.0.0.1"):
+                logger.info("Verifying MAPDL instance is running on specified port...")
+                running_instances = get_mapdl_instances_from_cli(python_session)
+                
+                if running_instances:
+                    # Check if there's an instance on the specified port
+                    target_instance = next(
+                        (inst for inst in running_instances if inst.get('port') == port),
+                        None
+                    )
+                    
+                    if not target_instance:
+                        available_ports = [
+                            inst['port'] for inst in running_instances 
+                            if inst.get('status') == 'running' and inst.get('port')
+                        ]
+                        if available_ports:
+                            ports_str = ", ".join(str(p) for p in available_ports)
+                            return (
+                                f"No MAPDL instance found running on port {port}.\n"
+                                f"Available MAPDL instances are running on ports: {ports_str}\n\n"
+                                f"Please use one of these ports or launch a new MAPDL instance."
+                            )
+                        else:
+                            return (
+                                f"No MAPDL instance found running on port {port}.\n"
+                                f"Please launch a MAPDL instance first or verify the port number."
+                            )
+                    else:
+                        logger.info(f"Verified MAPDL instance running on port {port} (PID: {target_instance.get('pid')})")
 
             connect_code = f"from ansys.mapdl.core import launch_mapdl\nmapdl = launch_mapdl(ip='{ip}', port={port})\nprint(mapdl)"
             
@@ -449,3 +528,42 @@ def register_tools(mcp: PyMAPDLMCPServer):
         last_command = command_history.pop()
         logger.info(f"Undid last command: {last_command}")
         return f"Undid last command: {last_command}"
+
+    @mcp.tool()
+    def restart_python_session(replay_history: bool = True) -> str:
+        """Restart Python session and optionally replay command history.
+        
+        Parameters
+        ----------
+        replay_history : bool
+            If True, replay all previous commands from history
+        
+        Returns
+        -------
+        str
+            Restart status
+        """
+        ctx = get_context()
+        app_context = ctx.fastmcp._lifespan_result
+        
+        # Restart the session
+        result = app_context.python_session.restart()
+        
+        if not result["success"]:
+            return f"Failed to restart: {result.get('error')}"
+        
+        # Optionally replay command history
+        if replay_history and app_context.command_history:
+            logger.info(f"Replaying {len(app_context.command_history)} commands...")
+            
+            for i, cmd in enumerate(app_context.command_history):
+                replay_result = app_context.python_session.execute(cmd)
+                if not replay_result["success"]:
+                    return (
+                        f"Session restarted but replay failed at command {i+1}/{len(app_context.command_history)}: "
+                        f"{replay_result.get('error')}"
+                    )
+            
+            return f"Session restarted and {len(app_context.command_history)} commands replayed successfully"
+        
+        return "Session restarted successfully"

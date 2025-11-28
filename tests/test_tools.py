@@ -175,12 +175,15 @@ class TestLaunchNewMAPDLTool:
 
     def test_launch_success(self, mock_context, mock_get_context):
         """Test successful MAPDL launch."""
-        mock_context.python_session.execute.side_effect = [
-            {"success": True, "stdout": "False"},  # Check existing connection
-            {"success": True, "stdout": "Mapdl\n-----\nPyMAPDL Version: 0.71.1", "stderr": ""},
-        ]
+        mock_context.python_session.execute.return_value = {
+            "success": True, 
+            "stdout": "Mapdl\n-----\nPyMAPDL Version: 0.71.1", 
+            "stderr": ""
+        }
         
-        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context), \
+             patch('ansys.mapdl.mcp.helpers.check_mapdl_connection', return_value=(False, "Not connected")), \
+             patch('ansys.mapdl.mcp.helpers.get_mapdl_instances_from_cli', return_value=[]):
             from ansys.mapdl.mcp import tools
             
             mock_mcp = Mock()
@@ -202,12 +205,15 @@ class TestLaunchNewMAPDLTool:
 
     def test_launch_with_custom_params(self, mock_context, mock_get_context):
         """Test MAPDL launch with custom parameters."""
-        mock_context.python_session.execute.side_effect = [
-            {"success": True, "stdout": "False"},
-            {"success": True, "stdout": "MAPDL launched", "stderr": ""},
-        ]
+        mock_context.python_session.execute.return_value = {
+            "success": True, 
+            "stdout": "MAPDL launched", 
+            "stderr": ""
+        }
         
-        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context), \
+             patch('ansys.mapdl.mcp.helpers.check_mapdl_connection', return_value=(False, "Not connected")), \
+             patch('ansys.mapdl.mcp.helpers.get_mapdl_instances_from_cli', return_value=[]):
             from ansys.mapdl.mcp import tools
             
             mock_mcp = Mock()
@@ -231,18 +237,14 @@ class TestLaunchNewMAPDLTool:
             )
             
             # Verify parameters were passed to execute
-            call_args = mock_context.python_session.execute.call_args_list[1][0][0]
+            call_args = mock_context.python_session.execute.call_args[0][0]
             assert 'nproc=4' in call_args
             assert 'exec_file="/path/to/mapdl"' in call_args
 
     def test_launch_already_connected(self, mock_context, mock_get_context):
         """Test launch when already connected."""
-        mock_context.python_session.execute.return_value = {
-            "success": True,
-            "stdout": "True",  # mapdl is not None returns True
-        }
-        
-        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context), \
+             patch('ansys.mapdl.mcp.helpers.check_mapdl_connection', return_value=(True, "")):
             from ansys.mapdl.mcp import tools
             
             mock_mcp = Mock()
@@ -264,12 +266,15 @@ class TestLaunchNewMAPDLTool:
 
     def test_launch_failure(self, mock_context, mock_get_context):
         """Test MAPDL launch failure."""
-        mock_context.python_session.execute.side_effect = [
-            {"success": True, "stdout": "False"},
-            {"success": False, "error": "MAPDL not found", "stderr": ""},
-        ]
+        mock_context.python_session.execute.return_value = {
+            "success": False, 
+            "error": "MAPDL not found", 
+            "stderr": ""
+        }
         
-        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context), \
+             patch('ansys.mapdl.mcp.helpers.check_mapdl_connection', return_value=(False, "Not connected")), \
+             patch('ansys.mapdl.mcp.helpers.get_mapdl_instances_from_cli', return_value=[]):
             from ansys.mapdl.mcp import tools
             
             mock_mcp = Mock()
@@ -290,6 +295,38 @@ class TestLaunchNewMAPDLTool:
             assert "Failed to launch MAPDL" in result
             assert "MAPDL not found" in result
 
+    def test_launch_with_running_instances(self, mock_context, mock_get_context):
+        """Test launch when running instances exist."""
+        running_instances = [
+            {"name": "ANSYS.exe", "is_instance": True, "status": "running", "port": 50052, "pid": 12345},
+            {"name": "ANSYS.exe", "is_instance": True, "status": "running", "port": 50053, "pid": 12346},
+        ]
+        
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context), \
+             patch('ansys.mapdl.mcp.helpers.check_mapdl_connection', return_value=(False, "Not connected")), \
+             patch('ansys.mapdl.mcp.helpers.get_mapdl_instances_from_cli', return_value=running_instances):
+            from ansys.mapdl.mcp import tools
+            
+            mock_mcp = Mock()
+            registered_tools = {}
+            
+            def mock_tool_decorator():
+                def decorator(fn):
+                    registered_tools[fn.__name__] = fn
+                    return fn
+                return decorator
+            
+            mock_mcp.tool = mock_tool_decorator
+            tools.register_tools(mock_mcp)
+            
+            launch_fn = registered_tools['launch_new_mapdl']
+            result = launch_fn()
+            
+            assert "Found" in result
+            assert "running MAPDL instance" in result
+            assert "50052" in result
+            assert "connect_to_mapdl" in result
+
 
 @pytest.mark.unit
 class TestConnectToMAPDLTool:
@@ -297,12 +334,19 @@ class TestConnectToMAPDLTool:
 
     def test_connect_success(self, mock_context, mock_get_context):
         """Test successful connection to existing MAPDL."""
-        mock_context.python_session.execute.side_effect = [
-            {"success": True, "stdout": "False"},
-            {"success": True, "stdout": "Connected to MAPDL at localhost:50052", "stderr": ""},
+        mock_context.python_session.execute.return_value = {
+            "success": True, 
+            "stdout": "Connected to MAPDL at localhost:50052", 
+            "stderr": ""
+        }
+        
+        running_instances = [
+            {"name": "ANSYS.exe", "is_instance": True, "status": "running", "port": 50052, "pid": 12345}
         ]
         
-        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context), \
+             patch('ansys.mapdl.mcp.helpers.check_mapdl_connection', return_value=(False, "Not connected")), \
+             patch('ansys.mapdl.mcp.helpers.get_mapdl_instances_from_cli', return_value=running_instances):
             from ansys.mapdl.mcp import tools
             
             mock_mcp = Mock()
@@ -327,12 +371,15 @@ class TestConnectToMAPDLTool:
 
     def test_connect_custom_port(self, mock_context, mock_get_context):
         """Test connection with custom port."""
-        mock_context.python_session.execute.side_effect = [
-            {"success": True, "stdout": "False"},
-            {"success": True, "stdout": "Connected", "stderr": ""},
-        ]
+        mock_context.python_session.execute.return_value = {
+            "success": True, 
+            "stdout": "Connected", 
+            "stderr": ""
+        }
         
-        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context), \
+             patch('ansys.mapdl.mcp.helpers.check_mapdl_connection', return_value=(False, "Not connected")), \
+             patch('ansys.mapdl.mcp.helpers.get_mapdl_instances_from_cli', return_value=[]):
             from ansys.mapdl.mcp import tools
             
             mock_mcp = Mock()
@@ -350,9 +397,64 @@ class TestConnectToMAPDLTool:
             connect_fn = registered_tools['connect_to_mapdl']
             result = connect_fn(port=50053, ip="192.168.1.100")
             
-            call_args = mock_context.python_session.execute.call_args_list[1][0][0]
+            call_args = mock_context.python_session.execute.call_args[0][0]
             assert "port=50053" in call_args
             assert "ip='192.168.1.100'" in call_args
+
+    def test_connect_wrong_port(self, mock_context, mock_get_context):
+        """Test connection to port with no running instance."""
+        running_instances = [
+            {"name": "ANSYS.exe", "is_instance": True, "status": "running", "port": 50052, "pid": 12345},
+            {"name": "ANSYS.exe", "is_instance": True, "status": "running", "port": 50053, "pid": 12346},
+        ]
+        
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context), \
+             patch('ansys.mapdl.mcp.helpers.check_mapdl_connection', return_value=(False, "Not connected")), \
+             patch('ansys.mapdl.mcp.helpers.get_mapdl_instances_from_cli', return_value=running_instances):
+            from ansys.mapdl.mcp import tools
+            
+            mock_mcp = Mock()
+            registered_tools = {}
+            
+            def mock_tool_decorator():
+                def decorator(fn):
+                    registered_tools[fn.__name__] = fn
+                    return fn
+                return decorator
+            
+            mock_mcp.tool = mock_tool_decorator
+            tools.register_tools(mock_mcp)
+            
+            connect_fn = registered_tools['connect_to_mapdl']
+            result = connect_fn(port=50054, ip="localhost")
+            
+            assert "No MAPDL instance found running on port 50054" in result
+            assert "50052" in result
+            assert "50053" in result
+            assert "Available MAPDL instances" in result
+
+    def test_connect_already_connected(self, mock_context, mock_get_context):
+        """Test connection when already connected."""
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context), \
+             patch('ansys.mapdl.mcp.helpers.check_mapdl_connection', return_value=(True, "")):
+            from ansys.mapdl.mcp import tools
+            
+            mock_mcp = Mock()
+            registered_tools = {}
+            
+            def mock_tool_decorator():
+                def decorator(fn):
+                    registered_tools[fn.__name__] = fn
+                    return fn
+                return decorator
+            
+            mock_mcp.tool = mock_tool_decorator
+            tools.register_tools(mock_mcp)
+            
+            connect_fn = registered_tools['connect_to_mapdl']
+            result = connect_fn(port=50052, ip="localhost")
+            
+            assert "Already connected" in result
 
 
 @pytest.mark.unit

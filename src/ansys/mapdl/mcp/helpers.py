@@ -2,15 +2,22 @@
 
 import subprocess
 from typing import Any
-from .tools import logger
+from ansys.common.mcp.helpers import logger
 from .context import PyMAPDLContext
 
-def get_mapdl_instances_from_cli() -> list[dict[str, Any]]:
+def get_mapdl_instances_from_cli(python_session: Any = None) -> list[dict[str, Any]]:
     """
     Get list of running MAPDL instances using the pymapdl CLI command.
     
     This function runs `pymapdl list` command and parses the output to extract
     information about running MAPDL instances.
+    
+    Parameters
+    ----------
+    python_session : PersistentPythonSession, optional
+        The Python session to use for running the command. If provided, the command
+        will be executed within the persistent Python session's environment where
+        pymapdl is guaranteed to be installed.
     
     Returns
     -------
@@ -25,19 +32,45 @@ def get_mapdl_instances_from_cli() -> list[dict[str, Any]]:
     instances = []
     
     try:
-        # Run pymapdl list command
-        result = subprocess.run(
-            ["pymapdl", "list"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        
-        if result.returncode != 0:
-            logger.warning(f"pymapdl list command failed: {result.stderr}")
-            return instances
-        
-        output = result.stdout
+        if python_session is not None:
+            # Run pymapdl list command within the persistent Python session
+            list_code = """
+import subprocess
+result = subprocess.run(
+    ["pymapdl", "list"],
+    capture_output=True,
+    text=True,
+    timeout=30,
+)
+if result.returncode == 0:
+    print(result.stdout)
+else:
+    print(f"ERROR:{result.stderr}")
+"""
+            exec_result = python_session.execute(list_code, timeout=35.0)
+            
+            if not exec_result["success"]:
+                logger.warning(f"Failed to execute pymapdl list in Python session: {exec_result.get('error')}")
+                return instances
+            
+            output = exec_result.get("stdout", "")
+            if output.startswith("ERROR:"):
+                logger.warning(f"pymapdl list command failed: {output[6:]}")
+                return instances
+        else:
+            # Fall back to direct subprocess call (may not work if pymapdl not in PATH)
+            result = subprocess.run(
+                ["pymapdl", "list"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            
+            if result.returncode != 0:
+                logger.warning(f"pymapdl list command failed: {result.stderr}")
+                return instances
+            
+            output = result.stdout
         lines = output.strip().split('\n')
         
         # Skip header lines (first 2 lines typically)
@@ -92,6 +125,11 @@ def check_mapdl_connection(python_session: Any) -> tuple[bool, str]:
     """
     Check if MAPDL is still connected and responsive.
     
+    This function performs a comprehensive check that:
+    1. Verifies the mapdl object exists and is not None
+    2. Tests the connection by executing a simple MAPDL command
+    3. Returns clear status about the connection state
+    
     Parameters
     ----------
     python_session : PersistentPythonSession
@@ -100,17 +138,22 @@ def check_mapdl_connection(python_session: Any) -> tuple[bool, str]:
     Returns
     -------
     tuple[bool, str]
-        (is_connected, error_message)
+        (is_connected, error_message) - error_message is empty string if connected
     """
     try:
         check_code = """
 try:
-    if mapdl is None:
+    # Check if mapdl variable exists
+    if 'mapdl' not in dir():
+        print('MAPDL_CHECK:NOT_DEFINED')
+    elif mapdl is None:
         print('MAPDL_CHECK:NOT_CONNECTED')
     else:
-        # Try to execute a simple command to verify connection
+        # Try to execute a simple command to verify connection is active
         mapdl.com('Connection check')
         print('MAPDL_CHECK:CONNECTED')
+except NameError:
+    print('MAPDL_CHECK:NOT_DEFINED')
 except Exception as e:
     print(f'MAPDL_CHECK:ERROR:{str(e)}')
 """
@@ -123,6 +166,8 @@ except Exception as e:
         
         if "MAPDL_CHECK:CONNECTED" in output:
             return True, ""
+        elif "MAPDL_CHECK:NOT_DEFINED" in output:
+            return False, "No MAPDL connection (mapdl variable not defined)"
         elif "MAPDL_CHECK:NOT_CONNECTED" in output:
             return False, "MAPDL is not connected (mapdl is None)"
         elif "MAPDL_CHECK:ERROR:" in output:
@@ -164,7 +209,7 @@ def attempt_reconnect_mapdl(
     # If no connection parameters are stored, try to discover instances via CLI
     if params is None:
         logger.info("No stored connection parameters - discovering instances via pymapdl CLI")
-        instances = get_mapdl_instances_from_cli()
+        instances = get_mapdl_instances_from_cli(python_session)
         
         if not instances:
             return False, "No stored connection parameters and no running MAPDL instances found via CLI"
