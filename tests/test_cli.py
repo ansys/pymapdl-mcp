@@ -46,7 +46,7 @@ def test_main_invalid_port_raises():
         main(["--port", "70000"])  # out of 1-65535 should exit
 
 
-def test_app_lifespan_attempts_connect_on_startup(monkeypatch):
+def test_app_lifespan_attempts_connect_on_startup():
     """When connect_on_startup is True, AppContext should attempt Mapdl()."""
     from ansys.mapdl.mcp.mcp import app_lifespan, mcp
 
