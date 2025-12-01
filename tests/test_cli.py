@@ -1,8 +1,8 @@
 """Unit tests for MCP CLI parsing and startup connection behavior."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import asyncio
 import pytest
 
 
@@ -48,22 +48,27 @@ def test_main_invalid_port_raises():
 
 def test_app_lifespan_attempts_connect_on_startup(monkeypatch):
     """When connect_on_startup is True, AppContext should attempt Mapdl()."""
-    from ansys.mapdl.mcp.mcp import mcp, app_lifespan
+    from ansys.mapdl.mcp.mcp import app_lifespan, mcp
 
     # Prepare a fake Mapdl instance to be returned by the constructor
     fake_mapdl = MagicMock()
     fake_mapdl.exit = MagicMock()
 
     # Attach CLI config to server
-    setattr(mcp, "_cli_config", {
-        "transport_type": "stdio",
-        "mapdl_ip": "127.0.0.1",
-        "mapdl_port": 50052,
-        "connect_on_startup": True,
-    })
+    setattr(
+        mcp,
+        "_cli_config",
+        {
+            "transport_type": "stdio",
+            "mapdl_ip": "127.0.0.1",
+            "mapdl_port": 50052,
+            "connect_on_startup": True,
+        },
+    )
 
     # Patch ansys.mapdl.core.Mapdl to return our fake_mapdl (this is imported inside app_lifespan)
     with patch("ansys.mapdl.core.Mapdl", return_value=fake_mapdl) as mock_mapdl:
+
         async def runner():
             async with app_lifespan(mcp) as ctx:
                 assert ctx.mapdl is fake_mapdl

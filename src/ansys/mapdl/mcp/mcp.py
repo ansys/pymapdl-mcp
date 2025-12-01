@@ -1,7 +1,6 @@
 """Lifespan and CLI entry for the MCP server with startup options."""
 
 import argparse
-import ipaddress
 import logging
 import sys
 from collections.abc import AsyncIterator
@@ -126,7 +125,13 @@ def main(argv: list[str] | None = None) -> None:
         argv = sys.argv[1:]
 
     parser = argparse.ArgumentParser(prog="ansys.mapdl.mcp")
-    parser.add_argument("--type", dest="transport_type", choices=["stdio", "http"], default="stdio", help="Transport type. Allowed: stdio, http")
+    parser.add_argument(
+        "--type",
+        dest="transport_type",
+        choices=["stdio", "http"],
+        default="stdio",
+        help="Transport type. Allowed: stdio, http",
+    )
     parser.add_argument("--ip", dest="mapdl_ip", default="127.0.0.1", help="MAPDL IP or hostname")
     parser.add_argument(
         "--port",
@@ -144,13 +149,6 @@ def main(argv: list[str] | None = None) -> None:
 
     args = parser.parse_args(argv)
 
-    # Basic IP validation - allow hostnames but try ipaddress for numeric IPs
-    try:
-        ipaddress.ip_address(args.mapdl_ip)
-    except Exception:
-        # If this is not a pure IP address, assume hostname; no further validation
-        pass
-
     # If unsupported transport chosen, provide clear message and exit
     if args.transport_type != "stdio":
         print(
@@ -160,12 +158,16 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(2)
 
     # Attach CLI config to server so lifespan can read it
-    setattr(mcp, "_cli_config", {
-        "transport_type": args.transport_type,
-        "mapdl_ip": args.mapdl_ip,
-        "mapdl_port": args.mapdl_port,
-        "connect_on_startup": bool(args.connect_on_startup),
-    })
+    setattr(
+        mcp,
+        "_cli_config",
+        {
+            "transport_type": args.transport_type,
+            "mapdl_ip": args.mapdl_ip,
+            "mapdl_port": args.mapdl_port,
+            "connect_on_startup": bool(args.connect_on_startup),
+        },
+    )
 
     # Run server using stdio transport
     import asyncio
