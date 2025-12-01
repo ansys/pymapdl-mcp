@@ -733,6 +733,8 @@ class TestConnectToMapdl:
         mock_mapdl._port = 50052
         mock_mapdl._exited = False
         mock_mapdl._exiting = False
+        mock_mapdl.exited = False
+        mock_mapdl.exiting = False
 
         # Create mock pool
         mock_pool = MagicMock()
@@ -756,6 +758,8 @@ class TestConnectToMapdl:
         mock_mapdl._port = 50053
         mock_mapdl._exited = False
         mock_mapdl._exiting = False
+        mock_mapdl.exited = False
+        mock_mapdl.exiting = False
 
         mock_pool = MagicMock()
         mock_pool._instances = [mock_mapdl]
@@ -1223,6 +1227,8 @@ class TestConnectionLifecycle:
         mock_mapdl.check_status = "running"
         mock_mapdl._exited = False
         mock_mapdl._exiting = False
+        mock_mapdl.exited = False
+        mock_mapdl.exiting = False
 
         mock_mapdl.com = MagicMock(return_value="Comment written")
         mock_mapdl.run = MagicMock(return_value="Command executed")
@@ -1351,6 +1357,8 @@ class TestLaunchWorkflow:
         mock_mapdl.is_local = True
         mock_mapdl._exited = False
         mock_mapdl._exiting = False
+        mock_mapdl.exited = False
+        mock_mapdl.exiting = False
         mock_mapdl.platform = "linux"
 
         mock_mapdl.com = MagicMock(return_value="Comment written")
