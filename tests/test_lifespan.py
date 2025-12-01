@@ -14,14 +14,23 @@ def test_app_context_dataclass():
 
     assert is_dataclass(AppContext)
 
-    # Test creating AppContext with MAPDL
+    # Test creating AppContext with pool
     mock_mapdl = MagicMock()
-    ctx = AppContext(mapdl=mock_mapdl)
+    mock_pool = MagicMock()
+    mock_pool._instances = [mock_mapdl]
+    mock_pool.__len__ = MagicMock(return_value=1)
+    mock_pool.__getitem__ = MagicMock(return_value=mock_mapdl)
+
+    ctx = AppContext()
+    ctx.pool = mock_pool
+
+    # Test mapdl property returns first instance from pool
     assert ctx.mapdl == mock_mapdl
 
-    # Test creating AppContext without MAPDL
-    ctx_none = AppContext(mapdl=None)
+    # Test creating AppContext without pool
+    ctx_none = AppContext()
     assert ctx_none.mapdl is None
+    assert ctx_none.pool is None
 
 
 @pytest.mark.unit

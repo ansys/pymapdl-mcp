@@ -3,8 +3,8 @@
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
-from typing import Any, Optional
+from dataclasses import dataclass, field
+from typing import Any, Dict, Optional
 
 from mcp.server.fastmcp import FastMCP
 
@@ -17,11 +17,34 @@ class AppContext:
 
     Attributes
     ----------
-    mapdl : Optional[Any]
-        MAPDL instance connection. Using Any to avoid type issues with MAPDL variants.
+    pool : Optional[Any]
+        MapdlPool instance managing multiple MAPDL connections.
+        Using Any to avoid type issues with MapdlPool.
+    instance_nicknames : Dict[str, int]
+        Mapping of user-defined nicknames to pool indices.
+    default_instance_index : int
+        Index of the default instance to use when none specified.
     """
 
-    mapdl: Optional[Any] = None  # Using Any to avoid type issues with MAPDL variants
+    pool: Optional[Any] = None  # MapdlPool instance
+    instance_nicknames: Dict[str, int] = field(default_factory=dict)
+    default_instance_index: int = 0
+
+    @property
+    def mapdl(self) -> Optional[Any]:
+        """Returns the default MAPDL instance for backward compatibility.
+
+        Returns
+        -------
+        Optional[Any]
+            The default MAPDL instance from the pool, or None if no pool exists.
+        """
+        if self.pool is not None and len(self.pool) > 0:
+            try:
+                return self.pool[self.default_instance_index]
+            except (IndexError, KeyError):
+                return None
+        return None
 
 
 @asynccontextmanager
@@ -36,22 +59,25 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     Yields
     ------
     AppContext
-        Application context for storing MAPDL connections.
+        Application context for storing MapdlPool and instance management.
     """
     context = AppContext()
     try:
-        logger.info("MCP Server initialized. Use connect_to_mapdl to establish a connection.")
+        logger.info(
+            "MCP Server initialized. Use connect_to_mapdl or launch_mapdl to establish connections."
+        )
         yield context
 
     finally:
-        # Cleanup on shutdown
-        if context.mapdl is not None:
+        # Cleanup on shutdown - exit entire pool
+        if context.pool is not None:
             try:
-                logger.info("Disconnecting from MAPDL...")
-                context.mapdl.exit()
-                logger.info("MAPDL disconnect complete")
+                logger.info("Exiting MAPDL pool...")
+                context.pool.exit()
+                logger.info("MAPDL pool exit complete")
             except Exception as e:
-                logger.error(f"Error during MAPDL disconnect: {e}")
+                logger.error(f"Error during MAPDL pool exit: {e}")
+        context.instance_nicknames.clear()
 
 
 # Pass lifespan to server

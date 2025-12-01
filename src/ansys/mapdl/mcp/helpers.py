@@ -1,8 +1,13 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
+from mcp.server.fastmcp import Context
+from mcp.server.session import ServerSession
+
 if TYPE_CHECKING:
     from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
+
+    from ansys.mapdl.mcp.mcp import AppContext
 
 logger = logging.getLogger(__name__)
 
@@ -237,3 +242,387 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
     info["mesh"] = mesh_info
 
     return info
+
+
+def create_pool(
+    ctx: "Context[ServerSession, AppContext]",
+    n_instances: int = 1,
+    exec_file: str | None = None,
+    run_location: str | None = None,
+    jobname: str = "file",
+    nproc: int = 2,
+    ram: int | None = None,
+    override: bool = False,
+    additional_switches: str = "",
+    clear_on_connect: bool = True,
+    remove_temp_dir_on_exit: bool = False,
+    start_timeout: int = 45,
+    ip: str | list[str] | None = None,
+    port: int | list[int] | None = None,
+    start_instance: bool = True,
+    cleanup_on_exit: bool = True,
+    nicknames: list[str] | None = None,
+) -> str:
+    """Create a MapdlPool and store it in context.
+
+    This internal method handles pool creation for both launch_mapdl and
+    connect_to_mapdl tools, reducing code duplication.
+
+    Parameters
+    ----------
+    ctx : Context[ServerSession, AppContext]
+        The MCP context containing server session and application context.
+    n_instances : int
+        Number of MAPDL instances in the pool.
+    exec_file : str, optional
+        The path to the MAPDL executable.
+    run_location : str, optional
+        The directory where MAPDL will run.
+    jobname : str
+        The jobname for MAPDL instances.
+    nproc : int
+        Number of processors to use.
+    ram : int, optional
+        Amount of RAM to allocate.
+    override : bool
+        Whether to override existing files.
+    additional_switches : str
+        Additional command line switches.
+    clear_on_connect : bool
+        Whether to clear on connect.
+    remove_temp_dir_on_exit : bool
+        Whether to remove temp directory on exit.
+    start_timeout : int
+        Timeout for starting instances.
+    ip : str | list[str], optional
+        IP address(es) for remote connections.
+    port : int | list[int], optional
+        Port(s) for remote connections.
+    start_instance : bool
+        Whether to start new instances (True) or connect to existing (False).
+    cleanup_on_exit : bool
+        Whether to cleanup on exit.
+    nicknames : list[str], optional
+        List of nicknames for instances.
+
+    Returns
+    -------
+    str
+        Success message with pool information.
+    """
+    from ansys.mapdl.core import MapdlPool  # pyright: ignore[reportMissingTypeStubs]
+
+    logger.info(f"Creating MAPDL pool with {n_instances} instance(s)...")
+
+    # Check if pool already exists
+    if ctx.request_context.lifespan_context.pool is not None:
+        n_existing = len(ctx.request_context.lifespan_context.pool)
+        return (
+            f"MAPDL pool already exists with {n_existing} instance(s). "
+            f"Use disconnect_from_mapdl to clear the pool before launching new instances."
+        )
+
+    # Validate nicknames
+    if nicknames is not None:
+        if len(nicknames) != n_instances:
+            return (
+                f"Error: Number of nicknames ({len(nicknames)}) "
+                f"must match n_instances ({n_instances})"
+            )
+
+        # Check for duplicate nicknames
+        if len(nicknames) != len(set(nicknames)):
+            return "Error: Duplicate nicknames are not allowed"
+
+    try:
+        # Create the pool - MapdlPool handles validation and defaults
+        pool = MapdlPool(
+            n_instances=n_instances,
+            exec_file=exec_file,
+            run_location=run_location,
+            jobname=jobname,
+            nproc=nproc,
+            ram=ram,
+            override=override,
+            additional_switches=additional_switches,
+            start_instance=start_instance,
+            clear_on_connect=clear_on_connect,
+            remove_temp_dir_on_exit=remove_temp_dir_on_exit,
+            start_timeout=start_timeout,
+            ip=ip,
+            port=port,
+            cleanup_on_exit=cleanup_on_exit,
+            restart_failed=True,  # Enable auto-restart for failed instances
+        )
+
+        # Store pool in context
+        ctx.request_context.lifespan_context.pool = pool
+
+        # Set up nicknames if provided
+        if nicknames is not None:
+            for idx, nickname in enumerate(nicknames):
+                ctx.request_context.lifespan_context.instance_nicknames[nickname] = idx
+
+        # Build success message
+        lines = [
+            f"Successfully launched {n_instances} MAPDL instance(s)",
+            f"Pool size: {len(pool)}",
+        ]
+
+        # Show first instance details
+        if len(pool) > 0:
+            first_instance = pool[0]
+            nickname_str = f' (nickname: "{nicknames[0]}")' if nicknames else ""
+            lines.append(f"  Instance 0{nickname_str}: {first_instance.ip}:{first_instance.port}")
+
+        logger.info(f"MAPDL pool created successfully with {len(pool)} instance(s)")
+        return "\n".join(lines)
+
+    except Exception as e:
+        error_msg = f"Failed to create MAPDL pool: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
+def exit_instance(
+    ctx: "Context[ServerSession, AppContext]",
+    instance: str | int | None = None,
+) -> str:
+    """Exit a specific MAPDL instance or the entire pool.
+
+    Parameters
+    ----------
+    ctx : Context[ServerSession, AppContext]
+        The MCP context containing server session and application context.
+    instance : str | int | None
+        Instance identifier (index or nickname). If None, exits entire pool.
+
+    Returns
+    -------
+    str
+        Success or error message.
+    """
+    pool = ctx.request_context.lifespan_context.pool
+
+    if pool is None:
+        return "No MAPDL pool available. Nothing to disconnect."
+
+    try:
+        # Exit entire pool if no instance specified
+        if instance is None:
+            logger.info("Exiting entire MAPDL pool...")
+            pool.exit()
+            ctx.request_context.lifespan_context.pool = None
+            ctx.request_context.lifespan_context.instance_nicknames.clear()
+            ctx.request_context.lifespan_context.default_instance_index = 0
+            logger.info("Successfully disconnected from entire MAPDL pool")
+            return "Successfully disconnected from entire MAPDL pool"
+
+        # Exit specific instance
+        idx = resolve_instance_index(ctx, instance)
+        if idx is None:
+            available = list_available_instances(ctx)
+            return f"Instance '{instance}' not found. Available instances:\n{available}"
+
+        # Get instance info before exiting
+        try:
+            mapdl_instance = pool[idx]
+            ip = mapdl_instance.ip
+            port = mapdl_instance.port
+        except (IndexError, AttributeError):
+            ip = "unknown"
+            port = "unknown"
+
+        # Exit the specific instance
+        if hasattr(pool, "_instances") and idx < len(pool._instances):
+            if pool._instances[idx] is not None:
+                pool._instances[idx].exit()
+                pool._instances[idx] = None
+
+        # Remove nickname if exists
+        nickname_to_remove = find_nickname(ctx, idx)
+        if nickname_to_remove:
+            del ctx.request_context.lifespan_context.instance_nicknames[nickname_to_remove]
+
+        # Check if pool is now empty
+        remaining = sum(1 for inst in pool._instances if inst is not None)
+        if remaining == 0:
+            logger.info("Pool is now empty, clearing pool object")
+            ctx.request_context.lifespan_context.pool = None
+            ctx.request_context.lifespan_context.instance_nicknames.clear()
+            ctx.request_context.lifespan_context.default_instance_index = 0
+            return (
+                f"Successfully disconnected instance {idx} at {ip}:{port}. "
+                f"Pool cleared (last instance)."
+            )
+
+        logger.info(f"Successfully disconnected instance {idx}")
+        return f"Successfully disconnected instance {idx} at {ip}:{port}"
+
+    except Exception as e:
+        error_msg = f"Error during disconnect: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
+def resolve_instance_index(
+    ctx: "Context[ServerSession, AppContext]",
+    instance: str | int | None = None,
+) -> int | None:
+    """Resolve instance identifier to pool index.
+
+    Parameters
+    ----------
+    ctx : Context[ServerSession, AppContext]
+        The MCP context containing server session and application context.
+    instance : str | int | None
+        Instance identifier (index, nickname, or None for default).
+
+    Returns
+    -------
+    int | None
+        Pool index if found, None otherwise.
+    """
+    pool = ctx.request_context.lifespan_context.pool
+
+    if pool is None:
+        return None
+
+    # None means use default
+    if instance is None:
+        default_idx: int = ctx.request_context.lifespan_context.default_instance_index
+        return default_idx
+
+    # Integer means direct index
+    if isinstance(instance, int):
+        if 0 <= instance < len(pool._instances):
+            return instance
+        return None
+
+    # String means nickname lookup
+    if isinstance(instance, str):
+        idx_result: int | None = ctx.request_context.lifespan_context.instance_nicknames.get(
+            instance
+        )
+        return idx_result
+
+    return None
+
+
+def get_mapdl_instance(
+    ctx: "Context[ServerSession, AppContext]",
+    instance: str | int | None = None,
+) -> tuple[Any | None, str]:
+    """Get MAPDL instance from pool.
+
+    Parameters
+    ----------
+    ctx : Context[ServerSession, AppContext]
+        The MCP context containing server session and application context.
+    instance : str | int | None
+        Instance identifier (index, nickname, or None for default).
+
+    Returns
+    -------
+    tuple[Any | None, str]
+        Tuple of (MAPDL instance or None, description string).
+        Description is for error messages and logging.
+    """
+    pool = ctx.request_context.lifespan_context.pool
+
+    if pool is None:
+        return (
+            None,
+            "No MAPDL pool available. Use launch_mapdl or connect_to_mapdl to initialize.",
+        )
+
+    # Resolve index
+    idx = resolve_instance_index(ctx, instance)
+
+    if idx is None:
+        available = list_available_instances(ctx)
+        return None, f"Instance '{instance}' not found. Available instances:\n{available}"
+
+    # Get instance from pool
+    try:
+        mapdl_instance = pool[idx]
+
+        # Check if instance has exited
+        if mapdl_instance.exited:
+            return None, f"Instance {idx} has exited. Please reconnect or launch a new instance."
+
+        if mapdl_instance.exiting:
+            return (
+                None,
+                f"Instance {idx} is currently exiting. Please wait or launch a new instance.",
+            )
+
+        # Build description
+        nickname = find_nickname(ctx, idx)
+        nickname_str = f' ("{nickname}")' if nickname else ""
+        desc = f"instance {idx}{nickname_str}"
+
+        return mapdl_instance, desc
+
+    except (IndexError, KeyError):
+        return (
+            None,
+            (
+                f"Instance {idx} is not available (disconnected). "
+                f"Use list_pool_instances to see status."
+            ),
+        )
+
+
+def list_available_instances(ctx: "Context[ServerSession, AppContext]") -> str:
+    """List all available instances in the pool.
+
+    Parameters
+    ----------
+    ctx : Context[ServerSession, AppContext]
+        The MCP context containing server session and application context.
+
+    Returns
+    -------
+    str
+        Formatted list of available instances.
+    """
+    pool = ctx.request_context.lifespan_context.pool
+
+    if pool is None:
+        return "No pool"
+
+    lines = []
+    for idx in range(len(pool._instances)):
+        if pool._instances[idx] is not None:
+            nickname = find_nickname(ctx, idx)
+            nickname_str = f' ("{nickname}")' if nickname else ""
+            try:
+                status = "active" if not pool._instances[idx].exited else "exited"
+            except AttributeError:
+                status = "active"
+            lines.append(f"  {idx}{nickname_str}: {status}")
+
+    return "\n".join(lines) if lines else "No instances"
+
+
+def find_nickname(ctx: "Context[ServerSession, AppContext]", index: int) -> str | None:
+    """Find nickname for given index.
+
+    Parameters
+    ----------
+    ctx : Context[ServerSession, AppContext]
+        The MCP context containing server session and application context.
+    index : int
+        Pool index.
+
+    Returns
+    -------
+    str | None
+        Nickname if found, None otherwise.
+    """
+    for nickname, idx in ctx.request_context.lifespan_context.instance_nicknames.items():
+        if idx == index:
+            nickname_result: str = nickname
+            return nickname_result
+    return None
