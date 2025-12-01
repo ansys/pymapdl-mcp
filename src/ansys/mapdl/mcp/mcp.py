@@ -58,10 +58,9 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
         context.connect_on_startup = cli_cfg.get("connect_on_startup", context.connect_on_startup)
 
     try:
-        logger.info("MCP Server initialized. Use connect_to_mapdl to establish a connection.")
-
         # Attempt an initial connection if requested and using stdio transport
         if context.connect_on_startup and context.transport_type == "stdio":
+            logger.info("MCP Server initialized. Attempting MAPDL connection on startup...")
             try:
                 from ansys.mapdl.core import Mapdl  # type: ignore
 
@@ -89,6 +88,8 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
                     context.mapdl_port,
                     str(e),
                 )
+        else:
+            logger.info("MCP Server initialized. Use connect_to_mapdl to establish a connection.")
 
         yield context
 
