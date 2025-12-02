@@ -93,12 +93,11 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
                 context.mapdl = mapdl
                 logger.info("Connected to MAPDL at %s:%s", context.mapdl_ip, context.mapdl_port)
 
-            except Exception as e:  # pragma: no cover - best-effort startup only
-                logger.error(
-                    "Initial connection to MAPDL failed at %s:%s - %s",
+            except Exception:  # pragma: no cover - best-effort startup only
+                logger.exception(
+                    "Initial connection to MAPDL failed at %s:%s",
                     context.mapdl_ip,
                     context.mapdl_port,
-                    str(e),
                 )
         else:
             logger.info("MCP Server initialized. Use connect_to_mapdl to establish a connection.")
@@ -112,8 +111,8 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
                 logger.info("Disconnecting from MAPDL...")
                 context.mapdl.exit()
                 logger.info("MAPDL disconnect complete")
-            except Exception as e:
-                logger.error(f"Error during MAPDL disconnect: {e}")
+            except Exception:
+                logger.exception("Error during MAPDL disconnect")
 
 
 # Pass lifespan to server
@@ -140,7 +139,7 @@ def main(argv: list[str] | None = None) -> None:
 
     parser = argparse.ArgumentParser(prog="ansys.mapdl.mcp")
     parser.add_argument(
-        "--type",
+        "--transport",
         dest="transport_type",
         choices=["stdio", "http"],
         default="stdio",
