@@ -14,6 +14,16 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
+class PyMAPDLMCPState:
+    """State holder for MCP server."""
+
+    lock_connection: bool = False
+
+
+mcp_state = PyMAPDLMCPState()
+
+
+@dataclass
 class AppContext:
     """Application context with typed dependencies and CLI options.
 
@@ -60,6 +70,8 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     try:
         # Attempt an initial connection if requested and using stdio transport
         if context.connect_on_startup and context.transport_type == "stdio":
+            mcp_state.lock_connection = True
+
             logger.info("MCP Server initialized. Attempting MAPDL connection on startup...")
             try:
                 from ansys.mapdl.core import Mapdl  # type: ignore
@@ -106,6 +118,7 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 
 # Pass lifespan to server
 mcp = FastMCP("PyMAPDL", lifespan=app_lifespan)
+mcp.mcp_state = mcp_state
 
 
 def _validate_port(port: int) -> int:

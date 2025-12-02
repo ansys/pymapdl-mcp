@@ -12,7 +12,7 @@ from mcp.server.fastmcp import Context
 from mcp.server.session import ServerSession
 from mcp.types import ImageContent, TextContent
 
-from ansys.mapdl.mcp.mcp import AppContext, mcp
+from ansys.mapdl.mcp.mcp import AppContext, mcp, mcp_state
 
 logger = logging.getLogger(__name__)
 
@@ -223,7 +223,7 @@ def run_multiple_commands(ctx: Context[ServerSession, AppContext], commands: lis
         return error_msg
 
 
-@mcp.tool()
+@mcp.tool(enabled=not mcp_state.lock_connection)
 def launch_mapdl(
     ctx: Context[ServerSession, AppContext],
     exec_file: str | None = None,
@@ -304,7 +304,7 @@ def launch_mapdl(
         return error_msg
 
 
-@mcp.tool()
+@mcp.tool(enabled=not mcp_state.lock_connection)
 def connect_to_mapdl(
     ctx: Context[ServerSession, AppContext], port: int = 50052, ip: str = "localhost"
 ) -> str:
@@ -365,7 +365,7 @@ def connect_to_mapdl(
         return error_msg
 
 
-@mcp.tool()
+@mcp.tool(enabled=not mcp_state.lock_connection)
 def disconnect_from_mapdl(ctx: Context[ServerSession, AppContext]) -> str:
     """Disconnect from the dynamically connected MAPDL instance.
 
