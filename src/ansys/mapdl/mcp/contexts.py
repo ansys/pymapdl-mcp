@@ -9,10 +9,10 @@ MAPDL simulations.
 # flake8: noqa: E501
 
 # Import the mcp instance from mcp.py
-from ansys.mapdl.mcp.mcp import mcp
+from ansys.mapdl.mcp.mcp import add_tool, mcp
 
 
-@mcp.tool()
+@add_tool
 def get_context_for_workflow_overview() -> str:
     """Get general MAPDL simulation workflow overview context.
 
@@ -67,7 +67,7 @@ Always follow this general simulation process when explaining or generating PyMA
 """
 
 
-@mcp.tool()
+@add_tool
 def get_context_for_preprocessing_geometry() -> str:
     """Get geometry and meshing guidelines for MAPDL preprocessing.
 
@@ -105,7 +105,7 @@ mapdl.com("Creating geometry")
 """
 
 
-@mcp.tool()
+@add_tool
 def get_context_for_preprocessing_elements() -> str:
     """Get element type selection and definition guidelines.
 
@@ -175,7 +175,7 @@ The following element types are commonly used in MAPDL simulations:
 """
 
 
-@mcp.tool()
+@add_tool
 def get_context_for_preprocessing_materials() -> str:
     """Get material model definition guidelines.
 
@@ -246,7 +246,7 @@ mapdl.mp("DENS", 1, 7850)   # Density in kg/m³
 """
 
 
-@mcp.tool()
+@add_tool
 def get_context_for_preprocessing_mesh() -> str:
     """Get mesh generation guidelines.
 
@@ -309,7 +309,7 @@ mapdl.vmesh("ALL")
 """
 
 
-@mcp.tool()
+@add_tool
 def get_context_for_preprocessing_boundary_conditions() -> str:
     """Get boundary conditions and loads application guidelines.
 
@@ -403,7 +403,7 @@ mapdl.f(node_id, "FY", -1000)
 """
 
 
-@mcp.tool()
+@add_tool
 def get_context_for_solution_phase() -> str:
     """Get solution phase guidelines for MAPDL analysis.
 
@@ -499,7 +499,7 @@ mapdl.solve()
 """
 
 
-@mcp.tool()
+@add_tool
 def get_context_for_postprocessing_phase() -> str:
     """Get postprocessing phase guidelines for MAPDL analysis.
 
@@ -651,7 +651,7 @@ mapdl.plot_element_solution("SEQV")
 """
 
 
-@mcp.tool()
+@add_tool
 def get_context_for_general_rules() -> str:
     """Get general rules and best practices for MAPDL workflows.
 
