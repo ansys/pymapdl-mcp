@@ -1,13 +1,10 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
-from mcp.server.fastmcp import Context
-from mcp.server.session import ServerSession
+from fastmcp.server import Context
 
 if TYPE_CHECKING:
     from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
-
-    from ansys.mapdl.mcp.mcp import AppContext
 
 logger = logging.getLogger(__name__)
 
@@ -245,7 +242,7 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
 
 
 def create_pool(
-    ctx: "Context[ServerSession, AppContext]",
+    ctx: "Context",
     n_instances: int = 1,
     exec_file: str | None = None,
     run_location: str | None = None,
@@ -389,7 +386,7 @@ def create_pool(
 
 
 def exit_instance(
-    ctx: "Context[ServerSession, AppContext]",
+    ctx: "Context",
     instance: str | int | None = None,
 ) -> str:
     """Exit a specific MAPDL instance or the entire pool.
@@ -470,7 +467,7 @@ def exit_instance(
 
 
 def resolve_instance_index(
-    ctx: "Context[ServerSession, AppContext]",
+    ctx: "Context",
     instance: str | int | None = None,
 ) -> int | None:
     """Resolve instance identifier to pool index.
@@ -514,7 +511,7 @@ def resolve_instance_index(
 
 
 def get_mapdl_instance(
-    ctx: "Context[ServerSession, AppContext]",
+    ctx: "Context",
     instance: str | int | None = None,
 ) -> tuple[Any | None, str]:
     """Get MAPDL instance from pool.
@@ -578,7 +575,7 @@ def get_mapdl_instance(
         )
 
 
-def list_available_instances(ctx: "Context[ServerSession, AppContext]") -> str:
+def list_available_instances(ctx: "Context") -> str:
     """List all available instances in the pool.
 
     Parameters
@@ -610,7 +607,7 @@ def list_available_instances(ctx: "Context[ServerSession, AppContext]") -> str:
     return "\n".join(lines) if lines else "No instances"
 
 
-def find_nickname(ctx: "Context[ServerSession, AppContext]", index: int) -> str | None:
+def find_nickname(ctx: "Context", index: int) -> str | None:
     """Find nickname for given index.
 
     Parameters

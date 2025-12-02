@@ -9,7 +9,7 @@ async def test_context_tools_registered():
     from ansys.mapdl.mcp.mcp import mcp
 
     # Get list of registered tools
-    tool_list = await mcp.list_tools()
+    tool_list = await mcp.get_tools()
 
     # Expected tool names
     expected_tools = [
@@ -25,7 +25,7 @@ async def test_context_tools_registered():
     ]
 
     # Check each expected tool is registered
-    tool_names = [t.name for t in tool_list]
+    tool_names = [t.name for t in tool_list.values()]
     for expected_name in expected_tools:
         assert expected_name in tool_names, f"Tool {expected_name} not found"
 

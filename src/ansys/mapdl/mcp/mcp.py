@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp.server import FastMCP
 
 logger = logging.getLogger(__name__)
 
@@ -148,8 +148,21 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 
 
 # Pass lifespan to server
-mcp = FastMCP("PyMAPDL", lifespan=app_lifespan)
+mcp = FastMCP("PyMAPDL-MCP", lifespan=app_lifespan)
 mcp.mcp_state = mcp_state
+
+
+def add_tool(func):
+    """Wrap functions to register them as MCP tools.
+
+    It does return the original function unchanged.
+    """
+    mcp.tool(func)
+
+    def wrapped(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return wrapped
 
 
 def _validate_port(port: int) -> int:

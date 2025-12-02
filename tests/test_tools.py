@@ -309,26 +309,28 @@ class TestCheckMapdlInstalled:
             assert "MAPDL is installed" in result
             assert custom_path in result
 
-    def test_check_installed_logging(self, caplog):
+    def test_check_installed_logging(self):
         """Test that check_mapdl_installed logs messages."""
         with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True), patch(
             "ansys.mapdl.core.launcher.get_default_ansys_path",
             return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
         ):
-            check_mapdl_installed()
+            output = check_mapdl_installed()
 
             # Verify logging messages
-            assert "Checking if MAPDL is installed" in caplog.text
-            assert "MAPDL installation found" in caplog.text
+            assert (
+                "MAPDL is installed on this system in: /usr/ansys_inc/v242/ansys/bin/ansys242"
+                in output
+            )
 
-    def test_check_not_installed_logging(self, caplog):
+    def test_check_not_installed_logging(self):
         """Test that check_mapdl_installed logs when not installed."""
         with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=False):
-            check_mapdl_installed()
+            output = check_mapdl_installed()
 
-            # Verify logging messages
-            assert "Checking if MAPDL is installed" in caplog.text
-            assert "MAPDL installation not found" in caplog.text
+            assert "MAPDL is not installed on this system or cannot be found in the " in output
+            assert "standard locations. Please ensure ANSYS/MAPDL is properly installed " in output
+            assert "and the installation path is correct." in output
 
 
 @pytest.mark.unit
@@ -627,15 +629,15 @@ class TestRunMultipleCommands:
         # Should not have "Output:" section when result is None
         assert "Output:" not in result
 
-    def test_run_multiple_commands_stderr_logging(self, mock_context, caplog):
+    def test_run_multiple_commands_stderr_logging(self, mock_context):
         """Test that run_multiple_commands logs messages."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        run_multiple_commands(mock_context, commands)
+        output = run_multiple_commands(mock_context, commands)
 
         # Verify logging messages
-        assert "Executing 2 MAPDL commands on instance 0 using input_strings" in caplog.text
+        assert "Successfully executed 2 MAPDL commands on instance 0" in output
 
     def test_run_multiple_commands_error_logging(self, mock_context, caplog):
         """Test that command errors are logged."""
@@ -712,8 +714,9 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
     def test_list_instances_stderr_logging(self, caplog):
         """Test that list_mapdl_instances logs messages."""
         mock_output = "Sample output"
-
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
+            # Capture INFO logs
+            caplog.set_level("INFO")
             result = list_mapdl_instances()
 
             # Verify logging messages
@@ -895,10 +898,10 @@ class TestConnectToMapdl:
         mock_pool.__len__ = MagicMock(return_value=1)
 
         with patch("ansys.mapdl.core.MapdlPool", return_value=mock_pool):
-            connect_to_mapdl(mock_context_no_mapdl)
+            output = connect_to_mapdl(mock_context_no_mapdl)
 
             # Verify logging messages
-            assert "Connecting to 1 MAPDL instance" in caplog.text
+            assert "Successfully launched 1" in output
 
 
 @pytest.mark.unit
@@ -968,6 +971,7 @@ class TestDisconnectFromMapdl:
         mock_context.request_context.lifespan_context.mapdl.ip = "127.0.0.1"
         mock_context.request_context.lifespan_context.mapdl.port = 50052
 
+        caplog.set_level("INFO")
         disconnect_from_mapdl(mock_context)
 
         # Verify logging messages (pool is cleared when last instance exits)
@@ -1198,6 +1202,8 @@ class TestLaunchMapdl:
         mock_pool.__len__ = MagicMock(return_value=1)
 
         with patch("ansys.mapdl.core.MapdlPool", return_value=mock_pool):
+            caplog.set_level("INFO")
+
             launch_mapdl(mock_context_no_mapdl)
 
             # Verify logging messages
@@ -1834,6 +1840,7 @@ class TestScreenshot:
         mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
             screenshot_path
         )
+        caplog.set_level("INFO")
 
         screenshot(mock_context)
 
@@ -1848,6 +1855,8 @@ class TestScreenshot:
         mock_context.request_context.lifespan_context.mapdl.screenshot.side_effect = Exception(
             "Test error"
         )
+
+        caplog.set_level("INFO")
 
         screenshot(mock_context)
 
