@@ -66,18 +66,30 @@ def test_app_lifespan_attempts_connect_on_startup():
         },
     )
 
-    # Patch ansys.mapdl.core.Mapdl to return our fake_mapdl (this is imported inside app_lifespan)
-    with patch("ansys.mapdl.core.Mapdl", return_value=fake_mapdl) as mock_mapdl:
+    # Patch helpers.create_pool so startup populates ctx.pool with our fake_mapdl.
+    # app_lifespan calls create_pool(..., ctx=context, ...), so we intercept
+    # that call and set the pool directly for this unit test.
+    with patch("ansys.mapdl.mcp.helpers.create_pool") as mock_create_pool:
+
+        def _fake_create_pool(*args, **kwargs):
+            # ctx can be passed as keyword or positional arg
+            ctx = kwargs.get("ctx") if "ctx" in kwargs else (args[0] if args else None)
+            if ctx is not None:
+                ctx.pool = [fake_mapdl]
+            return "ok"
+
+        mock_create_pool.side_effect = _fake_create_pool
 
         async def runner():
             async with app_lifespan(mcp) as ctx:
-                assert ctx.mapdl is fake_mapdl
+                assert ctx.pool is not None
+                assert ctx.pool[0] is fake_mapdl
 
         # Run the async runner synchronously
         asyncio.run(runner())
 
-        # Ensure Mapdl constructor was called with expected args
-        mock_mapdl.assert_called()
+        # Ensure create_pool was invoked during startup
+        mock_create_pool.assert_called()
 
     # Clean up _cli_config
     delattr(mcp, "_cli_config")
