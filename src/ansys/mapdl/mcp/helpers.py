@@ -262,6 +262,7 @@ def create_pool(
     start_instance: bool = True,
     cleanup_on_exit: bool = True,
     nicknames: list[str] | None = None,
+    loglevel: str = "INFO",
 ) -> str:
     """Create a MapdlPool and store it in context.
 
@@ -304,6 +305,8 @@ def create_pool(
         Whether to cleanup on exit.
     nicknames : list[str], optional
         List of nicknames for instances.
+    loglevel: str
+        Logging level for MAPDL instances.
 
     Returns
     -------
@@ -353,6 +356,7 @@ def create_pool(
             port=port,
             cleanup_on_exit=cleanup_on_exit,
             restart_failed=True,  # Enable auto-restart for failed instances
+            loglevel=loglevel,
         )
 
         # Store pool in context

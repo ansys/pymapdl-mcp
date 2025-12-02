@@ -30,7 +30,6 @@ class MockMapdl(MagicMock):
 
 
 import pytest
-from mcp.server.fastmcp import FastMCP
 from mcp.server.session import ServerSession
 
 from ansys.mapdl.mcp.mcp import AppContext

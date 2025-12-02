@@ -23,7 +23,7 @@ def test_main_entry_point():
     with patch.object(asyncio, "run") as mock_run:
         with patch.object(mcp, "run_stdio_async", new_callable=AsyncMock):
             # Mock asyncio.run to avoid actually starting the server
-            main()
+            main([])
 
             # Verify that asyncio.run was called with mcp.run_stdio_async()
             mock_run.assert_called_once()
