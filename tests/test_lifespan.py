@@ -37,7 +37,7 @@ def test_app_context_dataclass():
 def test_mcp_server_initialization():
     """Test that MCP server is properly initialized."""
     assert mcp is not None
-    assert mcp.name == "PyMAPDL"
+    assert mcp.name == "PyMAPDL-MCP"
 
 
 @pytest.mark.unit

@@ -7,20 +7,16 @@ import os
 import tempfile
 from pathlib import Path
 
-from mcp.server.fastmcp import Context
-from mcp.server.session import ServerSession
+from fastmcp.server import Context
 from mcp.types import ImageContent, TextContent
 
-from ansys.mapdl.mcp.mcp import AppContext, mcp
+from ansys.mapdl.mcp.mcp import add_tool
 
 logger = logging.getLogger(__name__)
 
 
-# Access type-safe lifespan context in tools
-@mcp.tool()
-def check_mapdl_status(
-    ctx: Context[ServerSession, AppContext], instance: str | int | None = None
-) -> str:
+@add_tool
+def check_mapdl_status(ctx: Context, instance: str | int | None = None) -> str:
     """Check the status of MAPDL initialization for a specific instance.
 
     This tool executes the /STATUS command in MAPDL and extracts comprehensive
@@ -29,7 +25,7 @@ def check_mapdl_status(
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
+    ctx : Context
         The MCP context containing server session and application context.
     instance : str | int | None
         Instance identifier (index, nickname, or None for default).
@@ -65,7 +61,7 @@ def check_mapdl_status(
         return error_msg
 
 
-@mcp.tool()
+@add_tool
 def check_mapdl_installed() -> str:
     """Check if MAPDL is installed on the system.
 
@@ -104,9 +100,9 @@ def check_mapdl_installed() -> str:
         return error_msg
 
 
-@mcp.tool()
+@add_tool
 def write_comment(
-    ctx: Context[ServerSession, AppContext],
+    ctx: Context,
     comment: str,
     instance: str | int | None = None,
 ) -> str:
@@ -114,7 +110,7 @@ def write_comment(
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
+    ctx : Context
         The MCP context containing server session and application context.
     comment : str
         The comment text to write in MAPDL.
@@ -138,9 +134,9 @@ def write_comment(
     return f"Comment written successfully on {desc}: {result}"
 
 
-@mcp.tool()
+@add_tool
 def run_mapdl_command(
-    ctx: Context[ServerSession, AppContext],
+    ctx: Context,
     cmd: str,
     instance: str | int | None = None,
 ) -> str:
@@ -148,7 +144,7 @@ def run_mapdl_command(
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
+    ctx : Context
         The MCP context containing server session and application context.
     cmd : str
         The MAPDL command to execute.
@@ -171,9 +167,9 @@ def run_mapdl_command(
     return f"MAPDL command executed successfully on {desc}: {result}"
 
 
-@mcp.tool()
+@add_tool
 def run_multiple_commands(
-    ctx: Context[ServerSession, AppContext],
+    ctx: Context,
     commands: list[str],
     instance: str | int | None = None,
 ) -> str:
@@ -185,7 +181,7 @@ def run_multiple_commands(
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
+    ctx : Context
         The MCP context containing server session and application context.
     commands : list[str]
         List of MAPDL commands to execute in sequence.
@@ -243,9 +239,9 @@ def run_multiple_commands(
         return error_msg
 
 
-@mcp.tool()
+@add_tool
 def launch_mapdl(
-    ctx: Context[ServerSession, AppContext],
+    ctx: Context,
     exec_file: str | None = None,
     run_location: str | None = None,
     jobname: str = "file",
@@ -268,7 +264,7 @@ def launch_mapdl(
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
+    ctx : Context
         The MCP context containing server session and application context.
     exec_file : str, optional
         The path to the MAPDL executable. If None, PyMAPDL will attempt to find
@@ -325,9 +321,9 @@ def launch_mapdl(
     )
 
 
-@mcp.tool()
+@add_tool
 def connect_to_mapdl(
-    ctx: Context[ServerSession, AppContext],
+    ctx: Context,
     port: int | list[int] = 50052,
     ip: str | list[str] = "localhost",
     nicknames: list[str] | None = None,
@@ -341,7 +337,7 @@ def connect_to_mapdl(
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
+    ctx : Context
         The MCP context containing server session and application context.
     port : int | list[int]
         The gRPC port(s) where MAPDL is listening. Default is 50052.
@@ -379,8 +375,8 @@ def connect_to_mapdl(
     )
 
 
-@mcp.tool()
-def disconnect_from_mapdl(ctx: Context[ServerSession, AppContext]) -> str:
+@add_tool
+def disconnect_from_mapdl(ctx: Context) -> str:
     """Disconnect from the default MAPDL instance.
 
     This tool closes the connection to the default MAPDL instance (instance 0)
@@ -389,7 +385,7 @@ def disconnect_from_mapdl(ctx: Context[ServerSession, AppContext]) -> str:
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
+    ctx : Context
         The MCP context containing server session and application context.
 
     Returns
@@ -409,7 +405,7 @@ def disconnect_from_mapdl(ctx: Context[ServerSession, AppContext]) -> str:
     return exit_instance(ctx, instance=default_idx)
 
 
-@mcp.tool()
+@add_tool
 def list_mapdl_instances() -> str:
     """List all MAPDL instances running on the local machine.
 
@@ -432,9 +428,9 @@ def list_mapdl_instances() -> str:
     return list_instances(long=True)
 
 
-@mcp.tool()
+@add_tool
 def screenshot(
-    ctx: Context[ServerSession, AppContext],
+    ctx: Context,
     instance: str | int | None = None,
 ) -> list[TextContent | ImageContent]:
     """Capture a screenshot of the MAPDL graphics window for a specific instance.
@@ -445,7 +441,7 @@ def screenshot(
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
+    ctx : Context
         The MCP context containing server session and application context.
     instance : str | int | None
         Instance identifier (index, nickname, or None for default).
@@ -516,8 +512,8 @@ def screenshot(
         return [TextContent(type="text", text=error_msg)]
 
 
-@mcp.tool()
-def list_pool_instances(ctx: Context[ServerSession, AppContext]) -> str:
+@add_tool
+def list_pool_instances(ctx: Context) -> str:
     """List all MAPDL instances in the pool with their status and nicknames.
 
     This tool displays comprehensive information about all instances in the pool,
@@ -526,7 +522,7 @@ def list_pool_instances(ctx: Context[ServerSession, AppContext]) -> str:
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
+    ctx : Context
         The MCP context containing server session and application context.
 
     Returns
@@ -576,9 +572,9 @@ def list_pool_instances(ctx: Context[ServerSession, AppContext]) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
+@add_tool
 def set_default_instance(
-    ctx: Context[ServerSession, AppContext],
+    ctx: Context,
     instance: str | int,
 ) -> str:
     """Set the default instance for operations without explicit instance specification.
@@ -588,7 +584,7 @@ def set_default_instance(
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
+    ctx : Context
         The MCP context containing server session and application context.
     instance : str | int
         Instance identifier (index or nickname).
@@ -628,9 +624,9 @@ def set_default_instance(
     return f"Default instance set to {idx}{nickname_str}"
 
 
-@mcp.tool()
+@add_tool
 def assign_nickname(
-    ctx: Context[ServerSession, AppContext],
+    ctx: Context,
     instance: str | int,
     nickname: str,
 ) -> str:
@@ -642,7 +638,7 @@ def assign_nickname(
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
+    ctx : Context
         The MCP context containing server session and application context.
     instance : str | int
         Instance identifier (index or existing nickname).
@@ -698,9 +694,9 @@ def assign_nickname(
     return msg
 
 
-@mcp.tool()
+@add_tool
 def remove_nickname(
-    ctx: Context[ServerSession, AppContext],
+    ctx: Context,
     nickname: str,
 ) -> str:
     """Remove a nickname from an instance.
@@ -710,7 +706,7 @@ def remove_nickname(
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
+    ctx : Context
         The MCP context containing server session and application context.
     nickname : str
         Nickname to remove.
