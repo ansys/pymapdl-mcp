@@ -94,6 +94,7 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 
     # Populate context from CLI config on server if available
     cli_cfg = getattr(server, "_cli_config", None)
+
     if cli_cfg is not None:
         context.transport_type = cli_cfg.get("transport_type", context.transport_type)
         context.mapdl_ip = cli_cfg.get("mapdl_ip", context.mapdl_ip)
@@ -116,9 +117,8 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 
                 create_pool(
                     ctx=context,
-                    n_instances=1,
-                    ip=context.mapdl_ip,
-                    port=context.mapdl_port,
+                    ip=[context.mapdl_ip],
+                    port=[context.mapdl_port],
                     start_instance=False,
                     cleanup_on_exit=False,
                     loglevel="INFO",
