@@ -157,7 +157,9 @@ def mock_context(mock_server_session, app_context):
     """Create a mock Context with AppContext for testing tools."""
     context = MagicMock()
     context.request_context = MagicMock()
-    context.request_context.lifespan_context = app_context
+    context.pool = app_context.pool
+    context.instance_nicknames = app_context.instance_nicknames
+    context.default_instance_index = app_context.default_instance_index
     return context
 
 
@@ -166,7 +168,9 @@ def mock_context_no_mapdl(mock_server_session, app_context_no_mapdl):
     """Create a mock Context without MAPDL for testing error handling."""
     context = MagicMock()
     context.request_context = MagicMock()
-    context.request_context.lifespan_context = app_context_no_mapdl
+    context.pool = app_context_no_mapdl.pool
+    context.instance_nicknames = app_context_no_mapdl.instance_nicknames
+    context.default_instance_index = app_context_no_mapdl.default_instance_index
     return context
 
 

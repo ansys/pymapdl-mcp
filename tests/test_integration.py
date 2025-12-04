@@ -72,9 +72,9 @@ class TestMapdlIntegration:
 
         context = MagicMock()
         context.request_context = MagicMock()
-        app_context = AppContext()
-        app_context.pool = mock_pool
-        context.request_context.lifespan_context = app_context
+        context.pool = mock_pool
+        context.instance_nicknames = {}
+        context.default_instance_index = 0
 
         return context
 
@@ -242,9 +242,9 @@ class TestRunMultipleCommandsIntegration:
 
         context = MagicMock()
         context.request_context = MagicMock()
-        app_context = AppContext()
-        app_context.pool = mock_pool
-        context.request_context.lifespan_context = app_context
+        context.pool = mock_pool
+        context.instance_nicknames = {}
+        context.default_instance_index = 0
 
         return context
 
