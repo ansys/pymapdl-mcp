@@ -70,11 +70,17 @@ class TestMapdlIntegration:
         mock_pool.__getitem__ = MagicMock(return_value=real_mapdl)
         mock_pool.__len__ = MagicMock(return_value=1)
 
+        # Create AppContext structure
+        app_context = MagicMock()
+        app_context.pool = mock_pool
+        app_context.instance_nicknames = {}
+        app_context.default_instance_index = 0
+
+        # Create Context with fastmcp._app_context
         context = MagicMock()
         context.request_context = MagicMock()
-        context.pool = mock_pool
-        context.instance_nicknames = {}
-        context.default_instance_index = 0
+        context.fastmcp = MagicMock()
+        context.fastmcp._app_context = app_context
 
         return context
 
@@ -240,11 +246,17 @@ class TestRunMultipleCommandsIntegration:
         mock_pool.__getitem__ = MagicMock(return_value=real_mapdl)
         mock_pool.__len__ = MagicMock(return_value=1)
 
+        # Create AppContext structure
+        app_context = MagicMock()
+        app_context.pool = mock_pool
+        app_context.instance_nicknames = {}
+        app_context.default_instance_index = 0
+
+        # Create Context with fastmcp._app_context
         context = MagicMock()
         context.request_context = MagicMock()
-        context.pool = mock_pool
-        context.instance_nicknames = {}
-        context.default_instance_index = 0
+        context.fastmcp = MagicMock()
+        context.fastmcp._app_context = app_context
 
         return context
 

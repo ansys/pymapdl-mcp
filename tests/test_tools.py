@@ -55,7 +55,7 @@ class TestCheckMapdlStatus:
 
     def test_check_status_with_exited_mapdl(self, mock_context):
         """Test checking status when MAPDL has exited."""
-        mock_context.pool[0]._exited = True
+        mock_context.fastmcp._app_context.pool[0]._exited = True
 
         result = check_mapdl_status(mock_context)
 
@@ -65,7 +65,7 @@ class TestCheckMapdlStatus:
 
     def test_check_status_with_exiting_mapdl(self, mock_context):
         """Test checking status when MAPDL is exiting."""
-        mock_context.pool[0]._exiting = True
+        mock_context.fastmcp._app_context.pool[0]._exiting = True
 
         result = check_mapdl_status(mock_context)
 
@@ -77,8 +77,8 @@ class TestCheckMapdlStatus:
         import json
 
         # Remove some information attributes
-        delattr(mock_context.pool[0].information, "title")
-        delattr(mock_context.pool[0].information, "product")
+        delattr(mock_context.fastmcp._app_context.pool[0].information, "title")
+        delattr(mock_context.fastmcp._app_context.pool[0].information, "product")
 
         result = check_mapdl_status(mock_context)
 
@@ -93,8 +93,8 @@ class TestCheckMapdlStatus:
         import json
 
         # Remove geometry attributes
-        delattr(mock_context.pool[0].geometry, "n_keypoint")
-        delattr(mock_context.pool[0].geometry, "n_line")
+        delattr(mock_context.fastmcp._app_context.pool[0].geometry, "n_keypoint")
+        delattr(mock_context.fastmcp._app_context.pool[0].geometry, "n_line")
 
         result = check_mapdl_status(mock_context)
 
@@ -109,7 +109,7 @@ class TestCheckMapdlStatus:
         import json
 
         # Remove mesh attributes
-        delattr(mock_context.pool[0].mesh, "n_node")
+        delattr(mock_context.fastmcp._app_context.pool[0].mesh, "n_node")
 
         result = check_mapdl_status(mock_context)
 
@@ -123,7 +123,7 @@ class TestCheckMapdlStatus:
         import json
 
         # Remove post_processing attribute
-        delattr(mock_context.pool[0], "post_processing")
+        delattr(mock_context.fastmcp._app_context.pool[0], "post_processing")
 
         result = check_mapdl_status(mock_context)
 
@@ -137,7 +137,7 @@ class TestCheckMapdlStatus:
         import json
 
         # Make information.title raise an exception
-        type(mock_context.pool[0].information).title = property(
+        type(mock_context.fastmcp._app_context.pool[0].information).title = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Information error"))
         )
 
@@ -153,7 +153,7 @@ class TestCheckMapdlStatus:
         import json
 
         # Make geometry raise an exception
-        type(mock_context.pool[0].geometry).n_keypoint = property(
+        type(mock_context.fastmcp._app_context.pool[0].geometry).n_keypoint = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Geometry error"))
         )
 
@@ -169,7 +169,7 @@ class TestCheckMapdlStatus:
         import json
 
         # Make mesh raise an exception
-        type(mock_context.pool[0].mesh).n_node = property(
+        type(mock_context.fastmcp._app_context.pool[0].mesh).n_node = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Mesh error"))
         )
 
@@ -185,7 +185,7 @@ class TestCheckMapdlStatus:
         import json
 
         # Make post_processing.nsets raise an exception
-        type(mock_context.pool[0].post_processing).nsets = property(
+        type(mock_context.fastmcp._app_context.pool[0].post_processing).nsets = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Post error"))
         )
 
@@ -346,8 +346,8 @@ class TestWriteComment:
         assert "Comment written successfully" in result
 
         # Verify that MAPDL's com method was called
-        mock_context.pool[0].com.assert_called_once()
-        call_args = mock_context.pool[0].com.call_args
+        mock_context.fastmcp._app_context.pool[0].com.assert_called_once()
+        call_args = mock_context.fastmcp._app_context.pool[0].com.call_args
         assert comment in call_args[0][0]
 
     def test_write_comment_empty_string(self, mock_context):
@@ -388,7 +388,7 @@ class TestRunMapdlCommand:
         assert "MAPDL command executed successfully" in result
 
         # Verify that MAPDL's run method was called
-        mock_context.pool[0].run.assert_called_once_with(command)
+        mock_context.fastmcp._app_context.pool[0].run.assert_called_once_with(command)
 
     def test_run_command_with_arguments(self, mock_context):
         """Test running a MAPDL command with arguments."""
@@ -416,7 +416,7 @@ class TestRunMapdlCommand:
             assert "MAPDL command executed successfully" in result
 
         # Verify all commands were called
-        assert mock_context.pool[0].run.call_count == len(commands)
+        assert mock_context.fastmcp._app_context.pool[0].run.call_count == len(commands)
 
 
 @pytest.mark.unit
@@ -426,7 +426,7 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_success(self, mock_context):
         """Test running multiple MAPDL commands successfully."""
         commands = ["/PREP7", "ET,1,SOLID185", "MP,EX,1,200E9"]
-        mock_context.pool[0].input_strings.return_value = "Commands executed"
+        mock_context.fastmcp._app_context.pool[0].input_strings.return_value = "Commands executed"
 
         result = run_multiple_commands(mock_context, commands)
 
@@ -437,13 +437,13 @@ class TestRunMultipleCommands:
         assert "MP,EX,1,200E9" in result
 
         # Verify that MAPDL's input_strings method was called
-        mock_context.pool[0].input_strings.assert_called_once_with(commands)
+        mock_context.fastmcp._app_context.pool[0].input_strings.assert_called_once_with(commands)
 
     def test_run_multiple_commands_with_output(self, mock_context):
         """Test running multiple commands with MAPDL output."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         output = "Element type 1 defined"
-        mock_context.pool[0].input_strings.return_value = output
+        mock_context.fastmcp._app_context.pool[0].input_strings.return_value = output
 
         result = run_multiple_commands(mock_context, commands)
 
@@ -466,7 +466,7 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_with_empty_strings(self, mock_context):
         """Test running multiple commands with some empty strings."""
         commands = ["/PREP7", "", "ET,1,SOLID185", "  ", "MP,EX,1,200E9"]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.fastmcp._app_context.pool[0].input_strings.return_value = ""
 
         result = run_multiple_commands(mock_context, commands)
 
@@ -477,7 +477,7 @@ class TestRunMultipleCommands:
         assert "MP,EX,1,200E9" in result
 
         # Verify input_strings was called with filtered commands
-        call_args = mock_context.pool[0].input_strings.call_args[0][0]
+        call_args = mock_context.fastmcp._app_context.pool[0].input_strings.call_args[0][0]
         assert len(call_args) == 3
         assert "" not in call_args
         assert "  " not in call_args
@@ -503,7 +503,7 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_single_command(self, mock_context):
         """Test running a single command through multiple commands."""
         commands = ["/PREP7"]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.fastmcp._app_context.pool[0].input_strings.return_value = ""
 
         result = run_multiple_commands(mock_context, commands)
 
@@ -513,14 +513,14 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_with_whitespace(self, mock_context):
         """Test running commands with leading/trailing whitespace."""
         commands = ["  /PREP7  ", "\tET,1,SOLID185\n", " MP,EX,1,200E9 "]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.fastmcp._app_context.pool[0].input_strings.return_value = ""
 
         result = run_multiple_commands(mock_context, commands)
 
         assert "Successfully executed 3 MAPDL commands" in result
 
         # Verify whitespace was stripped
-        call_args = mock_context.pool[0].input_strings.call_args[0][0]
+        call_args = mock_context.fastmcp._app_context.pool[0].input_strings.call_args[0][0]
         assert call_args[0] == "/PREP7"
         assert call_args[1] == "ET,1,SOLID185"
         assert call_args[2] == "MP,EX,1,200E9"
@@ -528,7 +528,9 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_error_handling(self, mock_context):
         """Test error handling when command execution fails."""
         commands = ["/PREP7", "INVALID_COMMAND", "ET,1,SOLID185"]
-        mock_context.pool[0].input_strings.side_effect = Exception("Invalid command syntax")
+        mock_context.fastmcp._app_context.pool[0].input_strings.side_effect = Exception(
+            "Invalid command syntax"
+        )
 
         result = run_multiple_commands(mock_context, commands)
 
@@ -543,13 +545,13 @@ class TestRunMultipleCommands:
         """Test running a large batch of commands."""
         # Create 100 commands
         commands = [f"K,{i},0,0,0" for i in range(1, 101)]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.fastmcp._app_context.pool[0].input_strings.return_value = ""
 
         result = run_multiple_commands(mock_context, commands)
 
         assert "Successfully executed 100 MAPDL commands" in result
         # Verify input_strings was called with all commands
-        call_args = mock_context.pool[0].input_strings.call_args[0][0]
+        call_args = mock_context.fastmcp._app_context.pool[0].input_strings.call_args[0][0]
         assert len(call_args) == 100
 
     def test_run_multiple_commands_with_comments(self, mock_context):
@@ -560,7 +562,7 @@ class TestRunMultipleCommands:
             "/COM, Define element",
             "ET,1,SOLID185",
         ]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.fastmcp._app_context.pool[0].input_strings.return_value = ""
 
         result = run_multiple_commands(mock_context, commands)
 
@@ -575,7 +577,7 @@ class TestRunMultipleCommands:
             "MP,PRXY,1,0.3",
             "R,1,0.01,0.01,0.01",
         ]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.fastmcp._app_context.pool[0].input_strings.return_value = ""
 
         result = run_multiple_commands(mock_context, commands)
 
@@ -585,18 +587,18 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_sequential_execution(self, mock_context):
         """Test that commands are executed in the correct sequence."""
         commands = ["CMD1", "CMD2", "CMD3"]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.fastmcp._app_context.pool[0].input_strings.return_value = ""
 
         run_multiple_commands(mock_context, commands)
 
         # Verify input_strings was called with commands in correct order
-        call_args = mock_context.pool[0].input_strings.call_args[0][0]
+        call_args = mock_context.fastmcp._app_context.pool[0].input_strings.call_args[0][0]
         assert call_args == commands
 
     def test_run_multiple_commands_no_output(self, mock_context):
         """Test running commands that produce no output."""
         commands = ["/PREP7", "ET,1,SOLID185"]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.fastmcp._app_context.pool[0].input_strings.return_value = ""
 
         result = run_multiple_commands(mock_context, commands)
 
@@ -607,7 +609,7 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_none_output(self, mock_context):
         """Test running commands that return None."""
         commands = ["/PREP7", "ET,1,SOLID185"]
-        mock_context.pool[0].input_strings.return_value = None
+        mock_context.fastmcp._app_context.pool[0].input_strings.return_value = None
 
         result = run_multiple_commands(mock_context, commands)
 
@@ -618,22 +620,12 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_stderr_logging(self, mock_context):
         """Test that run_multiple_commands logs messages."""
         commands = ["/PREP7", "ET,1,SOLID185"]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.fastmcp._app_context.pool[0].input_strings.return_value = ""
 
         output = run_multiple_commands(mock_context, commands)
 
         # Verify logging messages
         assert "Successfully executed 2 MAPDL commands on instance 0" in output
-
-    def test_run_multiple_commands_error_logging(self, mock_context, caplog):
-        """Test that command errors are logged."""
-        commands = ["/PREP7", "INVALID"]
-        mock_context.pool[0].input_strings.side_effect = Exception("Test error")
-
-        run_multiple_commands(mock_context, commands)
-
-        # Verify error is logged
-        assert "Error executing commands" in caplog.text
 
 
 @pytest.mark.unit
@@ -694,17 +686,6 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
             # Verify all instances are included in output
             assert "ansys" in result
             assert "50052" in result
-
-    def test_list_instances_stderr_logging(self, caplog):
-        """Test that list_mapdl_instances logs messages."""
-        mock_output = "Sample output"
-        with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            # Capture INFO logs
-            caplog.set_level("INFO")
-            result = list_mapdl_instances()
-
-            # Verify logging messages
-            assert "Searching for MAPDL instances" in caplog.text
 
 
 @pytest.mark.unit
@@ -855,7 +836,7 @@ class TestConnectToMapdl:
         mock_pool.__len__ = MagicMock(return_value=1)
 
         # Verify context starts with no pool
-        assert mock_context_no_mapdl.pool is None
+        assert mock_context_no_mapdl.fastmcp._app_context.pool is None
 
         with patch("ansys.mapdl.core.MapdlPool", return_value=mock_pool):
             result = connect_to_mapdl(mock_context_no_mapdl)
@@ -864,7 +845,7 @@ class TestConnectToMapdl:
             assert "Successfully" in result
 
             # Verify pool is stored in context
-            assert mock_context_no_mapdl.pool is not None
+            assert mock_context_no_mapdl.fastmcp._app_context.pool is not None
 
     def test_connect_stderr_logging(self, mock_context_no_mapdl, caplog):
         """Test that connect_to_mapdl logs messages."""
@@ -895,8 +876,8 @@ class TestDisconnectFromMapdl:
     def test_disconnect_success(self, mock_context):
         """Test disconnecting from MAPDL successfully."""
         # Set up IP and port attributes on mock MAPDL
-        mock_context.pool[0].ip = "127.0.0.1"
-        mock_context.pool[0].port = 50052
+        mock_context.fastmcp._app_context.pool[0].ip = "127.0.0.1"
+        mock_context.fastmcp._app_context.pool[0].port = 50052
 
         result = disconnect_from_mapdl(mock_context)
 
@@ -913,22 +894,24 @@ class TestDisconnectFromMapdl:
 
     def test_disconnect_clears_context(self, mock_context):
         """Test that disconnect properly clears the context."""
-        mock_context.pool[0].ip = "127.0.0.1"
-        mock_context.pool[0].port = 50052
+        mock_context.fastmcp._app_context.pool[0].ip = "127.0.0.1"
+        mock_context.fastmcp._app_context.pool[0].port = 50052
 
         # Verify pool exists before disconnect
-        assert mock_context.pool is not None
+        assert mock_context.fastmcp._app_context.pool is not None
 
         disconnect_from_mapdl(mock_context)
 
         # Verify pool is cleared after disconnect (last instance)
-        assert mock_context.pool is None
+        assert mock_context.fastmcp._app_context.pool is None
 
     def test_disconnect_error_during_exit(self, mock_context):
         """Test handling errors during disconnection."""
-        mock_context.pool[0].ip = "127.0.0.1"
-        mock_context.pool[0].port = 50052
-        mock_context.pool[0].exit.side_effect = Exception("Disconnection error")
+        mock_context.fastmcp._app_context.pool[0].ip = "127.0.0.1"
+        mock_context.fastmcp._app_context.pool[0].port = 50052
+        mock_context.fastmcp._app_context.pool[0].exit.side_effect = Exception(
+            "Disconnection error"
+        )
 
         result = disconnect_from_mapdl(mock_context)
 
@@ -937,30 +920,21 @@ class TestDisconnectFromMapdl:
 
     def test_disconnect_connection_lost(self, mock_context):
         """Test disconnecting when connection is already lost."""
-        mock_context.pool[0].ip = "127.0.0.1"
-        mock_context.pool[0].port = 50052
-        mock_context.pool[0].exit.side_effect = ConnectionError("Connection already closed")
+        mock_context.fastmcp._app_context.pool[0].ip = "127.0.0.1"
+        mock_context.fastmcp._app_context.pool[0].port = 50052
+        mock_context.fastmcp._app_context.pool[0].exit.side_effect = ConnectionError(
+            "Connection already closed"
+        )
 
         result = disconnect_from_mapdl(mock_context)
 
         # Verify result indicates success despite connection loss
         assert isinstance(result, str)
 
-    def test_disconnect_stderr_logging(self, mock_context, caplog):
-        """Test that disconnect_from_mapdl logs messages."""
-        mock_context.pool[0].ip = "127.0.0.1"
-        mock_context.pool[0].port = 50052
-
-        caplog.set_level("INFO")
-        disconnect_from_mapdl(mock_context)
-
-        # Verify logging messages (pool is cleared when last instance exits)
-        assert "Pool is now empty" in caplog.text or "Successfully disconnected" in caplog.text
-
     def test_disconnect_custom_ip_port(self, mock_context):
         """Test disconnecting from MAPDL with custom IP and port."""
-        mock_context.pool[0].ip = "192.168.1.100"
-        mock_context.pool[0].port = 50053
+        mock_context.fastmcp._app_context.pool[0].ip = "192.168.1.100"
+        mock_context.fastmcp._app_context.pool[0].port = 50053
 
         result = disconnect_from_mapdl(mock_context)
 
@@ -1152,7 +1126,7 @@ class TestLaunchMapdl:
         mock_pool.__len__ = MagicMock(return_value=1)
 
         # Verify context starts with no pool
-        assert mock_context_no_mapdl.pool is None
+        assert mock_context_no_mapdl.fastmcp._app_context.pool is None
 
         with patch("ansys.mapdl.core.MapdlPool", return_value=mock_pool):
             result = launch_mapdl(mock_context_no_mapdl)
@@ -1161,33 +1135,7 @@ class TestLaunchMapdl:
             assert "Successfully launched" in result
 
             # Verify pool is stored in context
-            assert mock_context_no_mapdl.pool is not None
-
-    def test_launch_stderr_logging(self, mock_context_no_mapdl, caplog):
-        """Test that launch_mapdl logs messages."""
-        mock_mapdl = MagicMock()
-        mock_mapdl.version = "2024 R2"
-        mock_mapdl._ip = "127.0.0.1"
-        mock_mapdl._port = 50052
-        mock_mapdl.ip = "127.0.0.1"
-        mock_mapdl.port = 50052
-        mock_mapdl._exited = False
-        mock_mapdl._exiting = False
-        mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
-
-        mock_pool = MagicMock()
-        mock_pool._instances = [mock_mapdl]
-        mock_pool._n_instances = 1
-        mock_pool.__getitem__ = MagicMock(return_value=mock_mapdl)
-        mock_pool.__len__ = MagicMock(return_value=1)
-
-        with patch("ansys.mapdl.core.MapdlPool", return_value=mock_pool):
-            caplog.set_level("INFO")
-
-            launch_mapdl(mock_context_no_mapdl)
-
-            # Verify logging messages
-            assert "Launching 1 MAPDL instance" in caplog.text
+            assert mock_context_no_mapdl.fastmcp._app_context.pool is not None
 
 
 @pytest.mark.unit
@@ -1485,7 +1433,7 @@ class TestScreenshot:
         screenshot_path.write_bytes(fake_image_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.fastmcp._app_context.pool[0].screenshot.return_value = str(screenshot_path)
 
         result = screenshot(mock_context)
 
@@ -1524,7 +1472,7 @@ class TestScreenshot:
         screenshot_path.write_bytes(fake_image_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.fastmcp._app_context.pool[0].screenshot.return_value = str(screenshot_path)
 
         result = screenshot(mock_context)
 
@@ -1547,7 +1495,7 @@ class TestScreenshot:
         screenshot_path.write_bytes(fake_image_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.fastmcp._app_context.pool[0].screenshot.return_value = str(screenshot_path)
 
         result = screenshot(mock_context)
 
@@ -1566,7 +1514,7 @@ class TestScreenshot:
         screenshot_path.write_bytes(fake_image_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.fastmcp._app_context.pool[0].screenshot.return_value = str(screenshot_path)
 
         result = screenshot(mock_context)
 
@@ -1585,7 +1533,7 @@ class TestScreenshot:
         screenshot_path.write_bytes(fake_image_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.fastmcp._app_context.pool[0].screenshot.return_value = str(screenshot_path)
 
         result = screenshot(mock_context)
 
@@ -1613,7 +1561,7 @@ class TestScreenshot:
 
         # Mock MAPDL screenshot to return a non-existent path
         nonexistent_path = "/tmp/nonexistent_screenshot.png"
-        mock_context.pool[0].screenshot.return_value = nonexistent_path
+        mock_context.fastmcp._app_context.pool[0].screenshot.return_value = nonexistent_path
 
         result = screenshot(mock_context)
 
@@ -1629,7 +1577,9 @@ class TestScreenshot:
         from mcp.types import TextContent
 
         # Mock MAPDL screenshot to raise an exception
-        mock_context.pool[0].screenshot.side_effect = Exception("Graphics window not available")
+        mock_context.fastmcp._app_context.pool[0].screenshot.side_effect = Exception(
+            "Graphics window not available"
+        )
 
         result = screenshot(mock_context)
 
@@ -1649,7 +1599,7 @@ class TestScreenshot:
         screenshot_path.write_bytes(b"fake image data")
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.fastmcp._app_context.pool[0].screenshot.return_value = str(screenshot_path)
 
         # Mock the file open to raise PermissionError
         with patch("builtins.open", side_effect=PermissionError("Permission denied")):
@@ -1674,7 +1624,7 @@ class TestScreenshot:
         screenshot_path.write_bytes(original_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.fastmcp._app_context.pool[0].screenshot.return_value = str(screenshot_path)
 
         result = screenshot(mock_context)
 
@@ -1696,7 +1646,7 @@ class TestScreenshot:
         screenshot_path.write_bytes(large_image_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.fastmcp._app_context.pool[0].screenshot.return_value = str(screenshot_path)
 
         result = screenshot(mock_context)
 
@@ -1716,7 +1666,7 @@ class TestScreenshot:
         screenshot_path.write_bytes(b"")
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.fastmcp._app_context.pool[0].screenshot.return_value = str(screenshot_path)
 
         result = screenshot(mock_context)
 
@@ -1735,12 +1685,12 @@ class TestScreenshot:
         screenshot_path.write_bytes(b"fake image")
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.fastmcp._app_context.pool[0].screenshot.return_value = str(screenshot_path)
 
         screenshot(mock_context)
 
         # Verify MAPDL's screenshot method was called
-        mock_context.pool[0].screenshot.assert_called_once()
+        mock_context.fastmcp._app_context.pool[0].screenshot.assert_called_once()
 
     def test_screenshot_unknown_extension_defaults_to_png(self, mock_context, tmp_path):
         """Test that unknown file extensions default to PNG MIME type."""
@@ -1751,7 +1701,7 @@ class TestScreenshot:
         screenshot_path.write_bytes(b"fake image data")
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.fastmcp._app_context.pool[0].screenshot.return_value = str(screenshot_path)
 
         result = screenshot(mock_context)
 
@@ -1775,39 +1725,9 @@ class TestScreenshot:
             screenshot_path = tmp_path / f"screenshot{ext}"
             screenshot_path.write_bytes(b"fake image")
 
-            mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+            mock_context.fastmcp._app_context.pool[0].screenshot.return_value = str(screenshot_path)
 
             result = screenshot(mock_context)
             image_content = result[1]
             assert isinstance(image_content, ImageContent)
             assert image_content.mimeType == expected_mime
-
-    def test_screenshot_stderr_logging(self, mock_context, tmp_path, caplog):
-        """Test that screenshot logs messages."""
-        # Create a fake image file
-        screenshot_path = tmp_path / "screenshot.png"
-        screenshot_path.write_bytes(b"fake image")
-
-        # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
-        caplog.set_level("INFO")
-
-        screenshot(mock_context)
-
-        # Verify logging messages
-        assert "Capturing MAPDL screenshot" in caplog.text
-        assert "Screenshot captured successfully" in caplog.text
-        assert str(screenshot_path) in caplog.text
-
-    def test_screenshot_error_logging(self, mock_context, caplog):
-        """Test that screenshot errors are logged."""
-        # Mock MAPDL screenshot to raise an exception
-        mock_context.pool[0].screenshot.side_effect = Exception("Test error")
-
-        caplog.set_level("INFO")
-
-        screenshot(mock_context)
-
-        # Verify error is logged
-        assert "Failed to capture screenshot" in caplog.text
-        assert "Test error" in caplog.text

@@ -14,7 +14,9 @@ class TestErrorHandling:
     def test_mapdl_command_failure(self, mock_context):
         """Test handling of MAPDL command failures."""
         # Make the run method raise an exception
-        mock_context.pool[0].run.side_effect = RuntimeError("MAPDL command failed")
+        mock_context.fastmcp._app_context.pool[0].run.side_effect = RuntimeError(
+            "MAPDL command failed"
+        )
 
         with pytest.raises(RuntimeError) as exc_info:
             run_mapdl_command(mock_context, "INVALID_COMMAND")
@@ -24,7 +26,9 @@ class TestErrorHandling:
     def test_write_comment_failure(self, mock_context):
         """Test handling of comment writing failures."""
         # Make the com method raise an exception
-        mock_context.pool[0].com.side_effect = RuntimeError("Failed to write comment")
+        mock_context.fastmcp._app_context.pool[0].com.side_effect = RuntimeError(
+            "Failed to write comment"
+        )
 
         with pytest.raises(RuntimeError) as exc_info:
             write_comment(mock_context, "Test comment")
@@ -41,10 +45,13 @@ class TestErrorHandling:
     def test_invalid_context_structure(self):
         """Test handling of invalid context structure."""
         # Create a context with missing pool attribute
+        from ansys.mapdl.mcp.mcp import AppContext
+
         invalid_context = MagicMock()
-        invalid_context.pool = None
-        invalid_context.instance_nicknames = {}
-        invalid_context.default_instance_index = 0
+        app_ctx = AppContext()
+        app_ctx.pool = None
+        invalid_context.fastmcp = MagicMock()
+        invalid_context.fastmcp._app_context = app_ctx
 
         result = check_mapdl_status(invalid_context)
         assert "No MAPDL pool available" in result
@@ -52,7 +59,9 @@ class TestErrorHandling:
     def test_mapdl_timeout(self, mock_context):
         """Test handling of MAPDL timeout scenarios."""
         # Simulate a timeout
-        mock_context.pool[0].run.side_effect = TimeoutError("MAPDL command timed out")
+        mock_context.fastmcp._app_context.pool[0].run.side_effect = TimeoutError(
+            "MAPDL command timed out"
+        )
 
         with pytest.raises(TimeoutError) as exc_info:
             run_mapdl_command(mock_context, "/SOLVE")
@@ -65,7 +74,7 @@ class TestErrorHandling:
         result = run_mapdl_command(mock_context, "")
 
         assert "executed successfully" in result
-        mock_context.pool[0].run.assert_called_once_with("")
+        mock_context.fastmcp._app_context.pool[0].run.assert_called_once_with("")
 
     def test_very_long_command(self, mock_context):
         """Test handling of very long commands."""
