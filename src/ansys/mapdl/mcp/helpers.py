@@ -315,8 +315,8 @@ def create_pool(
     logger.info(f"Creating MAPDL pool with {n_instances} instance(s)...")
 
     # Check if pool already exists
-    if ctx.request_context.lifespan_context.pool is not None:
-        n_existing = len(ctx.request_context.lifespan_context.pool)
+    if hasattr(ctx, "pool") and ctx.pool is not None:
+        n_existing = len(ctx.pool)
         return (
             f"MAPDL pool already exists with {n_existing} instance(s). "
             f"Use disconnect_from_mapdl to clear the pool before launching new instances."
@@ -357,12 +357,12 @@ def create_pool(
         )
 
         # Store pool in context
-        ctx.request_context.lifespan_context.pool = pool
+        ctx.pool = pool
 
         # Set up nicknames if provided
         if nicknames is not None:
             for idx, nickname in enumerate(nicknames):
-                ctx.request_context.lifespan_context.instance_nicknames[nickname] = idx
+                ctx.instance_nicknames[nickname] = idx
 
         # Build success message
         lines = [
@@ -403,7 +403,7 @@ def exit_instance(
     str
         Success or error message.
     """
-    pool = ctx.request_context.lifespan_context.pool
+    pool = ctx.pool
 
     if pool is None:
         return "No MAPDL pool available. Nothing to disconnect."
@@ -413,9 +413,9 @@ def exit_instance(
         if instance is None:
             logger.info("Exiting entire MAPDL pool...")
             pool.exit()
-            ctx.request_context.lifespan_context.pool = None
-            ctx.request_context.lifespan_context.instance_nicknames.clear()
-            ctx.request_context.lifespan_context.default_instance_index = 0
+            ctx.pool = None
+            ctx.instance_nicknames.clear()
+            ctx.default_instance_index = 0
             logger.info("Successfully disconnected from entire MAPDL pool")
             return "Successfully disconnected from entire MAPDL pool"
 
@@ -443,15 +443,15 @@ def exit_instance(
         # Remove nickname if exists
         nickname_to_remove = find_nickname(ctx, idx)
         if nickname_to_remove:
-            del ctx.request_context.lifespan_context.instance_nicknames[nickname_to_remove]
+            del ctx.instance_nicknames[nickname_to_remove]
 
         # Check if pool is now empty
         remaining = sum(1 for inst in pool._instances if inst is not None)
         if remaining == 0:
             logger.info("Pool is now empty, clearing pool object")
-            ctx.request_context.lifespan_context.pool = None
-            ctx.request_context.lifespan_context.instance_nicknames.clear()
-            ctx.request_context.lifespan_context.default_instance_index = 0
+            ctx.pool = None
+            ctx.instance_nicknames.clear()
+            ctx.default_instance_index = 0
             return (
                 f"Successfully disconnected instance {idx} at {ip}:{port}. "
                 f"Pool cleared (last instance)."
@@ -484,14 +484,14 @@ def resolve_instance_index(
     int | None
         Pool index if found, None otherwise.
     """
-    pool = ctx.request_context.lifespan_context.pool
+    pool = ctx.pool
 
     if pool is None:
         return None
 
     # None means use default
     if instance is None:
-        default_idx: int = ctx.request_context.lifespan_context.default_instance_index
+        default_idx: int = ctx.default_instance_index
         return default_idx
 
     # Integer means direct index
@@ -502,9 +502,7 @@ def resolve_instance_index(
 
     # String means nickname lookup
     if isinstance(instance, str):
-        idx_result: int | None = ctx.request_context.lifespan_context.instance_nicknames.get(
-            instance
-        )
+        idx_result: int | None = ctx.instance_nicknames.get(instance)
         return idx_result
 
     return None
@@ -529,7 +527,7 @@ def get_mapdl_instance(
         Tuple of (MAPDL instance or None, description string).
         Description is for error messages and logging.
     """
-    pool = ctx.request_context.lifespan_context.pool
+    pool = ctx.pool
 
     if pool is None:
         return (
@@ -588,7 +586,7 @@ def list_available_instances(ctx: "Context") -> str:
     str
         Formatted list of available instances.
     """
-    pool = ctx.request_context.lifespan_context.pool
+    pool = ctx.pool
 
     if pool is None:
         return "No pool"
@@ -622,7 +620,7 @@ def find_nickname(ctx: "Context", index: int) -> str | None:
     str | None
         Nickname if found, None otherwise.
     """
-    for nickname, idx in ctx.request_context.lifespan_context.instance_nicknames.items():
+    for nickname, idx in ctx.instance_nicknames.items():
         if idx == index:
             nickname_result: str = nickname
             return nickname_result
