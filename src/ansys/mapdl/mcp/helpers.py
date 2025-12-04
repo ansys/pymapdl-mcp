@@ -336,6 +336,17 @@ def create_pool(
 
     try:
         # Create the pool - MapdlPool handles validation and defaults
+        from ansys.mapdl.core.launcher import LOCALHOST, MAPDL_DEFAULT_PORT
+
+        if port is None:
+            port = MAPDL_DEFAULT_PORT
+
+        if ip is None:
+            ip = LOCALHOST
+
+        list_ips = ip if isinstance(ip, list) else [ip]
+        list_ports = port if isinstance(port, list) else [port]
+
         pool = MapdlPool(
             n_instances=n_instances,
             exec_file=exec_file,
@@ -349,8 +360,8 @@ def create_pool(
             clear_on_connect=clear_on_connect,
             remove_temp_dir_on_exit=remove_temp_dir_on_exit,
             start_timeout=start_timeout,
-            ip=ip,
-            port=port,
+            ip=list_ips,
+            port=list_ports,
             cleanup_on_exit=cleanup_on_exit,
             restart_failed=True,  # Enable auto-restart for failed instances
             loglevel=loglevel,
