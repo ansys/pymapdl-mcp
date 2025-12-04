@@ -1,12 +1,42 @@
-import logging
 from typing import TYPE_CHECKING, Any
 
 from fastmcp.server import Context
+from fastmcp.utilities.logging import get_logger
 
 if TYPE_CHECKING:
     from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
 
-logger = logging.getLogger(__name__)
+    from ansys.mapdl.mcp.mcp import AppContext
+
+logger = get_logger(__name__)
+
+
+def get_app_context(ctx: Context) -> "AppContext":
+    """Get the AppContext from FastMCP Context.
+
+    The AppContext is stored on the FastMCP server instance during lifespan.
+
+    Parameters
+    ----------
+    ctx : Context
+        The FastMCP context.
+
+    Returns
+    -------
+    AppContext
+        The application context containing pool and instance management.
+    """
+    # Get the FastMCP server instance from context
+    mcp_instance = ctx.fastmcp
+
+    # The AppContext is stored on the server instance by the lifespan
+    if hasattr(mcp_instance, "_app_context"):
+        return mcp_instance._app_context  # type: ignore[no-any-return]
+
+    raise AttributeError(
+        "AppContext not found on server instance. "
+        "This may indicate the server lifespan has not been initialized."
+    )
 
 
 def list_instances(
@@ -315,8 +345,9 @@ def create_pool(
     logger.info(f"Creating MAPDL pool with {n_instances} instance(s)...")
 
     # Check if pool already exists
-    if hasattr(ctx, "pool") and ctx.pool is not None:
-        n_existing = len(ctx.pool)
+    app_ctx = get_app_context(ctx)
+    if app_ctx.pool is not None:
+        n_existing = len(app_ctx.pool)
         return (
             f"MAPDL pool already exists with {n_existing} instance(s). "
             f"Use disconnect_from_mapdl to clear the pool before launching new instances."
@@ -368,12 +399,12 @@ def create_pool(
         )
 
         # Store pool in context
-        ctx.pool = pool
+        app_ctx.pool = pool
 
         # Set up nicknames if provided
         if nicknames is not None:
             for idx, nickname in enumerate(nicknames):
-                ctx.instance_nicknames[nickname] = idx
+                app_ctx.instance_nicknames[nickname] = idx
 
         # Build success message
         lines = [
@@ -414,7 +445,8 @@ def exit_instance(
     str
         Success or error message.
     """
-    pool = ctx.pool
+    app_ctx = get_app_context(ctx)
+    pool = app_ctx.pool
 
     if pool is None:
         return "No MAPDL pool available. Nothing to disconnect."
@@ -424,9 +456,9 @@ def exit_instance(
         if instance is None:
             logger.info("Exiting entire MAPDL pool...")
             pool.exit()
-            ctx.pool = None
-            ctx.instance_nicknames.clear()
-            ctx.default_instance_index = 0
+            app_ctx.pool = None
+            app_ctx.instance_nicknames.clear()
+            app_ctx.default_instance_index = 0
             logger.info("Successfully disconnected from entire MAPDL pool")
             return "Successfully disconnected from entire MAPDL pool"
 
@@ -454,15 +486,15 @@ def exit_instance(
         # Remove nickname if exists
         nickname_to_remove = find_nickname(ctx, idx)
         if nickname_to_remove:
-            del ctx.instance_nicknames[nickname_to_remove]
+            del app_ctx.instance_nicknames[nickname_to_remove]
 
         # Check if pool is now empty
         remaining = sum(1 for inst in pool._instances if inst is not None)
         if remaining == 0:
             logger.info("Pool is now empty, clearing pool object")
-            ctx.pool = None
-            ctx.instance_nicknames.clear()
-            ctx.default_instance_index = 0
+            app_ctx.pool = None
+            app_ctx.instance_nicknames.clear()
+            app_ctx.default_instance_index = 0
             return (
                 f"Successfully disconnected instance {idx} at {ip}:{port}. "
                 f"Pool cleared (last instance)."
@@ -495,14 +527,15 @@ def resolve_instance_index(
     int | None
         Pool index if found, None otherwise.
     """
-    pool = ctx.pool
+    app_ctx = get_app_context(ctx)
+    pool = app_ctx.pool
 
     if pool is None:
         return None
 
     # None means use default
     if instance is None:
-        default_idx: int = ctx.default_instance_index
+        default_idx: int = app_ctx.default_instance_index
         return default_idx
 
     # Integer means direct index
@@ -513,7 +546,7 @@ def resolve_instance_index(
 
     # String means nickname lookup
     if isinstance(instance, str):
-        idx_result: int | None = ctx.instance_nicknames.get(instance)
+        idx_result: int | None = app_ctx.instance_nicknames.get(instance)
         return idx_result
 
     return None
@@ -538,7 +571,8 @@ def get_mapdl_instance(
         Tuple of (MAPDL instance or None, description string).
         Description is for error messages and logging.
     """
-    pool = ctx.pool
+    app_ctx = get_app_context(ctx)
+    pool = app_ctx.pool
 
     if pool is None:
         return (
@@ -597,7 +631,8 @@ def list_available_instances(ctx: "Context") -> str:
     str
         Formatted list of available instances.
     """
-    pool = ctx.pool
+    app_ctx = get_app_context(ctx)
+    pool = app_ctx.pool
 
     if pool is None:
         return "No pool"
@@ -631,7 +666,8 @@ def find_nickname(ctx: "Context", index: int) -> str | None:
     str | None
         Nickname if found, None otherwise.
     """
-    for nickname, idx in ctx.instance_nicknames.items():
+    app_ctx = get_app_context(ctx)
+    for nickname, idx in app_ctx.instance_nicknames.items():
         if idx == index:
             nickname_result: str = nickname
             return nickname_result

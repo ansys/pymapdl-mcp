@@ -2,17 +2,18 @@
 
 import base64
 import json
-import logging
 import os
 import tempfile
 from pathlib import Path
 
 from fastmcp.server import Context
+from fastmcp.utilities.logging import get_logger
 from mcp.types import ImageContent, TextContent
 
+from ansys.mapdl.mcp.helpers import get_app_context
 from ansys.mapdl.mcp.mcp import add_tool
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @add_tool
@@ -399,13 +400,14 @@ def disconnect_from_mapdl(ctx: Context) -> str:
     """
     from ansys.mapdl.mcp.helpers import exit_instance
 
-    pool = ctx.pool
+    app_ctx = get_app_context(ctx)
+    pool = app_ctx.pool
 
     if pool is None:
         return "No MAPDL pool available. Nothing to disconnect."
 
     # Disconnect from default instance
-    default_idx = ctx.default_instance_index
+    default_idx = app_ctx.default_instance_index
     return exit_instance(ctx, instance=default_idx)
 
 
@@ -534,7 +536,8 @@ def list_pool_instances(ctx: Context) -> str:
     str
         Formatted table of pool instances with their details.
     """
-    pool = ctx.pool
+    app_ctx = get_app_context(ctx)
+    pool = app_ctx.pool
 
     if pool is None:
         return "No MAPDL pool available. Use launch_mapdl or connect_to_mapdl to initialize."
@@ -543,7 +546,7 @@ def list_pool_instances(ctx: Context) -> str:
 
     lines = [
         f"MAPDL Pool: {len(pool._instances)} instance(s)",
-        f"Default instance: {ctx.default_instance_index}",
+        f"Default instance: {app_ctx.default_instance_index}",
         "-" * 80,
     ]
 
@@ -600,7 +603,8 @@ def set_default_instance(
     """
     from ansys.mapdl.mcp.helpers import find_nickname, resolve_instance_index
 
-    pool = ctx.pool
+    app_ctx = get_app_context(ctx)
+    pool = app_ctx.pool
 
     if pool is None:
         return "No MAPDL pool available. Use launch_mapdl or connect_to_mapdl to initialize."
@@ -619,7 +623,7 @@ def set_default_instance(
         return f"Instance {idx} is not available. Use list_pool_instances to see status."
 
     # Set as default
-    ctx.default_instance_index = idx
+    app_ctx.default_instance_index = idx
 
     nickname = find_nickname(ctx, idx)
     nickname_str = f' ("{nickname}")' if nickname else ""
@@ -656,7 +660,8 @@ def assign_nickname(
     """
     from ansys.mapdl.mcp.helpers import find_nickname, resolve_instance_index
 
-    pool = ctx.pool
+    app_ctx = get_app_context(ctx)
+    pool = app_ctx.pool
 
     if pool is None:
         return "No MAPDL pool available. Use launch_mapdl or connect_to_mapdl to initialize."
@@ -675,7 +680,7 @@ def assign_nickname(
         return f"Instance {idx} is not available. Use list_pool_instances to see status."
 
     # Check if nickname already exists for a different instance
-    existing_idx = ctx.instance_nicknames.get(nickname)
+    existing_idx = app_ctx.instance_nicknames.get(nickname)
     if existing_idx is not None and existing_idx != idx:
         return (
             f"Nickname '{nickname}' already assigned to instance {existing_idx}. "
@@ -685,10 +690,10 @@ def assign_nickname(
     # Remove old nickname for this instance if it exists
     old_nickname = find_nickname(ctx, idx)
     if old_nickname and old_nickname != nickname:
-        del ctx.instance_nicknames[old_nickname]
+        del app_ctx.instance_nicknames[old_nickname]
 
     # Assign new nickname
-    ctx.instance_nicknames[nickname] = idx
+    app_ctx.instance_nicknames[nickname] = idx
 
     msg = f"Assigned nickname '{nickname}' to instance {idx}"
     if old_nickname and old_nickname != nickname:
@@ -720,17 +725,18 @@ def remove_nickname(
     str
         Confirmation message with the removal status.
     """
-    pool = ctx.pool
+    app_ctx = get_app_context(ctx)
+    pool = app_ctx.pool
 
     if pool is None:
         return "No MAPDL pool available."
 
-    instance_idx = ctx.instance_nicknames.get(nickname)
+    instance_idx = app_ctx.instance_nicknames.get(nickname)
 
     if instance_idx is None:
-        return f"Nickname '{nickname}' not found. No changes made."
+        return f"Nickname '{nickname}' not found."
 
-    del ctx.instance_nicknames[nickname]
+    del app_ctx.instance_nicknames[nickname]
 
     logger.info(f"Removed nickname '{nickname}' from instance {instance_idx}")
     return f"Removed nickname '{nickname}' from instance {instance_idx}"

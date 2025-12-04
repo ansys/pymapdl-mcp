@@ -1,7 +1,6 @@
 """Lifespan and CLI entry for the MCP server with startup options."""
 
 import argparse
-import logging
 import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -9,8 +8,9 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
 from fastmcp.server import FastMCP
+from fastmcp.utilities.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -133,6 +133,9 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
         else:
             logger.info("MCP Server initialized. Use connect_to_mapdl to establish a connection.")
 
+        # Store context on server instance for tool access
+        server._app_context = context
+
         yield context
 
     finally:
@@ -145,6 +148,10 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
             except Exception as e:
                 logger.error(f"Error during MAPDL pool exit: {e}")
         context.instance_nicknames.clear()
+
+        # Clean up stored context
+        if hasattr(server, "_app_context"):
+            delattr(server, "_app_context")
 
 
 # Pass lifespan to server
