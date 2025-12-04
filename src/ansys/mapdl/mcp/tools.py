@@ -243,6 +243,7 @@ def run_multiple_commands(
 def launch_mapdl(
     ctx: Context,
     exec_file: str | None = None,
+    port: int | None = None,
     run_location: str | None = None,
     jobname: str = "file",
     nproc: int = 2,
@@ -269,6 +270,8 @@ def launch_mapdl(
     exec_file : str, optional
         The path to the MAPDL executable. If None, PyMAPDL will attempt to find
         the MAPDL executable automatically.
+    port : int, optional
+        The gRPC port for MAPDL to listen on. If None, a default port will be used.
     run_location : str, optional
         The directory where MAPDL will run and store files. If None, a temporary
         directory will be created.
@@ -306,6 +309,7 @@ def launch_mapdl(
         ctx=ctx,
         n_instances=n_instances,
         exec_file=exec_file,
+        port=port,
         run_location=run_location,
         jobname=jobname,
         nproc=nproc,
