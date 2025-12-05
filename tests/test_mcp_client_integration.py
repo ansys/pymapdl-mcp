@@ -224,6 +224,12 @@ class TestMapdlIntegration:
     @pytest.mark.asyncio
     async def test_connect_disconnect_workflow(self, mcp_client, mapdl):
         """Test connect and disconnect workflow via MCP protocol."""
+        # Ensure we start clean - disconnect if already connected
+        try:
+            await mcp_client.call_tool("disconnect_from_mapdl")
+        except Exception:
+            pass  # Ignore if not connected
+
         # Connect
         connect_result = await mcp_client.call_tool(
             "connect_to_mapdl", arguments={"port": mapdl.port, "ip": "localhost"}
