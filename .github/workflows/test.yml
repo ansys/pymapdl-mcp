@@ -89,11 +89,11 @@ jobs:
         continue-on-error: true
 
   integration-local:
-    name: Integration Tests (local)
+    name: Integration Tests (local MAPDL)
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     container:
-      image: ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd"
+      image: ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd
       options: -u=0:0 --oom-kill-disable --memory=6656MB --memory-swap=16896MB --shm-size=1gb --entrypoint /bin/bash
       credentials:
         username: ${{ github.actor }}
@@ -133,7 +133,7 @@ jobs:
           pytest -m integration -v --tb=short
 
   integration-remote:
-    name: Integration Tests (with MAPDL)
+    name: Integration Tests (remote MAPDL)
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
