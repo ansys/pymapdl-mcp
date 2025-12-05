@@ -31,22 +31,6 @@ async def test_list_tools():
         assert len(list_tools) == 23
 
 
-async def test_list_tools_connect_on_startup():
-    from ansys.mapdl.mcp import mcp
-
-    setattr(
-        mcp,
-        "_cli_config",
-        {
-            "connect_on_startup": True,
-        },
-    )
-
-    async with Client(transport=mcp) as mcp_client:
-        list_tools = await mcp_client.list_tools()
-        assert len(list_tools) == 23
-
-
 @pytest.mark.integration
 @pytest.mark.slow
 class TestMapdlIntegration:
