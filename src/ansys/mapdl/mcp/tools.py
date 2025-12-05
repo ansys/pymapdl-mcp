@@ -347,6 +347,8 @@ def connect_to_mapdl(
     """
     from ansys.mapdl.mcp.helpers import create_pool
 
+    ctx = get_context()
+
     # Determine number of instances
     n_instances = 1
     if isinstance(ip, list):
