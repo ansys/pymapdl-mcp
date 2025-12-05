@@ -140,7 +140,6 @@ jobs:
         env:
           PYMAPDL_START_INSTANCE: "false"
           PYMAPDL_PORT: ${{ env.PYMAPDL_PORT }}
-          PYMAPDL_ADDITIONAL_SWITCHES: "-mpi openmpi"
         run: |
           pytest -m integration -v --tb=short
 
