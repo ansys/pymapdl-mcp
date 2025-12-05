@@ -25,16 +25,26 @@ from ansys.mapdl.mcp import mcp
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture
-async def main_mcp_client():
+async def test_list_tools():
     async with Client(transport=mcp) as mcp_client:
-        yield mcp_client
+        list_tools = await mcp_client.list_tools()
+        assert len(list_tools) == 23
 
 
-async def test_list_tools(main_mcp_client: Client[FastMCPTransport]):
-    list_tools = await main_mcp_client.list_tools()
+async def test_list_tools_connect_on_startup():
+    from ansys.mapdl.mcp import mcp
 
-    assert len(list_tools) == 23
+    setattr(
+        mcp,
+        "_cli_config",
+        {
+            "connect_on_startup": True,
+        },
+    )
+
+    async with Client(transport=mcp) as mcp_client:
+        list_tools = await mcp_client.list_tools()
+        assert len(list_tools) == 23
 
 
 @pytest.mark.integration

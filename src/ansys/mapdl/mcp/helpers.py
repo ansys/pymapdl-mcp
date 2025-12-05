@@ -26,6 +26,11 @@ def get_app_context(ctx: Context) -> "AppContext":
     AppContext
         The application context containing pool and instance management.
     """
+    # If the context does not have fastmcp attribute, return ctx itself
+    # because it means the lifespan has not been initialized yet.
+    if ctx.connect_on_startup and not hasattr(ctx, "fastmcp"):
+        return ctx  # type: ignore[no-any-return]
+
     # Get the FastMCP server instance from context
     mcp_instance = ctx.fastmcp
 
