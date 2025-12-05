@@ -90,7 +90,7 @@ class TestMapdlIntegration:
         await mcp_client.call_tool("disconnect_from_mapdl")
 
     @pytest.mark.asyncio
-    async def test_run_multiple_commands_via_protocol(self, mapdl, connected_client):
+    async def test_run_multiple_commands_via_protocol(self, connected_client):
         # Now test running multiple commands
         result = await connected_client.call_tool(
             "run_multiple_commands",
