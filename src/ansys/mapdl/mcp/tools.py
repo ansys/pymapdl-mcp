@@ -322,11 +322,8 @@ def register_tools(mcp: PyMAPDLMCPServer):
         Before connecting, this tool checks if there's already an active connection.
         It also verifies that a MAPDL instance is actually running on the specified port.
 
-        Before connecting, this tool checks if there's already an active connection.
-        It also verifies that a MAPDL instance is actually running on the specified port.
-
-    Parameters
-    ----------
+        Parameters
+        ----------
         port : int, optional
             The gRPC port where MAPDL is listening. Default is 50052.
         ip : str, optional
