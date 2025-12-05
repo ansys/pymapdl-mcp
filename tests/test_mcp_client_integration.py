@@ -47,7 +47,9 @@ class TestMapdlIntegration:
         try:
             from ansys.mapdl.core import launch_mapdl
 
-            mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
+            mapdl = launch_mapdl(
+                cleanup_on_exit=False, loglevel="ERROR", additional_switches="-smp"
+            )
 
             yield mapdl
 

@@ -36,7 +36,9 @@ class TestMapdlIntegration:
         try:
             from ansys.mapdl.core import launch_mapdl
 
-            mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
+            mapdl = launch_mapdl(
+                cleanup_on_exit=False, loglevel="ERROR", additional_switches="-smp"
+            )
 
             yield mapdl
 
@@ -217,7 +219,7 @@ class TestRunMultipleCommandsIntegration:
         try:
             from ansys.mapdl.core import launch_mapdl
 
-            mapdl = launch_mapdl(loglevel="ERROR")
+            mapdl = launch_mapdl(loglevel="ERROR", additional_switches="-smp")
             yield mapdl
 
             mapdl.exit()
@@ -385,9 +387,7 @@ class TestListMapdlInstancesIntegration:
             from ansys.mapdl.core import launch_mapdl
 
             # Try to connect to verify MAPDL is running
-            mapdl = launch_mapdl(
-                loglevel="ERROR",
-            )
+            mapdl = launch_mapdl(loglevel="ERROR", additional_switches="-smp")
 
         except Exception as e:
             # Not allow to skip if running on CICD
