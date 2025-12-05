@@ -7,7 +7,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from fastmcp.server import Context
+from fastmcp.server.dependencies import get_context
 from mcp.types import ImageContent, TextContent
 
 from ansys.mapdl.mcp.mcp import add_tool
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @add_tool
-def check_mapdl_status(ctx: Context, instance: str | int | None = None) -> str:
+def check_mapdl_status(instance: str | int | None = None) -> str:
     """Check the status of MAPDL initialization for a specific instance.
 
     This tool executes the /STATUS command in MAPDL and extracts comprehensive
@@ -25,8 +25,6 @@ def check_mapdl_status(ctx: Context, instance: str | int | None = None) -> str:
 
     Parameters
     ----------
-    ctx : Context
-        The MCP context containing server session and application context.
     instance : str | int | None
         Instance identifier (index, nickname, or None for default).
 
@@ -44,6 +42,7 @@ def check_mapdl_status(ctx: Context, instance: str | int | None = None) -> str:
     """
     from ansys.mapdl.mcp.helpers import get_info, get_mapdl_instance
 
+    ctx = get_context()
     mapdl, desc = get_mapdl_instance(ctx, instance)
 
     if mapdl is None:
@@ -102,7 +101,6 @@ def check_mapdl_installed() -> str:
 
 @add_tool
 def write_comment(
-    ctx: Context,
     comment: str,
     instance: str | int | None = None,
 ) -> str:
@@ -110,8 +108,6 @@ def write_comment(
 
     Parameters
     ----------
-    ctx : Context
-        The MCP context containing server session and application context.
     comment : str
         The comment text to write in MAPDL.
     instance : str | int | None
@@ -124,6 +120,7 @@ def write_comment(
     """
     from ansys.mapdl.mcp.helpers import get_mapdl_instance
 
+    ctx = get_context()
     mapdl, desc = get_mapdl_instance(ctx, instance)
 
     if mapdl is None:
@@ -136,7 +133,6 @@ def write_comment(
 
 @add_tool
 def run_mapdl_command(
-    ctx: Context,
     cmd: str,
     instance: str | int | None = None,
 ) -> str:
@@ -144,8 +140,6 @@ def run_mapdl_command(
 
     Parameters
     ----------
-    ctx : Context
-        The MCP context containing server session and application context.
     cmd : str
         The MAPDL command to execute.
     instance : str | int | None
@@ -158,6 +152,7 @@ def run_mapdl_command(
     """
     from ansys.mapdl.mcp.helpers import get_mapdl_instance
 
+    ctx = get_context()
     mapdl, desc = get_mapdl_instance(ctx, instance)
 
     if mapdl is None:
@@ -169,7 +164,6 @@ def run_mapdl_command(
 
 @add_tool
 def run_multiple_commands(
-    ctx: Context,
     commands: list[str],
     instance: str | int | None = None,
 ) -> str:
@@ -181,8 +175,6 @@ def run_multiple_commands(
 
     Parameters
     ----------
-    ctx : Context
-        The MCP context containing server session and application context.
     commands : list[str]
         List of MAPDL commands to execute in sequence.
     instance : str | int | None
@@ -195,6 +187,7 @@ def run_multiple_commands(
     """
     from ansys.mapdl.mcp.helpers import get_mapdl_instance
 
+    ctx = get_context()
     mapdl, desc = get_mapdl_instance(ctx, instance)
 
     if mapdl is None:
@@ -241,7 +234,6 @@ def run_multiple_commands(
 
 @add_tool
 def launch_mapdl(
-    ctx: Context,
     exec_file: str | None = None,
     port: int | None = None,
     run_location: str | None = None,
@@ -265,8 +257,6 @@ def launch_mapdl(
 
     Parameters
     ----------
-    ctx : Context
-        The MCP context containing server session and application context.
     exec_file : str, optional
         The path to the MAPDL executable. If None, PyMAPDL will attempt to find
         the MAPDL executable automatically.
@@ -303,6 +293,7 @@ def launch_mapdl(
     """
     from ansys.mapdl.mcp.helpers import create_pool
 
+    ctx = get_context()
     logger.info(f"Launching {n_instances} MAPDL instance(s)...")
 
     return create_pool(
@@ -327,7 +318,6 @@ def launch_mapdl(
 
 @add_tool
 def connect_to_mapdl(
-    ctx: Context,
     port: int | list[int] = 50052,
     ip: str | list[str] = "localhost",
     nicknames: list[str] | None = None,
@@ -341,8 +331,6 @@ def connect_to_mapdl(
 
     Parameters
     ----------
-    ctx : Context
-        The MCP context containing server session and application context.
     port : int | list[int]
         The gRPC port(s) where MAPDL is listening. Default is 50052.
         For multiple instances, provide a list of ports.
@@ -380,17 +368,12 @@ def connect_to_mapdl(
 
 
 @add_tool
-def disconnect_from_mapdl(ctx: Context) -> str:
+def disconnect_from_mapdl() -> str:
     """Disconnect from the default MAPDL instance.
 
     This tool closes the connection to the default MAPDL instance (instance 0)
     and releases the associated resources. To disconnect from a specific instance
     or the entire pool, the internal exit_instance helper can be used.
-
-    Parameters
-    ----------
-    ctx : Context
-        The MCP context containing server session and application context.
 
     Returns
     -------
@@ -399,6 +382,7 @@ def disconnect_from_mapdl(ctx: Context) -> str:
     """
     from ansys.mapdl.mcp.helpers import exit_instance
 
+    ctx = get_context()
     pool = ctx.pool
 
     if pool is None:
@@ -434,7 +418,6 @@ def list_mapdl_instances() -> str:
 
 @add_tool
 def screenshot(
-    ctx: Context,
     instance: str | int | None = None,
 ) -> list[TextContent | ImageContent]:
     """Capture a screenshot of the MAPDL graphics window for a specific instance.
@@ -445,8 +428,6 @@ def screenshot(
 
     Parameters
     ----------
-    ctx : Context
-        The MCP context containing server session and application context.
     instance : str | int | None
         Instance identifier (index, nickname, or None for default).
 
@@ -459,6 +440,7 @@ def screenshot(
     """
     from ansys.mapdl.mcp.helpers import get_mapdl_instance
 
+    ctx = get_context()
     mapdl, desc = get_mapdl_instance(ctx, instance)
 
     if mapdl is None:
@@ -517,23 +499,19 @@ def screenshot(
 
 
 @add_tool
-def list_pool_instances(ctx: Context) -> str:
+def list_pool_instances() -> str:
     """List all MAPDL instances in the pool with their status and nicknames.
 
     This tool displays comprehensive information about all instances in the pool,
     including their indices, nicknames, status, IP addresses, ports, and working
     directories. It also indicates which instance is set as the default.
 
-    Parameters
-    ----------
-    ctx : Context
-        The MCP context containing server session and application context.
-
     Returns
     -------
     str
         Formatted table of pool instances with their details.
     """
+    ctx = get_context()
     pool = ctx.pool
 
     if pool is None:
@@ -578,7 +556,6 @@ def list_pool_instances(ctx: Context) -> str:
 
 @add_tool
 def set_default_instance(
-    ctx: Context,
     instance: str | int,
 ) -> str:
     """Set the default instance for operations without explicit instance specification.
@@ -588,8 +565,6 @@ def set_default_instance(
 
     Parameters
     ----------
-    ctx : Context
-        The MCP context containing server session and application context.
     instance : str | int
         Instance identifier (index or nickname).
 
@@ -600,6 +575,7 @@ def set_default_instance(
     """
     from ansys.mapdl.mcp.helpers import find_nickname, resolve_instance_index
 
+    ctx = get_context()
     pool = ctx.pool
 
     if pool is None:
@@ -630,7 +606,6 @@ def set_default_instance(
 
 @add_tool
 def assign_nickname(
-    ctx: Context,
     instance: str | int,
     nickname: str,
 ) -> str:
@@ -642,8 +617,6 @@ def assign_nickname(
 
     Parameters
     ----------
-    ctx : Context
-        The MCP context containing server session and application context.
     instance : str | int
         Instance identifier (index or existing nickname).
     nickname : str
@@ -656,6 +629,7 @@ def assign_nickname(
     """
     from ansys.mapdl.mcp.helpers import find_nickname, resolve_instance_index
 
+    ctx = get_context()
     pool = ctx.pool
 
     if pool is None:
@@ -700,7 +674,6 @@ def assign_nickname(
 
 @add_tool
 def remove_nickname(
-    ctx: Context,
     nickname: str,
 ) -> str:
     """Remove a nickname from an instance.
@@ -710,8 +683,6 @@ def remove_nickname(
 
     Parameters
     ----------
-    ctx : Context
-        The MCP context containing server session and application context.
     nickname : str
         Nickname to remove.
 
@@ -720,6 +691,7 @@ def remove_nickname(
     str
         Confirmation message with the removal status.
     """
+    ctx = get_context()
     pool = ctx.pool
 
     if pool is None:

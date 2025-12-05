@@ -1,7 +1,6 @@
 import logging
 from typing import TYPE_CHECKING, Any
-
-from fastmcp.server import Context
+from fastmcp.server.dependencies import get_context
 
 if TYPE_CHECKING:
     from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
@@ -242,7 +241,6 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
 
 
 def create_pool(
-    ctx: "Context",
     n_instances: int = 1,
     exec_file: str | None = None,
     run_location: str | None = None,
@@ -268,8 +266,6 @@ def create_pool(
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
     n_instances : int
         Number of MAPDL instances in the pool.
     exec_file : str, optional
@@ -311,6 +307,7 @@ def create_pool(
         Success message with pool information.
     """
     from ansys.mapdl.core import MapdlPool  # pyright: ignore[reportMissingTypeStubs]
+    ctx = get_context()
 
     logger.info(f"Creating MAPDL pool with {n_instances} instance(s)...")
 
@@ -397,15 +394,12 @@ def create_pool(
 
 
 def exit_instance(
-    ctx: "Context",
     instance: str | int | None = None,
 ) -> str:
     """Exit a specific MAPDL instance or the entire pool.
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
     instance : str | int | None
         Instance identifier (index or nickname). If None, exits entire pool.
 
@@ -414,6 +408,7 @@ def exit_instance(
     str
         Success or error message.
     """
+    ctx = get_context()
     pool = ctx.pool
 
     if pool is None:
@@ -478,15 +473,12 @@ def exit_instance(
 
 
 def resolve_instance_index(
-    ctx: "Context",
     instance: str | int | None = None,
 ) -> int | None:
     """Resolve instance identifier to pool index.
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
     instance : str | int | None
         Instance identifier (index, nickname, or None for default).
 
@@ -495,6 +487,7 @@ def resolve_instance_index(
     int | None
         Pool index if found, None otherwise.
     """
+    ctx = get_context()
     pool = ctx.pool
 
     if pool is None:
@@ -520,15 +513,12 @@ def resolve_instance_index(
 
 
 def get_mapdl_instance(
-    ctx: "Context",
     instance: str | int | None = None,
 ) -> tuple[Any | None, str]:
     """Get MAPDL instance from pool.
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
     instance : str | int | None
         Instance identifier (index, nickname, or None for default).
 
@@ -538,6 +528,7 @@ def get_mapdl_instance(
         Tuple of (MAPDL instance or None, description string).
         Description is for error messages and logging.
     """
+    ctx = get_context()
     pool = ctx.pool
 
     if pool is None:
@@ -584,19 +575,15 @@ def get_mapdl_instance(
         )
 
 
-def list_available_instances(ctx: "Context") -> str:
+def list_available_instances() -> str:
     """List all available instances in the pool.
-
-    Parameters
-    ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
 
     Returns
     -------
     str
         Formatted list of available instances.
     """
+    ctx = get_context()
     pool = ctx.pool
 
     if pool is None:
@@ -616,13 +603,11 @@ def list_available_instances(ctx: "Context") -> str:
     return "\n".join(lines) if lines else "No instances"
 
 
-def find_nickname(ctx: "Context", index: int) -> str | None:
+def find_nickname(index: int) -> str | None:
     """Find nickname for given index.
 
     Parameters
     ----------
-    ctx : Context[ServerSession, AppContext]
-        The MCP context containing server session and application context.
     index : int
         Pool index.
 
@@ -631,6 +616,7 @@ def find_nickname(ctx: "Context", index: int) -> str | None:
     str | None
         Nickname if found, None otherwise.
     """
+    ctx = get_context()
     for nickname, idx in ctx.instance_nicknames.items():
         if idx == index:
             nickname_result: str = nickname
