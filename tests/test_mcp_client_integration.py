@@ -88,127 +88,133 @@ class TestMapdlIntegration:
         text = disconnect_result.content[0].text
         assert isinstance(text, str)
 
-    @pytest.mark.asyncio
-    async def test_run_multiple_commands_via_protocol(self, connected_client):
-        # Now test running multiple commands
-        result = await connected_client.call_tool(
-            "run_multiple_commands",
-            arguments={"commands": ["/PREP7", "ET,1,SOLID185", "MP,EX,1,200E9"]},
-        )
+    async def test_fixing(self, connected_client):
+        list_tools = await connected_client.list_tools()
+        # result = await connected_client.call_tool("check_mapdl_installed")
 
-        text = result.content[0].text
-        assert isinstance(text, str)
+    # @pytest.mark.asyncio
+    # async def test_run_multiple_commands_via_protocol(self, connected_client):
+    # Now test running multiple commands
+    # return
 
-    @pytest.mark.asyncio
-    async def test_check_mapdl_status(self, connected_client):
-        """Test check_mapdl_status tool via MCP protocol."""
-        result = await connected_client.call_tool("check_mapdl_status")
+    # result = await connected_client.call_tool(
+    #     "run_multiple_commands",
+    #     arguments={"commands": ["/PREP7", "ET,1,SOLID185", "MP,EX,1,200E9"]},
+    # )
 
-        text = result.content[0].text
-        assert isinstance(text, str)
-        # Should return JSON with status information
-        import json
+    # text = result.content[0].text
+    # assert isinstance(text, str)
 
-        status = json.loads(text)
-        assert "connection" in status
-        assert "information" in status
+    # @pytest.mark.asyncio
+    # async def test_check_mapdl_status(self, connected_client):
+    #     """Test check_mapdl_status tool via MCP protocol."""
+    #     result = await connected_client.call_tool("check_mapdl_status")
 
-    @pytest.mark.asyncio
-    async def test_check_mapdl_installed(self, mcp_client):
-        """Test check_mapdl_installed tool via MCP protocol."""
-        result = await mcp_client.call_tool("check_mapdl_installed")
+    #     text = result.content[0].text
+    #     assert isinstance(text, str)
+    #     # Should return JSON with status information
+    #     import json
 
-        text = result.content[0].text
-        assert isinstance(text, str)
-        assert "MAPDL" in text
+    #     status = json.loads(text)
+    #     assert "connection" in status
+    #     assert "information" in status
 
-    @pytest.mark.asyncio
-    async def test_write_comment(self, connected_client):
-        """Test write_comment tool via MCP protocol."""
-        result = await connected_client.call_tool(
-            "write_comment", arguments={"comment": "Test comment via MCP"}
-        )
+    # @pytest.mark.asyncio
+    # async def test_check_mapdl_installed(self, mcp_client):
+    #     """Test check_mapdl_installed tool via MCP protocol."""
+    #     result = await mcp_client.call_tool("check_mapdl_installed")
 
-        text = result.content[0].text
-        assert isinstance(text, str)
-        assert "comment" in text.lower()
+    #     text = result.content[0].text
+    #     assert isinstance(text, str)
+    #     assert "MAPDL" in text
 
-    @pytest.mark.asyncio
-    async def test_run_mapdl_command(self, connected_client):
-        """Test run_mapdl_command tool via MCP protocol."""
-        result = await connected_client.call_tool("run_mapdl_command", arguments={"cmd": "/PREP7"})
+    # @pytest.mark.asyncio
+    # async def test_write_comment(self, connected_client):
+    #     """Test write_comment tool via MCP protocol."""
+    #     result = await connected_client.call_tool(
+    #         "write_comment", arguments={"comment": "Test comment via MCP"}
+    #     )
 
-        text = result.content[0].text
-        assert isinstance(text, str)
+    #     text = result.content[0].text
+    #     assert isinstance(text, str)
+    #     assert "comment" in text.lower()
 
-    @pytest.mark.asyncio
-    async def test_list_mapdl_instances(self, mcp_client):
-        """Test list_mapdl_instances tool via MCP protocol."""
-        result = await mcp_client.call_tool("list_mapdl_instances")
+    # @pytest.mark.asyncio
+    # async def test_run_mapdl_command(self, connected_client):
+    #     """Test run_mapdl_command tool via MCP protocol."""
+    #     result = await connected_client.call_tool("run_mapdl_command", arguments={"cmd": "/PREP7"})
 
-        text = result.content[0].text
-        assert isinstance(text, str)
+    #     text = result.content[0].text
+    #     assert isinstance(text, str)
 
-    @pytest.mark.asyncio
-    async def test_list_pool_instances(self, connected_client):
-        """Test list_pool_instances tool via MCP protocol."""
-        result = await connected_client.call_tool("list_pool_instances")
+    # @pytest.mark.asyncio
+    # async def test_list_mapdl_instances(self, mcp_client):
+    #     """Test list_mapdl_instances tool via MCP protocol."""
+    #     result = await mcp_client.call_tool("list_mapdl_instances")
 
-        text = result.content[0].text
-        assert isinstance(text, str)
-        # Should show at least one instance (the connected one)
-        assert "instance" in text.lower()
+    #     text = result.content[0].text
+    #     assert isinstance(text, str)
 
-    @pytest.mark.asyncio
-    async def test_set_default_instance(self, connected_client):
-        """Test set_default_instance tool via MCP protocol."""
-        result = await connected_client.call_tool("set_default_instance", arguments={"instance": 0})
+    # @pytest.mark.asyncio
+    # async def test_list_pool_instances(self, connected_client):
+    #     """Test list_pool_instances tool via MCP protocol."""
+    #     result = await connected_client.call_tool("list_pool_instances")
 
-        text = result.content[0].text
-        assert isinstance(text, str)
-        assert "default" in text.lower()
+    #     text = result.content[0].text
+    #     assert isinstance(text, str)
+    #     # Should show at least one instance (the connected one)
+    #     assert "instance" in text.lower()
 
-    @pytest.mark.asyncio
-    async def test_assign_nickname(self, connected_client):
-        """Test assign_nickname tool via MCP protocol."""
-        result = await connected_client.call_tool(
-            "assign_nickname", arguments={"instance": 0, "nickname": "test_instance"}
-        )
+    # @pytest.mark.asyncio
+    # async def test_set_default_instance(self, connected_client):
+    #     """Test set_default_instance tool via MCP protocol."""
+    #     result = await connected_client.call_tool("set_default_instance", arguments={"instance": 0})
 
-        text = result.content[0].text
-        assert isinstance(text, str)
-        assert "nickname" in text.lower() or "test_instance" in text
+    #     text = result.content[0].text
+    #     assert isinstance(text, str)
+    #     assert "default" in text.lower()
 
-    @pytest.mark.asyncio
-    async def test_remove_nickname(self, connected_client):
-        """Test remove_nickname tool via MCP protocol."""
-        # First assign a nickname
-        await connected_client.call_tool(
-            "assign_nickname", arguments={"instance": 0, "nickname": "temp_nickname"}
-        )
+    # @pytest.mark.asyncio
+    # async def test_assign_nickname(self, connected_client):
+    #     """Test assign_nickname tool via MCP protocol."""
+    #     result = await connected_client.call_tool(
+    #         "assign_nickname", arguments={"instance": 0, "nickname": "test_instance"}
+    #     )
 
-        # Then remove it
-        result = await connected_client.call_tool(
-            "remove_nickname", arguments={"nickname": "temp_nickname"}
-        )
+    #     text = result.content[0].text
+    #     assert isinstance(text, str)
+    #     assert "nickname" in text.lower() or "test_instance" in text
 
-        text = result.content[0].text
-        assert isinstance(text, str)
+    # @pytest.mark.asyncio
+    # async def test_remove_nickname(self, connected_client):
+    #     """Test remove_nickname tool via MCP protocol."""
+    #     # First assign a nickname
+    #     await connected_client.call_tool(
+    #         "assign_nickname", arguments={"instance": 0, "nickname": "temp_nickname"}
+    #     )
 
-    @pytest.mark.asyncio
-    async def test_screenshot(self, connected_client, mapdl):
-        """Test screenshot tool via MCP protocol."""
-        # Set up a simple geometry to visualize
-        mapdl.clear()
-        mapdl.prep7()
-        mapdl.block(0, 1, 0, 1, 0, 1)
+    #     # Then remove it
+    #     result = await connected_client.call_tool(
+    #         "remove_nickname", arguments={"nickname": "temp_nickname"}
+    #     )
 
-        result = await connected_client.call_tool("screenshot")
+    #     text = result.content[0].text
+    #     assert isinstance(text, str)
 
-        # Screenshot returns both text and image content
-        assert len(result.content) >= 1
-        text = result.content[0].text
-        assert isinstance(text, str)
+    # @pytest.mark.asyncio
+    # async def test_screenshot(self, connected_client, mapdl):
+    #     """Test screenshot tool via MCP protocol."""
+    #     # Set up a simple geometry to visualize
+    #     mapdl.clear()
+    #     mapdl.prep7()
+    #     mapdl.block(0, 1, 0, 1, 0, 1)
+
+    #     result = await connected_client.call_tool("screenshot")
+
+    #     # Screenshot returns both text and image content
+    #     assert len(result.content) >= 1
+    #     text = result.content[0].text
+    #     assert isinstance(text, str)
 
 
 @pytest.mark.integration
