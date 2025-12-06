@@ -69,12 +69,12 @@ class TestMapdlIntegration:
         real_mapdl.clear()
         return real_mapdl
 
-    @pytest.fixture()
+    @pytest.fixture(scope="class")
     async def mcp_client(self):
         async with Client(transport=mcp) as mcp_client:
             yield mcp_client
 
-    @pytest.fixture()
+    @pytest.fixture(scope="class")
     async def connected_client(self, mcp_client, mapdl):
         """Fixture to provide a connected MCP client."""
         await mcp_client.call_tool(
@@ -83,7 +83,10 @@ class TestMapdlIntegration:
 
         yield mcp_client
 
-        await mcp_client.call_tool("disconnect_from_mapdl")
+        # Disconnect
+        disconnect_result = await mcp_client.call_tool("disconnect_from_mapdl")
+        text = disconnect_result.content[0].text
+        assert isinstance(text, str)
 
     @pytest.mark.asyncio
     async def test_run_multiple_commands_via_protocol(self, connected_client):
@@ -205,28 +208,6 @@ class TestMapdlIntegration:
         # Screenshot returns both text and image content
         assert len(result.content) >= 1
         text = result.content[0].text
-        assert isinstance(text, str)
-
-    @pytest.mark.asyncio
-    async def test_connect_disconnect_workflow(self, mcp_client, mapdl):
-        """Test connect and disconnect workflow via MCP protocol."""
-        # Ensure we start clean - disconnect if already connected
-        try:
-            await mcp_client.call_tool("disconnect_from_mapdl")
-        except Exception:
-            pass  # Ignore if not connected
-
-        # Connect
-        connect_result = await mcp_client.call_tool(
-            "connect_to_mapdl", arguments={"port": mapdl.port, "ip": "localhost"}
-        )
-        text = connect_result.content[0].text
-        assert isinstance(text, str)
-        assert "success" in text.lower()
-
-        # Disconnect
-        disconnect_result = await mcp_client.call_tool("disconnect_from_mapdl")
-        text = disconnect_result.content[0].text
         assert isinstance(text, str)
 
 
