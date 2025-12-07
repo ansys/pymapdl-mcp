@@ -1,9 +1,11 @@
 """Tests for MCP tools functionality."""
 
 import json
+import logging
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from mcp.types import ImageContent, TextContent
 
 from ansys.mapdl.mcp.tools import (
     check_mapdl_installed,
@@ -25,7 +27,7 @@ class TestCheckMapdlStatus:
 
     def test_check_status_with_mapdl(self, mock_context):
         """Test checking MAPDL status when MAPDL is available."""
-        result = check_mapdl_status(mock_context)
+        result = check_mapdl_status.fn(mock_context)
 
         assert isinstance(result, str)
         # Check for JSON structure
@@ -41,7 +43,7 @@ class TestCheckMapdlStatus:
 
     def test_check_status_without_mapdl(self, mock_context_no_mapdl):
         """Test checking MAPDL status when MAPDL is not available."""
-        result = check_mapdl_status(mock_context_no_mapdl)
+        result = check_mapdl_status.fn(mock_context_no_mapdl)
 
         # Should return helpful error message instead of raising exception
         assert isinstance(result, str)
@@ -50,9 +52,9 @@ class TestCheckMapdlStatus:
 
     def test_check_status_with_exited_mapdl(self, mock_context):
         """Test checking status when MAPDL has exited."""
-        mock_context.pool[0]._exited = True
+        mock_context.request_context.lifespan_context.mapdl._exited = True
 
-        result = check_mapdl_status(mock_context)
+        result = check_mapdl_status.fn(mock_context)
 
         assert isinstance(result, str)
         assert "MAPDL instance has exited" in result
@@ -60,9 +62,9 @@ class TestCheckMapdlStatus:
 
     def test_check_status_with_exiting_mapdl(self, mock_context):
         """Test checking status when MAPDL is exiting."""
-        mock_context.pool[0]._exiting = True
+        mock_context.request_context.lifespan_context.mapdl._exiting = True
 
-        result = check_mapdl_status(mock_context)
+        result = check_mapdl_status.fn(mock_context)
 
         assert isinstance(result, str)
         assert "MAPDL instance is currently exiting" in result
@@ -72,10 +74,10 @@ class TestCheckMapdlStatus:
         import json
 
         # Remove some information attributes
-        delattr(mock_context.pool[0].information, "title")
-        delattr(mock_context.pool[0].information, "product")
+        delattr(mock_context.request_context.lifespan_context.mapdl.information, "title")
+        delattr(mock_context.request_context.lifespan_context.mapdl.information, "product")
 
-        result = check_mapdl_status(mock_context)
+        result = check_mapdl_status.fn(mock_context)
 
         # Should still return valid JSON with default values
         data = json.loads(result)
@@ -88,10 +90,10 @@ class TestCheckMapdlStatus:
         import json
 
         # Remove geometry attributes
-        delattr(mock_context.pool[0].geometry, "n_keypoint")
-        delattr(mock_context.pool[0].geometry, "n_line")
+        delattr(mock_context.request_context.lifespan_context.mapdl.geometry, "n_keypoint")
+        delattr(mock_context.request_context.lifespan_context.mapdl.geometry, "n_line")
 
-        result = check_mapdl_status(mock_context)
+        result = check_mapdl_status.fn(mock_context)
 
         # Should still return valid JSON with default values
         data = json.loads(result)
@@ -104,9 +106,9 @@ class TestCheckMapdlStatus:
         import json
 
         # Remove mesh attributes
-        delattr(mock_context.pool[0].mesh, "n_node")
+        delattr(mock_context.request_context.lifespan_context.mapdl.mesh, "n_node")
 
-        result = check_mapdl_status(mock_context)
+        result = check_mapdl_status.fn(mock_context)
 
         # Should still return valid JSON with default values
         data = json.loads(result)
@@ -118,9 +120,9 @@ class TestCheckMapdlStatus:
         import json
 
         # Remove post_processing attribute
-        delattr(mock_context.pool[0], "post_processing")
+        delattr(mock_context.request_context.lifespan_context.mapdl, "post_processing")
 
-        result = check_mapdl_status(mock_context)
+        result = check_mapdl_status.fn(mock_context)
 
         # Should still return valid JSON
         data = json.loads(result)
@@ -132,11 +134,11 @@ class TestCheckMapdlStatus:
         import json
 
         # Make information.title raise an exception
-        type(mock_context.pool[0].information).title = property(
+        type(mock_context.request_context.lifespan_context.mapdl.information).title = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Information error"))
         )
 
-        result = check_mapdl_status(mock_context)
+        result = check_mapdl_status.fn(mock_context)
 
         # Should still return valid JSON with error field
         data = json.loads(result)
@@ -148,11 +150,11 @@ class TestCheckMapdlStatus:
         import json
 
         # Make geometry raise an exception
-        type(mock_context.pool[0].geometry).n_keypoint = property(
+        type(mock_context.request_context.lifespan_context.mapdl.geometry).n_keypoint = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Geometry error"))
         )
 
-        result = check_mapdl_status(mock_context)
+        result = check_mapdl_status.fn(mock_context)
 
         # Should still return valid JSON with error field
         data = json.loads(result)
@@ -164,11 +166,11 @@ class TestCheckMapdlStatus:
         import json
 
         # Make mesh raise an exception
-        type(mock_context.pool[0].mesh).n_node = property(
+        type(mock_context.request_context.lifespan_context.mapdl.mesh).n_node = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Mesh error"))
         )
 
-        result = check_mapdl_status(mock_context)
+        result = check_mapdl_status.fn(mock_context)
 
         # Should still return valid JSON with error field
         data = json.loads(result)
@@ -180,11 +182,11 @@ class TestCheckMapdlStatus:
         import json
 
         # Make post_processing.nsets raise an exception
-        type(mock_context.pool[0].post_processing).nsets = property(
+        type(mock_context.request_context.lifespan_context.mapdl.post_processing).nsets = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Post error"))
         )
 
-        result = check_mapdl_status(mock_context)
+        result = check_mapdl_status.fn(mock_context)
 
         # Should still return valid JSON with error field
         data = json.loads(result)
@@ -195,7 +197,7 @@ class TestCheckMapdlStatus:
         """Test status extraction when all data is properly available."""
         import json
 
-        result = check_mapdl_status(mock_context)
+        result = check_mapdl_status.fn(mock_context)
 
         data = json.loads(result)
 
@@ -241,7 +243,7 @@ class TestCheckMapdlInstalled:
             "ansys.mapdl.core.launcher.get_default_ansys_path",
             return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
         ):
-            result = check_mapdl_installed()
+            result = check_mapdl_installed.fn(MagicMock())
 
             assert isinstance(result, str)
             assert "MAPDL is installed" in result
@@ -250,7 +252,7 @@ class TestCheckMapdlInstalled:
     def test_check_installed_false(self):
         """Test checking MAPDL installation when MAPDL is not installed."""
         with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=False):
-            result = check_mapdl_installed()
+            result = check_mapdl_installed.fn(MagicMock())
 
             assert isinstance(result, str)
             assert "MAPDL is not installed" in result
@@ -263,7 +265,7 @@ class TestCheckMapdlInstalled:
             "ansys.mapdl.core.launcher.check_valid_ansys",
             side_effect=Exception("System error"),
         ):
-            result = check_mapdl_installed()
+            result = check_mapdl_installed.fn(MagicMock())
 
             assert isinstance(result, str)
             assert "Error checking MAPDL installation" in result
@@ -275,7 +277,7 @@ class TestCheckMapdlInstalled:
             "ansys.mapdl.core.launcher.check_valid_ansys",
             side_effect=EnvironmentError("ANSYS environment not configured"),
         ):
-            result = check_mapdl_installed()
+            result = check_mapdl_installed.fn(MagicMock())
 
             assert isinstance(result, str)
             assert "Error checking MAPDL installation" in result
@@ -287,7 +289,7 @@ class TestCheckMapdlInstalled:
             "ansys.mapdl.core.launcher.check_valid_ansys",
             side_effect=ImportError("Failed to import MAPDL module"),
         ):
-            result = check_mapdl_installed()
+            result = check_mapdl_installed.fn(MagicMock())
 
             assert isinstance(result, str)
             assert "Error checking MAPDL installation" in result
@@ -299,7 +301,7 @@ class TestCheckMapdlInstalled:
         with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True), patch(
             "ansys.mapdl.core.launcher.get_default_ansys_path", return_value=custom_path
         ):
-            result = check_mapdl_installed()
+            result = check_mapdl_installed.fn(MagicMock())
 
             assert "MAPDL is installed" in result
             assert custom_path in result
@@ -310,7 +312,7 @@ class TestCheckMapdlInstalled:
             "ansys.mapdl.core.launcher.get_default_ansys_path",
             return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
         ):
-            output = check_mapdl_installed()
+            output = check_mapdl_installed.fn(MagicMock())
 
             # Verify logging messages
             assert (
@@ -321,7 +323,7 @@ class TestCheckMapdlInstalled:
     def test_check_not_installed_logging(self):
         """Test that check_mapdl_installed logs when not installed."""
         with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=False):
-            output = check_mapdl_installed()
+            output = check_mapdl_installed.fn(MagicMock())
 
             assert "MAPDL is not installed on this system or cannot be found in the " in output
             assert "standard locations. Please ensure ANSYS/MAPDL is properly installed " in output
@@ -335,19 +337,19 @@ class TestWriteComment:
     def test_write_comment_success(self, mock_context):
         """Test writing a comment successfully."""
         comment = "This is a test comment"
-        result = write_comment(mock_context, comment)
+        result = write_comment.fn(mock_context, comment)
 
         assert isinstance(result, str)
         assert "Comment written successfully" in result
 
         # Verify that MAPDL's com method was called
-        mock_context.pool[0].com.assert_called_once()
-        call_args = mock_context.pool[0].com.call_args
+        mock_context.request_context.lifespan_context.mapdl.com.assert_called_once()
+        call_args = mock_context.request_context.lifespan_context.mapdl.com.call_args
         assert comment in call_args[0][0]
 
     def test_write_comment_empty_string(self, mock_context):
         """Test writing an empty comment."""
-        result = write_comment(mock_context, "")
+        result = write_comment.fn(mock_context, "")
 
         assert isinstance(result, str)
         assert "Comment written successfully" in result
@@ -355,14 +357,14 @@ class TestWriteComment:
     def test_write_comment_special_characters(self, mock_context):
         """Test writing a comment with special characters."""
         comment = "Comment with special chars: !@#$%^&*()"
-        result = write_comment(mock_context, comment)
+        result = write_comment.fn(mock_context, comment)
 
         assert isinstance(result, str)
         assert "Comment written successfully" in result
 
     def test_write_comment_without_mapdl(self, mock_context_no_mapdl):
         """Test writing a comment when MAPDL is not available."""
-        result = write_comment(mock_context_no_mapdl, "Test comment")
+        result = write_comment.fn(mock_context_no_mapdl, "Test comment")
 
         # Should return helpful error message instead of raising exception
         assert isinstance(result, str)
@@ -377,25 +379,25 @@ class TestRunMapdlCommand:
     def test_run_command_success(self, mock_context):
         """Test running a MAPDL command successfully."""
         command = "/PREP7"
-        result = run_mapdl_command(mock_context, command)
+        result = run_mapdl_command.fn(mock_context, command)
 
         assert isinstance(result, str)
         assert "MAPDL command executed successfully" in result
 
         # Verify that MAPDL's run method was called
-        mock_context.pool[0].run.assert_called_once_with(command)
+        mock_context.request_context.lifespan_context.mapdl.run.assert_called_once_with(command)
 
     def test_run_command_with_arguments(self, mock_context):
         """Test running a MAPDL command with arguments."""
         command = "K,1,0,0,0"
-        result = run_mapdl_command(mock_context, command)
+        result = run_mapdl_command.fn(mock_context, command)
 
         assert isinstance(result, str)
         assert "MAPDL command executed successfully" in result
 
     def test_run_command_without_mapdl(self, mock_context_no_mapdl):
         """Test running a command when MAPDL is not available."""
-        result = run_mapdl_command(mock_context_no_mapdl, "/PREP7")
+        result = run_mapdl_command.fn(mock_context_no_mapdl, "/PREP7")
 
         # Should return helpful error message instead of raising exception
         assert isinstance(result, str)
@@ -407,11 +409,11 @@ class TestRunMapdlCommand:
         commands = ["/PREP7", "ET,1,SOLID185", "MP,EX,1,200E9"]
 
         for cmd in commands:
-            result = run_mapdl_command(mock_context, cmd)
+            result = run_mapdl_command.fn(mock_context, cmd)
             assert "MAPDL command executed successfully" in result
 
         # Verify all commands were called
-        assert mock_context.pool[0].run.call_count == len(commands)
+        assert mock_context.request_context.lifespan_context.mapdl.run.call_count == len(commands)
 
 
 @pytest.mark.unit
@@ -421,9 +423,11 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_success(self, mock_context):
         """Test running multiple MAPDL commands successfully."""
         commands = ["/PREP7", "ET,1,SOLID185", "MP,EX,1,200E9"]
-        mock_context.pool[0].input_strings.return_value = "Commands executed"
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = (
+            "Commands executed"
+        )
 
-        result = run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
         assert isinstance(result, str)
         assert "Successfully executed 3 MAPDL commands" in result
@@ -432,15 +436,17 @@ class TestRunMultipleCommands:
         assert "MP,EX,1,200E9" in result
 
         # Verify that MAPDL's input_strings method was called
-        mock_context.pool[0].input_strings.assert_called_once_with(commands)
+        mock_context.request_context.lifespan_context.mapdl.input_strings.assert_called_once_with(
+            commands
+        )
 
     def test_run_multiple_commands_with_output(self, mock_context):
         """Test running multiple commands with MAPDL output."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         output = "Element type 1 defined"
-        mock_context.pool[0].input_strings.return_value = output
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = output
 
-        result = run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
         assert "Successfully executed 2 MAPDL commands" in result
         assert "Output:" in result
@@ -448,22 +454,22 @@ class TestRunMultipleCommands:
 
     def test_run_multiple_commands_empty_list(self, mock_context):
         """Test running multiple commands with an empty list."""
-        result = run_multiple_commands(mock_context, [])
+        result = run_multiple_commands.fn(mock_context, [])
 
         assert "No commands provided" in result
 
     def test_run_multiple_commands_not_list(self, mock_context):
         """Test running multiple commands with non-list input."""
-        result = run_multiple_commands(mock_context, "not a list")
+        result = run_multiple_commands.fn(mock_context, "not a list")
 
         assert "Commands must be provided as a list" in result
 
     def test_run_multiple_commands_with_empty_strings(self, mock_context):
         """Test running multiple commands with some empty strings."""
         commands = ["/PREP7", "", "ET,1,SOLID185", "  ", "MP,EX,1,200E9"]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
         # Should only execute non-empty commands
         assert "Successfully executed 3 MAPDL commands" in result
@@ -472,7 +478,9 @@ class TestRunMultipleCommands:
         assert "MP,EX,1,200E9" in result
 
         # Verify input_strings was called with filtered commands
-        call_args = mock_context.pool[0].input_strings.call_args[0][0]
+        call_args = mock_context.request_context.lifespan_context.mapdl.input_strings.call_args[0][
+            0
+        ]
         assert len(call_args) == 3
         assert "" not in call_args
         assert "  " not in call_args
@@ -481,14 +489,14 @@ class TestRunMultipleCommands:
         """Test running multiple commands when all are empty."""
         commands = ["", "  ", "\t", "\n"]
 
-        result = run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
         assert "No valid commands found" in result
 
     def test_run_multiple_commands_without_mapdl(self, mock_context_no_mapdl):
         """Test running multiple commands when MAPDL is not available."""
         commands = ["/PREP7", "ET,1,SOLID185"]
-        result = run_multiple_commands(mock_context_no_mapdl, commands)
+        result = run_multiple_commands.fn(mock_context_no_mapdl, commands)
 
         # Should return helpful error message instead of raising exception
         assert isinstance(result, str)
@@ -498,9 +506,9 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_single_command(self, mock_context):
         """Test running a single command through multiple commands."""
         commands = ["/PREP7"]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
         assert "Successfully executed 1 MAPDL commands" in result
         assert "/PREP7" in result
@@ -508,14 +516,16 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_with_whitespace(self, mock_context):
         """Test running commands with leading/trailing whitespace."""
         commands = ["  /PREP7  ", "\tET,1,SOLID185\n", " MP,EX,1,200E9 "]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
         assert "Successfully executed 3 MAPDL commands" in result
 
         # Verify whitespace was stripped
-        call_args = mock_context.pool[0].input_strings.call_args[0][0]
+        call_args = mock_context.request_context.lifespan_context.mapdl.input_strings.call_args[0][
+            0
+        ]
         assert call_args[0] == "/PREP7"
         assert call_args[1] == "ET,1,SOLID185"
         assert call_args[2] == "MP,EX,1,200E9"
@@ -523,9 +533,11 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_error_handling(self, mock_context):
         """Test error handling when command execution fails."""
         commands = ["/PREP7", "INVALID_COMMAND", "ET,1,SOLID185"]
-        mock_context.pool[0].input_strings.side_effect = Exception("Invalid command syntax")
+        mock_context.request_context.lifespan_context.mapdl.input_strings.side_effect = Exception(
+            "Invalid command syntax"
+        )
 
-        result = run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
         assert "Error executing commands" in result
         assert "Invalid command syntax" in result
@@ -538,13 +550,15 @@ class TestRunMultipleCommands:
         """Test running a large batch of commands."""
         # Create 100 commands
         commands = [f"K,{i},0,0,0" for i in range(1, 101)]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
         assert "Successfully executed 100 MAPDL commands" in result
         # Verify input_strings was called with all commands
-        call_args = mock_context.pool[0].input_strings.call_args[0][0]
+        call_args = mock_context.request_context.lifespan_context.mapdl.input_strings.call_args[0][
+            0
+        ]
         assert len(call_args) == 100
 
     def test_run_multiple_commands_with_comments(self, mock_context):
@@ -555,9 +569,9 @@ class TestRunMultipleCommands:
             "/COM, Define element",
             "ET,1,SOLID185",
         ]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
         assert "Successfully executed 4 MAPDL commands" in result
         assert all(cmd in result for cmd in commands)
@@ -570,9 +584,9 @@ class TestRunMultipleCommands:
             "MP,PRXY,1,0.3",
             "R,1,0.01,0.01,0.01",
         ]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
         assert "Successfully executed 4 MAPDL commands" in result
         assert all(cmd in result for cmd in commands)
@@ -580,20 +594,22 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_sequential_execution(self, mock_context):
         """Test that commands are executed in the correct sequence."""
         commands = ["CMD1", "CMD2", "CMD3"]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        run_multiple_commands(mock_context, commands)
+        run_multiple_commands.fn(mock_context, commands)
 
         # Verify input_strings was called with commands in correct order
-        call_args = mock_context.pool[0].input_strings.call_args[0][0]
+        call_args = mock_context.request_context.lifespan_context.mapdl.input_strings.call_args[0][
+            0
+        ]
         assert call_args == commands
 
     def test_run_multiple_commands_no_output(self, mock_context):
         """Test running commands that produce no output."""
         commands = ["/PREP7", "ET,1,SOLID185"]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
         assert "Successfully executed 2 MAPDL commands" in result
         # Should not have "Output:" section when result is empty
@@ -602,9 +618,9 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_none_output(self, mock_context):
         """Test running commands that return None."""
         commands = ["/PREP7", "ET,1,SOLID185"]
-        mock_context.pool[0].input_strings.return_value = None
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = None
 
-        result = run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
         assert "Successfully executed 2 MAPDL commands" in result
         # Should not have "Output:" section when result is None
@@ -613,22 +629,26 @@ class TestRunMultipleCommands:
     def test_run_multiple_commands_stderr_logging(self, mock_context):
         """Test that run_multiple_commands logs messages."""
         commands = ["/PREP7", "ET,1,SOLID185"]
-        mock_context.pool[0].input_strings.return_value = ""
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        output = run_multiple_commands(mock_context, commands)
+        output = run_multiple_commands.fn(mock_context, commands)
 
         # Verify logging messages
-        assert "Successfully executed 2 MAPDL commands on instance 0" in output
+        assert "Successfully executed 2 MAPDL commands" in output
 
-    def test_run_multiple_commands_error_logging(self, mock_context, caplog):
-        """Test that command errors are logged."""
+    def test_run_multiple_commands_error_handling(self, mock_context):
+        """Test that command errors are properly handled and reported in return value."""
         commands = ["/PREP7", "INVALID"]
-        mock_context.pool[0].input_strings.side_effect = Exception("Test error")
+        mock_context.request_context.lifespan_context.mapdl.input_strings.side_effect = Exception(
+            "Test error"
+        )
 
-        run_multiple_commands(mock_context, commands)
+        result = run_multiple_commands.fn(mock_context, commands)
 
-        # Verify error is logged
-        assert "Error executing commands" in caplog.text
+        # Verify error message is in the return value
+        assert isinstance(result, str)
+        assert "Error executing commands" in result
+        assert "Test error" in result
 
 
 @pytest.mark.unit
@@ -644,7 +664,7 @@ ansys     True          running         50052  12345  ansys242 -grpc -port 50052
 ansys     True          running         50053  12346  ansys242 -grpc -port 50053  /tmp/ansys_tmp2"""
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances()
+            result = list_mapdl_instances.fn()
 
             # Verify the function returns the output from list_instances
             assert result == mock_output
@@ -658,7 +678,7 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
 ------  -------------  --------  -----------  -----  --------------  -------------------"""
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances()
+            result = list_mapdl_instances.fn()
 
             # Verify appropriate message is returned
             assert result == mock_output
@@ -668,7 +688,7 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
         mock_list_instances = Mock(return_value="Sample output")
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", mock_list_instances):
-            result = list_mapdl_instances()
+            result = list_mapdl_instances.fn()
 
             # Verify list_instances was called with long=True
             mock_list_instances.assert_called_once_with(long=True)
@@ -684,22 +704,23 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
 ansys     True          running         50054  12347  ansys242 -grpc -port 50054  /tmp/ansys_workdir3"""
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances()
+            result = list_mapdl_instances.fn()
 
             # Verify all instances are included in output
             assert "ansys" in result
             assert "50052" in result
 
-    def test_list_instances_stderr_logging(self, caplog):
-        """Test that list_mapdl_instances logs messages."""
-        mock_output = "Sample output"
-        with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            # Capture INFO logs
-            caplog.set_level("INFO")
-            result = list_mapdl_instances()
+    def test_list_instances_return_value_propagation(self):
+        """Test that list_mapdl_instances correctly propagates the return value from helpers.list_instances."""
+        mock_output = "Sample output with instance information"
+        with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output) as mock_list:
+            result = list_mapdl_instances.fn()
 
-            # Verify logging messages
-            assert "Searching for MAPDL instances" in caplog.text
+            # Verify the helper function was called with correct parameters
+            mock_list.assert_called_once_with(long=True)
+
+            # Verify the result is correctly propagated
+            assert result == mock_output
 
 
 @pytest.mark.unit
@@ -715,7 +736,7 @@ class TestConnectToMapdl:
         mock_mapdl._port = 50052
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
-            result = connect_to_mapdl(mock_context_no_mapdl)
+            result = connect_to_mapdl.fn(mock_context_no_mapdl)
 
             # Verify successful connection
             assert isinstance(result, str)
@@ -734,7 +755,7 @@ class TestConnectToMapdl:
         mock_mapdl._port = 50053
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
-            result = connect_to_mapdl(mock_context_no_mapdl, port=50053)
+            result = connect_to_mapdl.fn(mock_context_no_mapdl, port=50053)
 
             # Verify connection with custom port
             assert "Successfully connected to MAPDL" in result
@@ -757,7 +778,7 @@ class TestConnectToMapdl:
         mock_mapdl._port = 50052
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
-            result = connect_to_mapdl(mock_context_no_mapdl, ip="192.168.1.100")
+            result = connect_to_mapdl.fn(mock_context_no_mapdl, ip="192.168.1.100")
 
             # Verify connection with custom IP
             assert "Successfully connected to MAPDL" in result
@@ -780,7 +801,7 @@ class TestConnectToMapdl:
         mock_mapdl._port = 50099
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
-            result = connect_to_mapdl(mock_context_no_mapdl, port=50099, ip="10.0.0.50")
+            result = connect_to_mapdl.fn(mock_context_no_mapdl, port=50099, ip="10.0.0.50")
 
             # Verify connection with custom parameters
             assert "Successfully connected to MAPDL" in result
@@ -798,7 +819,7 @@ class TestConnectToMapdl:
     def test_connect_already_connected(self, mock_context):
         """Test connecting when already connected."""
         # Context already has a MAPDL connection
-        result = connect_to_mapdl(mock_context)
+        result = connect_to_mapdl.fn(mock_context)
 
         # Verify appropriate error message
         assert "Already connected to MAPDL" in result
@@ -807,7 +828,7 @@ class TestConnectToMapdl:
     def test_connect_connection_error(self, mock_context_no_mapdl):
         """Test handling connection errors."""
         with patch("ansys.mapdl.core.Mapdl", side_effect=Exception("Connection refused")):
-            result = connect_to_mapdl(mock_context_no_mapdl, port=50052, ip="localhost")
+            result = connect_to_mapdl.fn(mock_context_no_mapdl, port=50052, ip="localhost")
 
             # Verify error message is returned
             assert "Failed to connect to MAPDL" in result
@@ -819,7 +840,7 @@ class TestConnectToMapdl:
     def test_connect_network_error(self, mock_context_no_mapdl):
         """Test handling network errors during connection."""
         with patch("ansys.mapdl.core.Mapdl", side_effect=ConnectionError("Network unreachable")):
-            result = connect_to_mapdl(mock_context_no_mapdl, port=50052, ip="192.168.1.999")
+            result = connect_to_mapdl.fn(mock_context_no_mapdl, port=50052, ip="192.168.1.999")
 
             # Verify error message
             assert "Failed to connect to MAPDL" in result
@@ -828,7 +849,7 @@ class TestConnectToMapdl:
     def test_connect_timeout_error(self, mock_context_no_mapdl):
         """Test handling timeout errors during connection."""
         with patch("ansys.mapdl.core.Mapdl", side_effect=TimeoutError("Connection timed out")):
-            result = connect_to_mapdl(mock_context_no_mapdl)
+            result = connect_to_mapdl.fn(mock_context_no_mapdl)
 
             # Verify timeout error is handled
             assert "Failed to connect to MAPDL" in result
@@ -845,7 +866,7 @@ class TestConnectToMapdl:
         assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is None
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
-            result = connect_to_mapdl(mock_context_no_mapdl)
+            result = connect_to_mapdl.fn(mock_context_no_mapdl)
 
             # Verify successful connection
             assert "Successfully connected" in result
@@ -854,19 +875,20 @@ class TestConnectToMapdl:
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is not None
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl == mock_mapdl
 
-    def test_connect_stderr_logging(self, mock_context_no_mapdl, caplog):
-        """Test that connect_to_mapdl logs messages."""
+    def test_connect_result_message(self, mock_context_no_mapdl):
+        """Test that connect_to_mapdl returns informative success message."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50052
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
-            connect_to_mapdl(mock_context_no_mapdl)
+            result = connect_to_mapdl.fn(mock_context_no_mapdl)
 
-            # Verify logging messages
-            assert "Connecting to MAPDL instance at localhost:50052" in caplog.text
-            assert "Connected to MAPDL successfully" in caplog.text
+            # Verify the result contains connection information
+            assert isinstance(result, str)
+            assert "Successfully connected to MAPDL at localhost:50052" in result
+            assert "2024 R2" in result
 
 
 @pytest.mark.unit
@@ -882,7 +904,7 @@ class TestDisconnectFromMapdl:
         # Store reference to check exit was called
         mapdl_ref = mock_context.request_context.lifespan_context.mapdl
 
-        result = disconnect_from_mapdl(mock_context)
+        result = disconnect_from_mapdl.fn(mock_context)
 
         # Verify successful disconnection
         assert isinstance(result, str)
@@ -897,7 +919,7 @@ class TestDisconnectFromMapdl:
 
     def test_disconnect_no_connection(self, mock_context_no_mapdl):
         """Test disconnecting when no connection exists."""
-        result = disconnect_from_mapdl(mock_context_no_mapdl)
+        result = disconnect_from_mapdl.fn(mock_context_no_mapdl)
 
         # Verify appropriate message
         assert "No MAPDL connection to disconnect" in result
@@ -910,7 +932,7 @@ class TestDisconnectFromMapdl:
         # Verify MAPDL exists before disconnect
         assert mock_context.request_context.lifespan_context.mapdl is not None
 
-        disconnect_from_mapdl(mock_context)
+        disconnect_from_mapdl.fn(mock_context)
 
         # Verify MAPDL is cleared after disconnect
         assert mock_context.request_context.lifespan_context.mapdl is None
@@ -923,7 +945,7 @@ class TestDisconnectFromMapdl:
             "Disconnection error"
         )
 
-        result = disconnect_from_mapdl(mock_context)
+        result = disconnect_from_mapdl.fn(mock_context)
 
         # Verify error message is returned
         assert "Error during disconnect" in result
@@ -940,7 +962,7 @@ class TestDisconnectFromMapdl:
             "Connection already closed"
         )
 
-        result = disconnect_from_mapdl(mock_context)
+        result = disconnect_from_mapdl.fn(mock_context)
 
         # Verify error is handled gracefully
         assert "Error during disconnect" in result
@@ -949,24 +971,23 @@ class TestDisconnectFromMapdl:
         # Context should still be cleared
         assert mock_context.request_context.lifespan_context.mapdl is None
 
-    def test_disconnect_stderr_logging(self, mock_context, caplog):
-        """Test that disconnect_from_mapdl logs messages."""
+    def test_disconnect_return_message(self, mock_context):
+        """Test that disconnect_from_mapdl returns informative message."""
         mock_context.request_context.lifespan_context.mapdl._ip = "localhost"
         mock_context.request_context.lifespan_context.mapdl._port = 50052
 
-        caplog.set_level("INFO")
-        disconnect_from_mapdl(mock_context)
+        result = disconnect_from_mapdl.fn(mock_context)
 
-        # Verify logging messages
-        assert "Disconnecting from MAPDL at localhost:50052" in caplog.text
-        assert "Disconnected successfully" in caplog.text
+        # Verify the result contains disconnection information
+        assert isinstance(result, str)
+        assert "Successfully disconnected from MAPDL at localhost:50052" in result
 
     def test_disconnect_custom_ip_port(self, mock_context):
         """Test disconnecting from MAPDL with custom IP and port."""
         mock_context.request_context.lifespan_context.mapdl._ip = "192.168.1.100"
         mock_context.request_context.lifespan_context.mapdl._port = 50053
 
-        result = disconnect_from_mapdl(mock_context)
+        result = disconnect_from_mapdl.fn(mock_context)
 
         # Verify disconnection message includes custom IP and port
         assert "Successfully disconnected from MAPDL at 192.168.1.100:50053" in result
@@ -988,7 +1009,7 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(mock_context_no_mapdl)
+            result = launch_mapdl.fn(mock_context_no_mapdl)
 
             # Verify successful launch
             assert isinstance(result, str)
@@ -1014,7 +1035,7 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(mock_context_no_mapdl, nproc=4)
+            result = launch_mapdl.fn(mock_context_no_mapdl, nproc=4)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result
@@ -1035,7 +1056,7 @@ class TestLaunchMapdl:
         exec_path = "/usr/ansys_inc/v242/ansys/bin/ansys242"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(mock_context_no_mapdl, exec_file=exec_path)
+            result = launch_mapdl.fn(mock_context_no_mapdl, exec_file=exec_path)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result
@@ -1056,7 +1077,7 @@ class TestLaunchMapdl:
         run_loc = "/custom/working/dir"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(mock_context_no_mapdl, run_location=run_loc)
+            result = launch_mapdl.fn(mock_context_no_mapdl, run_location=run_loc)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result
@@ -1078,7 +1099,7 @@ class TestLaunchMapdl:
         switches = "-smp"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(mock_context_no_mapdl, additional_switches=switches)
+            result = launch_mapdl.fn(mock_context_no_mapdl, additional_switches=switches)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result
@@ -1103,7 +1124,7 @@ class TestLaunchMapdl:
         switches = "-smp -db 1024"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(
+            result = launch_mapdl.fn(
                 mock_context_no_mapdl,
                 exec_file=exec_path,
                 run_location=run_loc,
@@ -1128,7 +1149,7 @@ class TestLaunchMapdl:
     def test_launch_already_connected(self, mock_context):
         """Test launching when already connected to MAPDL."""
         # Context already has a MAPDL connection
-        result = launch_mapdl(mock_context)
+        result = launch_mapdl.fn(mock_context)
 
         # Verify appropriate error message
         assert "Already connected to MAPDL" in result
@@ -1140,7 +1161,7 @@ class TestLaunchMapdl:
             "ansys.mapdl.core.launch_mapdl",
             side_effect=Exception("MAPDL executable not found"),
         ):
-            result = launch_mapdl(mock_context_no_mapdl)
+            result = launch_mapdl.fn(mock_context_no_mapdl)
 
             # Verify error message is returned
             assert "Failed to launch MAPDL" in result
@@ -1155,7 +1176,7 @@ class TestLaunchMapdl:
             "ansys.mapdl.core.launch_mapdl",
             side_effect=Exception("No ANSYS license available"),
         ):
-            result = launch_mapdl(mock_context_no_mapdl)
+            result = launch_mapdl.fn(mock_context_no_mapdl)
 
             # Verify error message
             assert "Failed to launch MAPDL" in result
@@ -1175,7 +1196,7 @@ class TestLaunchMapdl:
         assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is None
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
-            result = launch_mapdl(mock_context_no_mapdl)
+            result = launch_mapdl.fn(mock_context_no_mapdl)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result
@@ -1184,8 +1205,8 @@ class TestLaunchMapdl:
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is not None
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl == mock_mapdl
 
-    def test_launch_stderr_logging(self, mock_context_no_mapdl, caplog):
-        """Test that launch_mapdl logs messages."""
+    def test_launch_result_message(self, mock_context_no_mapdl):
+        """Test that launch_mapdl returns informative success message."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
         mock_mapdl._ip = "127.0.0.1"
@@ -1195,11 +1216,13 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
-            launch_mapdl(mock_context_no_mapdl)
+            result = launch_mapdl.fn(mock_context_no_mapdl)
 
-            # Verify logging messages
-            assert "Launching new MAPDL instance" in caplog.text
-            assert "MAPDL launched successfully" in caplog.text
+            # Verify the result contains launch information
+            assert isinstance(result, str)
+            assert "Successfully launched MAPDL at 127.0.0.1:50052" in result
+            assert "2024 R2" in result
+            assert "/tmp/ansys_mapdl_1234" in result
 
 
 @pytest.mark.unit
@@ -1249,27 +1272,27 @@ class TestConnectionLifecycle:
 
         # Step 1: Connect
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
-            result = connect_to_mapdl(mock_context_no_mapdl)
+            result = connect_to_mapdl.fn(mock_context_no_mapdl)
             assert "Successfully connected" in result
 
         # Step 2: Use MAPDL
-        status = check_mapdl_status(mock_context_no_mapdl)
+        status = check_mapdl_status.fn(mock_context_no_mapdl)
         status_data = json.loads(status)
         assert "connection" in status_data
         assert status_data["connection"]["version"] == 24.2
 
-        comment_result = write_comment(mock_context_no_mapdl, "Test comment")
+        comment_result = write_comment.fn(mock_context_no_mapdl, "Test comment")
         assert "Comment written successfully" in comment_result
 
-        command_result = run_mapdl_command(mock_context_no_mapdl, "/PREP7")
+        command_result = run_mapdl_command.fn(mock_context_no_mapdl, "/PREP7")
         assert "MAPDL command executed successfully" in command_result
 
         # Step 3: Disconnect
-        result = disconnect_from_mapdl(mock_context_no_mapdl)
+        result = disconnect_from_mapdl.fn(mock_context_no_mapdl)
         assert "Successfully disconnected" in result
 
         # Step 4: Verify connection is cleared
-        status_after = check_mapdl_status(mock_context_no_mapdl)
+        status_after = check_mapdl_status.fn(mock_context_no_mapdl)
         assert "No MAPDL connection available" in status_after
 
     def test_reconnect_after_disconnect(self, mock_context_no_mapdl):
@@ -1286,31 +1309,31 @@ class TestConnectionLifecycle:
 
         # First connection
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl1):
-            result = connect_to_mapdl(mock_context_no_mapdl, port=50052)
+            result = connect_to_mapdl.fn(mock_context_no_mapdl, port=50052)
             assert "Successfully connected" in result
             assert "50052" in result
 
         # Disconnect
-        disconnect_from_mapdl(mock_context_no_mapdl)
+        disconnect_from_mapdl.fn(mock_context_no_mapdl)
 
         # Second connection with different parameters
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl2):
-            result = connect_to_mapdl(mock_context_no_mapdl, port=50053)
+            result = connect_to_mapdl.fn(mock_context_no_mapdl, port=50053)
             assert "Successfully connected" in result
             assert "50053" in result
 
     def test_tools_without_connection(self, mock_context_no_mapdl):
         """Test that tools return appropriate messages without connection."""
         # Check status without connection
-        status = check_mapdl_status(mock_context_no_mapdl)
+        status = check_mapdl_status.fn(mock_context_no_mapdl)
         assert "No MAPDL connection available" in status
 
         # Try to write comment without connection
-        comment_result = write_comment(mock_context_no_mapdl, "Test")
+        comment_result = write_comment.fn(mock_context_no_mapdl, "Test")
         assert "No MAPDL connection available" in comment_result
 
         # Try to run command without connection
-        command_result = run_mapdl_command(mock_context_no_mapdl, "/PREP7")
+        command_result = run_mapdl_command.fn(mock_context_no_mapdl, "/PREP7")
         assert "No MAPDL connection available" in command_result
 
 
@@ -1358,27 +1381,27 @@ class TestLaunchWorkflow:
 
         # Step 1: Launch
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
-            result = launch_mapdl(mock_context_no_mapdl, nproc=4)
+            result = launch_mapdl.fn(mock_context_no_mapdl, nproc=4)
             assert "Successfully launched MAPDL" in result
 
         # Step 2: Use MAPDL
-        status = check_mapdl_status(mock_context_no_mapdl)
+        status = check_mapdl_status.fn(mock_context_no_mapdl)
         status_data = json.loads(status)
         assert "connection" in status_data
         assert status_data["connection"]["version"] == "2024 R2"
 
-        comment_result = write_comment(mock_context_no_mapdl, "Test comment")
+        comment_result = write_comment.fn(mock_context_no_mapdl, "Test comment")
         assert "Comment written successfully" in comment_result
 
-        command_result = run_mapdl_command(mock_context_no_mapdl, "/PREP7")
+        command_result = run_mapdl_command.fn(mock_context_no_mapdl, "/PREP7")
         assert "MAPDL command executed successfully" in command_result
 
         # Step 3: Disconnect
-        result = disconnect_from_mapdl(mock_context_no_mapdl)
+        result = disconnect_from_mapdl.fn(mock_context_no_mapdl)
         assert "Successfully disconnected" in result
 
         # Step 4: Verify connection is cleared
-        status_after = check_mapdl_status(mock_context_no_mapdl)
+        status_after = check_mapdl_status.fn(mock_context_no_mapdl)
         assert "No MAPDL connection available" in status_after
 
     def test_launch_after_disconnect(self, mock_context_no_mapdl):
@@ -1401,16 +1424,16 @@ class TestLaunchWorkflow:
 
         # First launch
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl1):
-            result = launch_mapdl(mock_context_no_mapdl, nproc=2)
+            result = launch_mapdl.fn(mock_context_no_mapdl, nproc=2)
             assert "Successfully launched MAPDL" in result
             assert "50052" in result
 
         # Disconnect
-        disconnect_from_mapdl(mock_context_no_mapdl)
+        disconnect_from_mapdl.fn(mock_context_no_mapdl)
 
         # Second launch
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl2):
-            result = launch_mapdl(mock_context_no_mapdl, nproc=4)
+            result = launch_mapdl.fn(mock_context_no_mapdl, nproc=4)
             assert "Successfully launched MAPDL" in result
             assert "50053" in result
 
@@ -1423,11 +1446,11 @@ class TestLaunchWorkflow:
         mock_mapdl._port = 50052
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
-            connect_result = connect_to_mapdl(mock_context_no_mapdl)
+            connect_result = connect_to_mapdl.fn(mock_context_no_mapdl)
             assert "Successfully connected" in connect_result
 
         # Now try to launch - should fail
-        launch_result = launch_mapdl(mock_context_no_mapdl)
+        launch_result = launch_mapdl.fn(mock_context_no_mapdl)
         assert "Already connected to MAPDL" in launch_result
         assert "disconnect first" in launch_result
 
@@ -1446,9 +1469,11 @@ class TestScreenshot:
         screenshot_path.write_bytes(fake_image_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
 
-        result = screenshot(mock_context)
+        result = screenshot.fn(mock_context)
 
         # Verify result is a list
         assert isinstance(result, list)
@@ -1485,9 +1510,11 @@ class TestScreenshot:
         screenshot_path.write_bytes(fake_image_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
 
-        result = screenshot(mock_context)
+        result = screenshot.fn(mock_context)
 
         # Verify result structure
         assert isinstance(result, list)
@@ -1508,9 +1535,11 @@ class TestScreenshot:
         screenshot_path.write_bytes(fake_image_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
 
-        result = screenshot(mock_context)
+        result = screenshot.fn(mock_context)
 
         # Verify MIME type is correct for .jpeg extension
         image_content = result[1]
@@ -1527,9 +1556,11 @@ class TestScreenshot:
         screenshot_path.write_bytes(fake_image_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
 
-        result = screenshot(mock_context)
+        result = screenshot.fn(mock_context)
 
         # Verify MIME type is correct for BMP
         image_content = result[1]
@@ -1546,9 +1577,11 @@ class TestScreenshot:
         screenshot_path.write_bytes(fake_image_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
 
-        result = screenshot(mock_context)
+        result = screenshot.fn(mock_context)
 
         # Verify MIME type is correct for GIF
         image_content = result[1]
@@ -1559,7 +1592,7 @@ class TestScreenshot:
         """Test screenshot when MAPDL is not available."""
         from mcp.types import TextContent
 
-        result = screenshot(mock_context_no_mapdl)
+        result = screenshot.fn(mock_context_no_mapdl)
 
         # Verify error message is returned
         assert isinstance(result, list)
@@ -1574,9 +1607,11 @@ class TestScreenshot:
 
         # Mock MAPDL screenshot to return a non-existent path
         nonexistent_path = "/tmp/nonexistent_screenshot.png"
-        mock_context.pool[0].screenshot.return_value = nonexistent_path
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = (
+            nonexistent_path
+        )
 
-        result = screenshot(mock_context)
+        result = screenshot.fn(mock_context)
 
         # Verify error message is returned
         assert isinstance(result, list)
@@ -1590,9 +1625,11 @@ class TestScreenshot:
         from mcp.types import TextContent
 
         # Mock MAPDL screenshot to raise an exception
-        mock_context.pool[0].screenshot.side_effect = Exception("Graphics window not available")
+        mock_context.request_context.lifespan_context.mapdl.screenshot.side_effect = Exception(
+            "Graphics window not available"
+        )
 
-        result = screenshot(mock_context)
+        result = screenshot.fn(mock_context)
 
         # Verify error message is returned
         assert isinstance(result, list)
@@ -1610,11 +1647,13 @@ class TestScreenshot:
         screenshot_path.write_bytes(b"fake image data")
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
 
         # Mock the file open to raise PermissionError
         with patch("builtins.open", side_effect=PermissionError("Permission denied")):
-            result = screenshot(mock_context)
+            result = screenshot.fn(mock_context)
 
             # Verify error message is returned
             assert isinstance(result, list)
@@ -1635,9 +1674,11 @@ class TestScreenshot:
         screenshot_path.write_bytes(original_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
 
-        result = screenshot(mock_context)
+        result = screenshot.fn(mock_context)
 
         # Get the image content
         image_content = result[1]
@@ -1657,9 +1698,11 @@ class TestScreenshot:
         screenshot_path.write_bytes(large_image_data)
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
 
-        result = screenshot(mock_context)
+        result = screenshot.fn(mock_context)
 
         # Verify screenshot succeeds with large file
         assert isinstance(result, list)
@@ -1677,9 +1720,11 @@ class TestScreenshot:
         screenshot_path.write_bytes(b"")
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
 
-        result = screenshot(mock_context)
+        result = screenshot.fn(mock_context)
 
         # Verify screenshot handles empty file
         assert isinstance(result, list)
@@ -1696,12 +1741,14 @@ class TestScreenshot:
         screenshot_path.write_bytes(b"fake image")
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
 
-        screenshot(mock_context)
+        screenshot.fn(mock_context)
 
         # Verify MAPDL's screenshot method was called
-        mock_context.pool[0].screenshot.assert_called_once()
+        mock_context.request_context.lifespan_context.mapdl.screenshot.assert_called_once()
 
     def test_screenshot_unknown_extension_defaults_to_png(self, mock_context, tmp_path):
         """Test that unknown file extensions default to PNG MIME type."""
@@ -1712,9 +1759,11 @@ class TestScreenshot:
         screenshot_path.write_bytes(b"fake image data")
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
 
-        result = screenshot(mock_context)
+        result = screenshot.fn(mock_context)
 
         # Verify it defaults to PNG
         image_content = result[1]
@@ -1736,39 +1785,47 @@ class TestScreenshot:
             screenshot_path = tmp_path / f"screenshot{ext}"
             screenshot_path.write_bytes(b"fake image")
 
-            mock_context.pool[0].screenshot.return_value = str(screenshot_path)
+            mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+                screenshot_path
+            )
 
-            result = screenshot(mock_context)
+            result = screenshot.fn(mock_context)
             image_content = result[1]
             assert isinstance(image_content, ImageContent)
             assert image_content.mimeType == expected_mime
 
-    def test_screenshot_stderr_logging(self, mock_context, tmp_path, caplog):
-        """Test that screenshot logs messages."""
+    def test_screenshot_result_structure(self, mock_context, tmp_path):
+        """Test that screenshot returns proper result structure."""
         # Create a fake image file
         screenshot_path = tmp_path / "screenshot.png"
         screenshot_path.write_bytes(b"fake image")
 
         # Mock MAPDL screenshot method
-        mock_context.pool[0].screenshot.return_value = str(screenshot_path)
-        caplog.set_level("INFO")
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
 
-        screenshot(mock_context)
+        result = screenshot.fn(mock_context)
 
-        # Verify logging messages
-        assert "Capturing MAPDL screenshot" in caplog.text
-        assert "Screenshot captured successfully" in caplog.text
-        assert str(screenshot_path) in caplog.text
+        # Verify result structure
+        assert isinstance(result, list)
+        assert len(result) == 2
+        assert isinstance(result[0], TextContent)
+        assert isinstance(result[1], ImageContent)
+        assert str(screenshot_path) in result[0].text
 
-    def test_screenshot_error_logging(self, mock_context, caplog):
-        """Test that screenshot errors are logged."""
+    def test_screenshot_error_message(self, mock_context):
+        """Test that screenshot returns proper error message on failure."""
         # Mock MAPDL screenshot to raise an exception
-        mock_context.pool[0].screenshot.side_effect = Exception("Test error")
+        mock_context.request_context.lifespan_context.mapdl.screenshot.side_effect = Exception(
+            "Test error"
+        )
 
-        caplog.set_level("INFO")
+        result = screenshot.fn(mock_context)
 
-        screenshot(mock_context)
-
-        # Verify error is logged
-        assert "Failed to capture screenshot" in caplog.text
-        assert "Test error" in caplog.text
+        # Verify error is in the return value
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        assert "Failed to capture screenshot" in result[0].text
+        assert "Test error" in result[0].text

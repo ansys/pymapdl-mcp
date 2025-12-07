@@ -2,22 +2,18 @@
 
 import base64
 import json
-import logging
 import os
 import tempfile
 from pathlib import Path
 from typing import Any
 
 from fastmcp.server import Context
+from fastmcp.server.server import get_logger
 from mcp.types import ImageContent, TextContent
 
-from ansys.mapdl.mcp.mcp import add_tool
+from ansys.mapdl.mcp import mcp
 
-logger = logging.getLogger(__name__)
-
-from mcp.server.session import ServerSession
-
-from ansys.mapdl.mcp import AppContext, mcp
+logger = get_logger(__name__)
 
 
 # Access type-safe lifespan context in tools
@@ -226,7 +222,7 @@ def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
         return error_msg
 
 
-@add_tool
+@mcp.tool()
 def launch_mapdl(
     ctx: Context,
     exec_file: str | None = None,
@@ -310,7 +306,7 @@ def launch_mapdl(
         return error_msg
 
 
-@add_tool
+@mcp.tool()
 def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> str:
     """Connect to an existing MAPDL instance.
 
@@ -415,7 +411,7 @@ def disconnect_from_mapdl(ctx: Context) -> str:
         return error_msg
 
 
-@add_tool
+@mcp.tool()
 def list_mapdl_instances() -> str:
     """List all MAPDL instances running on the local machine.
 
@@ -438,7 +434,7 @@ def list_mapdl_instances() -> str:
     return list_instances(long=True)
 
 
-@add_tool
+@mcp.tool()
 def screenshot(
     ctx: Context,
 ) -> list[TextContent | ImageContent]:

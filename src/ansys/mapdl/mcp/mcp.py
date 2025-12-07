@@ -34,6 +34,10 @@ class AppContext:
     """
 
     mapdl: Optional[Any] = None  # Using Any to avoid type issues with MAPDL variants
+    transport_type: str = "stdio"
+    mapdl_ip: str = "127.0.0.1"
+    mapdl_port: int = 50052
+    connect_on_startup: bool = False
 
 
 @asynccontextmanager

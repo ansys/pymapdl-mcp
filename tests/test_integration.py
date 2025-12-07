@@ -337,7 +337,7 @@ class TestListMapdlInstancesIntegration:
         without mocking. It should work regardless of whether MAPDL
         instances are running.
         """
-        result = list_mapdl_instances()
+        result = list_mapdl_instances.fn()
 
         # The result should always be a string
         assert isinstance(result, str)
@@ -369,7 +369,7 @@ class TestListMapdlInstancesIntegration:
                 pytest.skip(f"MAPDL not available on port 50052: {e}")
 
         # If we get here, MAPDL is running
-        result = list_mapdl_instances()
+        result = list_mapdl_instances.fn()
 
         assert isinstance(result, str)
         assert len(result) > 0
@@ -385,7 +385,7 @@ class TestListMapdlInstancesIntegration:
 
     def test_list_instances_output_format(self):
         """Test that list_mapdl_instances returns properly formatted output."""
-        result = list_mapdl_instances()
+        result = list_mapdl_instances.fn()
 
         assert isinstance(result, str)
 
@@ -404,7 +404,7 @@ class TestListMapdlInstancesIntegration:
         The function should always return a string, even if there are errors.
         """
         try:
-            result = list_mapdl_instances()
+            result = list_mapdl_instances.fn()
             assert isinstance(result, str)
             assert result is not None
         except Exception as e:
@@ -412,8 +412,8 @@ class TestListMapdlInstancesIntegration:
 
     def test_list_instances_consistent_calls(self):
         """Test that multiple calls to list_mapdl_instances are consistent."""
-        result1 = list_mapdl_instances()
-        result2 = list_mapdl_instances()
+        result1 = list_mapdl_instances.fn()
+        result2 = list_mapdl_instances.fn()
 
         # Both should be strings
         assert isinstance(result1, str)

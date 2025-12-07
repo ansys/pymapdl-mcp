@@ -38,7 +38,7 @@ def test_mcp_server_has_tools():
     # This is a basic check to ensure tools are defined
     from ansys.mapdl.mcp import check_mapdl_status, run_mapdl_command, write_comment
 
-    # Verify tools are callable
-    assert callable(check_mapdl_status)
-    assert callable(run_mapdl_command)
-    assert callable(write_comment)
+    # Verify tools are FunctionTool objects with callable .fn attribute
+    assert hasattr(check_mapdl_status, "fn") and callable(check_mapdl_status.fn)
+    assert hasattr(run_mapdl_command, "fn") and callable(run_mapdl_command.fn)
+    assert hasattr(write_comment, "fn") and callable(write_comment.fn)
