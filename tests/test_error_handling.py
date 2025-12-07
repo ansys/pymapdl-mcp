@@ -36,7 +36,7 @@ class TestErrorHandling:
         # Should return helpful error message instead of raising exception
         result = check_mapdl_status(mock_context_no_mapdl)
         assert isinstance(result, str)
-        assert "No MAPDL pool available" in result
+        assert "No MAPDL connection available" in result
 
     def test_invalid_context_structure(self):
         """Test handling of invalid context structure."""

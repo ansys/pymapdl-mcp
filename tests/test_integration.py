@@ -63,18 +63,9 @@ class TestMapdlIntegration:
 
         from ansys.mapdl.mcp.mcp import AppContext
 
-        # Create a mock pool containing the real MAPDL instance
-        mock_pool = MagicMock()
-        mock_pool._instances = [real_mapdl]
-        mock_pool._n_instances = 1
-        mock_pool.__getitem__ = MagicMock(return_value=real_mapdl)
-        mock_pool.__len__ = MagicMock(return_value=1)
-
         context = MagicMock()
         context.request_context = MagicMock()
-        context.pool = mock_pool
-        context.instance_nicknames = {}
-        context.default_instance_index = 0
+        context.request_context.lifespan_context = AppContext(mapdl=real_mapdl)
 
         return context
 
@@ -211,7 +202,8 @@ class TestRunMultipleCommandsIntegration:
         try:
             from ansys.mapdl.core import launch_mapdl
 
-            mapdl = launch_mapdl(loglevel="ERROR")
+            mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
+
             yield mapdl
 
             mapdl.exit()
@@ -233,18 +225,9 @@ class TestRunMultipleCommandsIntegration:
 
         from ansys.mapdl.mcp.mcp import AppContext
 
-        # Create a mock pool containing the real MAPDL instance
-        mock_pool = MagicMock()
-        mock_pool._instances = [real_mapdl]
-        mock_pool._n_instances = 1
-        mock_pool.__getitem__ = MagicMock(return_value=real_mapdl)
-        mock_pool.__len__ = MagicMock(return_value=1)
-
         context = MagicMock()
         context.request_context = MagicMock()
-        context.pool = mock_pool
-        context.instance_nicknames = {}
-        context.default_instance_index = 0
+        context.request_context.lifespan_context = AppContext(mapdl=real_mapdl)
 
         return context
 
@@ -374,6 +357,7 @@ class TestListMapdlInstancesIntegration:
 
             # Try to connect to verify MAPDL is running
             mapdl = launch_mapdl(
+                cleanup_on_exit=False,
                 loglevel="ERROR",
             )
 
