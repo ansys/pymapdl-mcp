@@ -12,16 +12,12 @@ ENV ON_CI=true
 
 # Installing libs for testing and docs
 RUN apt-get -qq update && apt-get install -qq -y \
-    graphviz \
-    latexmk \
+    gcc mono-mcs g++ \
     libgl1 \
     libglx-mesa0 \
     libgomp1 \
-    pandoc \
     python3-pip \
     python3.11-venv \
-    texlive-latex-extra \
-    texlive-xetex \
     xvfb \
     zip \
     && \
