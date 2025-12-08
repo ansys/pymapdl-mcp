@@ -1020,7 +1020,7 @@ class TestLaunchMapdl:
             assert "/tmp/ansys_mapdl_1234" in result
 
             # Verify launch_mapdl was called with correct parameters
-            mock_launch.assert_called_once_with(nproc=2, loglevel="INFO", port=None)
+            mock_launch.assert_called_once_with(nproc=None, loglevel="INFO", port=None)
 
             # Verify MAPDL was stored in context
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl == mock_mapdl
@@ -1064,7 +1064,7 @@ class TestLaunchMapdl:
 
             # Verify launch_mapdl was called with exec_file
             mock_launch.assert_called_once_with(
-                nproc=2, loglevel="INFO", port=None, exec_file=exec_path
+                nproc=None, loglevel="INFO", port=None, exec_file=exec_path
             )
 
     def test_launch_custom_run_location(self, mock_context_no_mapdl):
@@ -1088,7 +1088,7 @@ class TestLaunchMapdl:
 
             # Verify launch_mapdl was called with run_location
             mock_launch.assert_called_once_with(
-                nproc=2, loglevel="INFO", port=None, run_location=run_loc
+                nproc=None, loglevel="INFO", port=None, run_location=run_loc
             )
 
     def test_launch_with_additional_switches(self, mock_context_no_mapdl):
@@ -1111,7 +1111,7 @@ class TestLaunchMapdl:
 
             # Verify launch_mapdl was called with additional_switches
             mock_launch.assert_called_once_with(
-                nproc=2, loglevel="INFO", port=None, additional_switches=switches
+                nproc=None, loglevel="INFO", port=None, additional_switches=switches
             )
 
     def test_launch_all_custom_parameters(self, mock_context_no_mapdl):
@@ -1430,7 +1430,7 @@ class TestLaunchWorkflow:
 
         # First launch
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl1):
-            result = launch_mapdl.fn(mock_context_no_mapdl, nproc=2)
+            result = launch_mapdl.fn(mock_context_no_mapdl, nproc=None)
             assert "Successfully launched MAPDL" in result
             assert "50052" in result
 
