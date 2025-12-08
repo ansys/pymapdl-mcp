@@ -228,7 +228,7 @@ def launch_mapdl(
     exec_file: str | None = None,
     port: int | None = None,
     run_location: str | None = None,
-    nproc: int = 2,
+    nproc: int | None = None,
     additional_switches: str = "",
 ) -> str:
     """Launch a new MAPDL instance.
@@ -249,8 +249,9 @@ def launch_mapdl(
     run_location : str, optional
         The directory where MAPDL will run and store files. If None, a temporary
         directory will be created.
-    nproc : int, optional
-        Number of processors to use. Default is 2.
+    nproc : int | None, optional
+        Number of processors to use. Default is None. MAPDL will decide based on
+        available resources.
     additional_switches : str, optional
         Additional command line switches to pass to MAPDL. Default is empty string.
 

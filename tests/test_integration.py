@@ -463,7 +463,7 @@ class TestLaunchMapdlIntegration:
         from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
 
         try:
-            result = launch_mapdl.fn(clean_context, nproc=4)
+            result = launch_mapdl.fn(clean_context, nproc=1)
 
             # Verify successful launch
             assert isinstance(result, str)
