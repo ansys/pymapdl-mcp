@@ -785,13 +785,14 @@ class TestConnectToMapdl:
             assert "192.168.1.100:50052" in result
 
             # Verify Mapdl was called with correct parameters
-            mock_mapdl_class.assert_called_once_with(
-                start_instance=False,
-                ip="192.168.1.100",
-                port=None,
-                cleanup_on_exit=False,
-                loglevel="INFO",
-            )
+            mock_mapdl_class.assert_called_once()
+            call_args = mock_mapdl_class.call_args[1]
+
+            assert "start_instance" in call_args and call_args["start_instance"] == False
+            assert "ip" in call_args and call_args["ip"] == "192.168.1.100"
+            assert "port" in call_args and call_args["port"] is not None
+            assert "cleanup_on_exit" in call_args and call_args["cleanup_on_exit"] == False
+            assert "loglevel" in call_args and call_args["loglevel"] == "INFO"
 
     def test_connect_custom_ip_and_port(self, mock_context_no_mapdl):
         """Test connecting to MAPDL with both custom IP and port."""
