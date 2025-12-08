@@ -251,7 +251,7 @@ except Exception as e:
             if result["success"] and "RECONNECT_SUCCESS:" in result.get("stdout", ""):
                 logger.info(f"Successfully connected to MAPDL instance at port {port}")
                 # Store the connection parameters for future use
-                context.mapdl_connection_params = {
+                context.metadata["mapdl_connection_params"] = {
                     "type": "connect",
                     "port": port,
                     "ip": "localhost",

@@ -23,9 +23,26 @@ def register_tools(mcp: PyMAPDLMCPServer):
         The code should use PyMAPDL methods (e.g., mapdl.prep7(), mapdl.et(), etc.)
         and assume that the 'mapdl' object is already available and connected.
 
-        No need to import PyMAPDL, launch MAPDL or create the 'mapdl' object;
-        these should already be handled before calling this tool.
+        IMPORTANT: MAPDL Connection Workflow
+        -------------------------------------
+        Before using this tool, you MUST ensure a MAPDL instance is connected:
+        
+        1. First, check if MAPDL is already running using this tool with code:
+           'print("MAPDL exists" if "mapdl" in dir() and mapdl is not None else "No MAPDL")'
+        
+        2. If no MAPDL connection exists:
+           - Check for running instances with get_mapdl_instances_from_cli helper
+           - Use connect_to_mapdl tool if an instance is already running
+           - Use launch_new_mapdl tool if no instances are running
+        
+        3. Only then execute PyMAPDL commands using this tool
 
+        Do NOT directly execute code that assumes 'mapdl' exists without checking first.
+        Do NOT import PyMAPDL or create the 'mapdl' object in this tool - use the
+        dedicated connection tools instead.
+
+        Crash Recovery
+        --------------
         If the MAPDL session crashes during execution, this tool will automatically:
         1. Attempt to reconnect to the existing MAPDL instance
         2. If reconnection fails, launch a new MAPDL instance
@@ -567,3 +584,150 @@ def register_tools(mcp: PyMAPDLMCPServer):
             return f"Session restarted and {len(app_context.command_history)} commands replayed successfully"
         
         return "Session restarted successfully"
+
+    @mcp.tool()
+    def render_plot(
+        plot_code: str,
+        filename: str = "mapdl_plot.png",
+        save_directory: str | None = None,
+    ) -> str:
+        """Render and save a plot from MAPDL visualization code.
+
+        This tool executes plotting code, saves the rendered image to a file,
+        and returns the file path. The plotting code should use PyMAPDL plotting 
+        methods (e.g., mapdl.eplot(), mapdl.nplot(), mapdl.kplot()) or 
+        PyVista/Matplotlib directly.
+
+        The tool automatically handles off-screen rendering and provides helper functions:
+        - save_plot(plotter, filename, return_base64): Save PyVista plotter
+        - save_matplotlib_plot(filename, return_base64, dpi): Save matplotlib figure
+
+        Parameters
+        ----------
+        plot_code : str
+            Python code to generate the plot. Should use PyMAPDL plotting methods
+            with return_plotter=True for PyVista plots, or matplotlib for 2D plots.
+            Example: "plotter = mapdl.eplot(return_plotter=True, off_screen=True)"
+        filename : str, optional
+            Filename to use when saving. Default is "mapdl_plot.png".
+        save_directory : str, optional
+            Directory where the file should be saved. If None, uses the current
+            working directory. Default is None.
+
+        Returns
+        -------
+        str
+            The absolute file path where the plot was saved.
+
+        Examples
+        --------
+        Plot elements (saves to current directory):
+        >>> render_plot("plotter = mapdl.eplot(return_plotter=True, off_screen=True)")
+
+        Plot with custom location:
+        >>> render_plot(
+        ...     "plotter = mapdl.nplot(return_plotter=True, off_screen=True, color='red')",
+        ...     filename="nodes.png",
+        ...     save_directory="C:/my_project/plots"
+        ... )
+        """
+        logger.info(f"Rendering plot to file: {filename}")
+
+        # Get context via dependency injection
+        ctx = get_context()
+        app_context = ctx.fastmcp._lifespan_result
+        python_session = app_context.python_session
+
+        if python_session is None or not python_session.is_running():
+            return "Python session is not available. Please restart the server."
+
+        try:
+            # Determine save directory
+            if save_directory is None:
+                # Use current working directory from context
+                import os
+                save_dir = os.getcwd()
+            else:
+                save_dir = save_directory
+            
+            # Indent the user's plot code properly
+            indented_plot_code = '\n'.join('    ' + line for line in plot_code.split('\n'))
+            
+            # Construct the full plotting code with output suppression
+            full_code = f"""
+import sys
+import io
+import os
+
+# Suppress verbose output from PyVista
+_old_stdout = sys.stdout
+sys.stdout = io.StringIO()
+
+try:
+{indented_plot_code}
+finally:
+    # Restore stdout
+    sys.stdout = _old_stdout
+
+# Use the specified save directory
+save_dir = r'{save_dir}'
+
+# Create full path for the file
+full_path = os.path.join(save_dir, '{filename}')
+
+# Check if we have a PyVista plotter or matplotlib figure
+if 'plotter' in locals() and hasattr(plotter, 'screenshot'):
+    # PyVista plotter - save directly using screenshot
+    try:
+        plotter.screenshot(full_path)
+        if hasattr(plotter, 'close'):
+            plotter.close()
+        print(f"SAVED: {{full_path}}")
+    except Exception as e:
+        print(f"Error saving PyVista plot: {{str(e)}}")
+elif 'plt' in dir() and hasattr(plt, 'gcf'):
+    # Matplotlib figure
+    try:
+        fig = plt.gcf()
+        if fig.get_axes():  # Check if figure has any plots
+            plt.savefig(full_path, dpi=150, bbox_inches='tight')
+            plt.close()
+            print(f"SAVED: {{full_path}}")
+        else:
+            print("Error: No plot was generated")
+    except Exception as e:
+        print(f"Error saving matplotlib plot: {{str(e)}}")
+else:
+    print("Error: No plotter or figure found. Use return_plotter=True or create a matplotlib plot.")
+"""
+
+            logger.debug(f"Executing plot code:\n{full_code}")
+            result = python_session.execute(full_code, timeout=30.0)
+
+            if result["success"]:
+                output = result.get("stdout", "").strip()
+                
+                if "Error:" in output:
+                    logger.error(f"Plot rendering error: {output}")
+                    return output
+                
+                if "SAVED:" in output:
+                    # Extract the file path
+                    file_path = output.replace("SAVED:", "").strip()
+                    logger.info(f"Plot saved successfully: {file_path}")
+                    return f"Plot saved to: {file_path}\n\nYou can open this file to view the plot."
+                else:
+                    logger.warning(f"Unexpected output: {output}")
+                    return output if output else "Plot rendered but no output received"
+
+            else:
+                error_msg = f"Failed to render plot: {result.get('error', 'Unknown error')}"
+                if result.get('stderr'):
+                    error_msg += f"\n\nStderr:\n{result['stderr']}"
+                logger.error(error_msg)
+                return error_msg
+
+        except Exception as e:
+            error_msg = f"Exception while rendering plot: {str(e)}"
+            logger.error(error_msg)
+            return error_msg

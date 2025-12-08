@@ -616,3 +616,196 @@ class TestCommandHistoryTools:
             result = undo_fn()
             
             assert "No commands" in result
+
+
+@pytest.mark.unit
+class TestRenderPlotTool:
+    """Test render_plot tool."""
+
+    def test_render_plot_success(self, mock_context, mock_get_context):
+        """Test successful plot rendering to file."""
+        mock_context.python_session.execute.return_value = {
+            "success": True,
+            "stdout": "SAVED: C:\\test\\beam_plot.png",
+            "stderr": "",
+        }
+        
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+            from ansys.mapdl.mcp import tools
+            
+            mock_mcp = Mock()
+            registered_tools = {}
+            
+            def mock_tool_decorator():
+                def decorator(fn):
+                    registered_tools[fn.__name__] = fn
+                    return fn
+                return decorator
+            
+            mock_mcp.tool = mock_tool_decorator
+            tools.register_tools(mock_mcp)
+            
+            render_fn = registered_tools['render_plot']
+            result = render_fn(
+                plot_code="plotter = mapdl.eplot(return_plotter=True, off_screen=True)",
+                filename="beam_plot.png"
+            )
+            
+            assert "Plot saved to" in result
+            assert "beam_plot.png" in result
+
+    def test_render_plot_with_custom_directory(self, mock_context, mock_get_context):
+        """Test plot rendering with custom save directory."""
+        mock_context.python_session.execute.return_value = {
+            "success": True,
+            "stdout": "SAVED: C:\\custom\\path\\test_plot.png",
+            "stderr": "",
+        }
+        
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+            from ansys.mapdl.mcp import tools
+            
+            mock_mcp = Mock()
+            registered_tools = {}
+            
+            def mock_tool_decorator():
+                def decorator(fn):
+                    registered_tools[fn.__name__] = fn
+                    return fn
+                return decorator
+            
+            mock_mcp.tool = mock_tool_decorator
+            tools.register_tools(mock_mcp)
+            
+            render_fn = registered_tools['render_plot']
+            result = render_fn(
+                plot_code="plotter = mapdl.nplot(return_plotter=True, off_screen=True)",
+                filename="test_plot.png",
+                save_directory="C:\\custom\\path"
+            )
+            
+            assert "Plot saved to" in result
+            assert "custom\\path" in result or "custom/path" in result
+
+    def test_render_plot_no_plotter_error(self, mock_context, mock_get_context):
+        """Test plot rendering with no plotter created."""
+        mock_context.python_session.execute.return_value = {
+            "success": True,
+            "stdout": "Error: No plotter or figure found. Use return_plotter=True or create a matplotlib plot.",
+            "stderr": "",
+        }
+        
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+            from ansys.mapdl.mcp import tools
+            
+            mock_mcp = Mock()
+            registered_tools = {}
+            
+            def mock_tool_decorator():
+                def decorator(fn):
+                    registered_tools[fn.__name__] = fn
+                    return fn
+                return decorator
+            
+            mock_mcp.tool = mock_tool_decorator
+            tools.register_tools(mock_mcp)
+            
+            render_fn = registered_tools['render_plot']
+            result = render_fn(
+                plot_code="mapdl.eplot()",  # Missing return_plotter=True
+                filename="test.png"
+            )
+            
+            assert "Error:" in result
+            assert "No plotter" in result
+
+    def test_render_plot_execution_error(self, mock_context, mock_get_context):
+        """Test plot rendering with execution error."""
+        mock_context.python_session.execute.return_value = {
+            "success": False,
+            "error": "NameError: name 'mapdl' is not defined",
+            "stderr": "",
+        }
+        
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+            from ansys.mapdl.mcp import tools
+            
+            mock_mcp = Mock()
+            registered_tools = {}
+            
+            def mock_tool_decorator():
+                def decorator(fn):
+                    registered_tools[fn.__name__] = fn
+                    return fn
+                return decorator
+            
+            mock_mcp.tool = mock_tool_decorator
+            tools.register_tools(mock_mcp)
+            
+            render_fn = registered_tools['render_plot']
+            result = render_fn(
+                plot_code="plotter = mapdl.eplot(return_plotter=True)",
+                filename="test.png"
+            )
+            
+            assert "Failed to render plot" in result
+            assert "NameError" in result
+
+    def test_render_plot_no_python_session(self, mock_context, mock_get_context):
+        """Test plot rendering when Python session is not available."""
+        mock_context.python_session = None
+        
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+            from ansys.mapdl.mcp import tools
+            
+            mock_mcp = Mock()
+            registered_tools = {}
+            
+            def mock_tool_decorator():
+                def decorator(fn):
+                    registered_tools[fn.__name__] = fn
+                    return fn
+                return decorator
+            
+            mock_mcp.tool = mock_tool_decorator
+            tools.register_tools(mock_mcp)
+            
+            render_fn = registered_tools['render_plot']
+            result = render_fn(
+                plot_code="plotter = mapdl.eplot(return_plotter=True)",
+                filename="test.png"
+            )
+            
+            assert "Python session is not available" in result
+
+    def test_render_plot_matplotlib(self, mock_context, mock_get_context):
+        """Test plot rendering with matplotlib."""
+        mock_context.python_session.execute.return_value = {
+            "success": True,
+            "stdout": "SAVED: C:\\test\\matplotlib_plot.png",
+            "stderr": "",
+        }
+        
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+            from ansys.mapdl.mcp import tools
+            
+            mock_mcp = Mock()
+            registered_tools = {}
+            
+            def mock_tool_decorator():
+                def decorator(fn):
+                    registered_tools[fn.__name__] = fn
+                    return fn
+                return decorator
+            
+            mock_mcp.tool = mock_tool_decorator
+            tools.register_tools(mock_mcp)
+            
+            render_fn = registered_tools['render_plot']
+            result = render_fn(
+                plot_code="plt.plot([1, 2, 3], [1, 4, 9])",
+                filename="matplotlib_plot.png"
+            )
+            
+            assert "Plot saved to" in result
+            assert "matplotlib_plot.png" in result

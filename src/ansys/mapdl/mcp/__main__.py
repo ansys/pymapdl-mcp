@@ -3,6 +3,7 @@
 import sys
 
 from ansys.mapdl.mcp.tools import register_tools
+from ansys.mapdl.mcp.contexts import register_context_tools
 
 def main():
     # Import here to avoid the RuntimeWarning about module loading
@@ -13,6 +14,7 @@ def main():
         name="PyMAPDL"
     )
     register_tools(mcp)
+    register_context_tools(mcp)
     
     # Run the server
     mcp.run()
