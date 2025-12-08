@@ -277,6 +277,7 @@ def launch_mapdl(
         kwargs: dict[str, Any] = {
             "nproc": nproc,
             "loglevel": "INFO",
+            "port": port,
         }
 
         if exec_file is not None:
