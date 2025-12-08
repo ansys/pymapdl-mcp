@@ -809,3 +809,99 @@ class TestRenderPlotTool:
             
             assert "Plot saved to" in result
             assert "matplotlib_plot.png" in result
+
+    def test_render_plot_mapdl_plotter(self, mock_context, mock_get_context):
+        """Test plot rendering with MAPDL MapdlPlotter using show(savefig=...)."""
+        mock_context.python_session.execute.return_value = {
+            "success": True,
+            "stdout": "SAVED: C:\\test\\mapdl_beam.png",
+            "stderr": "",
+        }
+        
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+            from ansys.mapdl.mcp import tools
+            
+            mock_mcp = Mock()
+            registered_tools = {}
+            
+            def mock_tool_decorator():
+                def decorator(fn):
+                    registered_tools[fn.__name__] = fn
+                    return fn
+                return decorator
+            
+            mock_mcp.tool = mock_tool_decorator
+            tools.register_tools(mock_mcp)
+            
+            render_fn = registered_tools['render_plot']
+            result = render_fn(
+                plot_code="plotter = mapdl.eplot(return_plotter=True)",
+                filename="mapdl_beam.png"
+            )
+            
+            assert "Plot saved to" in result
+            assert "mapdl_beam.png" in result
+
+    def test_render_plot_pyvista_plotter(self, mock_context, mock_get_context):
+        """Test plot rendering with standard PyVista plotter using screenshot()."""
+        mock_context.python_session.execute.return_value = {
+            "success": True,
+            "stdout": "SAVED: C:\\test\\pyvista_mesh.png",
+            "stderr": "",
+        }
+        
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+            from ansys.mapdl.mcp import tools
+            
+            mock_mcp = Mock()
+            registered_tools = {}
+            
+            def mock_tool_decorator():
+                def decorator(fn):
+                    registered_tools[fn.__name__] = fn
+                    return fn
+                return decorator
+            
+            mock_mcp.tool = mock_tool_decorator
+            tools.register_tools(mock_mcp)
+            
+            render_fn = registered_tools['render_plot']
+            result = render_fn(
+                plot_code="import pyvista as pv\nplotter = pv.Plotter(off_screen=True)\nplotter.add_mesh(pv.Sphere())",
+                filename="pyvista_mesh.png"
+            )
+            
+            assert "Plot saved to" in result
+            assert "pyvista_mesh.png" in result
+
+    def test_render_plot_unsupported_plotter_type(self, mock_context, mock_get_context):
+        """Test plot rendering with unsupported plotter type showing available methods."""
+        mock_context.python_session.execute.return_value = {
+            "success": True,
+            "stdout": "Error: Plotter type 'CustomPlotter' doesn't have a recognized save method.\nAvailable methods: ['export', 'render']",
+            "stderr": "",
+        }
+        
+        with patch('ansys.mapdl.mcp.tools.get_context', mock_get_context):
+            from ansys.mapdl.mcp import tools
+            
+            mock_mcp = Mock()
+            registered_tools = {}
+            
+            def mock_tool_decorator():
+                def decorator(fn):
+                    registered_tools[fn.__name__] = fn
+                    return fn
+                return decorator
+            
+            mock_mcp.tool = mock_tool_decorator
+            tools.register_tools(mock_mcp)
+            
+            render_fn = registered_tools['render_plot']
+            result = render_fn(
+                plot_code="plotter = CustomPlotter()",
+                filename="test.png"
+            )
+            
+            assert "Error:" in result
+            assert "doesn't have a recognized save method" in result

@@ -675,16 +675,42 @@ save_dir = r'{save_dir}'
 # Create full path for the file
 full_path = os.path.join(save_dir, '{filename}')
 
-# Check if we have a PyVista plotter or matplotlib figure
-if 'plotter' in locals() and hasattr(plotter, 'screenshot'):
-    # PyVista plotter - save directly using screenshot
-    try:
-        plotter.screenshot(full_path)
-        if hasattr(plotter, 'close'):
-            plotter.close()
-        print(f"SAVED: {{full_path}}")
-    except Exception as e:
-        print(f"Error saving PyVista plot: {{str(e)}}")
+# Check what type of plotter we have
+if 'plotter' in locals():
+    plotter_type = type(plotter).__name__
+    
+    # Check for MAPDL plotter (has show method with savefig parameter)
+    if hasattr(plotter, 'show') and 'MapdlPlotter' in plotter_type:
+        try:
+            plotter.show(savefig=full_path, off_screen=True)
+            print(f"SAVED: {{full_path}}")
+        except Exception as e:
+            print(f"Error saving MAPDL plot: {{str(e)}}")
+    
+    # Check for standard PyVista plotter (has screenshot method)
+    elif hasattr(plotter, 'screenshot'):
+        try:
+            plotter.screenshot(full_path)
+            if hasattr(plotter, 'close'):
+                plotter.close()
+            print(f"SAVED: {{full_path}}")
+        except Exception as e:
+            print(f"Error saving PyVista plot: {{str(e)}}")
+    
+    # Check if it's a PyVista plotter without screenshot but with save_graphic
+    elif hasattr(plotter, 'save_graphic'):
+        try:
+            plotter.save_graphic(full_path)
+            if hasattr(plotter, 'close'):
+                plotter.close()
+            print(f"SAVED: {{full_path}}")
+        except Exception as e:
+            print(f"Error saving plot with save_graphic: {{str(e)}}")
+    
+    else:
+        print(f"Error: Plotter type '{{plotter_type}}' doesn't have a recognized save method.")
+        print(f"Available methods: {{[m for m in dir(plotter) if not m.startswith('_') and ('save' in m.lower() or 'show' in m.lower() or 'shot' in m.lower())]}}")
+
 elif 'plt' in dir() and hasattr(plt, 'gcf'):
     # Matplotlib figure
     try:
