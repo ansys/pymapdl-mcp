@@ -19,6 +19,8 @@ from ansys.mapdl.mcp import (
     write_comment,
 )
 
+ON_LOCAL = os.getenv("ON_LOCAL", "true") == "true"
+
 
 @pytest.mark.integration
 @pytest.mark.slow
@@ -412,3 +414,229 @@ class TestListMapdlInstancesIntegration:
         # But at least both should be non-empty
         assert len(result1) > 0
         assert len(result2) > 0
+
+
+@pytest.mark.integration
+@pytest.mark.slow
+class TestLaunchMapdlIntegration:
+    """Integration tests for launch_mapdl tool."""
+
+    @pytest.fixture
+    def clean_context(self):
+        """Create a clean context with no MAPDL connection."""
+        from unittest.mock import MagicMock
+
+        from ansys.mapdl.mcp.mcp import AppContext
+
+        context = MagicMock()
+        context.request_context = MagicMock()
+        context.request_context.lifespan_context = AppContext(mapdl=None)
+
+        return context
+
+    def test_launch_mapdl_default_parameters(self, clean_context):
+        """Test launching MAPDL with default parameters."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        try:
+            result = launch_mapdl.fn(clean_context)
+
+            # Verify successful launch
+            assert isinstance(result, str)
+            assert "Successfully launched MAPDL" in result
+            assert "MAPDL Version:" in result
+
+            # Verify MAPDL was stored in context
+            assert clean_context.request_context.lifespan_context.mapdl is not None
+
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert mapdl.is_alive is True
+            assert mapdl.version is not None
+
+        finally:
+            # Clean up
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_mapdl_custom_nproc(self, clean_context):
+        """Test launching MAPDL with custom number of processors."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        try:
+            result = launch_mapdl.fn(clean_context, nproc=4)
+
+            # Verify successful launch
+            assert isinstance(result, str)
+            assert "Successfully launched MAPDL" in result
+
+            # Verify MAPDL instance was created
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert mapdl is not None
+            assert mapdl.is_alive is True
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
+
+    @pytest.mark.skipif(not ON_LOCAL, reason="Only run on local environments")
+    def test_launch_mapdl_custom_run_location(self, clean_context):
+        """Test launching MAPDL with custom working directory."""
+        import tempfile
+
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        # Create a temporary directory for MAPDL to run in
+        tmpdir = tempfile.mkdtemp()
+
+        try:
+            result = launch_mapdl.fn(clean_context, run_location=tmpdir)
+
+            # Verify successful launch
+            assert isinstance(result, str)
+            assert "Successfully launched MAPDL" in result
+
+            # Verify MAPDL is using the specified directory
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert mapdl is not None
+            # Convert both paths to strings for comparison
+            assert tmpdir in str(mapdl.directory)
+
+        finally:
+            # Disconnect MAPDL first to release file locks
+            disconnect_from_mapdl.fn(clean_context)
+
+            # Clean up the temporary directory manually
+            import shutil
+            import time
+
+            # Wait a bit for MAPDL to fully release files
+            time.sleep(1)
+            try:
+                shutil.rmtree(tmpdir, ignore_errors=True)
+            except Exception:
+                pass  # Ignore cleanup errors
+
+    def test_launch_mapdl_already_connected(self, clean_context):
+        """Test launching when already connected to MAPDL."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        try:
+            # Launch first MAPDL instance
+            result1 = launch_mapdl.fn(clean_context)
+            assert "Successfully launched MAPDL" in result1
+
+            # Try to launch another instance
+            result2 = launch_mapdl.fn(clean_context)
+
+            # Verify appropriate error message
+            assert "Already connected to MAPDL" in result2
+            assert "disconnect first" in result2
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_mapdl_with_port(self, clean_context):
+        """Test launching MAPDL with specific port."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        try:
+            # Use a custom port (let PyMAPDL find an available port)
+            result = launch_mapdl.fn(clean_context, port=None)
+
+            # Verify successful launch
+            assert isinstance(result, str)
+            assert "Successfully launched MAPDL" in result
+
+            # Verify MAPDL instance is running
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert mapdl is not None
+            assert mapdl.is_alive is True
+            assert mapdl.port is not None
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_mapdl_with_additional_switches(self, clean_context):
+        """Test launching MAPDL with additional command line switches."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        try:
+            # Launch with additional switches
+            result = launch_mapdl.fn(clean_context, additional_switches="-smp")
+
+            # Verify successful launch
+            assert isinstance(result, str)
+            assert "Successfully launched MAPDL" in result
+
+            # Verify MAPDL instance is running
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert mapdl is not None
+            assert mapdl.is_alive is True
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_and_execute_commands(self, clean_context):
+        """Test launching MAPDL and executing commands."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl, run_mapdl_command
+
+        try:
+            # Launch MAPDL
+            result = launch_mapdl.fn(clean_context)
+            assert "Successfully launched MAPDL" in result
+
+            # Execute a simple command
+            cmd_result = run_mapdl_command.fn(clean_context, "/PREP7")
+            assert "MAPDL command executed successfully" in cmd_result
+
+            # Verify MAPDL is in PREP7
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert mapdl.parameters.routine == "PREP7"
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_mapdl_connection_info(self, clean_context):
+        """Test that launched MAPDL provides correct connection information."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        try:
+            result = launch_mapdl.fn(clean_context)
+
+            # Verify result contains connection info
+            assert "Successfully launched MAPDL" in result
+            assert "MAPDL Version:" in result
+
+            # Verify MAPDL object has required attributes
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert hasattr(mapdl, "ip")
+            assert hasattr(mapdl, "port")
+            assert hasattr(mapdl, "version")
+            assert hasattr(mapdl, "directory")
+
+            # Verify connection info in result
+            assert f"{mapdl.ip}:{mapdl.port}" in result
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_mapdl_status_after_launch(self, clean_context):
+        """Test checking MAPDL status after launch."""
+        from ansys.mapdl.mcp import check_mapdl_status, disconnect_from_mapdl, launch_mapdl
+
+        try:
+            # Launch MAPDL
+            launch_result = launch_mapdl.fn(clean_context)
+            assert "Successfully launched MAPDL" in launch_result
+
+            # Check status
+            status_result = check_mapdl_status.fn(clean_context)
+
+            # Verify status returns valid JSON with connection info
+            import json
+
+            status_data = json.loads(status_result)
+            assert "connection" in status_data
+            assert "version" in status_data["connection"]
+            assert status_data["connection"]["status"] == "Running"
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
