@@ -6,7 +6,7 @@ import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from fastmcp.server import FastMCP
 
@@ -33,10 +33,10 @@ class AppContext:
         MAPDL instance connection. Using Any to avoid type issues with MAPDL variants.
     """
 
-    mapdl: Optional[Any] = None  # Using Any to avoid type issues with MAPDL variants
+    mapdl: Any | None = None  # Using Any to avoid type issues with MAPDL variants
     transport_type: str = "stdio"
-    mapdl_ip: str = "127.0.0.1"
-    mapdl_port: int = 50052
+    mapdl_ip: str | None = None
+    mapdl_port: int | None = None
     connect_on_startup: bool = False
 
 
@@ -71,7 +71,25 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
         context.connect_on_startup = cli_cfg.get("connect_on_startup", context.connect_on_startup)
 
     try:
-        logger.info("MCP Server initialized. Use connect_to_mapdl to establish a connection.")
+        if context.connect_on_startup and context.transport_type == "stdio":
+            from ansys.mapdl.core import launch_mapdl
+
+            try:
+                logger.info(
+                    f"Attempting to connect to MAPDL at {context.mapdl_ip}:{context.mapdl_port}..."
+                )
+                context.mapdl = launch_mapdl(
+                    start_instance=False,
+                    ip=context.mapdl_ip,
+                    port=context.mapdl_port,
+                )
+                logger.info("Successfully connected to MAPDL on startup.")
+
+            except Exception as e:
+                logger.error(f"Failed to connect to MAPDL on startup: {e}")
+        else:
+            logger.info("MCP Server initialized. Use connect_to_mapdl to establish a connection.")
+
         yield context
 
     finally:
