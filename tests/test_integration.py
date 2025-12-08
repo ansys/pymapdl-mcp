@@ -73,7 +73,7 @@ class TestMapdlIntegration:
         """Test checking MAPDL status with a real connection."""
         import json
 
-        result = check_mapdl_status(real_context)
+        result = check_mapdl_status.fn(real_context)
 
         assert isinstance(result, str)
         # Check for JSON structure
@@ -85,7 +85,7 @@ class TestMapdlIntegration:
     def test_real_write_comment(self, real_context):
         """Test writing a comment with a real MAPDL connection."""
         comment = "Integration test comment"
-        result = write_comment(real_context, comment)
+        result = write_comment.fn(real_context, comment)
 
         assert isinstance(result, str)
         assert "Comment written successfully" in result
@@ -94,7 +94,7 @@ class TestMapdlIntegration:
         """Test running a MAPDL command with a real connection."""
         # Use a safe command that doesn't affect the model
         command = "/INQUIRE,RELEASE"
-        result = run_mapdl_command(real_context, command)
+        result = run_mapdl_command.fn(real_context, command)
 
         assert isinstance(result, str)
         assert "MAPDL command executed successfully" in result
@@ -102,28 +102,28 @@ class TestMapdlIntegration:
     def test_real_prep7_workflow(self, real_context):
         """Test a basic PREP7 workflow with real MAPDL."""
         # Clear any existing model
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         # Enter preprocessor
-        result = run_mapdl_command(real_context, "/PREP7")
+        result = run_mapdl_command.fn(real_context, "/PREP7")
         assert "executed successfully" in result
 
         # Write a comment
-        result = write_comment(real_context, "Starting PREP7 workflow")
+        result = write_comment.fn(real_context, "Starting PREP7 workflow")
         assert "Comment written successfully" in result
 
         # Define element type
-        result = run_mapdl_command(real_context, "ET,1,SOLID185")
+        result = run_mapdl_command.fn(real_context, "ET,1,SOLID185")
         assert "executed successfully" in result
 
         # Define material property
-        result = run_mapdl_command(real_context, "MP,EX,1,200E9")
+        result = run_mapdl_command.fn(real_context, "MP,EX,1,200E9")
         assert "executed successfully" in result
 
     def test_real_run_multiple_commands(self, real_context):
         """Test running multiple commands with real MAPDL."""
         # Clear any existing model
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         # Run multiple commands
         commands = [
@@ -133,7 +133,7 @@ class TestMapdlIntegration:
             "MP,PRXY,1,0.3",
         ]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_commands.fn(real_context, commands)
 
         assert isinstance(result, str)
         assert "Successfully executed 4 MAPDL commands" in result
@@ -142,7 +142,7 @@ class TestMapdlIntegration:
     def test_real_run_multiple_commands_with_geometry(self, real_context):
         """Test running multiple commands to create simple geometry."""
         # Clear any existing model
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         # Create a simple block using multiple commands
         commands = [
@@ -153,21 +153,21 @@ class TestMapdlIntegration:
             "BLC4,0,0,1,1,1",  # Create a block
         ]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_commands.fn(real_context, commands)
 
         assert "Successfully executed 5 MAPDL commands" in result
         assert "BLC4,0,0,1,1,1" in result
 
     def test_real_run_multiple_commands_empty_list(self, real_context):
         """Test error handling with empty command list."""
-        result = run_multiple_commands(real_context, [])
+        result = run_multiple_commands.fn(real_context, [])
 
         assert "No commands provided" in result
 
     def test_real_run_multiple_commands_vs_single(self, real_context):
         """Compare run_multiple_commands with sequential single commands."""
         # Clear any existing model
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         commands = [
             "/PREP7",
@@ -176,15 +176,15 @@ class TestMapdlIntegration:
         ]
 
         # Test multiple commands
-        result_multi = run_multiple_commands(real_context, commands)
+        result_multi = run_multiple_commands.fn(real_context, commands)
         assert "Successfully executed 3 MAPDL commands" in result_multi
 
         # Clear and test single commands
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         results_single = []
         for cmd in commands:
-            result = run_mapdl_command(real_context, cmd)
+            result = run_mapdl_command.fn(real_context, cmd)
             results_single.append(result)
             assert "executed successfully" in result
 
@@ -234,13 +234,13 @@ class TestRunMultipleCommandsIntegration:
     def test_multiple_commands_large_batch(self, real_context, mapdl):
         """Test running a large batch of commands."""
         # Clear model
-        run_mapdl_command(real_context, "/CLEAR")
-        run_mapdl_command(real_context, "/PREP7")
+        run_mapdl_command.fn(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/PREP7")
 
         # Create many keypoints
         commands = [f"K,{i},{i*0.1},{i*0.1},{i*0.1}" for i in range(1, 51)]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_commands.fn(real_context, commands)
 
         assert "Successfully executed 50 MAPDL commands" in result
 
@@ -248,7 +248,7 @@ class TestRunMultipleCommandsIntegration:
 
     def test_multiple_commands_with_comments(self, real_context, mapdl):
         """Test running multiple commands including comments."""
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         commands = [
             "/COM, Starting material definition",
@@ -260,7 +260,7 @@ class TestRunMultipleCommandsIntegration:
             "MP,PRXY,1,0.3",
         ]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_commands.fn(real_context, commands)
 
         assert "Successfully executed 7 MAPDL commands" in result
 
@@ -271,7 +271,7 @@ class TestRunMultipleCommandsIntegration:
 
     def test_multiple_commands_error_handling(self, real_context):
         """Test error handling with invalid commands."""
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         # Include an invalid command
         commands = [
@@ -280,7 +280,7 @@ class TestRunMultipleCommandsIntegration:
             "INVALID_MAPDL_COMMAND_XYZ",  # This should cause an error
         ]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_commands.fn(real_context, commands)
 
         # Should get error message
         assert isinstance(result, str)
@@ -295,23 +295,23 @@ class TestRunMultipleCommandsIntegration:
         """Test that multiple commands are faster than sequential single commands."""
         import time
 
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         commands = ["/PREP7", "ET,1,SOLID185", "MP,EX,1,200E9", "MP,PRXY,1,0.3"]
 
         # Time multiple commands approach
         start_multi = time.time()
-        result_multi = run_multiple_commands(real_context, commands)
+        result_multi = run_multiple_commands.fn(real_context, commands)
         time_multi = time.time() - start_multi
 
         assert "Successfully executed 4 MAPDL commands" in result_multi
 
         # Clear and time single commands approach
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         start_single = time.time()
         for cmd in commands:
-            run_mapdl_command(real_context, cmd)
+            run_mapdl_command.fn(real_context, cmd)
         time_single = time.time() - start_single
 
         # Multiple commands should be at least as fast (usually faster)
@@ -352,36 +352,25 @@ class TestListMapdlInstancesIntegration:
         This test assumes a MAPDL instance is running on port 50052
         and verifies that list_mapdl_instances can detect it.
         """
+        from ansys.mapdl.core import launch_mapdl
+
         try:
-            from ansys.mapdl.core import launch_mapdl
+            mapdl = launch_mapdl()
+            mapdl.prep7()
+            # If we get here, MAPDL is running
+            result = list_mapdl_instances.fn()
 
-            # Try to connect to verify MAPDL is running
-            mapdl = launch_mapdl(
-                cleanup_on_exit=False,
-                loglevel="ERROR",
-            )
+            assert isinstance(result, str)
+            assert len(result) > 0
 
-        except Exception as e:
-            # Not allow to skip if running on CICD
-            if os.getenv("ON_CI", False):
-                raise e
-            else:
-                pytest.skip(f"MAPDL not available on port 50052: {e}")
-
-        # If we get here, MAPDL is running
-        result = list_mapdl_instances.fn()
-
-        assert isinstance(result, str)
-        assert len(result) > 0
-
-        # The output should contain information about instances
-        # It might show "50052" port if the instance was started with PyMAPDL
-        # or might show an empty table if MAPDL was started externally
-        # without PyMAPDL (e.g., Docker container)
-        # Check for table headers
-        assert "Name" in result and "Is Instance" in result and "Status" in result
-
-        mapdl.exit()
+            # The output should contain information about instances
+            # It might show "50052" port if the instance was started with PyMAPDL
+            # or might show an empty table if MAPDL was started externally
+            # without PyMAPDL (e.g., Docker container)
+            # Check for table headers
+            assert "Name" in result and "Is Instance" in result and "Status" in result
+        finally:
+            mapdl.exit()
 
     def test_list_instances_output_format(self):
         """Test that list_mapdl_instances returns properly formatted output."""
