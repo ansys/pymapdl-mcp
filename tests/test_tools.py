@@ -788,7 +788,7 @@ class TestConnectToMapdl:
             mock_mapdl_class.assert_called_once_with(
                 start_instance=False,
                 ip="192.168.1.100",
-                port=50052,
+                port=None,
                 cleanup_on_exit=False,
                 loglevel="INFO",
             )
@@ -1019,7 +1019,7 @@ class TestLaunchMapdl:
             assert "/tmp/ansys_mapdl_1234" in result
 
             # Verify launch_mapdl was called with correct parameters
-            mock_launch.assert_called_once_with(nproc=2, loglevel="INFO", port=50052)
+            mock_launch.assert_called_once_with(nproc=2, loglevel="INFO", port=None)
 
             # Verify MAPDL was stored in context
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl == mock_mapdl
@@ -1041,7 +1041,7 @@ class TestLaunchMapdl:
             assert "Successfully launched MAPDL" in result
 
             # Verify launch_mapdl was called with correct nproc
-            mock_launch.assert_called_once_with(nproc=4, loglevel="INFO", port=50052)
+            mock_launch.assert_called_once_with(nproc=4, loglevel="INFO", port=None)
 
     def test_launch_custom_exec_file(self, mock_context_no_mapdl):
         """Test launching MAPDL with custom executable path."""
@@ -1063,7 +1063,7 @@ class TestLaunchMapdl:
 
             # Verify launch_mapdl was called with exec_file
             mock_launch.assert_called_once_with(
-                nproc=2, loglevel="INFO", port=50052, exec_file=exec_path
+                nproc=2, loglevel="INFO", port=None, exec_file=exec_path
             )
 
     def test_launch_custom_run_location(self, mock_context_no_mapdl):
@@ -1087,7 +1087,7 @@ class TestLaunchMapdl:
 
             # Verify launch_mapdl was called with run_location
             mock_launch.assert_called_once_with(
-                nproc=2, loglevel="INFO", port=50052, run_location=run_loc
+                nproc=2, loglevel="INFO", port=None, run_location=run_loc
             )
 
     def test_launch_with_additional_switches(self, mock_context_no_mapdl):
@@ -1110,7 +1110,7 @@ class TestLaunchMapdl:
 
             # Verify launch_mapdl was called with additional_switches
             mock_launch.assert_called_once_with(
-                nproc=2, loglevel="INFO", port=50052, additional_switches=switches
+                nproc=2, loglevel="INFO", port=None, additional_switches=switches
             )
 
     def test_launch_all_custom_parameters(self, mock_context_no_mapdl):
@@ -1145,7 +1145,7 @@ class TestLaunchMapdl:
             mock_launch.assert_called_once_with(
                 nproc=8,
                 loglevel="INFO",
-                port=50053,
+                port=None,
                 exec_file=exec_path,
                 run_location=run_loc,
                 additional_switches=switches,
