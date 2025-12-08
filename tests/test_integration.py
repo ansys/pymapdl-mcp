@@ -418,6 +418,7 @@ class TestListMapdlInstancesIntegration:
 
 @pytest.mark.integration
 @pytest.mark.slow
+@pytest.mark.skipif(not ON_LOCAL, reason="Only run on local environments")
 class TestLaunchMapdlIntegration:
     """Integration tests for launch_mapdl tool."""
 
@@ -476,7 +477,6 @@ class TestLaunchMapdlIntegration:
         finally:
             disconnect_from_mapdl.fn(clean_context)
 
-    @pytest.mark.skipif(not ON_LOCAL, reason="Only run on local environments")
     def test_launch_mapdl_custom_run_location(self, clean_context):
         """Test launching MAPDL with custom working directory."""
         import tempfile
