@@ -514,7 +514,7 @@ To add new MAPDL tools, edit `src/ansys/mapdl/mcp/mcp.py` and use the `@mcp.tool
 
 ```python
 @mcp.tool()
-def your_new_tool(ctx: Context[ServerSession, AppContext], param: str) -> str:
+def your_new_tool(ctx: Context, param: str) -> str:
     """Description of your tool."""
     mapdl = ctx.mapdl
 

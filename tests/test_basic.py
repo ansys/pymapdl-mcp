@@ -17,16 +17,14 @@ def test_version():
 def test_package_imports():
     """Test that all expected functions and classes can be imported."""
     from ansys.mapdl.mcp import (
-        AppContext,
+        PyMAPDLAppContext,
         app,
-        app_lifespan,
         check_mapdl_status,
         run_mapdl_command,
         write_comment,
     )
 
-    assert AppContext is not None
-    assert app_lifespan is not None
+    assert PyMAPDLAppContext is not None
     assert check_mapdl_status is not None
     assert app is not None
     assert run_mapdl_command is not None
@@ -39,8 +37,7 @@ def test_all_exports():
     from ansys.mapdl.mcp import __all__
 
     expected_exports = [
-        "AppContext",
-        "app_lifespan",
+        "PyMAPDLAppContext",
         "check_mapdl_installed",
         "check_mapdl_status",
         "connect_to_mapdl",
@@ -60,12 +57,12 @@ def test_all_exports():
 
 @pytest.mark.unit
 def test_app_context_creation(app_context):
-    """Test that AppContext can be created with MAPDL instance."""
+    """Test that PyMAPDLAppContext can be created with MAPDL instance."""
     assert app_context.mapdl is not None
     assert hasattr(app_context.mapdl, "version")
 
 
 @pytest.mark.unit
 def test_app_context_no_mapdl(app_context_no_mapdl):
-    """Test that AppContext can be created without MAPDL instance."""
+    """Test that PyMAPDLAppContext can be created without MAPDL instance."""
     assert app_context_no_mapdl.mapdl is None
