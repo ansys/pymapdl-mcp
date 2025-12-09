@@ -103,6 +103,9 @@ jobs:
     env:
       OMPI_ALLOW_RUN_AS_ROOT: 1
       OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+      ON_LOCAL: "true"
+      PYMAPDL_NPROC: 1
+
     steps:
 
       - name: "Install Git and checkout project"
@@ -148,6 +151,7 @@ jobs:
     env:
       MAPDL_IMAGE: "ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd"
       PYMAPDL_PORT: 21000
+      ON_LOCAL: "false"
 
     steps:
       - name: Checkout code

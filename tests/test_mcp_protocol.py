@@ -49,5 +49,12 @@ class TestMCPProtocol:
         ]
 
         for tool in tools:
-            assert callable(tool)
-            assert hasattr(tool, "__name__")
+            # Tools can be either FunctionTool objects (with .fn) or regular functions (decorated with @add_tool)
+            if hasattr(tool, "fn"):
+                # FunctionTool object
+                assert callable(tool.fn)
+                assert hasattr(tool.fn, "__name__")
+            else:
+                # Regular function
+                assert callable(tool)
+                assert hasattr(tool, "__name__")

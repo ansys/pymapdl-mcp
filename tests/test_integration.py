@@ -19,6 +19,8 @@ from ansys.mapdl.mcp import (
     write_comment,
 )
 
+ON_LOCAL = os.getenv("ON_LOCAL", "true") == "true"
+
 
 @pytest.mark.integration
 @pytest.mark.slow
@@ -63,18 +65,9 @@ class TestMapdlIntegration:
 
         from ansys.mapdl.mcp.mcp import AppContext
 
-        # Create a mock pool containing the real MAPDL instance
-        mock_pool = MagicMock()
-        mock_pool._instances = [real_mapdl]
-        mock_pool._n_instances = 1
-        mock_pool.__getitem__ = MagicMock(return_value=real_mapdl)
-        mock_pool.__len__ = MagicMock(return_value=1)
-
         context = MagicMock()
         context.request_context = MagicMock()
-        context.pool = mock_pool
-        context.instance_nicknames = {}
-        context.default_instance_index = 0
+        context.request_context.lifespan_context = AppContext(mapdl=real_mapdl)
 
         return context
 
@@ -82,7 +75,7 @@ class TestMapdlIntegration:
         """Test checking MAPDL status with a real connection."""
         import json
 
-        result = check_mapdl_status(real_context)
+        result = check_mapdl_status.fn(real_context)
 
         assert isinstance(result, str)
         # Check for JSON structure
@@ -94,7 +87,7 @@ class TestMapdlIntegration:
     def test_real_write_comment(self, real_context):
         """Test writing a comment with a real MAPDL connection."""
         comment = "Integration test comment"
-        result = write_comment(real_context, comment)
+        result = write_comment.fn(real_context, comment)
 
         assert isinstance(result, str)
         assert "Comment written successfully" in result
@@ -103,7 +96,7 @@ class TestMapdlIntegration:
         """Test running a MAPDL command with a real connection."""
         # Use a safe command that doesn't affect the model
         command = "/INQUIRE,RELEASE"
-        result = run_mapdl_command(real_context, command)
+        result = run_mapdl_command.fn(real_context, command)
 
         assert isinstance(result, str)
         assert "MAPDL command executed successfully" in result
@@ -111,28 +104,28 @@ class TestMapdlIntegration:
     def test_real_prep7_workflow(self, real_context):
         """Test a basic PREP7 workflow with real MAPDL."""
         # Clear any existing model
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         # Enter preprocessor
-        result = run_mapdl_command(real_context, "/PREP7")
+        result = run_mapdl_command.fn(real_context, "/PREP7")
         assert "executed successfully" in result
 
         # Write a comment
-        result = write_comment(real_context, "Starting PREP7 workflow")
+        result = write_comment.fn(real_context, "Starting PREP7 workflow")
         assert "Comment written successfully" in result
 
         # Define element type
-        result = run_mapdl_command(real_context, "ET,1,SOLID185")
+        result = run_mapdl_command.fn(real_context, "ET,1,SOLID185")
         assert "executed successfully" in result
 
         # Define material property
-        result = run_mapdl_command(real_context, "MP,EX,1,200E9")
+        result = run_mapdl_command.fn(real_context, "MP,EX,1,200E9")
         assert "executed successfully" in result
 
     def test_real_run_multiple_commands(self, real_context):
         """Test running multiple commands with real MAPDL."""
         # Clear any existing model
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         # Run multiple commands
         commands = [
@@ -142,7 +135,7 @@ class TestMapdlIntegration:
             "MP,PRXY,1,0.3",
         ]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_commands.fn(real_context, commands)
 
         assert isinstance(result, str)
         assert "Successfully executed 4 MAPDL commands" in result
@@ -151,7 +144,7 @@ class TestMapdlIntegration:
     def test_real_run_multiple_commands_with_geometry(self, real_context):
         """Test running multiple commands to create simple geometry."""
         # Clear any existing model
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         # Create a simple block using multiple commands
         commands = [
@@ -162,21 +155,21 @@ class TestMapdlIntegration:
             "BLC4,0,0,1,1,1",  # Create a block
         ]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_commands.fn(real_context, commands)
 
         assert "Successfully executed 5 MAPDL commands" in result
         assert "BLC4,0,0,1,1,1" in result
 
     def test_real_run_multiple_commands_empty_list(self, real_context):
         """Test error handling with empty command list."""
-        result = run_multiple_commands(real_context, [])
+        result = run_multiple_commands.fn(real_context, [])
 
         assert "No commands provided" in result
 
     def test_real_run_multiple_commands_vs_single(self, real_context):
         """Compare run_multiple_commands with sequential single commands."""
         # Clear any existing model
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         commands = [
             "/PREP7",
@@ -185,15 +178,15 @@ class TestMapdlIntegration:
         ]
 
         # Test multiple commands
-        result_multi = run_multiple_commands(real_context, commands)
+        result_multi = run_multiple_commands.fn(real_context, commands)
         assert "Successfully executed 3 MAPDL commands" in result_multi
 
         # Clear and test single commands
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         results_single = []
         for cmd in commands:
-            result = run_mapdl_command(real_context, cmd)
+            result = run_mapdl_command.fn(real_context, cmd)
             results_single.append(result)
             assert "executed successfully" in result
 
@@ -211,7 +204,8 @@ class TestRunMultipleCommandsIntegration:
         try:
             from ansys.mapdl.core import launch_mapdl
 
-            mapdl = launch_mapdl(loglevel="ERROR")
+            mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
+
             yield mapdl
 
             mapdl.exit()
@@ -233,31 +227,22 @@ class TestRunMultipleCommandsIntegration:
 
         from ansys.mapdl.mcp.mcp import AppContext
 
-        # Create a mock pool containing the real MAPDL instance
-        mock_pool = MagicMock()
-        mock_pool._instances = [real_mapdl]
-        mock_pool._n_instances = 1
-        mock_pool.__getitem__ = MagicMock(return_value=real_mapdl)
-        mock_pool.__len__ = MagicMock(return_value=1)
-
         context = MagicMock()
         context.request_context = MagicMock()
-        context.pool = mock_pool
-        context.instance_nicknames = {}
-        context.default_instance_index = 0
+        context.request_context.lifespan_context = AppContext(mapdl=real_mapdl)
 
         return context
 
     def test_multiple_commands_large_batch(self, real_context, mapdl):
         """Test running a large batch of commands."""
         # Clear model
-        run_mapdl_command(real_context, "/CLEAR")
-        run_mapdl_command(real_context, "/PREP7")
+        run_mapdl_command.fn(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/PREP7")
 
         # Create many keypoints
         commands = [f"K,{i},{i*0.1},{i*0.1},{i*0.1}" for i in range(1, 51)]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_commands.fn(real_context, commands)
 
         assert "Successfully executed 50 MAPDL commands" in result
 
@@ -265,7 +250,7 @@ class TestRunMultipleCommandsIntegration:
 
     def test_multiple_commands_with_comments(self, real_context, mapdl):
         """Test running multiple commands including comments."""
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         commands = [
             "/COM, Starting material definition",
@@ -277,7 +262,7 @@ class TestRunMultipleCommandsIntegration:
             "MP,PRXY,1,0.3",
         ]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_commands.fn(real_context, commands)
 
         assert "Successfully executed 7 MAPDL commands" in result
 
@@ -288,7 +273,7 @@ class TestRunMultipleCommandsIntegration:
 
     def test_multiple_commands_error_handling(self, real_context):
         """Test error handling with invalid commands."""
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         # Include an invalid command
         commands = [
@@ -297,7 +282,7 @@ class TestRunMultipleCommandsIntegration:
             "INVALID_MAPDL_COMMAND_XYZ",  # This should cause an error
         ]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_commands.fn(real_context, commands)
 
         # Should get error message
         assert isinstance(result, str)
@@ -312,23 +297,23 @@ class TestRunMultipleCommandsIntegration:
         """Test that multiple commands are faster than sequential single commands."""
         import time
 
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         commands = ["/PREP7", "ET,1,SOLID185", "MP,EX,1,200E9", "MP,PRXY,1,0.3"]
 
         # Time multiple commands approach
         start_multi = time.time()
-        result_multi = run_multiple_commands(real_context, commands)
+        result_multi = run_multiple_commands.fn(real_context, commands)
         time_multi = time.time() - start_multi
 
         assert "Successfully executed 4 MAPDL commands" in result_multi
 
         # Clear and time single commands approach
-        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command.fn(real_context, "/CLEAR")
 
         start_single = time.time()
         for cmd in commands:
-            run_mapdl_command(real_context, cmd)
+            run_mapdl_command.fn(real_context, cmd)
         time_single = time.time() - start_single
 
         # Multiple commands should be at least as fast (usually faster)
@@ -354,7 +339,7 @@ class TestListMapdlInstancesIntegration:
         without mocking. It should work regardless of whether MAPDL
         instances are running.
         """
-        result = list_mapdl_instances()
+        result = list_mapdl_instances.fn()
 
         # The result should always be a string
         assert isinstance(result, str)
@@ -369,39 +354,29 @@ class TestListMapdlInstancesIntegration:
         This test assumes a MAPDL instance is running on port 50052
         and verifies that list_mapdl_instances can detect it.
         """
+        from ansys.mapdl.core import launch_mapdl
+
         try:
-            from ansys.mapdl.core import launch_mapdl
+            mapdl = launch_mapdl()
+            mapdl.prep7()
+            # If we get here, MAPDL is running
+            result = list_mapdl_instances.fn()
 
-            # Try to connect to verify MAPDL is running
-            mapdl = launch_mapdl(
-                loglevel="ERROR",
-            )
+            assert isinstance(result, str)
+            assert len(result) > 0
 
-        except Exception as e:
-            # Not allow to skip if running on CICD
-            if os.getenv("ON_CI", False):
-                raise e
-            else:
-                pytest.skip(f"MAPDL not available on port 50052: {e}")
-
-        # If we get here, MAPDL is running
-        result = list_mapdl_instances()
-
-        assert isinstance(result, str)
-        assert len(result) > 0
-
-        # The output should contain information about instances
-        # It might show "50052" port if the instance was started with PyMAPDL
-        # or might show an empty table if MAPDL was started externally
-        # without PyMAPDL (e.g., Docker container)
-        # Check for table headers
-        assert "Name" in result and "Is Instance" in result and "Status" in result
-
-        mapdl.exit()
+            # The output should contain information about instances
+            # It might show "50052" port if the instance was started with PyMAPDL
+            # or might show an empty table if MAPDL was started externally
+            # without PyMAPDL (e.g., Docker container)
+            # Check for table headers
+            assert "Name" in result and "Is Instance" in result and "Status" in result
+        finally:
+            mapdl.exit()
 
     def test_list_instances_output_format(self):
         """Test that list_mapdl_instances returns properly formatted output."""
-        result = list_mapdl_instances()
+        result = list_mapdl_instances.fn()
 
         assert isinstance(result, str)
 
@@ -420,7 +395,7 @@ class TestListMapdlInstancesIntegration:
         The function should always return a string, even if there are errors.
         """
         try:
-            result = list_mapdl_instances()
+            result = list_mapdl_instances.fn()
             assert isinstance(result, str)
             assert result is not None
         except Exception as e:
@@ -428,8 +403,8 @@ class TestListMapdlInstancesIntegration:
 
     def test_list_instances_consistent_calls(self):
         """Test that multiple calls to list_mapdl_instances are consistent."""
-        result1 = list_mapdl_instances()
-        result2 = list_mapdl_instances()
+        result1 = list_mapdl_instances.fn()
+        result2 = list_mapdl_instances.fn()
 
         # Both should be strings
         assert isinstance(result1, str)
@@ -439,3 +414,229 @@ class TestListMapdlInstancesIntegration:
         # But at least both should be non-empty
         assert len(result1) > 0
         assert len(result2) > 0
+
+
+@pytest.mark.integration
+@pytest.mark.slow
+@pytest.mark.skipif(not ON_LOCAL, reason="Only run on local environments")
+class TestLaunchMapdlIntegration:
+    """Integration tests for launch_mapdl tool."""
+
+    @pytest.fixture
+    def clean_context(self):
+        """Create a clean context with no MAPDL connection."""
+        from unittest.mock import MagicMock
+
+        from ansys.mapdl.mcp.mcp import AppContext
+
+        context = MagicMock()
+        context.request_context = MagicMock()
+        context.request_context.lifespan_context = AppContext(mapdl=None)
+
+        return context
+
+    def test_launch_mapdl_default_parameters(self, clean_context):
+        """Test launching MAPDL with default parameters."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        try:
+            result = launch_mapdl.fn(clean_context)
+
+            # Verify successful launch
+            assert isinstance(result, str)
+            assert "Successfully launched MAPDL" in result
+            assert "MAPDL Version:" in result
+
+            # Verify MAPDL was stored in context
+            assert clean_context.request_context.lifespan_context.mapdl is not None
+
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert mapdl.is_alive is True
+            assert mapdl.version is not None
+
+        finally:
+            # Clean up
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_mapdl_custom_nproc(self, clean_context):
+        """Test launching MAPDL with custom number of processors."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        try:
+            result = launch_mapdl.fn(clean_context, nproc=1)
+
+            # Verify successful launch
+            assert isinstance(result, str)
+            assert "Successfully launched MAPDL" in result
+
+            # Verify MAPDL instance was created
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert mapdl is not None
+            assert mapdl.is_alive is True
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_mapdl_custom_run_location(self, clean_context):
+        """Test launching MAPDL with custom working directory."""
+        import tempfile
+
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        # Create a temporary directory for MAPDL to run in
+        tmpdir = tempfile.mkdtemp()
+
+        try:
+            result = launch_mapdl.fn(clean_context, run_location=tmpdir)
+
+            # Verify successful launch
+            assert isinstance(result, str)
+            assert "Successfully launched MAPDL" in result
+
+            # Verify MAPDL is using the specified directory
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert mapdl is not None
+            # Convert both paths to strings for comparison
+            assert tmpdir in str(mapdl.directory)
+
+        finally:
+            # Disconnect MAPDL first to release file locks
+            disconnect_from_mapdl.fn(clean_context)
+
+            # Clean up the temporary directory manually
+            import shutil
+            import time
+
+            # Wait a bit for MAPDL to fully release files
+            time.sleep(1)
+            try:
+                shutil.rmtree(tmpdir, ignore_errors=True)
+            except Exception:
+                pass  # Ignore cleanup errors
+
+    def test_launch_mapdl_already_connected(self, clean_context):
+        """Test launching when already connected to MAPDL."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        try:
+            # Launch first MAPDL instance
+            result1 = launch_mapdl.fn(clean_context)
+            assert "Successfully launched MAPDL" in result1
+
+            # Try to launch another instance
+            result2 = launch_mapdl.fn(clean_context)
+
+            # Verify appropriate error message
+            assert "Already connected to MAPDL" in result2
+            assert "disconnect first" in result2
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_mapdl_with_port(self, clean_context):
+        """Test launching MAPDL with specific port."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        try:
+            # Use a custom port (let PyMAPDL find an available port)
+            result = launch_mapdl.fn(clean_context, port=None)
+
+            # Verify successful launch
+            assert isinstance(result, str)
+            assert "Successfully launched MAPDL" in result
+
+            # Verify MAPDL instance is running
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert mapdl is not None
+            assert mapdl.is_alive is True
+            assert mapdl.port is not None
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_mapdl_with_additional_switches(self, clean_context):
+        """Test launching MAPDL with additional command line switches."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        try:
+            # Launch with additional switches
+            result = launch_mapdl.fn(clean_context, additional_switches="-smp")
+
+            # Verify successful launch
+            assert isinstance(result, str)
+            assert "Successfully launched MAPDL" in result
+
+            # Verify MAPDL instance is running
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert mapdl is not None
+            assert mapdl.is_alive is True
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_and_execute_commands(self, clean_context):
+        """Test launching MAPDL and executing commands."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl, run_mapdl_command
+
+        try:
+            # Launch MAPDL
+            result = launch_mapdl.fn(clean_context)
+            assert "Successfully launched MAPDL" in result
+
+            # Execute a simple command
+            cmd_result = run_mapdl_command.fn(clean_context, "/PREP7")
+            assert "MAPDL command executed successfully" in cmd_result
+
+            # Verify MAPDL is in PREP7
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert mapdl.parameters.routine == "PREP7"
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_mapdl_connection_info(self, clean_context):
+        """Test that launched MAPDL provides correct connection information."""
+        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+
+        try:
+            result = launch_mapdl.fn(clean_context)
+
+            # Verify result contains connection info
+            assert "Successfully launched MAPDL" in result
+            assert "MAPDL Version:" in result
+
+            # Verify MAPDL object has required attributes
+            mapdl = clean_context.request_context.lifespan_context.mapdl
+            assert hasattr(mapdl, "ip")
+            assert hasattr(mapdl, "port")
+            assert hasattr(mapdl, "version")
+            assert hasattr(mapdl, "directory")
+
+            # Verify connection info in result
+            assert f"{mapdl.ip}:{mapdl.port}" in result
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
+
+    def test_launch_mapdl_status_after_launch(self, clean_context):
+        """Test checking MAPDL status after launch."""
+        from ansys.mapdl.mcp import check_mapdl_status, disconnect_from_mapdl, launch_mapdl
+
+        try:
+            # Launch MAPDL
+            launch_result = launch_mapdl.fn(clean_context)
+            assert "Successfully launched MAPDL" in launch_result
+
+            # Check status
+            status_result = check_mapdl_status.fn(clean_context)
+
+            # Verify status returns valid JSON with connection info
+            import json
+
+            status_data = json.loads(status_result)
+            assert "connection" in status_data
+            assert "version" in status_data["connection"]
+            assert status_data["connection"]["status"] == "Running"
+
+        finally:
+            disconnect_from_mapdl.fn(clean_context)
