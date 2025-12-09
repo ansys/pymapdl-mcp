@@ -11,13 +11,13 @@ from fastmcp.server import Context
 from fastmcp.server.server import get_logger
 from mcp.types import ImageContent, TextContent
 
-from ansys.mapdl.mcp import mcp
+from ansys.mapdl.mcp import app
 
 logger = get_logger(__name__)
 
 
 # Access type-safe lifespan context in tools
-@mcp.tool()
+@app.tool()
 def check_mapdl_status(ctx: Context) -> str:
     """Check the status of MAPDL initialization.
 
@@ -68,7 +68,7 @@ def check_mapdl_status(ctx: Context) -> str:
         return error_msg
 
 
-@mcp.tool()
+@app.tool()
 def check_mapdl_installed(ctx: Context) -> str:
     """Check if MAPDL is installed on the system.
 
@@ -107,7 +107,7 @@ def check_mapdl_installed(ctx: Context) -> str:
         return error_msg
 
 
-@mcp.tool()
+@app.tool()
 def write_comment(ctx: Context, comment: str) -> str:
     """Write a comment in the MAPDL session.
 
@@ -133,7 +133,7 @@ def write_comment(ctx: Context, comment: str) -> str:
     return f"Comment written successfully: {result}"
 
 
-@mcp.tool()
+@app.tool()
 def run_mapdl_command(ctx: Context, cmd: str) -> str:
     """Execute an arbitrary MAPDL command.
 
@@ -158,7 +158,7 @@ def run_mapdl_command(ctx: Context, cmd: str) -> str:
     return f"MAPDL command executed successfully: {result}"
 
 
-@mcp.tool()
+@app.tool()
 def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
     """Execute multiple MAPDL commands in sequence using input_strings.
 
@@ -222,7 +222,7 @@ def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
         return error_msg
 
 
-@mcp.tool()
+@app.tool()
 def launch_mapdl(
     ctx: Context,
     exec_file: str | None = None,
@@ -308,7 +308,7 @@ def launch_mapdl(
         return error_msg
 
 
-@mcp.tool()
+@app.tool()
 def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> str:
     """Connect to an existing MAPDL instance.
 
@@ -367,7 +367,7 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
         return error_msg
 
 
-@mcp.tool()
+@app.tool()
 def disconnect_from_mapdl(ctx: Context) -> str:
     """Disconnect from the dynamically connected MAPDL instance.
 
@@ -413,7 +413,7 @@ def disconnect_from_mapdl(ctx: Context) -> str:
         return error_msg
 
 
-@mcp.tool()
+@app.tool()
 def list_mapdl_instances() -> str:
     """List all MAPDL instances running on the local machine.
 
@@ -436,7 +436,7 @@ def list_mapdl_instances() -> str:
     return list_instances(long=True)
 
 
-@mcp.tool()
+@app.tool()
 def screenshot(
     ctx: Context,
 ) -> list[TextContent | ImageContent]:

@@ -1,6 +1,6 @@
 """Tests for main entry point functionality."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -8,7 +8,7 @@ import pytest
 @pytest.mark.unit
 def test_main_function_exists():
     """Test that main function is defined."""
-    from ansys.mapdl.mcp.mcp import main
+    from ansys.mapdl.mcp.server import main
 
     assert callable(main)
 
@@ -18,14 +18,14 @@ def test_main_entry_point():
     """Test that main entry point can be called."""
     import asyncio
 
-    from ansys.mapdl.mcp.mcp import main, mcp
+    from ansys.mapdl.mcp.server import app, main
 
     with patch.object(asyncio, "run") as mock_run:
-        with patch.object(mcp, "run_stdio_async", new_callable=AsyncMock):
+        with patch.object(app, "run_stdio_async", new_callable=AsyncMock):
             # Mock asyncio.run to avoid actually starting the server
             main([])
 
-            # Verify that asyncio.run was called with mcp.run_stdio_async()
+            # Verify that asyncio.run was called with app.run_stdio_async()
             mock_run.assert_called_once()
 
 

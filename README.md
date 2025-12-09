@@ -7,9 +7,9 @@ A Model Context Protocol (MCP) server that provides AI assistants with the abili
 This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing you to:
 
 - Discover and list running MAPDL instances on your system
-- Connect to and disconnect from MAPDL instances dynamically
+- Dynamically connect to and disconnect from MAPDL instances
 - Execute MAPDL commands through natural language
-- Check MAPDL instance status and version information
+- Check MAPDL instance status, version information, and connection details
 - Write comments and run custom commands
 
 ## Features
@@ -18,7 +18,7 @@ This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing 
 - **Instance Discovery**: Automatically discover running MAPDL instances on your system
 - **Flexible Deployment**: Supports MAPDL running locally, remotely, or in Docker containers
 - **Type-Safe Context**: Strongly typed application context for reliable operations
-- **Comprehensive Tools**: Six specialized tools for MAPDL interaction
+- **Comprehensive Tools**: Specialized tools for MAPDL interaction, including enhanced error handling
 
 ## Prerequisites
 
@@ -378,27 +378,6 @@ Run integration tests (requires MAPDL on localhost:50052):
 pytest -m integration
 ```
 
-### Test Organization
-
-The test suite is organized into focused test modules:
-
-- **conftest.py** - Pytest configuration and shared fixtures (mock MAPDL, contexts)
-- **test_basic.py** - Package basics (version, imports, exports, AppContext)
-- **test_tools.py** - MCP tools functionality
-  - check_mapdl_status tool
-  - write_comment tool
-  - run_mapdl_command tool
-- **test_connection_tools.py** - Connection management tools
-  - connect_to_mapdl tool
-  - disconnect_from_mapdl tool
-  - list_mapdl_instances tool
-- **test_integration.py** - MAPDL integration tests
-- **test_error_handling.py** - Error scenarios
-  - Command failures, timeouts, invalid inputs
-- **test_lifespan.py** - Server lifespan management
-- **test_mcp_protocol.py** - MCP protocol compliance
-- **test_main.py** - Entry point functionality
-
 ### Coverage
 
 Current test coverage: **70%**
@@ -441,39 +420,6 @@ Contributions are welcome! Please:
 The pre-commit hooks and CI will ensure code quality. If hooks fail, review the changes, stage them with `git add .`, and commit again.
 pre-commit run --all-files
 
-## Project Structure
-
-```
-pymapdl-mcp/
-├── .github/
-│   └── workflows/
-│       └── test.yml                    # CI/CD workflow
-├── src/
-│   └── ansys/
-│       └── mapdl/
-│           └── mcp/
-│               ├── __init__.py         # Package initialization & exports
-│               ├── mcp.py              # Main MCP server & lifecycle management
-│               ├── tools.py            # MCP tool implementations
-│               ├── helpers.py          # Helper functions (instance discovery)
-│               ├── prompts.py          # MCP prompts (future use)
-│               └── py.typed            # PEP 561 type marker
-├── tests/
-│   ├── __init__.py
-│   ├── conftest.py                     # Pytest fixtures and configuration
-│   ├── test_basic.py                   # Basic package tests
-│   ├── test_tools.py                   # Core MCP tools tests
-│   ├── test_connection_tools.py        # Connection management tests
-│   ├── test_error_handling.py          # Error handling tests
-│   ├── test_lifespan.py                # Lifespan management tests
-│   ├── test_mcp_protocol.py            # MCP protocol tests
-│   ├── test_main.py                    # Entry point tests
-│   └── test_integration.py             # Integration tests (require MAPDL)
-├── .pre-commit-config.yaml             # Pre-commit hooks configuration
-├── pyproject.toml                      # Package metadata and dependencies
-├── LICENSE                             # MIT License
-└── README.md                           # This file
-```
 
 ## Architecture
 

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastmcp.server import FastMCP
 
-from ansys.mapdl.mcp import mcp
+from ansys.mapdl.mcp import app
 
 
 @pytest.mark.unit
@@ -14,19 +14,19 @@ class TestMCPProtocol:
 
     def test_server_name(self):
         """Test that server has correct name."""
-        assert mcp.name == "PyMAPDL-MCP"
+        assert app.name == "PyMAPDL-MCP"
 
     def test_server_is_fastmcp_instance(self):
         """Test that server is an instance of FastMCP."""
-        assert isinstance(mcp, FastMCP)
+        assert isinstance(app, FastMCP)
 
     def test_server_has_lifespan(self):
         """Test that server has lifespan configured."""
         # The server should have a lifespan function configured
         # Simply check that the server was created with lifespan by checking it's a valid instance
         # The actual lifespan functionality is tested in test_lifespan.py
-        assert isinstance(mcp, FastMCP)
-        assert mcp.name == "PyMAPDL-MCP"
+        assert isinstance(app, FastMCP)
+        assert app.name == "PyMAPDL-MCP"
 
     @pytest.mark.asyncio
     async def test_server_tools_registered(self):

@@ -18,9 +18,9 @@ def test_package_imports():
     """Test that all expected functions and classes can be imported."""
     from ansys.mapdl.mcp import (
         AppContext,
+        app,
         app_lifespan,
         check_mapdl_status,
-        mcp,
         run_mapdl_command,
         write_comment,
     )
@@ -28,7 +28,7 @@ def test_package_imports():
     assert AppContext is not None
     assert app_lifespan is not None
     assert check_mapdl_status is not None
-    assert mcp is not None
+    assert app is not None
     assert run_mapdl_command is not None
     assert write_comment is not None
 
@@ -47,7 +47,7 @@ def test_all_exports():
         "disconnect_from_mapdl",
         "launch_mapdl",
         "list_mapdl_instances",
-        "mcp",
+        "app",
         "main",
         "run_mapdl_command",
         "run_multiple_commands",

@@ -9,8 +9,8 @@ import pytest
 @pytest.mark.unit
 def test_main_parses_defaults(monkeypatch):
     """Default args populate mcp._cli_config correctly and doesn't run server."""
-    from ansys.mapdl.mcp import mcp as package_mcp
-    from ansys.mapdl.mcp.mcp import main
+    from ansys.mapdl.mcp import app as package_mcp
+    from ansys.mapdl.mcp.server import main
 
     # Prevent actual asyncio.run from running
     with patch.object(asyncio, "run") as mock_run:
@@ -29,7 +29,7 @@ def test_main_parses_defaults(monkeypatch):
 @pytest.mark.unit
 def test_main_rejects_http_transport(monkeypatch, capsys):
     """Selecting http transport prints message and exits with code 2."""
-    from ansys.mapdl.mcp.mcp import main
+    from ansys.mapdl.mcp.server import main
 
     with pytest.raises(SystemExit) as excinfo:
         main(["--type", "http"])  # should call sys.exit(2)
@@ -40,7 +40,7 @@ def test_main_rejects_http_transport(monkeypatch, capsys):
 @pytest.mark.unit
 def test_main_invalid_port_raises():
     """Providing an invalid port should cause argparse to exit."""
-    from ansys.mapdl.mcp.mcp import main
+    from ansys.mapdl.mcp.server import main
 
     with pytest.raises(SystemExit):
         main(["--port", "70000"])  # out of 1-65535 should exit
@@ -48,7 +48,7 @@ def test_main_invalid_port_raises():
 
 def test_app_lifespan_attempts_connect_on_startup():
     """When connect_on_startup is True, AppContext should be created."""
-    from ansys.mapdl.mcp.mcp import app_lifespan, mcp
+    from ansys.mapdl.mcp.server import app, app_lifespan
 
     # Prepare a fake Mapdl instance to be returned by the constructor
     fake_mapdl = MagicMock()
@@ -56,7 +56,7 @@ def test_app_lifespan_attempts_connect_on_startup():
 
     # Attach CLI config to server
     setattr(
-        mcp,
+        app,
         "_cli_config",
         {
             "transport_type": "stdio",
@@ -67,7 +67,7 @@ def test_app_lifespan_attempts_connect_on_startup():
     )
 
     async def runner():
-        async with app_lifespan(mcp) as ctx:
+        async with app_lifespan(app) as ctx:
             # Just verify that the context is created properly
             assert ctx is not None
             assert hasattr(ctx, "mapdl")
@@ -81,4 +81,4 @@ def test_app_lifespan_attempts_connect_on_startup():
     fake_mapdl.exit.assert_called_once()
 
     # Clean up _cli_config
-    delattr(mcp, "_cli_config")
+    delattr(app, "_cli_config")

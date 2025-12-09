@@ -9,7 +9,7 @@ MAPDL simulations.
 # flake8: noqa: E501
 
 # Import the mcp instance from mcp.py
-from ansys.mapdl.mcp.mcp import add_tool, mcp
+from ansys.mapdl.mcp.server import add_tool
 
 
 @add_tool
