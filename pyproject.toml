@@ -43,7 +43,7 @@ classifiers = [
 
 dependencies = [
     "ansys-mapdl-core[graphics]>=0.68.0",
-    "ansys-common-mcp @ git+https://github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation",
+    "ansys-common-mcp @ git+https://github.com/ansys-internal/pyansys-common-mcp.git",
 ]
 
 [project.optional-dependencies]
