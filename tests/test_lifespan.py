@@ -14,23 +14,14 @@ def test_app_context_dataclass():
 
     assert is_dataclass(AppContext)
 
-    # Test creating AppContext with pool
+    # Test creating AppContext with MAPDL
     mock_mapdl = MagicMock()
-    mock_pool = MagicMock()
-    mock_pool._instances = [mock_mapdl]
-    mock_pool.__len__ = MagicMock(return_value=1)
-    mock_pool.__getitem__ = MagicMock(return_value=mock_mapdl)
-
-    ctx = AppContext()
-    ctx.pool = mock_pool
-
-    # Test mapdl property returns first instance from pool
+    ctx = AppContext(mapdl=mock_mapdl)
     assert ctx.mapdl == mock_mapdl
 
-    # Test creating AppContext without pool
-    ctx_none = AppContext()
+    # Test creating AppContext without MAPDL
+    ctx_none = AppContext(mapdl=None)
     assert ctx_none.mapdl is None
-    assert ctx_none.pool is None
 
 
 @pytest.mark.unit
@@ -47,7 +38,7 @@ def test_mcp_server_has_tools():
     # This is a basic check to ensure tools are defined
     from ansys.mapdl.mcp import check_mapdl_status, run_mapdl_command, write_comment
 
-    # Verify tools are callable
-    assert callable(check_mapdl_status)
-    assert callable(run_mapdl_command)
-    assert callable(write_comment)
+    # Verify tools are FunctionTool objects with callable .fn attribute
+    assert hasattr(check_mapdl_status, "fn") and callable(check_mapdl_status.fn)
+    assert hasattr(run_mapdl_command, "fn") and callable(run_mapdl_command.fn)
+    assert hasattr(write_comment, "fn") and callable(write_comment.fn)
