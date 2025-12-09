@@ -43,7 +43,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          $token = "x-access-token:$env:GH_TOKEN"
+          $bytes = [System.Text.Encoding]::UTF8.GetBytes($token)
+          $encoded = [System.Convert]::ToBase64String($bytes)
+          git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $encoded"
+        shell: pwsh
 
       - name: Install dependencies
         run: |
@@ -81,7 +85,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n "x-access-token:${GH_TOKEN}" | base64)"
 
       - name: Install dependencies
         run: |
@@ -143,10 +147,11 @@ jobs:
           python -m pip install --upgrade pip
 
       - name: Configure git credentials for private repos
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n "x-access-token:${GH_TOKEN}" | base64)"
 
       - name: Install dependencies
         run: |
@@ -208,7 +213,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n "x-access-token:${GH_TOKEN}" | base64)"
 
       - name: Install dependencies
         run: |
