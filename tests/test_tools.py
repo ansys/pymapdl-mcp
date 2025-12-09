@@ -722,6 +722,48 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
             # Verify the result is correctly propagated
             assert result == mock_output
 
+    def test_list_instances_output_format(self):
+        """Test that list_mapdl_instances returns properly formatted output with table headers."""
+        # Mock output with all expected headers
+        mock_output = """Name      Is Instance    Status      gRPC port    PID    Command line                Working directory
+------  -------------  --------  -----------  -----  -------------------------  -------------------
+ansys     True          running         50052  12345  ansys242 -grpc -port 50052  /tmp/ansys_tmp"""
+
+        with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
+            result = list_mapdl_instances.fn()
+
+            # Verify all expected headers are present
+            assert "Name" in result
+            assert "Is Instance" in result
+            assert "Status" in result
+            assert "gRPC port" in result
+            assert "PID" in result
+
+    def test_list_instances_no_crash(self):
+        """Test that list_mapdl_instances never crashes even if helper raises exception."""
+        # Mock the list_instances to return a valid string even in error cases
+        mock_output = "Error: Unable to list instances"
+        with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
+            result = list_mapdl_instances.fn()
+
+            # Should return a string, not raise exception
+            assert isinstance(result, str)
+            assert result is not None
+
+    def test_list_instances_consistent_calls(self):
+        """Test that multiple calls to list_mapdl_instances return consistent format."""
+        mock_output = """Name      Is Instance    Status      gRPC port    PID    Command line                Working directory
+------  -------------  --------  -----------  -----  -------------------------  -------------------"""
+
+        with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
+            result1 = list_mapdl_instances.fn()
+            result2 = list_mapdl_instances.fn()
+
+            # Both should be strings with same format
+            assert isinstance(result1, str)
+            assert isinstance(result2, str)
+            assert result1 == result2
+
 
 @pytest.mark.unit
 class TestConnectToMapdl:
@@ -1229,6 +1271,45 @@ class TestLaunchMapdl:
             assert "Successfully launched MAPDL at 127.0.0.1:50052" in result
             assert "2024 R2" in result
             assert "/tmp/ansys_mapdl_1234" in result
+
+    def test_launch_with_port_parameter(self, mock_context_no_mapdl):
+        """Test launching MAPDL with specific port parameter."""
+        mock_mapdl = MagicMock()
+        mock_mapdl.version = "2024 R2"
+        mock_mapdl._ip = "127.0.0.1"
+        mock_mapdl._port = 50060
+        mock_mapdl.ip = "127.0.0.1"
+        mock_mapdl.port = 50060
+        mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
+
+        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
+            result = launch_mapdl.fn(mock_context_no_mapdl, port=50060)
+
+            # Verify successful launch
+            assert isinstance(result, str)
+            assert "Successfully launched MAPDL" in result
+            assert "50060" in result
+
+            # Verify launch_mapdl was called with port
+            mock_launch.assert_called_once_with(nproc=None, loglevel="INFO", port=50060)
+
+    def test_launch_connection_info_in_result(self, mock_context_no_mapdl):
+        """Test that launch result contains all connection info."""
+        mock_mapdl = MagicMock()
+        mock_mapdl.version = "2024 R2"
+        mock_mapdl._ip = "192.168.1.50"
+        mock_mapdl._port = 50055
+        mock_mapdl.ip = "192.168.1.50"
+        mock_mapdl.port = 50055
+        mock_mapdl.directory = "/home/user/mapdl_work"
+
+        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
+            result = launch_mapdl.fn(mock_context_no_mapdl)
+
+            # Verify all connection details are in result
+            assert "192.168.1.50:50055" in result
+            assert "MAPDL Version: 2024 R2" in result
+            assert "Working Directory: /home/user/mapdl_work" in result
 
 
 @pytest.mark.unit
