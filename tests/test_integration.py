@@ -291,33 +291,21 @@ class TestMapdlIntegration:
         assert time_single > 0
         # assert time_multi < time_single
 
-
-@pytest.mark.integration
-class TestListMapdlInstancesIntegration:
-    """Integration tests for list_mapdl_instances function."""
-
-    def test_list_instances_with_running_mapdl(self):
+    def test_list_instances_with_running_mapdl(self, real_context):
         """Test list_mapdl_instances when MAPDL is known to be running.
 
         This is the only integration test that launches MAPDL for list_instances.
         Other tests are covered by unit tests in test_tools.py.
         """
-        from ansys.mapdl.core import launch_mapdl
+        # If we get here, MAPDL is running
+        result = list_mapdl_instances.fn()
 
-        try:
-            mapdl = launch_mapdl()
-            mapdl.prep7()
-            # If we get here, MAPDL is running
-            result = list_mapdl_instances.fn()
+        assert isinstance(result, str)
+        assert len(result) > 0
 
-            assert isinstance(result, str)
-            assert len(result) > 0
-
-            # The output should contain information about instances
-            # Check for table headers
-            assert "Name" in result and "Is Instance" in result and "Status" in result
-        finally:
-            mapdl.exit()
+        # The output should contain information about instances
+        # Check for table headers
+        assert "Name" in result and "Is Instance" in result and "Status" in result
 
 
 @pytest.mark.integration
