@@ -24,17 +24,26 @@ def test_main_parses_defaults(monkeypatch):
     assert cfg["mapdl_ip"] == "127.0.0.1"
     assert cfg["mapdl_port"] == 50052
     assert cfg["connect_on_startup"] is False
+    assert cfg["http_host"] == "127.0.0.1"
+    assert cfg["http_port"] == 8080
+    assert cfg["cors_origins"] is None
 
 
 @pytest.mark.unit
-def test_main_rejects_http_transport(monkeypatch, capsys):
-    """Selecting http transport prints message and exits with code 2."""
+def test_main_accepts_http_transport(monkeypatch):
+    """Selecting http transport should work now."""
+    from ansys.mapdl.mcp import app as package_mcp
     from ansys.mapdl.mcp.server import main
 
-    with pytest.raises(SystemExit) as excinfo:
-        main(["--type", "http"])  # should call sys.exit(2)
+    # Prevent actual asyncio.run from running
+    with patch.object(asyncio, "run") as mock_run:
+        main(["--transport", "http"])
+        mock_run.assert_called_once()
 
-    assert excinfo.value.code == 2
+    # Ensure mcp._cli_config attached and has http transport
+    cfg = getattr(package_mcp, "_cli_config", None)
+    assert cfg is not None
+    assert cfg["transport_type"] == "http"
 
 
 @pytest.mark.unit
@@ -63,6 +72,9 @@ def test_app_lifespan_attempts_connect_on_startup():
             "mapdl_ip": "127.0.0.1",
             "mapdl_port": 50052,
             "connect_on_startup": True,
+            "http_host": "127.0.0.1",
+            "http_port": 8080,
+            "cors_origins": None,
         },
     )
 

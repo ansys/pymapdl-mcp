@@ -104,6 +104,85 @@ You can also use your python virtual environment if you have pip installed PyMAP
 ./.venv/bin/python -m ansys.mapdl.mcp
 ```
 
+## Transport Options
+
+PyMAPDL MCP server supports two transport protocols:
+
+### STDIO Transport (Default)
+
+STDIO transport is the default and recommended for local MCP client integration. It communicates via standard input/output streams.
+
+**VS Code Configuration** (`.vscode/mcp.json`):
+```json
+{
+  "servers": {
+    "pymapdl": {
+      "type": "stdio",
+      "command": ".venv\\Scripts\\python.exe",
+      "args": ["-m", "ansys.mapdl.mcp"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "DEBUG"
+      }
+    }
+  }
+}
+```
+
+**Command Line**:
+```console
+python -m ansys.mapdl.mcp --transport stdio
+```
+
+### HTTP Transport (Streamable HTTP with SSE)
+
+HTTP transport enables remote access to the MCP server over HTTP with Server-Sent Events (SSE), allowing web-based clients and remote integrations.
+
+**VS Code Configuration** (`.vscode/mcp.json`):
+```json
+{
+  "servers": {
+    "pymapdl": {
+      "type": "http",
+      "url": "http://127.0.0.1:8080"
+    }
+  }
+}
+```
+
+**Command Line**:
+```console
+# Basic HTTP server (localhost:8080)
+python -m ansys.mapdl.mcp --transport http
+
+# Custom host and port
+python -m ansys.mapdl.mcp --transport http --http-host 0.0.0.0 --http-port 9000
+
+# With CORS origins for web clients
+python -m ansys.mapdl.mcp --transport http --cors-origins "http://localhost:3000,https://example.com"
+```
+
+**HTTP Transport Options**:
+- `--http-host`: HTTP server host address (default: `127.0.0.1`)
+- `--http-port`: HTTP server port (default: `8080`, range: 1-65535)
+- `--cors-origins`: Comma-separated list of allowed CORS origins (optional)
+
+### MAPDL Connection Arguments (Works with Both Transports)
+
+The following MAPDL connection arguments work with both STDIO and HTTP transports:
+
+```console
+# Connect to MAPDL on startup
+python -m ansys.mapdl.mcp --connect-on-startup --ip 192.168.1.100 --port 50053
+
+# With HTTP transport
+python -m ansys.mapdl.mcp --transport http --connect-on-startup --ip 192.168.1.100 --port 50053
+```
+
+**MAPDL Connection Options**:
+- `--ip`: MAPDL IP address or hostname (default: `127.0.0.1`)
+- `--port`: MAPDL gRPC port (default: `50052`, range: 1-65535)
+- `--connect-on-startup`: Automatically connect to MAPDL when the server starts
+
 ## Usage
 
 ### Connect to an MAPDL instance
