@@ -41,11 +41,14 @@ jobs:
 
       - name: Install dependencies
         env:
-          GH_TOKEN: ${{ secrets.PYANSYS_COMMON_MCP }}
+          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
+          GH_USERNAME: ${{ secrets.PYANSYS_CI_BOT_USERNAME }}
         run: |
           python -m pip install --upgrade pip
-          git remote add origin 'https://{GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation' || true
-          pip install "git+https://${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
+          #git remote add origin 'https://{GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation' || true
+          echo "Added remote."
+          pip install "git+https://${GH_USERNAME}:${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
+          echo "Installed MCP base"
           pip install -e ".[dev]"
 
       - name: Run unit tests
@@ -77,11 +80,14 @@ jobs:
 
       - name: Install dependencies
         env:
-          GH_TOKEN: ${{ secrets.PYANSYS_COMMON_MCP }}
+          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
+          GH_USERNAME: ${{ secrets.PYANSYS_CI_BOT_USERNAME }}
         run: |
           python -m pip install --upgrade pip
-          git remote add origin 'https://{GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation' || true
-          pip install "git+https://${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
+          #git remote add origin 'https://{GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation' || true
+          echo "Added remote."
+          pip install "git+https://${GH_USERNAME}:${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
+          echo "Installed MCP base"
           pip install -e ".[dev]"
 
       - name: Check code formatting with black
@@ -140,11 +146,14 @@ jobs:
 
       - name: Install dependencies
         env:
-          GH_TOKEN: ${{ secrets.PYANSYS_COMMON_MCP }}
+          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
+          GH_USERNAME: ${{ secrets.PYANSYS_CI_BOT_USERNAME }}
         run: |
           python -m pip install --upgrade pip
-          git remote add origin 'https://{GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation' || true
-          pip install "git+https://${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
+          #git remote add origin 'https://{GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation' || true
+          echo "Added remote."
+          pip install "git+https://${GH_USERNAME}:${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
+          echo "Installed MCP base"
           pip install -e ".[dev]"
 
       - name: Run integration tests
@@ -200,11 +209,14 @@ jobs:
 
       - name: Install dependencies
         env:
-          GH_TOKEN: ${{ secrets.PYANSYS_COMMON_MCP }}
+          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
+          GH_USERNAME: ${{ secrets.PYANSYS_CI_BOT_USERNAME }}
         run: |
           python -m pip install --upgrade pip
-          git remote add origin 'https://{GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation' || true
-          pip install "git+https://${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
+          #git remote add origin 'https://{GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation' || true
+          echo "Added remote."
+          pip install "git+https://${GH_USERNAME}:${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
+          echo "Installed MCP base"
           pip install -e ".[dev]"
 
       - name: Run integration tests
