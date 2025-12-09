@@ -1,10 +1,10 @@
 """Tests for MCP server lifespan management."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
-from ansys.mapdl.mcp.mcp import AppContext, app_lifespan, mcp
+from ansys.mapdl.mcp.server import AppContext, app
 
 
 @pytest.mark.unit
@@ -27,8 +27,8 @@ def test_app_context_dataclass():
 @pytest.mark.unit
 def test_mcp_server_initialization():
     """Test that MCP server is properly initialized."""
-    assert mcp is not None
-    assert mcp.name == "PyMAPDL-MCP"
+    assert app is not None
+    assert app.name == "PyMAPDL-MCP"
 
 
 @pytest.mark.unit

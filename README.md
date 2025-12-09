@@ -7,9 +7,9 @@ A Model Context Protocol (MCP) server that provides AI assistants with the abili
 This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing you to:
 
 - Discover and list running MAPDL instances on your system
-- Connect to and disconnect from MAPDL instances dynamically
+- Dynamically connect to and disconnect from MAPDL instances
 - Execute MAPDL commands through natural language
-- Check MAPDL instance status and version information
+- Check MAPDL instance status, version information, and connection details
 - Write comments and run custom commands
 
 ## Features
@@ -18,7 +18,7 @@ This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing 
 - **Instance Discovery**: Automatically discover running MAPDL instances on your system
 - **Flexible Deployment**: Supports MAPDL running locally, remotely, or in Docker containers
 - **Type-Safe Context**: Strongly typed application context for reliable operations
-- **Comprehensive Tools**: Six specialized tools for MAPDL interaction
+- **Comprehensive Tools**: Specialized tools for MAPDL interaction, including enhanced error handling
 
 ## Prerequisites
 
@@ -103,6 +103,85 @@ You can also use your python virtual environment if you have pip installed PyMAP
 ```console
 ./.venv/bin/python -m ansys.mapdl.mcp
 ```
+
+## Transport Options
+
+PyMAPDL MCP server supports two transport protocols:
+
+### STDIO Transport (Default)
+
+STDIO transport is the default and recommended for local MCP client integration. It communicates via standard input/output streams.
+
+**VS Code Configuration** (`.vscode/mcp.json`):
+```json
+{
+  "servers": {
+    "pymapdl": {
+      "type": "stdio",
+      "command": ".venv\\Scripts\\python.exe",
+      "args": ["-m", "ansys.mapdl.mcp"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "DEBUG"
+      }
+    }
+  }
+}
+```
+
+**Command Line**:
+```console
+python -m ansys.mapdl.mcp --transport stdio
+```
+
+### HTTP Transport (Streamable HTTP with SSE)
+
+HTTP transport enables remote access to the MCP server over HTTP with Server-Sent Events (SSE), allowing web-based clients and remote integrations.
+
+**VS Code Configuration** (`.vscode/mcp.json`):
+```json
+{
+  "servers": {
+    "pymapdl": {
+      "type": "http",
+      "url": "http://127.0.0.1:8080"
+    }
+  }
+}
+```
+
+**Command Line**:
+```console
+# Basic HTTP server (localhost:8080)
+python -m ansys.mapdl.mcp --transport http
+
+# Custom host and port
+python -m ansys.mapdl.mcp --transport http --http-host 0.0.0.0 --http-port 9000
+
+# With CORS origins for web clients
+python -m ansys.mapdl.mcp --transport http --cors-origins "http://localhost:3000,https://example.com"
+```
+
+**HTTP Transport Options**:
+- `--http-host`: HTTP server host address (default: `127.0.0.1`)
+- `--http-port`: HTTP server port (default: `8080`, range: 1-65535)
+- `--cors-origins`: Comma-separated list of allowed CORS origins (optional)
+
+### MAPDL Connection Arguments (Works with Both Transports)
+
+The following MAPDL connection arguments work with both STDIO and HTTP transports:
+
+```console
+# Connect to MAPDL on startup
+python -m ansys.mapdl.mcp --connect-on-startup --ip 192.168.1.100 --port 50053
+
+# With HTTP transport
+python -m ansys.mapdl.mcp --transport http --connect-on-startup --ip 192.168.1.100 --port 50053
+```
+
+**MAPDL Connection Options**:
+- `--ip`: MAPDL IP address or hostname (default: `127.0.0.1`)
+- `--port`: MAPDL gRPC port (default: `50052`, range: 1-65535)
+- `--connect-on-startup`: Automatically connect to MAPDL when the server starts
 
 ## Usage
 
@@ -378,27 +457,6 @@ Run integration tests (requires MAPDL on localhost:50052):
 pytest -m integration
 ```
 
-### Test Organization
-
-The test suite is organized into focused test modules:
-
-- **conftest.py** - Pytest configuration and shared fixtures (mock MAPDL, contexts)
-- **test_basic.py** - Package basics (version, imports, exports, AppContext)
-- **test_tools.py** - MCP tools functionality
-  - check_mapdl_status tool
-  - write_comment tool
-  - run_mapdl_command tool
-- **test_connection_tools.py** - Connection management tools
-  - connect_to_mapdl tool
-  - disconnect_from_mapdl tool
-  - list_mapdl_instances tool
-- **test_integration.py** - MAPDL integration tests
-- **test_error_handling.py** - Error scenarios
-  - Command failures, timeouts, invalid inputs
-- **test_lifespan.py** - Server lifespan management
-- **test_mcp_protocol.py** - MCP protocol compliance
-- **test_main.py** - Entry point functionality
-
 ### Coverage
 
 Current test coverage: **70%**
@@ -441,39 +499,6 @@ Contributions are welcome! Please:
 The pre-commit hooks and CI will ensure code quality. If hooks fail, review the changes, stage them with `git add .`, and commit again.
 pre-commit run --all-files
 
-## Project Structure
-
-```
-pymapdl-mcp/
-├── .github/
-│   └── workflows/
-│       └── test.yml                    # CI/CD workflow
-├── src/
-│   └── ansys/
-│       └── mapdl/
-│           └── mcp/
-│               ├── __init__.py         # Package initialization & exports
-│               ├── mcp.py              # Main MCP server & lifecycle management
-│               ├── tools.py            # MCP tool implementations
-│               ├── helpers.py          # Helper functions (instance discovery)
-│               ├── prompts.py          # MCP prompts (future use)
-│               └── py.typed            # PEP 561 type marker
-├── tests/
-│   ├── __init__.py
-│   ├── conftest.py                     # Pytest fixtures and configuration
-│   ├── test_basic.py                   # Basic package tests
-│   ├── test_tools.py                   # Core MCP tools tests
-│   ├── test_connection_tools.py        # Connection management tests
-│   ├── test_error_handling.py          # Error handling tests
-│   ├── test_lifespan.py                # Lifespan management tests
-│   ├── test_mcp_protocol.py            # MCP protocol tests
-│   ├── test_main.py                    # Entry point tests
-│   └── test_integration.py             # Integration tests (require MAPDL)
-├── .pre-commit-config.yaml             # Pre-commit hooks configuration
-├── pyproject.toml                      # Package metadata and dependencies
-├── LICENSE                             # MIT License
-└── README.md                           # This file
-```
 
 ## Architecture
 

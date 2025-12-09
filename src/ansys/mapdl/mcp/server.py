@@ -38,6 +38,9 @@ class AppContext:
     mapdl_ip: str | None = None
     mapdl_port: int | None = None
     connect_on_startup: bool = False
+    http_host: str = "127.0.0.1"
+    http_port: int = 8080
+    cors_origins: list[str] | None = None
 
 
 @asynccontextmanager
@@ -69,9 +72,12 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
         context.mapdl_ip = cli_cfg.get("mapdl_ip", context.mapdl_ip)
         context.mapdl_port = cli_cfg.get("mapdl_port", context.mapdl_port)
         context.connect_on_startup = cli_cfg.get("connect_on_startup", context.connect_on_startup)
+        context.http_host = cli_cfg.get("http_host", context.http_host)
+        context.http_port = cli_cfg.get("http_port", context.http_port)
+        context.cors_origins = cli_cfg.get("cors_origins", context.cors_origins)
 
     try:
-        if context.connect_on_startup and context.transport_type == "stdio":
+        if context.connect_on_startup:
             from ansys.mapdl.core import launch_mapdl
 
             try:
@@ -104,8 +110,8 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 
 
 # Pass lifespan to server
-mcp = FastMCP("PyMAPDL-MCP", lifespan=app_lifespan)
-mcp.mcp_state = mcp_state
+app = FastMCP("PyMAPDL-MCP", lifespan=app_lifespan)
+app.mcp_state = mcp_state
 
 
 def add_tool(func):
@@ -113,7 +119,7 @@ def add_tool(func):
 
     It does return the original function unchanged.
     """
-    mcp.tool(func)
+    app.tool(func)
 
     def wrapped(*args, **kwargs):
         return func(*args, **kwargs)
@@ -160,30 +166,58 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help="Attempt to connect to MAPDL during MCP startup",
     )
+    parser.add_argument(
+        "--http-host",
+        dest="http_host",
+        default="127.0.0.1",
+        help="HTTP server host address (for http transport, default: 127.0.0.1)",
+    )
+    parser.add_argument(
+        "--http-port",
+        dest="http_port",
+        type=lambda v: _validate_port(int(v)),
+        default=8080,
+        help="HTTP server port (for http transport, default: 8080, range: 1-65535)",
+    )
+    parser.add_argument(
+        "--cors-origins",
+        dest="cors_origins",
+        default=None,
+        help="Allowed CORS origins (comma-separated URLs, for http transport)",
+    )
 
     args = parser.parse_args(argv)
 
-    # If unsupported transport chosen, provide clear message and exit
-    if args.transport_type != "stdio":
-        print(
-            f"Transport '{args.transport_type}' is not implemented yet. Only 'stdio' is supported.",
-            file=sys.stderr,
-        )
-        sys.exit(2)
+    # Parse CORS origins if provided
+    cors_origins = None
+    if args.cors_origins:
+        cors_origins = [origin.strip() for origin in args.cors_origins.split(",")]
 
     # Attach CLI config to server so lifespan can read it
     setattr(
-        mcp,
+        app,
         "_cli_config",
         {
             "transport_type": args.transport_type,
             "mapdl_ip": args.mapdl_ip,
             "mapdl_port": args.mapdl_port,
             "connect_on_startup": bool(args.connect_on_startup),
+            "http_host": args.http_host,
+            "http_port": args.http_port,
+            "cors_origins": cors_origins,
         },
     )
 
-    # Run server using stdio transport
+    # Run server using selected transport
     import asyncio
 
-    asyncio.run(mcp.run_stdio_async())
+    if args.transport_type == "stdio":
+        asyncio.run(app.run_stdio_async())
+    elif args.transport_type == "http":
+        asyncio.run(
+            app.run_http_async(
+                transport="http",  # Use streamable HTTP (default)
+                host=args.http_host,
+                port=args.http_port,
+            )
+        )
