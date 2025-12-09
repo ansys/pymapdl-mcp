@@ -1,13 +1,12 @@
 """Pytest configuration and fixtures for PyMAPDL MCP Server tests."""
 
 import sys
-from typing import Any, AsyncIterator
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 from mcp.server.session import ServerSession
 
-from ansys.mapdl.mcp.mcp import AppContext
+from ansys.mapdl.mcp.server import AppContext
 
 
 @pytest.fixture
@@ -99,11 +98,11 @@ def mock_context_no_mapdl(mock_server_session, app_context_no_mapdl):
 
 
 @pytest.fixture
-def mcp_server():
+def app_server():
     """Create a FastMCP server instance for testing."""
-    from ansys.mapdl.mcp.mcp import mcp
+    from ansys.mapdl.mcp.server import app
 
-    return mcp
+    return app
 
 
 @pytest.fixture(autouse=True)

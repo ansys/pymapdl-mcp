@@ -8,11 +8,11 @@ __version__ = "0.1.0"
 
 # Import contexts module to register context tools with the MCP server
 from ansys.mapdl.mcp import contexts  # noqa: F401
-from ansys.mapdl.mcp.mcp import (
+from ansys.mapdl.mcp.server import (
     AppContext,
+    app,
     app_lifespan,
     main,
-    mcp,
 )
 from ansys.mapdl.mcp.tools import (
     check_mapdl_installed,
@@ -35,7 +35,7 @@ __all__ = [
     "disconnect_from_mapdl",
     "launch_mapdl",
     "list_mapdl_instances",
-    "mcp",
+    "app",
     "main",
     "run_mapdl_command",
     "run_multiple_commands",
