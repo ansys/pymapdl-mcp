@@ -55,11 +55,11 @@ def test_main_invalid_port_raises():
         main(["--port", "70000"])  # out of 1-65535 should exit
 
 
-def test_app_lifespan_attempts_connect_on_startup():
-    """When connect_on_startup is True, AppContext should be created."""
-    from ansys.mapdl.mcp.server import app, app_lifespan
+def test_product_startup_attempts_connect_on_startup():
+    """When connect_on_startup is True, MCP should attempt to connect to MAPDL."""
+    from ansys.mapdl.mcp.server import PyMAPDLMCP, app
 
-    # Prepare a fake Mapdl instance to be returned by the constructor
+    # Prepare a fake Mapdl instance to be returned by launch_mapdl
     fake_mapdl = MagicMock()
     fake_mapdl.exit = MagicMock()
 
@@ -78,19 +78,27 @@ def test_app_lifespan_attempts_connect_on_startup():
         },
     )
 
-    async def runner():
-        async with app_lifespan(app) as ctx:
-            # Just verify that the context is created properly
-            assert ctx is not None
-            assert hasattr(ctx, "mapdl")
-            # Set a fake mapdl instance to test cleanup
-            ctx.mapdl = fake_mapdl
+    # Mock launch_mapdl to return our fake instance
+    with patch("ansys.mapdl.core.launch_mapdl", return_value=fake_mapdl) as mock_launch:
+        # Create MCP instance
+        mcp = PyMAPDLMCP()
+        mcp.server = app  # Manually attach server
+        mcp.create_context()
+        mcp.product_startup()
 
-    # Run the async runner synchronously
-    asyncio.run(runner())
+        # Verify launch_mapdl was called with correct parameters
+        mock_launch.assert_called_once_with(
+            start_instance=False,
+            ip="127.0.0.1",
+            port=50052,
+        )
 
-    # Verify cleanup was called
-    fake_mapdl.exit.assert_called_once()
+        # Verify MAPDL instance was stored in context
+        assert mcp.context.mapdl == fake_mapdl
+
+        # Test cleanup
+        mcp.product_cleanup()
+        fake_mapdl.exit.assert_called_once()
 
     # Clean up _cli_config
     delattr(app, "_cli_config")

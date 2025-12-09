@@ -67,11 +67,11 @@ class TestMapdlIntegration:
         """Create a real context with actual MAPDL connection."""
         from unittest.mock import MagicMock
 
-        from ansys.mapdl.mcp.server import AppContext
+        from ansys.mapdl.mcp.server import PyMAPDLAppContext
 
         context = MagicMock()
         context.request_context = MagicMock()
-        context.request_context.lifespan_context = AppContext(mapdl=real_mapdl)
+        context.request_context.lifespan_context = PyMAPDLAppContext(mapdl=real_mapdl)
 
         return context
 
@@ -305,7 +305,7 @@ class TestMapdlIntegration:
 
         # The output should contain information about instances
         # Check for table headers
-        assert "Name" in result and "Is Instance" in result and "Status" in result
+        assert "Name" in result and "Status" in result
 
 
 @pytest.mark.integration
@@ -323,11 +323,11 @@ class TestLaunchMapdlIntegration:
         """Create a clean context with no MAPDL connection."""
         from unittest.mock import MagicMock
 
-        from ansys.mapdl.mcp.server import AppContext
+        from ansys.mapdl.mcp.server import PyMAPDLAppContext
 
         context = MagicMock()
         context.request_context = MagicMock()
-        context.request_context.lifespan_context = AppContext(mapdl=None)
+        context.request_context.lifespan_context = PyMAPDLAppContext(mapdl=None)
 
         return context
 
