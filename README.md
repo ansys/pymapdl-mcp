@@ -137,6 +137,8 @@ python -m ansys.mapdl.mcp --transport stdio
 
 HTTP transport enables remote access to the MCP server over HTTP with Server-Sent Events (SSE), allowing web-based clients and remote integrations.
 
+> **Note**: When using HTTP transport, you must start the MCP server separately before configuring your client. Unlike STDIO transport (which auto-starts the server), HTTP transport requires the server to be running independently.
+
 **VS Code Configuration** (`.vscode/mcp.json`):
 ```json
 {
@@ -149,7 +151,10 @@ HTTP transport enables remote access to the MCP server over HTTP with Server-Sen
 }
 ```
 
-**Command Line**:
+**Starting the Server**:
+
+First, start the MCP server in a separate terminal:
+
 ```console
 # Basic HTTP server (localhost:8080)
 python -m ansys.mapdl.mcp --transport http
@@ -161,10 +166,12 @@ python -m ansys.mapdl.mcp --transport http --http-host 0.0.0.0 --http-port 9000
 python -m ansys.mapdl.mcp --transport http --cors-origins "http://localhost:3000,https://example.com"
 ```
 
-**HTTP Transport Options**:
+**Command Line Options**:
 - `--http-host`: HTTP server host address (default: `127.0.0.1`)
 - `--http-port`: HTTP server port (default: `8080`, range: 1-65535)
 - `--cors-origins`: Comma-separated list of allowed CORS origins (optional)
+
+After starting the server, configure your MCP client to connect to the specified URL (e.g., `http://127.0.0.1:8080`).
 
 ### MAPDL Connection Arguments (Works with Both Transports)
 
