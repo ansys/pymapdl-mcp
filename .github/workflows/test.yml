@@ -44,6 +44,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
           python -m pip install --upgrade pip
+          git remote add origin 'https://{GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git'
           pip install "git+https://${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
           pip install -e ".[dev]"
 
@@ -79,6 +80,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
           python -m pip install --upgrade pip
+          git remote add origin 'https://{GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git'
           pip install "git+https://${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
           pip install -e ".[dev]"
 
@@ -141,6 +143,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
           python -m pip install --upgrade pip
+          git remote add origin 'https://{GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git'
           pip install "git+https://${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
           pip install -e ".[dev]"
 
@@ -200,6 +203,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
           python -m pip install --upgrade pip
+          git remote add origin 'https://{GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git'
           pip install "git+https://${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
           pip install -e ".[dev]"
 
