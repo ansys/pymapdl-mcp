@@ -104,8 +104,8 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 
 
 # Pass lifespan to server
-mcp = FastMCP("PyMAPDL-MCP", lifespan=app_lifespan)
-mcp.mcp_state = mcp_state
+app = FastMCP("PyMAPDL-MCP", lifespan=app_lifespan)
+app.mcp_state = mcp_state
 
 
 def add_tool(func):
@@ -113,7 +113,7 @@ def add_tool(func):
 
     It does return the original function unchanged.
     """
-    mcp.tool(func)
+    app.tool(func)
 
     def wrapped(*args, **kwargs):
         return func(*args, **kwargs)
@@ -173,7 +173,7 @@ def main(argv: list[str] | None = None) -> None:
 
     # Attach CLI config to server so lifespan can read it
     setattr(
-        mcp,
+        app,
         "_cli_config",
         {
             "transport_type": args.transport_type,
@@ -186,4 +186,4 @@ def main(argv: list[str] | None = None) -> None:
     # Run server using stdio transport
     import asyncio
 
-    asyncio.run(mcp.run_stdio_async())
+    asyncio.run(app.run_stdio_async())
