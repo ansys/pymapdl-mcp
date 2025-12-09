@@ -1,36 +1,42 @@
 """Lifespan and CLI entry for the MCP server with startup options."""
 
 import argparse
-import logging
 import sys
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
-from fastmcp.server import FastMCP
+from ansys.common.mcp import (
+    PyAnsysBaseMCP,
+    get_logger,
+)
+from ansys.common.mcp.context import PyAnsysBaseAppContext
+from ansys.common.mcp.helpers import PersistentPythonSession
 
-logger = logging.getLogger(__name__)
-
-
-@dataclass
-class PyMAPDLMCPState:
-    """State holder for MCP server."""
-
-    lock_connection: bool = False
-
-
-mcp_state = PyMAPDLMCPState()
+logger = get_logger(__name__)
 
 
 @dataclass
-class AppContext:
+class PyMAPDLAppContext(PyAnsysBaseAppContext):
     """Application context with typed dependencies and CLI options.
 
     Attributes
     ----------
     mapdl : Optional[Any]
         MAPDL instance connection. Using Any to avoid type issues with MAPDL variants.
+    transport_type : str
+        Transport type for MCP server ('stdio' or 'http').
+    mapdl_ip : Optional[str]
+        IP address or hostname for MAPDL connection.
+    mapdl_port : Optional[int]
+        Port number for MAPDL connection.
+    connect_on_startup : bool
+        Whether to attempt MAPDL connection on MCP startup.
+    http_host : str
+        Host address for HTTP transport.
+    http_port : int
+        Port number for HTTP transport.
+    cors_origins : Optional[list[str]]
+        List of allowed CORS origins for HTTP transport.
     """
 
     mapdl: Any | None = None  # Using Any to avoid type issues with MAPDL variants
@@ -42,41 +48,70 @@ class AppContext:
     http_port: int = 8080
     cors_origins: list[str] | None = None
 
+    @property
+    def product_instance(self) -> Optional[Any]:
+        """Returns the default MAPDL instance for backward compatibility.
 
-@asynccontextmanager
-async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
-    """Manage application lifecycle with typed context and startup connect.
+        Returns
+        -------
+        Optional[Any]
+            The default MAPDL instance from the pool, or None if no pool exists.
+        """
+        return self.mapdl
 
-    The server object may carry parsed CLI options in `server._cli_config`.
-    If `connect_on_startup` is True and `transport_type` is `stdio`, an
-    initial attempt to connect to MAPDL will be performed. Failures are
-    logged but do not stop the server.
+    @product_instance.setter
+    def product_instance(self, value: Any) -> None:
+        """Setter for product_instance (no-op, use pool directly)."""
+        pass
 
-    Parameters
-    ----------
-    server : FastMCP
-        The FastMCP server instance.
 
-    Yields
-    ------
-    AppContext
-        Application context for storing MAPDL connections.
-    """
-    context = AppContext()
+class PyMAPDLMCP(PyAnsysBaseMCP):
+    """FastMCP server for managing MAPDL instances."""
 
-    # Populate context from CLI config on server if available
-    cli_cfg = getattr(server, "_cli_config", None)
+    def __init__(self, name: str = "PyMAPDL MCP Server", *args, **kwargs):
+        super().__init__(name=name, *args, **kwargs)
 
-    if cli_cfg is not None:
-        context.transport_type = cli_cfg.get("transport_type", context.transport_type)
-        context.mapdl_ip = cli_cfg.get("mapdl_ip", context.mapdl_ip)
-        context.mapdl_port = cli_cfg.get("mapdl_port", context.mapdl_port)
-        context.connect_on_startup = cli_cfg.get("connect_on_startup", context.connect_on_startup)
-        context.http_host = cli_cfg.get("http_host", context.http_host)
-        context.http_port = cli_cfg.get("http_port", context.http_port)
-        context.cors_origins = cli_cfg.get("cors_origins", context.cors_origins)
+    def create_context(self) -> PyMAPDLAppContext:
+        """
+        Create a new application context.
 
-    try:
+        Returns
+        -------
+        PyMAPDLAppContext
+            The application context for managing MAPDL instances.
+        """
+        python_session = PersistentPythonSession(
+            python_executable=self.python_executable,
+            working_directory=self.working_directory,
+        )
+        context = PyMAPDLAppContext(
+            python_session=python_session,
+            command_history=[],
+        )
+
+        # Populate context from CLI config on server if available
+        cli_cfg = getattr(self.server, "_cli_config", None)
+
+        if cli_cfg is not None:
+            context.transport_type = cli_cfg.get("transport_type", context.transport_type)
+            context.mapdl_ip = cli_cfg.get("mapdl_ip", context.mapdl_ip)
+            context.mapdl_port = cli_cfg.get("mapdl_port", context.mapdl_port)
+            context.connect_on_startup = cli_cfg.get(
+                "connect_on_startup", context.connect_on_startup
+            )
+            context.http_host = cli_cfg.get("http_host", context.http_host)
+            context.http_port = cli_cfg.get("http_port", context.http_port)
+            context.cors_origins = cli_cfg.get("cors_origins", context.cors_origins)
+
+        self.context = context
+        return context
+
+    def product_startup(self):
+        """Allow PyMAPDL-MCP specific startup actions."""
+        logger.info("PyMAPDL MCP server starting up...")
+
+        context = self.context
+
         if context.connect_on_startup:
             from ansys.mapdl.core import launch_mapdl
 
@@ -96,9 +131,9 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
         else:
             logger.info("MCP Server initialized. Use connect_to_mapdl to establish a connection.")
 
-        yield context
-
-    finally:
+    def product_cleanup(self):
+        """Perform cleanup actions for MAPDL instances on shutdown."""
+        context = self.context
         # Cleanup on shutdown
         if context.mapdl is not None:
             try:
@@ -110,8 +145,7 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 
 
 # Pass lifespan to server
-app = FastMCP("PyMAPDL-MCP", lifespan=app_lifespan)
-app.mcp_state = mcp_state
+app = PyMAPDLMCP(name="PyMAPDL MCP Server")
 
 
 def add_tool(func):

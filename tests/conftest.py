@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from mcp.server.session import ServerSession
 
-from ansys.mapdl.mcp.server import AppContext
+from ansys.mapdl.mcp.server import PyMAPDLAppContext
 
 
 @pytest.fixture
@@ -62,14 +62,14 @@ def mock_mapdl():
 
 @pytest.fixture
 def app_context(mock_mapdl):
-    """Create an AppContext with a mock MAPDL instance."""
-    return AppContext(mapdl=mock_mapdl)
+    """Create an PyMAPDLAppContext with a mock MAPDL instance."""
+    return PyMAPDLAppContext(mapdl=mock_mapdl)
 
 
 @pytest.fixture
 def app_context_no_mapdl():
-    """Create an AppContext without MAPDL (simulating connection failure)."""
-    return AppContext(mapdl=None)
+    """Create an PyMAPDLAppContext without MAPDL (simulating connection failure)."""
+    return PyMAPDLAppContext(mapdl=None)
 
 
 @pytest.fixture
@@ -81,7 +81,7 @@ def mock_server_session():
 
 @pytest.fixture
 def mock_context(mock_server_session, app_context):
-    """Create a mock Context with AppContext for testing tools."""
+    """Create a mock Context with PyMAPDLAppContext for testing tools."""
     context = MagicMock()
     context.request_context = MagicMock()
     context.request_context.lifespan_context = app_context

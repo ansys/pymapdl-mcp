@@ -691,7 +691,7 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
             result = list_mapdl_instances.fn()
 
             # Verify list_instances was called with long=True
-            mock_list_instances.assert_called_once_with(long=True)
+            mock_list_instances.assert_called_once_with(long=True, instances=True)
             assert result == "Sample output"
 
     def test_list_instances_multiple_instances(self):
@@ -717,7 +717,7 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
             result = list_mapdl_instances.fn()
 
             # Verify the helper function was called with correct parameters
-            mock_list.assert_called_once_with(long=True)
+            mock_list.assert_called_once_with(long=True, instances=True)
 
             # Verify the result is correctly propagated
             assert result == mock_output
@@ -725,8 +725,8 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
     def test_list_instances_output_format(self):
         """Test that list_mapdl_instances returns properly formatted output with table headers."""
         # Mock output with all expected headers
-        mock_output = """Name      Is Instance    Status      gRPC port    PID    Command line                Working directory
-------  -------------  --------  -----------  -----  -------------------------  -------------------
+        mock_output = """Name      Status      gRPC port    PID    Command line                Working directory
+------  --------  -----------  -----  -------------------------  -------------------
 ansys     True          running         50052  12345  ansys242 -grpc -port 50052  /tmp/ansys_tmp"""
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
@@ -734,7 +734,6 @@ ansys     True          running         50052  12345  ansys242 -grpc -port 50052
 
             # Verify all expected headers are present
             assert "Name" in result
-            assert "Is Instance" in result
             assert "Status" in result
             assert "gRPC port" in result
             assert "PID" in result
@@ -752,8 +751,8 @@ ansys     True          running         50052  12345  ansys242 -grpc -port 50052
 
     def test_list_instances_consistent_calls(self):
         """Test that multiple calls to list_mapdl_instances return consistent format."""
-        mock_output = """Name      Is Instance    Status      gRPC port    PID    Command line                Working directory
-------  -------------  --------  -----------  -----  -------------------------  -------------------"""
+        mock_output = """Name      Status      gRPC port    PID    Command line                Working directory
+------  --------  -----------  -----  -------------------------  -------------------"""
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
             result1 = list_mapdl_instances.fn()

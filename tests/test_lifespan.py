@@ -4,23 +4,23 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from ansys.mapdl.mcp.server import AppContext, app
+from ansys.mapdl.mcp.server import PyMAPDLAppContext, app
 
 
 @pytest.mark.unit
 def test_app_context_dataclass():
-    """Test that AppContext is properly defined as a dataclass."""
+    """Test that PyMAPDLAppContext is properly defined as a dataclass."""
     from dataclasses import is_dataclass
 
-    assert is_dataclass(AppContext)
+    assert is_dataclass(PyMAPDLAppContext)
 
-    # Test creating AppContext with MAPDL
+    # Test creating PyMAPDLAppContext with MAPDL
     mock_mapdl = MagicMock()
-    ctx = AppContext(mapdl=mock_mapdl)
+    ctx = PyMAPDLAppContext(mapdl=mock_mapdl)
     assert ctx.mapdl == mock_mapdl
 
-    # Test creating AppContext without MAPDL
-    ctx_none = AppContext(mapdl=None)
+    # Test creating PyMAPDLAppContext without MAPDL
+    ctx_none = PyMAPDLAppContext(mapdl=None)
     assert ctx_none.mapdl is None
 
 
@@ -28,7 +28,7 @@ def test_app_context_dataclass():
 def test_mcp_server_initialization():
     """Test that MCP server is properly initialized."""
     assert app is not None
-    assert app.name == "PyMAPDL-MCP"
+    assert app.name == "PyMAPDL MCP Server"
 
 
 @pytest.mark.unit
