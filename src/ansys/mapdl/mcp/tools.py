@@ -433,7 +433,7 @@ def list_mapdl_instances() -> str:
     from ansys.mapdl.mcp.helpers import list_instances
 
     # Use PyMAPDL CLI's list_instances function with long=True for detailed output
-    return list_instances(long=True)
+    return list_instances(long=True, instances=True)
 
 
 @app.tool()

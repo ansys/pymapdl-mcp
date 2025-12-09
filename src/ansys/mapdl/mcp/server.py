@@ -11,7 +11,6 @@ from ansys.common.mcp import (
 )
 from ansys.common.mcp.context import PyAnsysBaseAppContext
 from ansys.common.mcp.helpers import PersistentPythonSession
-from fastmcp.server import FastMCP
 
 logger = get_logger(__name__)
 
@@ -143,7 +142,7 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
 
 
 # Pass lifespan to server
-app = FastMCP("PyMAPDL MCP Server")
+app = PyMAPDLMCP("PyMAPDL MCP Server")
 
 
 def add_tool(func):
