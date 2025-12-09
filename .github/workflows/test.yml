@@ -40,8 +40,11 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
+        env:
+          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
           python -m pip install --upgrade pip
+          pip install "ansys-common-mcp @ git+https://x-access-token:${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
           pip install -e ".[dev]"
 
       - name: Run unit tests
@@ -72,8 +75,11 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
+        env:
+          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
           python -m pip install --upgrade pip
+          pip install "ansys-common-mcp @ git+https://x-access-token:${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
           pip install -e ".[dev]"
 
       - name: Check code formatting with black
@@ -131,9 +137,12 @@ jobs:
           python -m pip install --upgrade pip
 
       - name: Install dependencies
+        env:
+          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          pip install "ansys-common-mcp @ git+https://x-access-token:${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
+          pip install -e ".[dev]"
 
       - name: Run integration tests
         env:
@@ -187,8 +196,11 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
+        env:
+          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
           python -m pip install --upgrade pip
+          pip install "ansys-common-mcp @ git+https://x-access-token:${GH_TOKEN}@github.com/ansys-internal/pyansys-common-mcp.git@feat/other_implementation"
           pip install -e ".[dev]"
 
       - name: Run integration tests
