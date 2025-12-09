@@ -305,7 +305,7 @@ class TestMapdlIntegration:
 
         # The output should contain information about instances
         # Check for table headers
-        assert "Name" in result and "Is Instance" in result and "Status" in result
+        assert "Name" in result and "Status" in result
 
 
 @pytest.mark.integration

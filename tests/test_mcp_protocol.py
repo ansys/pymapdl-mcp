@@ -1,7 +1,5 @@
 """Tests for MCP protocol compliance and server behavior."""
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 from fastmcp.server import FastMCP
 
