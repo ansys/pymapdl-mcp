@@ -68,6 +68,9 @@ class PyMAPDLAppContext(PyAnsysBaseAppContext):
 class PyMAPDLMCP(PyAnsysBaseMCP):
     """FastMCP server for managing MAPDL instances."""
 
+    def __init__(self, name: str = "PyMAPDL MCP Server", *args, **kwargs):
+        super().__init__(name=name, *args, **kwargs)
+
     def create_context(self) -> PyMAPDLAppContext:
         """
         Create a new application context.
@@ -142,7 +145,7 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
 
 
 # Pass lifespan to server
-app = PyMAPDLMCP("PyMAPDL MCP Server")
+app = PyMAPDLMCP(name="PyMAPDL MCP Server")
 
 
 def add_tool(func):
