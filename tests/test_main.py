@@ -30,6 +30,96 @@ def test_main_entry_point():
 
 
 @pytest.mark.unit
+def test_main_with_http_transport():
+    """Test that main entry point can be called with HTTP transport."""
+    import asyncio
+
+    from ansys.mapdl.mcp.server import app, main
+
+    with patch.object(asyncio, "run") as mock_run:
+        with patch.object(app, "run_http_async", new_callable=AsyncMock):
+            # Mock asyncio.run to avoid actually starting the server
+            main(["--transport", "http"])
+
+            # Verify that asyncio.run was called
+            mock_run.assert_called_once()
+
+
+@pytest.mark.unit
+def test_main_http_with_custom_host_port():
+    """Test HTTP transport with custom host and port."""
+    import asyncio
+
+    from ansys.mapdl.mcp.server import app, main
+
+    with patch.object(asyncio, "run") as mock_run:
+        with patch.object(app, "run_http_async", new_callable=AsyncMock):
+            main(["--transport", "http", "--http-host", "0.0.0.0", "--http-port", "9000"])
+
+            # Verify that asyncio.run was called
+            mock_run.assert_called_once()
+
+            # Verify the CLI config was set correctly
+            assert hasattr(app, "_cli_config")
+            assert app._cli_config["http_host"] == "0.0.0.0"
+            assert app._cli_config["http_port"] == 9000
+
+
+@pytest.mark.unit
+def test_main_with_cors_origins():
+    """Test HTTP transport with CORS origins."""
+    import asyncio
+
+    from ansys.mapdl.mcp.server import app, main
+
+    with patch.object(asyncio, "run") as mock_run:
+        with patch.object(app, "run_http_async", new_callable=AsyncMock):
+            main(
+                [
+                    "--transport",
+                    "http",
+                    "--cors-origins",
+                    "http://localhost:3000,https://example.com",
+                ]
+            )
+
+            # Verify CORS origins were parsed correctly
+            assert hasattr(app, "_cli_config")
+            assert app._cli_config["cors_origins"] == [
+                "http://localhost:3000",
+                "https://example.com",
+            ]
+
+
+@pytest.mark.unit
+def test_mapdl_args_work_with_http():
+    """Test that MAPDL connection arguments work with HTTP transport."""
+    import asyncio
+
+    from ansys.mapdl.mcp.server import app, main
+
+    with patch.object(asyncio, "run") as mock_run:
+        with patch.object(app, "run_http_async", new_callable=AsyncMock):
+            main(
+                [
+                    "--transport",
+                    "http",
+                    "--ip",
+                    "192.168.1.100",
+                    "--port",
+                    "50053",
+                    "--connect-on-startup",
+                ]
+            )
+
+            # Verify MAPDL args were set correctly
+            assert hasattr(app, "_cli_config")
+            assert app._cli_config["mapdl_ip"] == "192.168.1.100"
+            assert app._cli_config["mapdl_port"] == 50053
+            assert app._cli_config["connect_on_startup"] is True
+
+
+@pytest.mark.unit
 def test_module_main_guard():
     """Test that the module can be imported without running main."""
     # This test verifies that importing the module doesn't automatically
