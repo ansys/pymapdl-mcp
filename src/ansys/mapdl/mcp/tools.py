@@ -521,3 +521,225 @@ def screenshot(
         error_msg = f"Failed to capture screenshot: {str(e)}"
         logger.error(error_msg)
         return [TextContent(type="text", text=error_msg)]
+
+
+####################################################################################################
+# Tools that uses the PythonPersistentSession
+
+@app.tool()
+def connect_to_mapdl_in_persistent_python(
+    ctx: Context,
+) -> str:
+    """Connect to the MAPDL instance in the persistent Python session.
+
+    This tool connects to the MAPDL instance from within the persistent Python session.
+    It assumes that the persistent session has already been created.
+
+
+    Parameters
+    ----------
+    ctx : Context
+        The MCP context containing server session and application context.
+
+    Returns
+    -------
+    str
+        Connection status message.
+    """
+    session = ctx.request_context.lifespan_context.python_session
+
+    if session is None:
+        return "No Python session available. The persistent Python session was not initialized."
+
+    try:
+        # Check if already connected
+        if session.metadata.get("mapdl", None) is not None:
+            mapdl = session.metadata["mapdl"]
+            return (
+                f"Already connected to persistent PyMAPDL session with MAPDL at "
+                f"{mapdl._ip}:{mapdl._port}."
+            )
+
+        # First, check if MAPDL is available in lifespan context
+        mapdl_instance = ctx.request_context.lifespan_context.mapdl
+        if mapdl_instance is None:
+            return (
+                "No MAPDL instance available in lifespan context. "
+                "Please launch or connect to MAPDL first using launch_mapdl or connect_to_mapdl tool."
+            )
+
+        connection_code =f"""
+# Connect to the persistent MAPDL instance
+from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
+
+mapdl = Mapdl(
+    start_instance=False,
+    ip='{mapdl_instance._ip}',
+    port={mapdl_instance._port},
+    cleanup_on_exit=False,
+    loglevel="INFO",
+)
+        """
+        session.execute(connection_code)
+
+        # Store in persistent session
+        session.metadata["mapdl"] = mapdl_instance
+
+        logger.info(
+            f"Connected to persistent PyMAPDL session successfully at {mapdl_instance._ip}:{mapdl_instance._port}!"
+        )
+        return (
+            f"Successfully connected to persistent PyMAPDL session at {mapdl_instance._ip}:{mapdl_instance._port}\n"
+            f"MAPDL Version: {mapdl_instance.version}\n"
+        )
+
+    except Exception as e:
+        error_msg = f"Failed to connect to persistent PyMAPDL session: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
+@app.tool()
+def execute_python_code(
+    ctx: Context,
+    code: str,
+    timeout: int = 60,
+) -> str:
+    """Execute arbitrary Python code in the persistent Python session.
+
+    Parameters
+    ----------
+    ctx : Context
+        The MCP context containing server session and application context.
+    code : str
+        The Python code to execute.
+    timeout : int, optional
+        Maximum time in seconds to allow for code execution. Default is 60 seconds.
+
+    Returns
+    -------
+    str
+        Execution result or error message. Returns JSON for structured output
+        compatible with both stdio and http transports.
+    """
+    session = ctx.request_context.lifespan_context.python_session
+
+    if session is None:
+        return json.dumps({
+            "success": False,
+            "error": "No Python session available. The persistent Python session was not initialized."
+        }, ensure_ascii=False)
+
+    # Check if MAPDL is connected in the persistent session
+    mapdl_instance = session.metadata.get("mapdl", None)
+    if mapdl_instance is None:
+        return json.dumps({
+            "success": False,
+            "error": "MAPDL is not connected in the persistent Python session. Please use connect_to_mapdl_in_persistent_python tool first to establish the connection."
+        }, ensure_ascii=False)
+
+    try:
+        logger.info(f"Executing Python code in persistent session:\n{code}")
+
+        # Execute code in persistent session
+        # The 'mapdl' object is already stored in session.metadata and should be accessible
+        result = session.execute(code, timeout=timeout)
+
+        # Parse the result which should be a dict with 'success', 'stdout', 'stderr', 'error'
+        if isinstance(result, dict):
+            # Result is already a structured dict from PersistentPythonSession
+            # Sanitize stdout and stderr to handle encoding issues
+            stdout = _sanitize_output(result.get("stdout", ""))
+            stderr = _sanitize_output(result.get("stderr", ""))
+            
+            if result.get("success"):
+                return json.dumps({
+                    "success": True,
+                    "stdout": stdout,
+                    "stderr": stderr,
+                    "message": "Python code executed successfully"
+                }, ensure_ascii=False, indent=2)
+            else:
+                # Execution failed - provide detailed error information
+                error_msg = result.get("error", "Unknown error occurred")
+                error_msg = _sanitize_output(error_msg)
+                return json.dumps({
+                    "success": False,
+                    "stdout": stdout,
+                    "stderr": stderr,
+                    "error": error_msg
+                }, ensure_ascii=False, indent=2)
+        else:
+            # Fallback if result is not a dict
+            return json.dumps({
+                "success": True,
+                "stdout": _sanitize_output(str(result)) if result else "",
+                "stderr": "",
+                "message": "Python code executed successfully"
+            }, ensure_ascii=False, indent=2)
+
+    except TimeoutError:
+        error_dict = {
+            "success": False,
+            "error": f"Python code execution timed out after {timeout} seconds"
+        }
+        logger.error(error_dict["error"])
+        return json.dumps(error_dict, ensure_ascii=False)
+
+    except Exception as e:
+        error_dict = {
+            "success": False,
+            "error": f"Error executing Python code: {str(e)}"
+        }
+        logger.error(error_dict["error"])
+        return json.dumps(error_dict, ensure_ascii=False)
+
+
+def _sanitize_output(text: str) -> str:
+    """Sanitize output text to handle encoding issues.
+    
+    This function removes or replaces problematic Unicode characters that can cause
+    encoding issues on Windows systems with limited character sets (e.g., charmap).
+    
+    Parameters
+    ----------
+    text : str
+        The text to sanitize.
+    
+    Returns
+    -------
+    str
+        The sanitized text with problematic characters removed or replaced.
+    """
+    if not isinstance(text, str):
+        return text
+    
+    # Replace common problematic Unicode characters with ASCII alternatives
+    replacements = {
+        '\u2713': '[OK]',      # checkmark
+        '\u2717': '[X]',       # cross
+        '\u2514': '\\',        # box drawing
+        '\u2502': '|',         # box drawing
+        '\u2500': '-',         # box drawing
+        '\u2510': '\\',        # box drawing
+        '\u250c': '/',         # box drawing
+        '\u2518': '/',         # box drawing
+        '\u2588': '#',         # block
+        '\u2589': '#',         # block
+        '\u258a': '#',         # block
+        '\u258c': '|',         # block
+        '\u2590': '|',         # block
+    }
+    
+    for unicode_char, replacement in replacements.items():
+        text = text.replace(unicode_char, replacement)
+    
+    # Remove any remaining characters that can't be encoded in ascii
+    try:
+        # Try to encode as ASCII to check for problematic characters
+        text.encode('ascii')
+    except UnicodeEncodeError:
+        # If there are non-ASCII characters, replace them with a replacement character
+        text = text.encode('ascii', errors='replace').decode('ascii')
+    
+    return text
