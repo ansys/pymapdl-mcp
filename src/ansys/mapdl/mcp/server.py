@@ -89,8 +89,8 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
             command_history=[],
         )
 
-        # Populate context from CLI config on server if available
-        cli_cfg = getattr(self.server, "_cli_config", None)
+        # Populate context from CLI config if available
+        cli_cfg = getattr(self, "_cli_config", None)
 
         if cli_cfg is not None:
             context.transport_type = cli_cfg.get("transport_type", context.transport_type)
