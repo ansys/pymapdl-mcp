@@ -11,6 +11,9 @@ from fastmcp.server import Context
 from fastmcp.server.server import get_logger
 from mcp.types import ImageContent, TextContent
 
+# Import MAPDL at module level to avoid import during tool execution
+# The import happens during server startup, before STDIO transport is active
+from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 from ansys.mapdl.mcp import app
 
 logger = get_logger(__name__)
@@ -260,8 +263,6 @@ def launch_mapdl(
     str
         Launch status message with MAPDL version and connection information.
     """
-    from ansys.mapdl.core import launch_mapdl  # pyright: ignore[reportMissingTypeStubs]
-
     logger.info("Launching new MAPDL instance...")
 
     try:
@@ -290,7 +291,8 @@ def launch_mapdl(
         if additional_switches:
             kwargs["additional_switches"] = additional_switches
 
-        mapdl = launch_mapdl(**kwargs)
+        # Launch MAPDL - import already done at module level
+        mapdl = pymapdl.launch_mapdl(**kwargs)
 
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
@@ -330,8 +332,6 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
     str
         Connection status message with MAPDL version information.
     """
-    from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
-
     logger.info(f"Connecting to MAPDL instance at {ip}:{port}...")
 
     try:
@@ -345,7 +345,7 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
             )
 
         # Connect to existing MAPDL instance
-        mapdl = Mapdl(
+        mapdl = pymapdl.Mapdl(
             start_instance=False,
             ip=ip,
             port=port,
