@@ -716,19 +716,42 @@ def _sanitize_output(text: str) -> str:
     
     # Replace common problematic Unicode characters with ASCII alternatives
     replacements = {
+        # Checkmarks and crosses
         '\u2713': '[OK]',      # checkmark
         '\u2717': '[X]',       # cross
+        # Box drawing characters
         '\u2514': '\\',        # box drawing
         '\u2502': '|',         # box drawing
         '\u2500': '-',         # box drawing
         '\u2510': '\\',        # box drawing
         '\u250c': '/',         # box drawing
         '\u2518': '/',         # box drawing
+        # Block elements
         '\u2588': '#',         # block
         '\u2589': '#',         # block
         '\u258a': '#',         # block
         '\u258c': '|',         # block
         '\u2590': '|',         # block
+        # Superscript and subscript characters
+        '\u00b9': '^1',        # superscript 1
+        '\u00b2': '^2',        # superscript 2
+        '\u00b3': '^3',        # superscript 3
+        '\u2074': '^4',        # superscript 4
+        '\u2075': '^5',        # superscript 5
+        '\u2076': '^6',        # superscript 6
+        '\u2077': '^7',        # superscript 7
+        '\u2078': '^8',        # superscript 8
+        '\u2079': '^9',        # superscript 9
+        '\u2070': '^0',        # superscript 0
+        # Other commonly problematic characters
+        '\u2022': '*',         # bullet
+        '\u2023': '*',         # triangular bullet
+        '\u2219': '*',         # bullet operator
+        '\u00a0': ' ',         # non-breaking space
+        '\u200b': '',          # zero-width space
+        '\u200c': '',          # zero-width non-joiner
+        '\u200d': '',          # zero-width joiner
+        '\ufeff': '',          # zero-width no-break space
     }
     
     for unicode_char, replacement in replacements.items():
