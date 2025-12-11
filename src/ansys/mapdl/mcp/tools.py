@@ -10,12 +10,12 @@ from typing import Any
 from fastmcp.server import Context
 from fastmcp.server.server import get_logger
 from mcp.types import ImageContent, TextContent
-from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
 
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 from ansys.mapdl.mcp import app
+from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
 
 logger = get_logger(__name__)
 
@@ -535,6 +535,7 @@ def screenshot(
 ####################################################################################################
 # Tools that uses the PythonPersistentSession
 
+
 @app.tool()
 def execute_python_code(
     ctx: Context,
@@ -574,7 +575,7 @@ def execute_python_code(
         return json.dumps(
             {
                 "success": False,
-                "error": "No Python session available. The persistent Python session was not initialized.",
+                "error": "No Python session available. The persistent Python session was not initialized.",  # noqa: E501
             },
             ensure_ascii=False,
         )
@@ -588,7 +589,7 @@ def execute_python_code(
         return json.dumps(
             {
                 "success": False,
-                "error": "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again.",
+                "error": "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again.",  # noqa: E501
             },
             ensure_ascii=False,
         )
@@ -735,7 +736,7 @@ def create_custom_plot(
         return json.dumps(
             {
                 "success": False,
-                "error": "No Python session available. The persistent Python session was not initialized.",
+                "error": "No Python session available. The persistent Python session was not initialized.",  # noqa: E501
             },
             ensure_ascii=False,
         )
@@ -747,7 +748,7 @@ def create_custom_plot(
         return json.dumps(
             {
                 "success": False,
-                "error": "MAPDL is not connected in the persistent Python session. Please use connect_to_mapdl_in_persistent_python tool first.",
+                "error": "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again.",  # noqa: E501
             },
             ensure_ascii=False,
         )
