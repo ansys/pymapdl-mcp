@@ -1,5 +1,6 @@
 import logging
 from typing import TYPE_CHECKING, Any
+
 from fastmcp.server import Context
 
 if TYPE_CHECKING:
@@ -239,9 +240,10 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
 
     return info
 
+
 def connect_to_mapdl_in_persistent_python(
     ctx: Context,
-) -> str:
+) -> Any:
     """Connect to the MAPDL instance in the persistent Python session.
 
     This tool connects to the MAPDL instance from within the persistent Python session.
@@ -277,7 +279,8 @@ def connect_to_mapdl_in_persistent_python(
         if mapdl_instance is None:
             return (
                 "No MAPDL instance available in lifespan context. "
-                "Please launch or connect to MAPDL first using launch_mapdl or connect_to_mapdl tool."
+                "Please launch or connect to MAPDL first using launch_mapdl"
+                "or connect_to_mapdl tool."
             )
 
         connection_code = f"""
@@ -298,7 +301,8 @@ mapdl = Mapdl(
         session.metadata["mapdl"] = mapdl_instance
 
         logger.info(
-            f"Connected to persistent PyMAPDL session successfully at {mapdl_instance._ip}:{mapdl_instance._port}!"
+            "Connected to persistent PyMAPDL session successfully at"
+            f" {mapdl_instance._ip}:{mapdl_instance._port}!"
         )
 
     except Exception as e:
@@ -306,4 +310,3 @@ mapdl = Mapdl(
         logger.error(error_msg)
 
     return session.metadata.get("mapdl", None)
-    
