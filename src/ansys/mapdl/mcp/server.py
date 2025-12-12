@@ -146,21 +146,37 @@ def save_plot(plotter, filename='plot.png', return_base64=False):
     str
         File path or base64 data URI
     '''
-    if return_base64:
-        img_array = plotter.screenshot(return_img=True, transparent_background=False)
+    try:
+        if return_base64:
+            # Capture screenshot
+            img_array = plotter.screenshot(return_img=True, transparent_background=False)
+            
+            # Convert to PIL Image
+            img = Image.fromarray(img_array)
+            
+            # Save to buffer
+            buffer = BytesIO()
+            img.save(buffer, format='PNG')
+            
+            # Seek to beginning before reading
+            buffer.seek(0)
+            
+            # Encode to base64
+            img_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+            
+            # Create data URI
+            result = f"data:image/png;base64,{img_base64}"
+            
+            # Clean up and return
+            plotter.close()
+            return result
+        else:
+            plotter.screenshot(filename, transparent_background=False)
+            plotter.close()
+            return f"Plot saved to {filename}"
+    except Exception as e:
         plotter.close()
-
-        img = Image.fromarray(img_array)
-        buffer = BytesIO()
-        img.save(buffer, format='PNG')
-        buffer.seek(0)
-
-        img_base64 = base64.b64encode(buffer.read()).decode('utf-8')
-        return f"data:image/png;base64,{img_base64}"
-    else:
-        plotter.screenshot(filename, transparent_background=False)
-        plotter.close()
-        return f"Plot saved to {filename}"
+        return f"Error in save_plot: {str(e)}"
 
 def save_matplotlib_plot(filename='plot.png', return_base64=False, dpi=150):
     '''
@@ -184,19 +200,22 @@ def save_matplotlib_plot(filename='plot.png', return_base64=False, dpi=150):
     if return_base64:
         buffer = BytesIO()
         plt.savefig(buffer, format='png', dpi=dpi, bbox_inches='tight')
-        plt.close()
         buffer.seek(0)
-
+        
         img_base64 = base64.b64encode(buffer.read()).decode('utf-8')
-        return f"data:image/png;base64,{img_base64}"
+        result = f"data:image/png;base64,{img_base64}"
+        plt.close()
+        return result
     else:
         plt.savefig(filename, dpi=dpi, bbox_inches='tight')
         plt.close()
         return f"Plot saved to {filename}"
 
-# Print confirmation
+# Print confirmation and verify functions are defined
 print("Matplotlib configured with non-interactive backend (Agg)")
 print("PyVista configured for off-screen rendering")
+print(f"save_plot function defined: {callable(save_plot)}")
+print(f"save_matplotlib_plot function defined: {callable(save_matplotlib_plot)}")
 """
         python_session = PersistentPythonSession(
             python_executable=self.python_executable,
