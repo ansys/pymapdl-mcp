@@ -759,6 +759,9 @@ def create_custom_plot(
     mapdl_instance = session.metadata.get("mapdl", None)
     if mapdl_instance is None:
         connect_to_mapdl_in_persistent_python(ctx)
+        mapdl_instance = session.metadata.get("mapdl", None)
+    
+    if mapdl_instance is None:
         return [
             TextContent(
                 type="text",
