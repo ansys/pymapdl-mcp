@@ -555,7 +555,7 @@ When the solution is complete, enter postprocessing mode:
 
 ### Plotting Session Strategy
 
-**IMPORTANT: By default, prioritize MAPDL native plotting (normal session) for all MAPDL plot methods as they provide interactive plots that are directly accessible.**
+**IMPORTANT: By default, use MAPDL commands (`run_mapdl_command` tool) for all plots**
 
 #### When to Use Normal MAPDL Session (Default - Preferred)
 
