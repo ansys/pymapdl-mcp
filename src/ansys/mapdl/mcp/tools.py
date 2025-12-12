@@ -537,7 +537,7 @@ def screenshot(
 
 
 @app.tool()
-def execute_python_code(
+def run_python_code (
     ctx: Context,
     code: str,
     timeout: int = 60,
