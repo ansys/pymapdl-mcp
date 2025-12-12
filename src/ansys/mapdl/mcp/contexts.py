@@ -605,9 +605,10 @@ Use the persistent Python session with `run_python_code ` or `create_custom_plot
 
 ### Using Post Processing Methods (Preferred)
 
+If using the persistent Python session for postprocessing, follow these guidelines:
 - **DO NOT** use `mapdl.result` methods unless specifically requested by the user
-- **USE** `mapdl.post_processing` methods in the normal MAPDL session
-- These methods work with MAPDL's native plotter by default, providing interactive plots
+- **USE** `mapdl.post_processing` methods
+- These methods work with the `screenshot`` tool to capture plots
 
 ### Plot Types Available in MAPDL
 
