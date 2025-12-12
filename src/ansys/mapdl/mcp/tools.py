@@ -665,7 +665,7 @@ def create_custom_plot(
     plot_type: str = "matplotlib",
     return_base64: bool = True,
     timeout: int = 60,
-) -> str:
+) -> list[TextContent | ImageContent]:
     """Create a custom plot using matplotlib or PyVista in the persistent Python session.
 
     This tool is specifically designed for creating custom plots that are NOT available
@@ -700,11 +700,10 @@ def create_custom_plot(
 
     Returns
     -------
-    str
-        JSON string containing:
-        - success: bool indicating if plot was created
-        - plot_data: base64 string (if return_base64=True) or file path
-        - stdout/stderr: any output from the code execution
+    list[TextContent | ImageContent]
+        A list containing:
+        - TextContent with the plot creation status message
+        - ImageContent with the base64-encoded image data (if successful and return_base64=True)
 
     Examples
     --------
@@ -733,25 +732,23 @@ def create_custom_plot(
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:
-        return json.dumps(
-            {
-                "success": False,
-                "error": "No Python session available. The persistent Python session was not initialized.",  # noqa: E501
-            },
-            ensure_ascii=False,
-        )
+        return [
+            TextContent(
+                type="text",
+                text="No Python session available. The persistent Python session was not initialized.",
+            )
+        ]
 
     # Check if MAPDL is connected in the persistent session
     mapdl_instance = session.metadata.get("mapdl", None)
     if mapdl_instance is None:
         connect_to_mapdl_in_persistent_python(ctx)
-        return json.dumps(
-            {
-                "success": False,
-                "error": "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again.",  # noqa: E501
-            },
-            ensure_ascii=False,
-        )
+        return [
+            TextContent(
+                type="text",
+                text="An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again.",
+            )
+        ]
 
     try:
         logger.info(f"Creating custom {plot_type} plot in persistent session")
@@ -770,57 +767,64 @@ def create_custom_plot(
 
             if result.get("success"):
                 # Try to extract plot data from stdout
-                # The helper functions should print the result (file path or base64 data)
+                # The helper functions return data URI format: "data:image/png;base64,<base64_string>"
                 plot_data = stdout.strip()
 
-                return json.dumps(
-                    {
-                        "success": True,
-                        "plot_type": plot_type,
-                        "plot_data": plot_data,
-                        "stdout": stdout,
-                        "stderr": stderr,
-                        "message": f"Custom {plot_type} plot created successfully",
-                    },
-                    ensure_ascii=False,
-                    indent=2,
-                )
+                # Check if the output contains a base64 data URI
+                if "data:image/png;base64," in plot_data:
+                    # Extract the base64 part
+                    base64_data = plot_data.split("data:image/png;base64,")[1].strip()
+
+                    return [
+                        TextContent(
+                            type="text",
+                            text=f"Custom {plot_type} plot created successfully",
+                        ),
+                        ImageContent(type="image", data=base64_data, mimeType="image/png"),
+                    ]
+                elif plot_data.startswith("Plot saved to"):
+                    # File path returned
+                    return [
+                        TextContent(
+                            type="text",
+                            text=f"Custom {plot_type} plot created successfully\n{plot_data}",
+                        )
+                    ]
+                else:
+                    # Unexpected output format
+                    return [
+                        TextContent(
+                            type="text",
+                            text=f"Plot created but unexpected output format:\n{stdout}",
+                        )
+                    ]
             else:
                 error_msg = result.get("error", "Unknown error occurred")
                 error_msg = _sanitize_output(error_msg)
-                return json.dumps(
-                    {
-                        "success": False,
-                        "plot_type": plot_type,
-                        "stdout": stdout,
-                        "stderr": stderr,
-                        "error": error_msg,
-                    },
-                    ensure_ascii=False,
-                    indent=2,
-                )
+                return [
+                    TextContent(
+                        type="text",
+                        text=f"Error creating custom {plot_type} plot: {error_msg}\nStdout: {stdout}\nStderr: {stderr}",
+                    )
+                ]
         else:
             # Fallback if result is not a dict
-            return json.dumps(
-                {
-                    "success": True,
-                    "plot_type": plot_type,
-                    "plot_data": _sanitize_output(str(result)) if result else "",
-                    "message": f"Custom {plot_type} plot created successfully",
-                },
-                ensure_ascii=False,
-                indent=2,
-            )
+            return [
+                TextContent(
+                    type="text",
+                    text=f"Unexpected result format: {_sanitize_output(str(result)) if result else 'No result'}",
+                )
+            ]
 
     except TimeoutError:
-        error_dict = {"success": False, "error": f"Plot creation timed out after {timeout} seconds"}
-        logger.error(error_dict["error"])
-        return json.dumps(error_dict, ensure_ascii=False)
+        error_msg = f"Plot creation timed out after {timeout} seconds"
+        logger.error(error_msg)
+        return [TextContent(type="text", text=error_msg)]
 
     except Exception as e:
-        error_dict = {"success": False, "error": f"Error creating custom plot: {str(e)}"}
-        logger.error(error_dict["error"])
-        return json.dumps(error_dict, ensure_ascii=False)
+        error_msg = f"Error creating custom plot: {str(e)}"
+        logger.error(error_msg)
+        return [TextContent(type="text", text=error_msg)]
 
 
 def _sanitize_output(text: str) -> str:
