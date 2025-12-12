@@ -542,7 +542,7 @@ def run_python_code (
     code: str,
     timeout: int = 60,
 ) -> str:
-    """Execute arbitrary Python code in the persistent Python session.
+    """Execute arbitrary Python and PyMAPDL code in the persistent Python session.
 
     This tool should be used for custom Python code execution, particularly for:
     - Custom data processing and analysis
