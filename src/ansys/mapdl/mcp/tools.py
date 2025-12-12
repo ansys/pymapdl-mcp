@@ -448,10 +448,9 @@ def screenshot(
     they provide interactive plots that are directly accessible.
 
     MAPDL Native Plot Commands (use with screenshot):
-    - Geometry: aplot(), lplot(), kplot(), vplot()
-    - Mesh: eplot(), nplot()
-    - Post-processing: plnsol(), plesol(), pldisp()
-    - Post-processing object: mapdl.post_processing.plot_nodal_solution(), etc.
+    - Geometry: APLOT, LPLOT, KPLOT, VPLOT
+    - Mesh: EPLOT, NPLOT
+    - Post-processing: PLNSOL, PLESOL, PLDISP
 
     For custom matplotlib or PyVista plots, use the create_custom_plot tool instead.
 
@@ -568,6 +567,23 @@ def run_python_code (
     str
         Execution result or error message. Returns JSON for structured output
         compatible with both stdio and http transports.
+    
+    
+    Examples
+    --------
+    Execute simple Python code to compute a value:
+    >>> code = '''
+    ... result = sum([i**2 for i in range(10)])
+    ... print(f"Sum of squares: {result}")
+    ... '''
+    >>> run_python_code(ctx, code)
+
+    Execute PyMAPDL code:
+    >>> code = '''
+    ... displacements = mapdl.get_array("NODE", item1="U", it1num="Y")
+    ... print(f"Displacements: {displacements}")
+    ... '''
+    >>> run_python_code(ctx, code)
     """
     session = ctx.request_context.lifespan_context.python_session
 
