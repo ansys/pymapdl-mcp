@@ -605,7 +605,7 @@ def run_python_code(
         if isinstance(mapdl_instance, str):
             error_msg = mapdl_instance
         else:
-            error_msg = "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again."
+            error_msg = "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again."  # noqa: E501
         return json.dumps(
             {
                 "success": False,
@@ -684,7 +684,7 @@ def create_custom_plot(
     plot_code: str,
     plot_type: str = "matplotlib",
     timeout: int = 60,
-) -> list[TextContent | ImageContent]:
+) -> list[TextContent | ImageContent] | str:
     """Create a custom plot using matplotlib or PyVista in the persistent Python session.
 
     This tool is specifically designed for creating custom plots that are NOT available
@@ -717,10 +717,11 @@ def create_custom_plot(
 
     Returns
     -------
-    list[TextContent | ImageContent]
+    list[TextContent | ImageContent] or str
         A list containing:
         - TextContent with the plot creation status message
         - ImageContent with the base64-encoded image data if successfull
+        or a JSON string with error details if failed.
 
     Examples
     --------
@@ -765,7 +766,7 @@ def create_custom_plot(
         if isinstance(mapdl_instance, str):
             error_msg = mapdl_instance
         else:
-            error_msg = "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again."
+            error_msg = "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again."  # noqa: E501
         return json.dumps(
             {
                 "success": False,

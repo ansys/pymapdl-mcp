@@ -1,10 +1,17 @@
 import base64
-from io import BytesIO
+import sys
+from io import BytesIO, TextIOWrapper
 
 import matplotlib
 import matplotlib.pyplot as plt
 import pyvista as pv
 from PIL import Image
+
+# Set UTF-8 encoding for stdout and stderr to handle Unicode characters
+if sys.stdout.encoding != "utf-8":
+    sys.stdout = TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+if sys.stderr.encoding != "utf-8":
+    sys.stderr = TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 # Use non-interactive backend to prevent blocking on plot displays
 matplotlib.use("Agg")
