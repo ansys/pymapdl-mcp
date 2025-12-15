@@ -15,37 +15,6 @@ from ansys.common.mcp.helpers import PersistentPythonSession
 logger = get_logger(__name__)
 
 
-def _initialize_python_session_encoding(session: PersistentPythonSession) -> None:
-    """Initialize the Python session with UTF-8 encoding to prevent charmap issues.
-
-    This ensures that Unicode characters are properly handled in the persistent
-    Python session, especially on Windows systems where charmap encoding might
-    be the default.
-
-    Parameters
-    ----------
-    session : PersistentPythonSession
-        The persistent Python session to initialize.
-    """
-    # Set UTF-8 encoding for stdout/stderr
-    encoding_setup = """
-import sys
-import io
-
-# Set UTF-8 encoding for stdout and stderr to handle Unicode characters
-if sys.stdout.encoding != 'utf-8':
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-if sys.stderr.encoding != 'utf-8':
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
-"""
-
-    try:
-        session.execute(encoding_setup, timeout=5)
-        logger.info("Python session encoding initialized to UTF-8")
-    except Exception as e:
-        logger.warning(f"Could not initialize UTF-8 encoding in Python session: {e}")
-
-
 @dataclass
 class PyMAPDLAppContext(PyAnsysBaseAppContext):
     """Application context with typed dependencies and CLI options.
@@ -117,9 +86,6 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
             working_directory=self.working_directory,
             startup_code=startup_code,
         )
-
-        # Initialize Python session with UTF-8 encoding to prevent charmap issues on Windows
-        _initialize_python_session_encoding(python_session)
 
         context = PyMAPDLAppContext(
             python_session=python_session,
