@@ -598,14 +598,18 @@ def run_python_code(
 
     # Check if MAPDL is connected in the persistent session
     mapdl_instance = session.metadata.get("mapdl", None)
-    if mapdl_instance is None:
+    if mapdl_instance is None or isinstance(mapdl_instance, str):
         mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
 
-    if mapdl_instance is None:
+    if mapdl_instance is None or isinstance(mapdl_instance, str):
+        if isinstance(mapdl_instance, str):
+            error_msg = mapdl_instance
+        else:
+            error_msg = "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again."
         return json.dumps(
             {
                 "success": False,
-                "error": "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again.",  # noqa: E501
+                "error": error_msg,  # noqa: E501
             },
             ensure_ascii=False,
         )
@@ -754,17 +758,21 @@ def create_custom_plot(
 
     # Check if MAPDL is connected in the persistent session
     mapdl_instance = session.metadata.get("mapdl", None)
-    if mapdl_instance is None:
-        connect_to_mapdl_in_persistent_python(ctx)
-        mapdl_instance = session.metadata.get("mapdl", None)
+    if mapdl_instance is None or isinstance(mapdl_instance, str):
+        mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
 
-    if mapdl_instance is None:
-        return [
-            TextContent(
-                type="text",
-                text="An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again.",  # noqa: E501
-            )
-        ]
+    if mapdl_instance is None or isinstance(mapdl_instance, str):
+        if isinstance(mapdl_instance, str):
+            error_msg = mapdl_instance
+        else:
+            error_msg = "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again."
+        return json.dumps(
+            {
+                "success": False,
+                "error": error_msg,  # noqa: E501
+            },
+            ensure_ascii=False,
+        )
 
     try:
         logger.info(f"Creating custom {plot_type} plot in persistent session")
