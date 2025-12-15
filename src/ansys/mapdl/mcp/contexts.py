@@ -590,7 +590,10 @@ Use the persistent Python session with `run_python_code ` or `create_custom_plot
    plt.plot(displacements)
    plt.xlabel("Node Number")
    plt.ylabel("Displacement (m)")
-   ```
+
+   # Save using the helper function from persistent session
+   result = save_matplotlib_plot()
+   print(result)
 
 3. **Custom PyVista Visualizations** - When you need advanced 3D visualization beyond MAPDL's capabilities
 
