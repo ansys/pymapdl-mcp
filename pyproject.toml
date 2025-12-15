@@ -42,7 +42,7 @@ classifiers = [
 dependencies = [
     "ansys-mapdl-core>=0.68.0",
     "fastmcp>=0.1.0",
-    "ansys-common-mcp @ git+https://github.com/ansys-internal/pyansys-common-mcp.git@feat/add_metadata",
+    "ansys-common-mcp @ git+https://github.com/ansys/pyansys-common-mcp.git@feat/add_metadata",
 ]
 
 [project.optional-dependencies]
