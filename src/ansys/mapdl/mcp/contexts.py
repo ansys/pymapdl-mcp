@@ -573,7 +573,7 @@ Use the normal MAPDL session for:
 Use the persistent Python session with `run_python_code ` or `create_custom_plot` tool ONLY for:
 
 1. **Advanced post-processing tasks** that require Python libraries such as NumPy, Matplotlib,
-   or PyVista. Examples include:  
+   or PyVista. Examples include:
    Post-processing object methods:
      - `mapdl.post_processing.plot_nodal_solution()`
      - `mapdl.post_processing.plot_element_solution()`
@@ -599,7 +599,7 @@ Use the persistent Python session with `run_python_code ` or `create_custom_plot
 5. **Capturing plots**
    Use the ``create_custom_plot`` tool to create custom plots and capture them.
    Helpers available:
-   - `save_matplotlib_plot(return_base64=True)` helper function: capture and return plots as base64 strings
+   - `save_matplotlib_plot` helper function: capture and return plots as base64 strings
    - `save_plot` helper function: capture and return other plot types
 
 
@@ -663,7 +663,7 @@ When you need custom plots not available in MAPDL, use the `run_python_code ` or
    plt.title("Nodal Displacement Distribution")
 
    # Save using the helper function from persistent session
-   result = save_matplotlib_plot(return_base64=True)
+   result = save_matplotlib_plot()
    print(result)
    ```
 
