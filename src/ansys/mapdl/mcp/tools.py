@@ -536,7 +536,7 @@ def screenshot(
 
 
 @app.tool()
-def run_python_code (
+def run_python_code(
     ctx: Context,
     code: str,
     timeout: int = 60,
@@ -567,8 +567,8 @@ def run_python_code (
     str
         Execution result or error message. Returns JSON for structured output
         compatible with both stdio and http transports.
-    
-    
+
+
     Examples
     --------
     Execute simple Python code to compute a value:
@@ -679,7 +679,6 @@ def create_custom_plot(
     ctx: Context,
     plot_code: str,
     plot_type: str = "matplotlib",
-    return_base64: bool = True,
     timeout: int = 60,
 ) -> list[TextContent | ImageContent]:
     """Create a custom plot using matplotlib or PyVista in the persistent Python session.
@@ -696,8 +695,8 @@ def create_custom_plot(
 
     The persistent Python session has pre-configured matplotlib (Agg backend) and
     PyVista (off-screen rendering) with helper functions:
-    - save_matplotlib_plot(filename, return_base64, dpi)
-    - save_plot(plotter, filename, return_base64)
+    - save_matplotlib_plot(filename, dpi)
+    - save_plot(plotter, filename)
 
     Parameters
     ----------
@@ -709,8 +708,6 @@ def create_custom_plot(
         Use the save_matplotlib_plot() or save_plot() helper functions to return the plot.
     plot_type : str, optional
         Type of plot: "matplotlib" or "pyvista". Default is "matplotlib".
-    return_base64 : bool, optional
-        If True, returns base64-encoded image data. If False, saves to file. Default is True.
     timeout : int, optional
         Maximum time in seconds for plot generation. Default is 60 seconds.
 
@@ -719,7 +716,7 @@ def create_custom_plot(
     list[TextContent | ImageContent]
         A list containing:
         - TextContent with the plot creation status message
-        - ImageContent with the base64-encoded image data (if successful and return_base64=True)
+        - ImageContent with the base64-encoded image data if successfull
 
     Examples
     --------
@@ -740,7 +737,7 @@ def create_custom_plot(
     ... plt.grid(True)
     ...
     ... # Save and return
-    ... result = save_matplotlib_plot(return_base64=True, dpi=150)
+    ... result = save_matplotlib_plot(dpi=150)
     ... print(result)
     ... '''
     >>> create_custom_plot(ctx, plot_code, plot_type="matplotlib")
@@ -751,7 +748,7 @@ def create_custom_plot(
         return [
             TextContent(
                 type="text",
-                text="No Python session available. The persistent Python session was not initialized.",
+                text="No Python session available. The persistent Python session was not initialized.",  # noqa: E501
             )
         ]
 
@@ -760,12 +757,12 @@ def create_custom_plot(
     if mapdl_instance is None:
         connect_to_mapdl_in_persistent_python(ctx)
         mapdl_instance = session.metadata.get("mapdl", None)
-    
+
     if mapdl_instance is None:
         return [
             TextContent(
                 type="text",
-                text="An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again.",
+                text="An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again.",  # noqa: E501
             )
         ]
 
@@ -786,7 +783,8 @@ def create_custom_plot(
 
             if result.get("success"):
                 # Try to extract plot data from stdout
-                # The helper functions return data URI format: "data:image/png;base64,<base64_string>"
+                # The helper functions return data URI format:
+                # "data:image/png;base64,<base64_string>"
                 plot_data = stdout.strip()
 
                 # Check if the output contains a base64 data URI
@@ -823,7 +821,7 @@ def create_custom_plot(
                 return [
                     TextContent(
                         type="text",
-                        text=f"Error creating custom {plot_type} plot: {error_msg}\nStdout: {stdout}\nStderr: {stderr}",
+                        text=f"Error creating custom {plot_type} plot: {error_msg}\nStdout: {stdout}\nStderr: {stderr}",  # noqa: E501
                     )
                 ]
         else:
@@ -831,7 +829,7 @@ def create_custom_plot(
             return [
                 TextContent(
                     type="text",
-                    text=f"Unexpected result format: {_sanitize_output(str(result)) if result else 'No result'}",
+                    text=f"Unexpected result format: {_sanitize_output(str(result)) if result else 'No result'}",  # noqa: E501
                 )
             ]
 
