@@ -453,6 +453,8 @@ class TestLaunchMapdlIntegration:
                 pass  # Ignore cleanup errors
 
 
+@pytest.mark.integration
+@pytest.mark.slow
 class TestPythonPersistentSessionIntegration:
     """Integration tests for connecting to MAPDL in persistent Python session."""
 
