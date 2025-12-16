@@ -292,7 +292,6 @@ mapdl = Mapdl(
     ip='{mapdl_instance.ip}',
     port={mapdl_instance.port},
     cleanup_on_exit=False,
-    loglevel="INFO",
 )
         """
         session.execute(connection_code)
