@@ -546,7 +546,8 @@ class TestPythonPersistentSessionIntegration:
         assert "No MAPDL instance available in lifespan context" in result
 
     def test_connect_to_mapdl_in_persistent_python_execute_failure(
-        self, persistent_real_context,
+        self,
+        persistent_real_context,
     ):
         """Test handling when executing code in persistent Python session fails."""
         from unittest.mock import MagicMock
