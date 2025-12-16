@@ -65,9 +65,9 @@ jobs:
     uses: ./.github/workflows/test.yml
     secrets: inherit
     with:
-      on_ci: ON_CI
-      main_python_version: MAIN_PYTHON_VERSION
-      package_name: PACKAGE_NAME
+      on_ci: ${{ env.ON_CI }}
+      main_python_version: ${{ env.MAIN_PYTHON_VERSION }}
+      package_name: ${{ env.PACKAGE_NAME }}
 
 
   package:

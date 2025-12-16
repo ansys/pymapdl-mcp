@@ -5,18 +5,17 @@ on:
     inputs:
       on_ci:
         description: 'Flag to indicate running on CI'
-        required: false
+        required: true
         type: boolean
-        default: true
 
       main_python_version:
         description: 'Main Python version to use'
-        required: false
+        required: true
         type: string
 
       package_name:
         description: 'Package name for artifacts'
-        required: false
+        required: true
         type: string
 
 env:
