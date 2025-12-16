@@ -15,6 +15,7 @@ from mcp.types import ImageContent, TextContent
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 from ansys.mapdl.mcp import app
+from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
 
 logger = get_logger(__name__)
 
@@ -442,9 +443,15 @@ def screenshot(
 ) -> list[TextContent | ImageContent]:
     """Capture a screenshot of the current MAPDL graphics window.
 
-    This tool captures the current state of the MAPDL graphics window and returns
-    both the file path and the image data encoded in base64 format for display
-    in the MCP client.
+    This tool captures the current state of the MAPDL graphics window after using
+    MAPDL native plotting commands. Use this tool for all standard MAPDL plots.
+
+    MAPDL Native Plot Commands (use with screenshot):
+    - Geometry: APLOT, LPLOT, KPLOT, VPLOT
+    - Mesh: EPLOT, NPLOT
+    - Post-processing: PLNSOL, PLESOL, PLDISP
+
+    For custom matplotlib or PyVista plots, use the create_custom_plot tool instead.
 
     Parameters
     ----------
@@ -521,3 +528,395 @@ def screenshot(
         error_msg = f"Failed to capture screenshot: {str(e)}"
         logger.error(error_msg)
         return [TextContent(type="text", text=error_msg)]
+
+
+####################################################################################################
+# Tools that uses the PythonPersistentSession
+
+
+@app.tool()
+def run_python_code(
+    ctx: Context,
+    code: str,
+    timeout: int = 60,
+) -> str:
+    """Execute arbitrary Python and PyMAPDL code in the persistent Python session.
+
+    This tool should be used for custom Python code execution, particularly for:
+    - Custom data processing and analysis
+    - Creating custom matplotlib plots not available in MAPDL
+    - Advanced PyVista visualizations beyond MAPDL's native capabilities
+    - NumPy/Pandas data manipulation and custom visualization
+
+    NOTE: For MAPDL native plotting (aplot, lplot, kplot, post_processing plots, etc.),
+    use the normal MAPDL session commands with the screenshot tool instead, as they
+    provide interactive plots that are directly accessible.
+
+    Parameters
+    ----------
+    ctx : Context
+        The MCP context containing server session and application context.
+    code : str
+        The Python code to execute.
+    timeout : int, optional
+        Maximum time in seconds to allow for code execution. Default is 60 seconds.
+
+    Returns
+    -------
+    str
+        Execution result or error message. Returns JSON for structured output
+        compatible with both stdio and http transports.
+
+    Examples
+    --------
+    Execute simple Python code to compute a value:
+    >>> code = '''
+    ... result = sum([i**2 for i in range(10)])
+    ... print(f"Sum of squares: {result}")
+    ... '''
+    >>> run_python_code(ctx, code)
+
+    Execute PyMAPDL code:
+    >>> code = '''
+    ... displacements = mapdl.get_array("NODE", item1="U", it1num="Y")
+    ... print(f"Displacements: {displacements}")
+    ... '''
+    >>> run_python_code(ctx, code)
+    """
+    session = ctx.request_context.lifespan_context.python_session
+
+    if session is None:
+        return json.dumps(
+            {
+                "success": False,
+                "error": "No Python session available. The persistent Python session was not initialized.",  # noqa: E501
+            },
+            ensure_ascii=False,
+        )
+
+    # Check if MAPDL is connected in the persistent session
+    mapdl_instance = session.metadata.get("mapdl", None)
+    if mapdl_instance is None or isinstance(mapdl_instance, str):
+        mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
+
+    if mapdl_instance is None or isinstance(mapdl_instance, str):
+        try:
+            mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
+        except Exception as e:
+            error_msg = f"Failed to connect to MAPDL in persistent Python session: {str(e)}"
+            logger.error(error_msg)
+            return json.dumps(
+                {"success": False, "error": error_msg},
+                ensure_ascii=False,
+                indent=2,
+            )
+    try:
+        # Sanitize the input code to remove problematic Unicode characters
+        # This prevents encoding issues on Windows systems with limited charsets
+        sanitized_code = _sanitize_output(code)
+
+        logger.info(f"Executing Python code in persistent session:\n{sanitized_code}")
+
+        # Execute code in persistent session
+        # The 'mapdl' object is already stored in session.metadata and should be accessible
+        result = session.execute(sanitized_code, timeout=timeout)
+
+        # Parse the result which should be a dict with 'success', 'stdout', 'stderr', 'error'
+        if isinstance(result, dict):
+            # Result is already a structured dict from PersistentPythonSession
+            # Sanitize stdout and stderr to handle encoding issues
+            stdout = _sanitize_output(result.get("stdout", ""))
+            stderr = _sanitize_output(result.get("stderr", ""))
+
+            if result.get("success"):
+                return json.dumps(
+                    {
+                        "success": True,
+                        "stdout": stdout,
+                        "stderr": stderr,
+                        "message": "Python code executed successfully",
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            else:
+                # Execution failed - provide detailed error information
+                error_msg = result.get("error", "Unknown error occurred")
+                error_msg = _sanitize_output(error_msg)
+                return json.dumps(
+                    {"success": False, "stdout": stdout, "stderr": stderr, "error": error_msg},
+                    ensure_ascii=False,
+                    indent=2,
+                )
+        else:
+            # Fallback if result is not a dict
+            return json.dumps(
+                {
+                    "success": True,
+                    "stdout": _sanitize_output(str(result)) if result else "",
+                    "stderr": "",
+                    "message": "Python code executed successfully",
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+
+    except TimeoutError:
+        error_dict = {
+            "success": False,
+            "error": f"Python code execution timed out after {timeout} seconds",
+        }
+        logger.error(error_dict["error"])
+        return json.dumps(error_dict, ensure_ascii=False)
+
+    except Exception as e:
+        error_dict = {"success": False, "error": f"Error executing Python code: {str(e)}"}
+        logger.error(error_dict["error"])
+        return json.dumps(error_dict, ensure_ascii=False)
+
+
+@app.tool()
+def create_custom_plot(
+    ctx: Context,
+    plot_code: str,
+    plot_type: str = "matplotlib",
+    timeout: int = 60,
+) -> list[TextContent | ImageContent] | str:
+    """Create a custom plot using matplotlib or PyVista in the persistent Python session.
+
+    This tool is specifically designed for creating custom plots that are NOT available
+    in MAPDL's native plotting capabilities. Use this when you need:
+    - Custom matplotlib visualizations (line plots, bar charts, histograms, etc.)
+    - Advanced PyVista 3D visualizations beyond MAPDL defaults
+    - Combined data from multiple sources
+    - Custom data processing with visualization
+
+    IMPORTANT: For standard MAPDL plots (aplot, lplot, kplot, post_processing plots),
+    use the normal MAPDL commands with the screenshot tool instead for interactive plots.
+
+    The persistent Python session has pre-configured matplotlib (Agg backend) and
+    PyVista (off-screen rendering) with helper functions:
+    - save_matplotlib_plot(filename, dpi)
+    - save_plot(plotter, filename)
+
+    Parameters
+    ----------
+    ctx : Context
+        The MCP context containing server session and application context.
+    plot_code : str
+        Python code to create the plot. Should use matplotlib.pyplot or PyVista.
+        For matplotlib, the code should create the figure/plot but NOT call plt.show().
+        Use the save_matplotlib_plot() or save_plot() helper functions to return the plot.
+    plot_type : str, optional
+        Type of plot: "matplotlib" or "pyvista". Default is "matplotlib".
+    timeout : int, optional
+        Maximum time in seconds for plot generation. Default is 60 seconds.
+
+    Returns
+    -------
+    list[TextContent | ImageContent]
+        A list containing:
+        - TextContent with the plot creation status message
+        - ImageContent with the base64-encoded image data if successfull
+        or a JSON string with error details if failed.
+
+    Examples
+    --------
+    Create a custom matplotlib line plot:
+    >>> plot_code = '''
+    ... import matplotlib.pyplot as plt
+    ... import numpy as np
+    ...
+    ... # Extract data from MAPDL
+    ... displacements = mapdl.get_array("NODE", item1="U", it1num="Y")
+    ...
+    ... # Create custom plot
+    ... plt.figure(figsize=(10, 6))
+    ... plt.plot(displacements)
+    ... plt.xlabel("Node Number")
+    ... plt.ylabel("Displacement (m)")
+    ... plt.title("Custom Displacement Plot")
+    ... plt.grid(True)
+    ...
+    ... # Save and return
+    ... result = save_matplotlib_plot(dpi=150)
+    ... print(result)
+    ... '''
+    >>> create_custom_plot(ctx, plot_code, plot_type="matplotlib")
+    """
+    session = ctx.request_context.lifespan_context.python_session
+
+    if session is None:
+        return [
+            TextContent(
+                type="text",
+                text="No Python session available. The persistent Python session was not initialized.",  # noqa: E501
+            )
+        ]
+
+    # Check if MAPDL is connected in the persistent session
+    mapdl_instance = session.metadata.get("mapdl", None)
+    if mapdl_instance is None or isinstance(mapdl_instance, str):
+        mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
+
+    if mapdl_instance is None or isinstance(mapdl_instance, str):
+        if isinstance(mapdl_instance, str):
+            error_msg = mapdl_instance
+        else:
+            error_msg = "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again."  # noqa: E501
+        return [
+            TextContent(
+                type="text",
+                text=f"Failed to connect to MAPDL in persistent Python session: {error_msg}",
+            )
+        ]
+
+    try:
+        logger.info(f"Creating custom {plot_type} plot in persistent session")
+
+        # Sanitize the plot code to remove problematic Unicode characters
+        # This prevents encoding issues on Windows systems with limited charsets
+        sanitized_plot_code = _sanitize_output(plot_code)
+
+        # Execute the plot code
+        result = session.execute(sanitized_plot_code, timeout=timeout)
+
+        # Parse the result
+        if isinstance(result, dict):
+            stdout = _sanitize_output(result.get("stdout", ""))
+            stderr = _sanitize_output(result.get("stderr", ""))
+
+            if result.get("success"):
+                # Try to extract plot data from stdout
+                # The helper functions return data URI format:
+                # "data:image/png;base64,<base64_string>"
+                plot_data = stdout.strip()
+
+                # Check if the output contains a base64 data URI
+                if "data:image/png;base64," in plot_data:
+                    # Extract the base64 part
+                    base64_data = plot_data.split("data:image/png;base64,")[1].strip()
+
+                    return [
+                        TextContent(
+                            type="text",
+                            text=f"Custom {plot_type} plot created successfully",
+                        ),
+                        ImageContent(type="image", data=base64_data, mimeType="image/png"),
+                    ]
+                elif plot_data.startswith("Plot saved to"):
+                    # File path returned
+                    return [
+                        TextContent(
+                            type="text",
+                            text=f"Custom {plot_type} plot created successfully\n{plot_data}",
+                        )
+                    ]
+                else:
+                    # Unexpected output format
+                    return [
+                        TextContent(
+                            type="text",
+                            text=f"Plot created but unexpected output format:\n{stdout}",
+                        )
+                    ]
+            else:
+                error_msg = result.get("error", "Unknown error occurred")
+                error_msg = _sanitize_output(error_msg)
+                return [
+                    TextContent(
+                        type="text",
+                        text=f"Error creating custom {plot_type} plot: {error_msg}\nStdout: {stdout}\nStderr: {stderr}",  # noqa: E501
+                    )
+                ]
+        else:
+            # Fallback if result is not a dict
+            return [
+                TextContent(
+                    type="text",
+                    text=f"Unexpected result format: {_sanitize_output(str(result)) if result else 'No result'}",  # noqa: E501
+                )
+            ]
+
+    except TimeoutError:
+        error_msg = f"Plot creation timed out after {timeout} seconds"
+        logger.error(error_msg)
+        return [TextContent(type="text", text=error_msg)]
+
+    except Exception as e:
+        error_msg = f"Error creating custom plot: {str(e)}"
+        logger.error(error_msg)
+        return [TextContent(type="text", text=error_msg)]
+
+
+def _sanitize_output(text: str) -> str:
+    """Sanitize output text to handle encoding issues.
+
+    This function removes or replaces problematic Unicode characters that can cause
+    encoding issues on Windows systems with limited character sets (e.g., charmap).
+
+    Parameters
+    ----------
+    text : str
+        The text to sanitize.
+
+    Returns
+    -------
+    str
+        The sanitized text with problematic characters removed or replaced.
+    """
+    if not isinstance(text, str):
+        return text
+
+    # Replace common problematic Unicode characters with ASCII alternatives
+    replacements = {
+        # Checkmarks and crosses
+        "\u2713": "[OK]",  # checkmark
+        "\u2717": "[X]",  # cross
+        # Box drawing characters
+        "\u2514": "\\",  # box drawing
+        "\u2502": "|",  # box drawing
+        "\u2500": "-",  # box drawing
+        "\u2510": "\\",  # box drawing
+        "\u250c": "/",  # box drawing
+        "\u2518": "/",  # box drawing
+        # Block elements
+        "\u2588": "#",  # block
+        "\u2589": "#",  # block
+        "\u258a": "#",  # block
+        "\u258c": "|",  # block
+        "\u2590": "|",  # block
+        # Superscript and subscript characters
+        "\u00b9": "^1",  # superscript 1
+        "\u00b2": "^2",  # superscript 2
+        "\u00b3": "^3",  # superscript 3
+        "\u2074": "^4",  # superscript 4
+        "\u2075": "^5",  # superscript 5
+        "\u2076": "^6",  # superscript 6
+        "\u2077": "^7",  # superscript 7
+        "\u2078": "^8",  # superscript 8
+        "\u2079": "^9",  # superscript 9
+        "\u2070": "^0",  # superscript 0
+        # Other commonly problematic characters
+        "\u2022": "*",  # bullet
+        "\u2023": "*",  # triangular bullet
+        "\u2219": "*",  # bullet operator
+        "\u00a0": " ",  # non-breaking space
+        "\u200b": "",  # zero-width space
+        "\u200c": "",  # zero-width non-joiner
+        "\u200d": "",  # zero-width joiner
+        "\ufeff": "",  # zero-width no-break space
+    }
+
+    for unicode_char, replacement in replacements.items():
+        text = text.replace(unicode_char, replacement)
+
+    # Remove any remaining characters that can't be encoded in ascii
+    try:
+        # Try to encode as ASCII to check for problematic characters
+        text.encode("ascii")
+    except UnicodeEncodeError:
+        # If there are non-ASCII characters, replace them with a replacement character
+        text = text.encode("ascii", errors="replace").decode("ascii")
+
+    return text

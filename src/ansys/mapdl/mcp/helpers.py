@@ -1,6 +1,8 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
+from fastmcp.server import Context
+
 if TYPE_CHECKING:
     from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
 
@@ -237,3 +239,73 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
     info["mesh"] = mesh_info
 
     return info
+
+
+def connect_to_mapdl_in_persistent_python(
+    ctx: Context,
+) -> Any:
+    """Connect to the MAPDL instance in the persistent Python session.
+
+    This tool connects to the MAPDL instance from within the persistent Python session.
+    It assumes that the persistent session has already been created.
+
+
+    Parameters
+    ----------
+    ctx : Context
+        The MCP context containing server session and application context.
+
+    Returns
+    -------
+    str
+        Connection status message.
+    """
+    session = ctx.request_context.lifespan_context.python_session
+
+    if session is None:
+        return "No Python session available. The persistent Python session was not initialized."
+
+    try:
+        # Check if already connected
+        if session.metadata.get("mapdl", None) is not None:
+            mapdl = session.metadata["mapdl"]
+            return (
+                f"Already connected to persistent PyMAPDL session with MAPDL at "
+                f"{mapdl._ip}:{mapdl._port}."
+            )
+
+        # First, check if MAPDL is available in lifespan context
+        mapdl_instance = ctx.request_context.lifespan_context.mapdl
+        if mapdl_instance is None:
+            return (
+                "No MAPDL instance available in lifespan context. "
+                "Please launch or connect to MAPDL first using launch_mapdl"
+                "or connect_to_mapdl tool."
+            )
+
+        connection_code = f"""
+# Connect to the persistent MAPDL instance
+from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
+
+mapdl = Mapdl(
+    start_instance=False,
+    ip='{mapdl_instance.ip}',
+    port={mapdl_instance.port},
+    cleanup_on_exit=False,
+)
+        """
+        session.execute(connection_code)
+
+        # Store in persistent session
+        session.metadata["mapdl"] = mapdl_instance
+
+        logger.info(
+            "Connected to persistent PyMAPDL session successfully at"
+            f" {mapdl_instance.ip}:{mapdl_instance.port}!"
+        )
+
+    except Exception as e:
+        error_msg = f"Failed to connect to MAPDL in the persistent PyMAPDL session: {str(e)}"
+        logger.error(error_msg)
+
+    return session.metadata.get("mapdl", None)

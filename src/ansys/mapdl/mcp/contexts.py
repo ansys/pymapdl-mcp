@@ -553,32 +553,77 @@ When the solution is complete, enter postprocessing mode:
 
 ## Visualization Methods
 
+### Plotting Session Strategy
+
+**IMPORTANT: By default, use MAPDL commands (`run_mapdl_command` tool) for all plots**
+
+#### When to use normal MAPDL session (Default - Preferred)
+
+Use the normal MAPDL session for:
+
+1. **All MAPDL native plot methods** - These provide interactive plots:
+   - Geometry plots: `APLOT`, `LPLOT`, `KPLOT`, `VPLOT`
+   - Mesh plots: `EPLOT`, `NPLOT`
+   - Post-processing plots: `PLNSOL`, `PLESOL`, `PLDISP`
+
+2. **Capturing Screenshots**: Use the `screenshot` tool after any MAPDL plot command
+
+#### When to Use Persistent Python Session
+
+Use the persistent Python session with `run_python_code ` or `create_custom_plot` tool ONLY for:
+
+1. **Advanced post-processing tasks** that require Python libraries such as NumPy, Matplotlib,
+   or PyVista. Examples include:
+   Post-processing object methods:
+     - `mapdl.post_processing.plot_nodal_solution()`
+     - `mapdl.post_processing.plot_element_solution()`
+     - `mapdl.post_processing.plot_nodal_displacement()`
+     - `mapdl.post_processing.plot_nodal_stress()`
+
+2. **Custom Matplotlib Plots** - When you need to create plots that MAPDL doesn't provide:
+   ```python
+   # Extract data from MAPDL
+   displacements = mapdl.get_array("NODE", item1="U", it1num="Y")
+
+   # Create custom matplotlib plot
+   plt.figure()
+   plt.plot(displacements)
+   plt.xlabel("Node Number")
+   plt.ylabel("Displacement (m)")
+
+   # Save using the helper function from persistent session
+   result = save_matplotlib_plot()
+   print(result)
+
+3. **Custom PyVista Visualizations** - When you need advanced 3D visualization beyond MAPDL's capabilities
+
+4. **Data Processing and Visualization** - Combining NumPy/Pandas with custom plots
+
+5. **Capturing plots**
+   Use the ``create_custom_plot`` tool to create custom plots and capture them.
+   Helpers available:
+   - `save_matplotlib_plot` helper function: capture and return plots as base64 strings
+   - `save_plot` helper function: capture and return other plot types
+
+
 ### Using Post Processing Methods (Preferred)
 
+If using the persistent Python session for postprocessing, follow these guidelines:
 - **DO NOT** use `mapdl.result` methods unless specifically requested by the user
-- **USE** `mapdl.post_processing` methods instead. For instance:
-  - `plot_nodal_solution()` - Plot nodal results
-  - `plot_element_solution()` - Plot element results
-  - `plot_nodal_displacement()` - Plot displacement contours
-  - `plot_nodal_stress()` - Plot stress contours
+- **USE** `mapdl.post_processing` methods
+- These methods work with the `screenshot`` tool to capture plots
 
-### Plot Types
+### Plot Types Available in MAPDL
 
-1. **Contour Plots** (Preferred over vector plots)
+1. **Contour Plots** (Preferred)
    - Show result distribution across model
    - Color-coded for easy interpretation
+   - Use methods like `plot_nodal_solution()`, `plot_element_solution()`
 
 2. **Vector Plots**
    - Show directional results
    - Useful for displacements and heat flux
-   - Use MAPDL plotting backend for these plots.
-    Example:
-    ```python
-    >>> from ansys.mapdl.core.plotting import GraphicsBackend
-    >>> mapdl.aplot(graphics_backend=GraphicsBackend.MAPDL)
-    >>> mapdl.lplot(graphics_backend=GraphicsBackend.MAPDL)
-    >>> mapdl.kplot(graphics_backend=GraphicsBackend.MAPDL)
-    ```
+   - Available in MAPDL native plotter
 
 3. **Animations**
    - Show mode shapes
@@ -590,9 +635,11 @@ When the solution is complete, enter postprocessing mode:
 
 If you want to use `*GET` commands to extract specific results, use `mapdl.get_value()` instead and explain what each command does.
 
-### NumPy and Matplotlib Integration
+### NumPy and Matplotlib Integration (Custom Plots Only)
 
-You are allowed to use numpy and matplotlib for further data processing and visualization:
+**NOTE: Use NumPy and Matplotlib ONLY when MAPDL native plots don't meet your needs. These require the persistent Python session.**
+
+When you need custom plots not available in MAPDL, use the `run_python_code ` or `create_custom_plot` tool:
 
 1. **Import required libraries** at the beginning of the code:
    ```python
@@ -617,7 +664,10 @@ You are allowed to use numpy and matplotlib for further data processing and visu
    plt.xlabel("Node Number")
    plt.ylabel("Displacement (m)")
    plt.title("Nodal Displacement Distribution")
-   plt.show()
+
+   # Save using the helper function from persistent session
+   result = save_matplotlib_plot()
+   print(result)
    ```
 
 ## Example Postprocessing Workflow
