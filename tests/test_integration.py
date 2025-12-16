@@ -502,9 +502,7 @@ class TestPythonPersistentSessionIntegration:
         """Test connecting to MAPDL in persistent Python session."""
         from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
 
-        # Disable capture to avoid stdin-related issues in CI
-        with capsys.disabled():
-            result = connect_to_mapdl_in_persistent_python(persistent_real_context)
+        result = connect_to_mapdl_in_persistent_python(persistent_real_context)
 
         # Should return the stored mapdl instance
         assert result is persistent_real_context.request_context.lifespan_context.mapdl
@@ -522,8 +520,7 @@ class TestPythonPersistentSessionIntegration:
         # Remove python_session to simulate missing session
         persistent_real_context.request_context.lifespan_context.python_session = None
 
-        with capsys.disabled():
-            result = connect_to_mapdl_in_persistent_python(persistent_real_context)
+        result = connect_to_mapdl_in_persistent_python(persistent_real_context)
 
         assert isinstance(result, str)
         assert "persistent Python session was not initialized" in result
@@ -543,14 +540,13 @@ class TestPythonPersistentSessionIntegration:
         # Simulate absence of MAPDL in lifespan context
         persistent_real_context.request_context.lifespan_context.mapdl = None
 
-        with capsys.disabled():
-            result = connect_to_mapdl_in_persistent_python(persistent_real_context)
+        result = connect_to_mapdl_in_persistent_python(persistent_real_context)
 
         assert isinstance(result, str)
         assert "No MAPDL instance available in lifespan context" in result
 
     def test_connect_to_mapdl_in_persistent_python_execute_failure(
-        self, persistent_real_context, capsys
+        self, persistent_real_context,
     ):
         """Test handling when executing code in persistent Python session fails."""
         from unittest.mock import MagicMock
@@ -563,8 +559,7 @@ class TestPythonPersistentSessionIntegration:
         session.execute.side_effect = RuntimeError("Execution failed")
         persistent_real_context.request_context.lifespan_context.python_session = session
 
-        with capsys.disabled():
-            result = connect_to_mapdl_in_persistent_python(persistent_real_context)
+        result = connect_to_mapdl_in_persistent_python(persistent_real_context)
 
         # On failure, function returns whatever is in metadata (likely None)
         assert result is None
