@@ -3,10 +3,6 @@ name: Tests (reusable)
 on:
   workflow_call:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 env:
   ON_CI: true
   MAIN_PYTHON_VERSION: "3.10"
