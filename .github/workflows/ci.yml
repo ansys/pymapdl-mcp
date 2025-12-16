@@ -165,7 +165,11 @@ jobs:
           LICENSE_SERVER: ${{ secrets.LICENSE_SERVER }}
         run: |
           export ANSYSLMD_LICENSE_FILE=1055@${LICENSE_SERVER}
-          python -m pytest -m integration -v --tb=short
+          python -m pytest -m integration -k TestPythonPersistentSessionIntegration -v -s --tb=short
+
+      - name: Run remaining integration tests (capture enabled)
+        run: |
+          python -m pytest -m integration -v --tb=short -k "not TestPythonPersistentSessionIntegration"
 
   integration-remote:
     name: Integration Tests (remote MAPDL)
@@ -226,7 +230,11 @@ jobs:
           PYMAPDL_START_INSTANCE: "false"
           PYMAPDL_PORT: ${{ env.PYMAPDL_PORT }}
         run: |
-          pytest -m integration -v --tb=short
+          pytest -m integration -k TestPythonPersistentSessionIntegration -v -s --tb=short
+
+      - name: Run remaining integration tests (capture enabled)
+        run: |
+          pytest -m integration -v --tb=short -k "not TestPythonPersistentSessionIntegration"
 
       - name: "Collect MAPDL logs on failure"
         if: failure()
