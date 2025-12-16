@@ -7,6 +7,7 @@ To skip integration tests, run: pytest -m "not integration"
 """
 
 import os
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
@@ -18,8 +19,23 @@ from ansys.mapdl.mcp import (
     run_multiple_commands,
     write_comment,
 )
+from ansys.mapdl.mcp.server import PyMAPDLAppContext
 
 ON_LOCAL = os.getenv("ON_LOCAL", "true") == "true"
+
+
+@pytest.fixture
+def real_context(mock_mapdl):
+    """Module-level context fixture using a mock MAPDL for persistent session tests."""
+    context = MagicMock()
+    context.request_context = MagicMock()
+    # Attach a python_session mock with metadata dict to simulate persistent session
+    py_session = MagicMock()
+    py_session.metadata = {}
+    lc = PyMAPDLAppContext(mapdl=mock_mapdl)
+    lc.python_session = py_session
+    context.request_context.lifespan_context = lc
+    return context
 
 
 @pytest.mark.integration
@@ -435,3 +451,136 @@ class TestLaunchMapdlIntegration:
                 shutil.rmtree(tmpdir, ignore_errors=True)
             except Exception:
                 pass  # Ignore cleanup errors
+
+
+@pytest.mark.integration
+@pytest.mark.slow
+class TestPythonPersistentSessionIntegration:
+    """Integration tests for connecting to MAPDL in persistent Python session."""
+
+    @pytest.fixture(scope="class")
+    def real_mapdl(self):
+        """
+        Fixture to connect to a real MAPDL instance.
+
+        This requires MAPDL to be running on localhost:50052.
+        Skip these tests if MAPDL is not available.
+        """
+        try:
+            from ansys.mapdl.core import launch_mapdl
+
+            mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
+
+            yield mapdl
+
+            # Cleanup after tests
+            # Don't exit since MAPDL is running externally
+            mapdl.exit()
+
+        except Exception as e:
+            # Not allow to skip if running on CICD
+            if os.getenv("ON_CI", False):
+                raise e
+            else:
+                pytest.skip(f"MAPDL not available: {e}")
+
+    @pytest.fixture
+    def persistent_real_context(self, real_mapdl):
+        """Context wired with REAL MAPDL and a mocked persistent session."""
+        ctx = MagicMock()
+        ctx.request_context = MagicMock()
+        lc = PyMAPDLAppContext(mapdl=real_mapdl)
+        py_session = MagicMock()
+        py_session.metadata = {}
+        lc.python_session = py_session
+        ctx.request_context.lifespan_context = lc
+        return ctx
+
+    def test_connect_to_mapdl_in_persistent_python(
+        self, persistent_real_context, real_mapdl, capsys
+    ):
+        """Test connecting to MAPDL in persistent Python session."""
+        from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
+
+        result = connect_to_mapdl_in_persistent_python(persistent_real_context)
+
+        # Should return the stored mapdl instance
+        assert result is persistent_real_context.request_context.lifespan_context.mapdl
+        assert result is real_mapdl
+        # Verify that the mapdl instance has expected attributes
+        assert result._ip == real_mapdl._ip
+        assert result._port == real_mapdl._port
+
+    def test_connect_to_mapdl_in_persistent_python_no_session(
+        self, persistent_real_context, capsys
+    ):
+        """Test handling when no persistent Python session is available."""
+        from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
+
+        # Remove python_session to simulate missing session
+        persistent_real_context.request_context.lifespan_context.python_session = None
+
+        result = connect_to_mapdl_in_persistent_python(persistent_real_context)
+
+        assert isinstance(result, str)
+        assert "persistent Python session was not initialized" in result
+
+    def test_connect_to_mapdl_in_persistent_python_no_mapdl(
+        self, persistent_real_context, real_mapdl, capsys
+    ):
+        """Test handling when no MAPDL instance is in the persistent Python session."""
+        from unittest.mock import MagicMock
+
+        from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
+
+        # Prepare python_session with no mapdl metadata
+        session = MagicMock()
+        session.metadata = {}
+        persistent_real_context.request_context.lifespan_context.python_session = session
+        # Simulate absence of MAPDL in lifespan context
+        persistent_real_context.request_context.lifespan_context.mapdl = None
+
+        result = connect_to_mapdl_in_persistent_python(persistent_real_context)
+
+        assert isinstance(result, str)
+        assert "No MAPDL instance available in lifespan context" in result
+
+    def test_connect_to_mapdl_in_persistent_python_execute_failure(
+        self,
+        persistent_real_context,
+    ):
+        """Test handling when executing code in persistent Python session fails."""
+        from unittest.mock import MagicMock
+
+        from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
+
+        # Prepare python_session with mapdl metadata
+        session = MagicMock()
+        session.metadata = {"mapdl": None}  # Simulate missing mapdl instance
+        session.execute.side_effect = RuntimeError("Execution failed")
+        persistent_real_context.request_context.lifespan_context.python_session = session
+
+        result = connect_to_mapdl_in_persistent_python(persistent_real_context)
+
+        # On failure, function returns whatever is in metadata (likely None)
+        assert result is None
+
+    def test_run_python_code_executes_simple(self, persistent_real_context, capsys):
+        """Light-weight execution test using mocked python_session near integration suite."""
+        import json
+        from unittest.mock import MagicMock
+
+        from ansys.mapdl.mcp.tools import run_python_code
+
+        # Attach a mocked persistent python session to the real_context lifespan
+        session = MagicMock()
+        session.metadata = {"mapdl": persistent_real_context.request_context.lifespan_context.mapdl}
+        # Simulate a normal dict-shaped execution result
+        session.execute.return_value = {"success": True, "stdout": "hello\n", "stderr": ""}
+        persistent_real_context.request_context.lifespan_context.python_session = session
+
+        with capsys.disabled():
+            result = run_python_code.fn(persistent_real_context, code="print('hello')")
+        data = json.loads(result)
+        assert data["success"] is True
+        assert data["stdout"].strip() == "hello"

@@ -80,10 +80,13 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         PyMAPDLAppContext
             The application context for managing MAPDL instances.
         """
+        startup_code = "from ansys.mapdl.mcp.python_helper.startup_code import *"
         python_session = PersistentPythonSession(
             python_executable=self.python_executable,
             working_directory=self.working_directory,
+            startup_code=startup_code,
         )
+
         context = PyMAPDLAppContext(
             python_session=python_session,
             command_history=[],
