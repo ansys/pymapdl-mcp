@@ -444,8 +444,7 @@ def screenshot(
     """Capture a screenshot of the current MAPDL graphics window.
 
     This tool captures the current state of the MAPDL graphics window after using
-    MAPDL native plotting commands. Use this tool for all standard MAPDL plots as
-    they provide interactive plots that are directly accessible.
+    MAPDL native plotting commands. Use this tool for all standard MAPDL plots.
 
     MAPDL Native Plot Commands (use with screenshot):
     - Geometry: APLOT, LPLOT, KPLOT, VPLOT
@@ -567,7 +566,6 @@ def run_python_code(
     str
         Execution result or error message. Returns JSON for structured output
         compatible with both stdio and http transports.
-
 
     Examples
     --------
@@ -717,7 +715,7 @@ def create_custom_plot(
 
     Returns
     -------
-    list[TextContent | ImageContent] or str
+    str | list[TextContent | ImageContent]
         A list containing:
         - TextContent with the plot creation status message
         - ImageContent with the base64-encoded image data if successfull

@@ -289,8 +289,8 @@ from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
 
 mapdl = Mapdl(
     start_instance=False,
-    ip='{mapdl_instance._ip}',
-    port={mapdl_instance._port},
+    ip='{mapdl_instance.ip}',
+    port={mapdl_instance.port},
     cleanup_on_exit=False,
     loglevel="INFO",
 )
@@ -302,11 +302,11 @@ mapdl = Mapdl(
 
         logger.info(
             "Connected to persistent PyMAPDL session successfully at"
-            f" {mapdl_instance._ip}:{mapdl_instance._port}!"
+            f" {mapdl_instance.ip}:{mapdl_instance.port}!"
         )
 
     except Exception as e:
-        error_msg = f"Failed to connect to persistent PyMAPDL session: {str(e)}"
+        error_msg = f"Failed to connect to MAPDL in the persistent PyMAPDL session: {str(e)}"
         logger.error(error_msg)
 
     return session.metadata.get("mapdl", None)
