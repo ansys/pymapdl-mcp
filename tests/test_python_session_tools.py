@@ -32,15 +32,17 @@ class TestRunPythonCode:
     def test_connect_failure_returns_error_string(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
 
+        # Mock the connection function to raise an exception on the second try
         with patch(
             "ansys.mapdl.mcp.tools.connect_to_mapdl_in_persistent_python",
-            return_value="Failed to connect to MAPDL",
+            side_effect=["Failed to connect to MAPDL", Exception("Connection failed")],
         ):
             result = run_python_code.fn(mock_context, code="print('x')")
 
         data = json.loads(result)
         assert data["success"] is False
         assert "Failed to connect to MAPDL" in data["error"]
+        assert "Connection failed" in data["error"]
 
     def test_success_with_dict_result(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
@@ -168,9 +170,9 @@ class TestCreateCustomPlot:
         ):
             # Function returns a JSON string in this error branch
             out = create_custom_plot.fn(mock_context, plot_code="print('x')")
-            assert isinstance(out, str)
-            data = json.loads(out)
-            assert data["success"] is False
+            assert isinstance(out, list)
+            assert isinstance(out[0], TextContent)
+            assert "No MAPDL instance available" in out[0].text
 
     def test_success_returns_image_content(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
@@ -270,4 +272,4 @@ class TestCreateCustomPlot:
         result = create_custom_plot.fn(mock_context, plot_code="while True: pass", timeout=1)
         assert isinstance(result, list)
         assert isinstance(result[0], TextContent)
-        assert "timed out" in result[0].text
+        assert "Plot creation timed out after" in result[0].text
