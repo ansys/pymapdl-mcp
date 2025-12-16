@@ -3,10 +3,6 @@ name: Tests (reusable)
 on:
   workflow_call:
 
-env:
-  ON_CI: true
-  MAIN_PYTHON_VERSION: "3.10"
-  PACKAGE_NAME: "ansys-common-mcp"
 
 jobs:
   test:
