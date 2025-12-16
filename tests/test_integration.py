@@ -494,7 +494,9 @@ class TestPythonPersistentSessionIntegration:
         ctx.request_context.lifespan_context = lc
         return ctx
 
-    def test_connect_to_mapdl_in_persistent_python(self, persistent_real_context, real_mapdl, capsys):
+    def test_connect_to_mapdl_in_persistent_python(
+        self, persistent_real_context, real_mapdl, capsys
+    ):
         """Test connecting to MAPDL in persistent Python session."""
         from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
 
@@ -509,7 +511,9 @@ class TestPythonPersistentSessionIntegration:
         assert result._ip == real_mapdl._ip
         assert result._port == real_mapdl._port
 
-    def test_connect_to_mapdl_in_persistent_python_no_session(self, persistent_real_context, capsys):
+    def test_connect_to_mapdl_in_persistent_python_no_session(
+        self, persistent_real_context, capsys
+    ):
         """Test handling when no persistent Python session is available."""
         from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
 
@@ -543,7 +547,9 @@ class TestPythonPersistentSessionIntegration:
         assert isinstance(result, str)
         assert "No MAPDL instance available in lifespan context" in result
 
-    def test_connect_to_mapdl_in_persistent_python_execute_failure(self, persistent_real_context, capsys):
+    def test_connect_to_mapdl_in_persistent_python_execute_failure(
+        self, persistent_real_context, capsys
+    ):
         """Test handling when executing code in persistent Python session fails."""
         from unittest.mock import MagicMock
 
