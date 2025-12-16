@@ -566,7 +566,7 @@ class TestPythonPersistentSessionIntegration:
 
     def test_run_python_code_executes_simple(self, persistent_real_context, capsys):
         """Light-weight execution test using mocked python_session near integration suite."""
-        import json as _json
+        import json
         from unittest.mock import MagicMock
 
         from ansys.mapdl.mcp.tools import run_python_code
@@ -580,6 +580,6 @@ class TestPythonPersistentSessionIntegration:
 
         with capsys.disabled():
             result = run_python_code.fn(persistent_real_context, code="print('hello')")
-        data = _json.loads(result)
+        data = json.loads(result)
         assert data["success"] is True
         assert data["stdout"].strip() == "hello"
