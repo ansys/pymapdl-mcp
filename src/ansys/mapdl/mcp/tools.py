@@ -603,12 +603,12 @@ def run_python_code(
         try:
             mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
         except Exception as e:
+            error_msg = f"Failed to connect to MAPDL in persistent Python session: {str(e)}"
+            logger.error(error_msg)
             return json.dumps(
-                {
-                    "success": False,
-                    "error": f"Failed to connect to MAPDL in persistent Python session: {str(e)}",
-                },
+                {"success": False, "error": error_msg},
                 ensure_ascii=False,
+                indent=2,
             )
     try:
         # Sanitize the input code to remove problematic Unicode characters
@@ -714,7 +714,7 @@ def create_custom_plot(
 
     Returns
     -------
-    str | list[TextContent | ImageContent]
+    list[TextContent | ImageContent]
         A list containing:
         - TextContent with the plot creation status message
         - ImageContent with the base64-encoded image data if successfull
@@ -764,13 +764,12 @@ def create_custom_plot(
             error_msg = mapdl_instance
         else:
             error_msg = "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again."  # noqa: E501
-        return json.dumps(
-            {
-                "success": False,
-                "error": error_msg,  # noqa: E501
-            },
-            ensure_ascii=False,
-        )
+        return [
+            TextContent(
+                type="text",
+                text=f"Failed to connect to MAPDL in persistent Python session: {error_msg}",
+            )
+        ]
 
     try:
         logger.info(f"Creating custom {plot_type} plot in persistent session")
