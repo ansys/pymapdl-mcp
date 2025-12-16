@@ -600,17 +600,16 @@ def run_python_code(
         mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
 
     if mapdl_instance is None or isinstance(mapdl_instance, str):
-        if isinstance(mapdl_instance, str):
-            error_msg = mapdl_instance
-        else:
-            error_msg = "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again."  # noqa: E501
-        return json.dumps(
-            {
-                "success": False,
-                "error": error_msg,  # noqa: E501
-            },
-            ensure_ascii=False,
-        )
+        try:
+            mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
+        except Exception as e:
+            return json.dumps(
+                {
+                    "success": False,
+                    "error": f"Failed to connect to MAPDL in persistent Python session: {str(e)}",
+                },
+                ensure_ascii=False,
+            )
     try:
         # Sanitize the input code to remove problematic Unicode characters
         # This prevents encoding issues on Windows systems with limited charsets
