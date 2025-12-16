@@ -494,11 +494,13 @@ class TestPythonPersistentSessionIntegration:
         ctx.request_context.lifespan_context = lc
         return ctx
 
-    def test_connect_to_mapdl_in_persistent_python(self, persistent_real_context, real_mapdl):
+    def test_connect_to_mapdl_in_persistent_python(self, persistent_real_context, real_mapdl, capsys):
         """Test connecting to MAPDL in persistent Python session."""
         from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
 
-        result = connect_to_mapdl_in_persistent_python(persistent_real_context)
+        # Disable capture to avoid stdin-related issues in CI
+        with capsys.disabled():
+            result = connect_to_mapdl_in_persistent_python(persistent_real_context)
 
         # Should return the stored mapdl instance
         assert result is persistent_real_context.request_context.lifespan_context.mapdl
@@ -507,20 +509,21 @@ class TestPythonPersistentSessionIntegration:
         assert result._ip == real_mapdl._ip
         assert result._port == real_mapdl._port
 
-    def test_connect_to_mapdl_in_persistent_python_no_session(self, persistent_real_context):
+    def test_connect_to_mapdl_in_persistent_python_no_session(self, persistent_real_context, capsys):
         """Test handling when no persistent Python session is available."""
         from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
 
         # Remove python_session to simulate missing session
         persistent_real_context.request_context.lifespan_context.python_session = None
 
-        result = connect_to_mapdl_in_persistent_python(persistent_real_context)
+        with capsys.disabled():
+            result = connect_to_mapdl_in_persistent_python(persistent_real_context)
 
         assert isinstance(result, str)
         assert "persistent Python session was not initialized" in result
 
     def test_connect_to_mapdl_in_persistent_python_no_mapdl(
-        self, persistent_real_context, real_mapdl
+        self, persistent_real_context, real_mapdl, capsys
     ):
         """Test handling when no MAPDL instance is in the persistent Python session."""
         from unittest.mock import MagicMock
@@ -534,12 +537,13 @@ class TestPythonPersistentSessionIntegration:
         # Simulate absence of MAPDL in lifespan context
         persistent_real_context.request_context.lifespan_context.mapdl = None
 
-        result = connect_to_mapdl_in_persistent_python(persistent_real_context)
+        with capsys.disabled():
+            result = connect_to_mapdl_in_persistent_python(persistent_real_context)
 
         assert isinstance(result, str)
         assert "No MAPDL instance available in lifespan context" in result
 
-    def test_connect_to_mapdl_in_persistent_python_execute_failure(self, persistent_real_context):
+    def test_connect_to_mapdl_in_persistent_python_execute_failure(self, persistent_real_context, capsys):
         """Test handling when executing code in persistent Python session fails."""
         from unittest.mock import MagicMock
 
@@ -551,12 +555,13 @@ class TestPythonPersistentSessionIntegration:
         session.execute.side_effect = RuntimeError("Execution failed")
         persistent_real_context.request_context.lifespan_context.python_session = session
 
-        result = connect_to_mapdl_in_persistent_python(persistent_real_context)
+        with capsys.disabled():
+            result = connect_to_mapdl_in_persistent_python(persistent_real_context)
 
         # On failure, function returns whatever is in metadata (likely None)
         assert result is None
 
-    def test_run_python_code_executes_simple(self, persistent_real_context):
+    def test_run_python_code_executes_simple(self, persistent_real_context, capsys):
         """Light-weight execution test using mocked python_session near integration suite."""
         import json as _json
         from unittest.mock import MagicMock
@@ -570,7 +575,8 @@ class TestPythonPersistentSessionIntegration:
         session.execute.return_value = {"success": True, "stdout": "hello\n", "stderr": ""}
         persistent_real_context.request_context.lifespan_context.python_session = session
 
-        result = run_python_code.fn(persistent_real_context, code="print('hello')")
+        with capsys.disabled():
+            result = run_python_code.fn(persistent_real_context, code="print('hello')")
         data = _json.loads(result)
         assert data["success"] is True
         assert data["stdout"].strip() == "hello"
