@@ -151,6 +151,21 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
 app = PyMAPDLMCP(name="PyMAPDL MCP Server")
 
 
+@dataclass
+class SessionContext:
+    """Session context for storing CLI options."""
+
+    connect_on_startup: bool = False
+
+    @property
+    def locked_connection(self) -> bool:
+        """Whether to lock the connection on startup."""
+        return self.connect_on_startup
+
+
+session = SessionContext()
+
+
 def add_tool(func):
     """Wrap functions to register them as MCP tools.
 
@@ -170,7 +185,7 @@ def _validate_port(port: int) -> int:
     return port
 
 
-def main(argv: list[str] | None = None) -> None:
+def launcher(argv: list[str] | None = None) -> None:
     """Entry point for the MCP server.
 
     Parameters
@@ -231,6 +246,8 @@ def main(argv: list[str] | None = None) -> None:
         cors_origins = [origin.strip() for origin in args.cors_origins.split(",")]
 
     # Attach CLI config to server so lifespan can read it
+    session.connect_on_startup = bool(args.connect_on_startup)
+
     setattr(
         app,
         "_cli_config",
@@ -238,7 +255,7 @@ def main(argv: list[str] | None = None) -> None:
             "transport_type": args.transport_type,
             "mapdl_ip": args.mapdl_ip,
             "mapdl_port": args.mapdl_port,
-            "connect_on_startup": bool(args.connect_on_startup),
+            "connect_on_startup": session.connect_on_startup,
             "http_host": args.http_host,
             "http_port": args.http_port,
             "cors_origins": cors_origins,
@@ -247,6 +264,10 @@ def main(argv: list[str] | None = None) -> None:
 
     # Run server using selected transport
     import asyncio
+
+    # import tools, context and resources to register them
+    from ansys.mapdl.mcp import contexts  # noqa: F401
+    from ansys.mapdl.mcp import tools  # noqa: F401
 
     if args.transport_type == "stdio":
         asyncio.run(app.run_stdio_async())

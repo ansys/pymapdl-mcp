@@ -9,37 +9,15 @@ use APDL code or for plotting MAPDL/PyMAPDL plots.
 
 __version__ = "0.1.0"
 
-# Import contexts module to register context tools with the MCP server
-from ansys.mapdl.mcp import contexts  # noqa: F401
+
 from ansys.mapdl.mcp.server import (
-    PyMAPDLAppContext,
     app,
-    main,
-)
-from ansys.mapdl.mcp.tools import (
-    check_mapdl_installed,
-    check_mapdl_status,
-    connect_to_mapdl,
-    disconnect_from_mapdl,
-    launch_mapdl,
-    list_mapdl_instances,
-    run_mapdl_command,
-    run_multiple_commands,
-    write_comment,
+    launcher,
 )
 
 __all__ = [
     "PyMAPDLAppContext",
-    "check_mapdl_installed",
-    "check_mapdl_status",
-    "connect_to_mapdl",
-    "disconnect_from_mapdl",
-    "launch_mapdl",
-    "list_mapdl_instances",
     "app",
-    "main",
-    "run_mapdl_command",
-    "run_multiple_commands",
-    "write_comment",
+    "launcher",
     "__version__",
 ]
