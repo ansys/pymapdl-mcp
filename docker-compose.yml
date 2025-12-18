@@ -1,5 +1,4 @@
-version: '3.8'
-
+# Docker Compose file for pymapdl-mcp and MAPDL containers
 services:
   pymapdl-mcp:
     depends_on:
