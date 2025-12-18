@@ -17,18 +17,10 @@ def test_version():
 def test_package_imports():
     """Test that all expected functions and classes can be imported."""
     from ansys.mapdl.mcp import (
-        PyMAPDLAppContext,
         app,
-        check_mapdl_status,
-        run_mapdl_command,
-        write_comment,
     )
 
-    assert PyMAPDLAppContext is not None
-    assert check_mapdl_status is not None
     assert app is not None
-    assert run_mapdl_command is not None
-    assert write_comment is not None
 
 
 @pytest.mark.unit
@@ -37,18 +29,8 @@ def test_all_exports():
     from ansys.mapdl.mcp import __all__
 
     expected_exports = [
-        "PyMAPDLAppContext",
-        "check_mapdl_installed",
-        "check_mapdl_status",
-        "connect_to_mapdl",
-        "disconnect_from_mapdl",
-        "launch_mapdl",
-        "list_mapdl_instances",
         "app",
-        "main",
-        "run_mapdl_command",
-        "run_multiple_commands",
-        "write_comment",
+        "launcher",
         "__version__",
     ]
 
