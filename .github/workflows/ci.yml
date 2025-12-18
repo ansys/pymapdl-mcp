@@ -112,6 +112,7 @@ jobs:
           cache: 'pip'
 
       - name: "Configure git for private repositories"
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
