@@ -606,8 +606,6 @@ DOCKER_BUILDKIT=1 docker build --secret id=github_token,env=GITHUB_TOKEN -t pyma
 
 ### Running Standalone Container
 
-
-
 **Connect to local MAPDL:**
 ```bash
 # Windows/Mac

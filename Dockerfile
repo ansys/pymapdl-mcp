@@ -1,5 +1,11 @@
 FROM python:3.12
 
+# Create non-root user
+RUN addgroup -g 1000 ansys && \
+	adduser -D -u 1000 -G ansys -s /bin/sh ansys && \
+	mkdir -p /app /workspace && \
+	chown -R ansys:ansys /app /workspace
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     git \
