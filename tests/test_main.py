@@ -8,9 +8,9 @@ import pytest
 @pytest.mark.unit
 def test_main_function_exists():
     """Test that main function is defined."""
-    from ansys.mapdl.mcp.server import main
+    from ansys.mapdl.mcp.server import launcher
 
-    assert callable(main)
+    assert callable(launcher)
 
 
 @pytest.mark.unit
@@ -18,12 +18,12 @@ def test_main_entry_point():
     """Test that main entry point can be called."""
     import asyncio
 
-    from ansys.mapdl.mcp.server import app, main
+    from ansys.mapdl.mcp.server import app, launcher
 
     with patch.object(asyncio, "run") as mock_run:
         with patch.object(app, "run_stdio_async", new_callable=AsyncMock):
             # Mock asyncio.run to avoid actually starting the server
-            main([])
+            launcher([])
 
             # Verify that asyncio.run was called with app.run_stdio_async()
             mock_run.assert_called_once()
@@ -34,12 +34,12 @@ def test_main_with_http_transport():
     """Test that main entry point can be called with HTTP transport."""
     import asyncio
 
-    from ansys.mapdl.mcp.server import app, main
+    from ansys.mapdl.mcp.server import app, launcher
 
     with patch.object(asyncio, "run") as mock_run:
         with patch.object(app, "run_http_async", new_callable=AsyncMock):
             # Mock asyncio.run to avoid actually starting the server
-            main(["--transport", "http"])
+            launcher(["--transport", "http"])
 
             # Verify that asyncio.run was called
             mock_run.assert_called_once()
@@ -50,11 +50,11 @@ def test_main_http_with_custom_host_port():
     """Test HTTP transport with custom host and port."""
     import asyncio
 
-    from ansys.mapdl.mcp.server import app, main
+    from ansys.mapdl.mcp.server import app, launcher
 
     with patch.object(asyncio, "run") as mock_run:
         with patch.object(app, "run_http_async", new_callable=AsyncMock):
-            main(["--transport", "http", "--http-host", "0.0.0.0", "--http-port", "9000"])
+            launcher(["--transport", "http", "--http-host", "0.0.0.0", "--http-port", "9000"])
 
             # Verify that asyncio.run was called
             mock_run.assert_called_once()
@@ -70,11 +70,11 @@ def test_main_with_cors_origins():
     """Test HTTP transport with CORS origins."""
     import asyncio
 
-    from ansys.mapdl.mcp.server import app, main
+    from ansys.mapdl.mcp.server import app, launcher
 
     with patch.object(asyncio, "run") as mock_run:
         with patch.object(app, "run_http_async", new_callable=AsyncMock):
-            main(
+            launcher(
                 [
                     "--transport",
                     "http",
@@ -96,11 +96,11 @@ def test_mapdl_args_work_with_http():
     """Test that MAPDL connection arguments work with HTTP transport."""
     import asyncio
 
-    from ansys.mapdl.mcp.server import app, main
+    from ansys.mapdl.mcp.server import app, launcher
 
     with patch.object(asyncio, "run") as mock_run:
         with patch.object(app, "run_http_async", new_callable=AsyncMock):
-            main(
+            launcher(
                 [
                     "--transport",
                     "http",
@@ -127,4 +127,4 @@ def test_module_main_guard():
     import ansys.mapdl.mcp
 
     # If we got here without hanging, the guard works correctly
-    assert hasattr(ansys.mapdl.mcp, "main")
+    assert hasattr(ansys.mapdl.mcp, "launcher")

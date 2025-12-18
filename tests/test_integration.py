@@ -12,14 +12,14 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
-from ansys.mapdl.mcp import (
+from ansys.mapdl.mcp.server import PyMAPDLAppContext
+from ansys.mapdl.mcp.tools import (
     check_mapdl_status,
     list_mapdl_instances,
     run_mapdl_command,
     run_multiple_commands,
     write_comment,
 )
-from ansys.mapdl.mcp.server import PyMAPDLAppContext
 
 ON_LOCAL = os.getenv("ON_LOCAL", "true") == "true"
 
@@ -356,7 +356,7 @@ class TestLaunchMapdlIntegration:
         - Execute commands
         - Check status
         """
-        from ansys.mapdl.mcp import (
+        from ansys.mapdl.mcp.tools import (
             check_mapdl_status,
             disconnect_from_mapdl,
             launch_mapdl,
@@ -417,7 +417,7 @@ class TestLaunchMapdlIntegration:
         """
         import tempfile
 
-        from ansys.mapdl.mcp import disconnect_from_mapdl, launch_mapdl
+        from ansys.mapdl.mcp.tools import disconnect_from_mapdl, launch_mapdl
 
         # Create a temporary directory for MAPDL to run in
         tmpdir = tempfile.mkdtemp()
