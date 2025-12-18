@@ -248,6 +248,12 @@ def launcher(argv: list[str] | None = None) -> None:
     # Attach CLI config to server so lifespan can read it
     session.connect_on_startup = bool(args.connect_on_startup)
 
+    if session.connect_on_startup:
+        logger.info(
+            f"MCP will attempt to connect to an MAPDL in {args.mapdl_ip}:{args.mapdl_port} on startup. "  # noqa: E501
+            "The tools 'launch_mapdl', 'connect_to_mapdl' and 'disconnect_from_mapdl' will be disabled."  # noqa: E501
+        )
+
     setattr(
         app,
         "_cli_config",
