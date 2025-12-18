@@ -30,7 +30,7 @@ class TestMCPProtocol:
     async def test_server_tools_registered(self):
         """Test that all tools are properly registered."""
         # Tools should be accessible through the MCP server
-        from ansys.mapdl.mcp import (
+        from ansys.mapdl.mcp.tools import (
             check_mapdl_status,
             launch_mapdl,
             run_mapdl_command,

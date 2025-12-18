@@ -36,7 +36,7 @@ def test_mcp_server_has_tools():
     """Test that MCP server has registered tools."""
     # The mcp server should have tools registered
     # This is a basic check to ensure tools are defined
-    from ansys.mapdl.mcp import check_mapdl_status, run_mapdl_command, write_comment
+    from ansys.mapdl.mcp.tools import check_mapdl_status, run_mapdl_command, write_comment
 
     # Verify tools are FunctionTool objects with callable .fn attribute
     assert hasattr(check_mapdl_status, "fn") and callable(check_mapdl_status.fn)
