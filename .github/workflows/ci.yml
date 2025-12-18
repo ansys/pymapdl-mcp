@@ -92,6 +92,7 @@ jobs:
   test:
     name: "Test Python ${{ matrix.python-version }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
+    needs: [lint, smoke-test]
     permissions:
       contents: read
     strategy:
@@ -137,6 +138,7 @@ jobs:
   integration-local:
     name: "Integration Tests (local MAPDL)"
     runs-on: ubuntu-22.04
+    needs: [lint, smoke-test]
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     container:
       image: ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd
@@ -195,6 +197,7 @@ jobs:
 
   integration-remote:
     name: Integration Tests (remote MAPDL)
+    needs: [lint, smoke-test]
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
@@ -267,7 +270,7 @@ jobs:
 
   package:
     name: "Package library"
-    needs: [test, integration-local, integration-remote, lint]
+    needs: [test, integration-local, integration-remote]
     runs-on: ubuntu-latest
     permissions:
       contents: read
