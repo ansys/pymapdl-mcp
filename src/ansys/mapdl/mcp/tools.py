@@ -347,7 +347,7 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
             )
 
         # Connect to existing MAPDL instance
-        mapdl = pymapdl.Mapdl(
+        mapdl = pymapdl.launch_mapdl(
             start_instance=False,
             ip=ip,
             port=port,
