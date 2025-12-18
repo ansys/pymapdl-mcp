@@ -10,11 +10,11 @@ import pytest
 def test_main_parses_defaults(monkeypatch):
     """Default args populate mcp._cli_config correctly and doesn't run server."""
     from ansys.mapdl.mcp import app as package_mcp
-    from ansys.mapdl.mcp.server import main
+    from ansys.mapdl.mcp.server import launcher
 
     # Prevent actual asyncio.run from running
     with patch.object(asyncio, "run") as mock_run:
-        main([])
+        launcher([])
         mock_run.assert_called_once()
 
     # Ensure mcp._cli_config attached and has defaults
@@ -33,11 +33,11 @@ def test_main_parses_defaults(monkeypatch):
 def test_main_accepts_http_transport(monkeypatch):
     """Selecting http transport should work now."""
     from ansys.mapdl.mcp import app as package_mcp
-    from ansys.mapdl.mcp.server import main
+    from ansys.mapdl.mcp.server import launcher
 
     # Prevent actual asyncio.run from running
     with patch.object(asyncio, "run") as mock_run:
-        main(["--transport", "http"])
+        launcher(["--transport", "http"])
         mock_run.assert_called_once()
 
     # Ensure mcp._cli_config attached and has http transport
@@ -49,10 +49,10 @@ def test_main_accepts_http_transport(monkeypatch):
 @pytest.mark.unit
 def test_main_invalid_port_raises():
     """Providing an invalid port should cause argparse to exit."""
-    from ansys.mapdl.mcp.server import main
+    from ansys.mapdl.mcp.server import launcher
 
     with pytest.raises(SystemExit):
-        main(["--port", "70000"])  # out of 1-65535 should exit
+        launcher(["--port", "70000"])  # out of 1-65535 should exit
 
 
 def test_product_startup_attempts_connect_on_startup():

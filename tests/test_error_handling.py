@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from ansys.mapdl.mcp import check_mapdl_status, run_mapdl_command, write_comment
+from ansys.mapdl.mcp.tools import check_mapdl_status, run_mapdl_command, write_comment
 
 
 @pytest.mark.unit

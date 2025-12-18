@@ -16,7 +16,6 @@ from ansys.mapdl.mcp.server import (
 )
 
 __all__ = [
-    "PyMAPDLAppContext",
     "app",
     "launcher",
     "__version__",
