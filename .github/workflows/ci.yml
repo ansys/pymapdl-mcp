@@ -73,12 +73,11 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
 
       - name: "Configure git for private repositories"
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
           git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
-          git config --global credential.helper store
-          echo "https://x-access-token:${GH_TOKEN}@github.com" > ~/.git-credentials
 
       - name: "Build wheelhouse and perform smoke test"
         id: build-wheelhouse
