@@ -137,6 +137,7 @@ python -m ansys.mapdl.mcp --transport stdio
 
 HTTP transport enables remote access to the MCP server over HTTP with Server-Sent Events (SSE), allowing web-based clients and remote integrations.
 
+> [!NOTE]
 > **Note**: When using HTTP transport, you must start the MCP server separately before configuring your client. Unlike STDIO transport (which auto-starts the server), HTTP transport requires the server to be running independently.
 
 **VS Code Configuration** (`.vscode/mcp.json`):
@@ -282,7 +283,8 @@ Execute multiple MAPDL commands in sequence efficiently.
 
 **Returns**: Execution result with summary of commands executed
 
-**Note**: This tool uses MAPDL's `input_strings` method for batch processing, which is significantly faster than executing commands individually. Perfect for running multiple setup commands or creating complex geometries.
+> [!NOTE]
+> **Note**: This tool uses MAPDL's `input_strings` method for batch processing, which is significantly faster than executing commands individually. Perfect for running multiple setup commands or creating complex geometries.
 
 ## Development
 
@@ -542,6 +544,135 @@ This project is licensed under the MIT License. See the LICENSE file for details
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [FastMCP Documentation](https://github.com/jlowin/fastmcp)
 - [Ansys MAPDL](https://www.ansys.com/products/structures/ansys-mechanical-apdl)
+
+## Docker Container
+
+PyMAPDL MCP Server can be deployed as a Docker container with HTTP transport for remote access.
+
+> [!WARNING]
+> **⚠️ Security Warning**: The HTTP transport is not encrypted. Only use this in trusted networks or environments.
+> For production deployments, consider using a reverse proxy with TLS/SSL encryption (e.g., Nginx, HAProxy) or network isolation.
+
+### Building the Docker Image
+
+The Dockerfile requires access to the private `ansys-common-mcp` repository. Build using Docker BuildKit secrets.
+
+**Linux/macOS**:
+
+```bash
+# Create a GitHub Personal Access Token with 'repo' scope at:
+# https://github.com/settings/tokens
+
+# Build the image with authentication
+DOCKER_BUILDKIT=1 docker build --secret id=github_token,env=GITHUB_TOKEN -t pymapdl-mcp .
+```
+
+**Windows (PowerShell)**:
+
+```powershell
+# Create a GitHub Personal Access Token with 'repo' scope at:
+# https://github.com/settings/tokens
+
+# Set the GitHub token as environment variable
+$env:GITHUB_TOKEN = "your_github_token_here"
+
+# Build the image with authentication
+$env:DOCKER_BUILDKIT = 1
+docker build --secret id=github_token,env=GITHUB_TOKEN -t pymapdl-mcp .
+```
+
+**Windows (Command Prompt)**:
+
+```cmd
+REM Create a GitHub Personal Access Token with 'repo' scope at:
+REM https://github.com/settings/tokens
+
+REM Set the GitHub token as environment variable
+set GITHUB_TOKEN=your_github_token_here
+
+REM Build the image with authentication
+set DOCKER_BUILDKIT=1
+docker build --secret id=github_token,env=GITHUB_TOKEN -t pymapdl-mcp .
+```
+
+### Running the Container
+
+The container starts the MCP server with HTTP transport and connects to MAPDL on startup.
+
+**Basic Usage** (connects to MAPDL on localhost:50052):
+
+```bash
+docker run -p 8080:8080 -p 50052:50052 pymapdl-mcp
+```
+
+You do not need to specify the ports if you are connecting to/from other containers.
+
+**Connect to Remote MAPDL Instance**:
+
+```bash
+docker run \
+  -p 8080:8080 \
+  -p 50053:50053 \
+  -e PYMAPDL_PORT=50053 \
+  -e PYMAPDL_IP=192.168.1.100 \
+  pymapdl-mcp
+```
+
+**Custom HTTP Port**:
+
+*Linux/macOS*:
+```bash
+docker run -p 9000:9000 \
+  -e HTTP_PORT=9000 \
+  -e PYMAPDL_IP=192.168.1.100 \
+  pymapdl-mcp
+```
+
+*Windows (PowerShell)*:
+```powershell
+docker run \
+  -p 9000:9000 `
+  -p 50052:50052 `
+  -e HTTP_PORT=9000 `
+  -e PYMAPDL_IP=192.168.1.100 `
+  pymapdl-mcp
+```
+
+### Environment Variables
+
+- `PYMAPDL_IP`: IP address or hostname of MAPDL instance (default: `localhost`)
+- `PYMAPDL_PORT`: MAPDL gRPC port (default: `50052`)
+- `HTTP_HOST`: HTTP server host address (default: `0.0.0.0`)
+- `HTTP_PORT`: HTTP server port (default: `8080`)
+
+### Starting a Local MAPDL Instance
+
+If you need to start a MAPDL instance on your host machine, use PyMAPDL CLI:
+
+```bash
+# Start MAPDL on default port (50052)
+pymapdl start
+
+# Start MAPDL on specific port
+pymapdl start --port 50052
+```
+
+Then connect the Docker container to it using `host.docker.internal` (Windows/Mac) or `--network host` (Linux).
+
+### Accessing the HTTP Server
+
+Once the container is running, configure your MCP client to connect to the HTTP endpoint:
+
+```json
+{
+  "servers": {
+    "pymapdl": {
+      "type": "http",
+      "url": "http://localhost:8080"
+    }
+  }
+}
+```
 
 ## Support
 
