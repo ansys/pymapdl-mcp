@@ -16,6 +16,7 @@ from mcp.types import ImageContent, TextContent
 from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 from ansys.mapdl.mcp import app
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
+from ansys.mapdl.mcp.server import session
 
 logger = get_logger(__name__)
 
@@ -226,7 +227,7 @@ def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
         return error_msg
 
 
-@app.tool()
+@app.tool(enabled=not session.locked_connection)
 def launch_mapdl(
     ctx: Context,
     exec_file: str | None = None,
@@ -311,7 +312,7 @@ def launch_mapdl(
         return error_msg
 
 
-@app.tool()
+@app.tool(enabled=not session.locked_connection)
 def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> str:
     """Connect to an existing MAPDL instance.
 
@@ -368,7 +369,7 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
         return error_msg
 
 
-@app.tool()
+@app.tool(enabled=not session.locked_connection)
 def disconnect_from_mapdl(ctx: Context) -> str:
     """Disconnect from the dynamically connected MAPDL instance.
 

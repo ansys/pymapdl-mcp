@@ -9,8 +9,7 @@ use APDL code or for plotting MAPDL/PyMAPDL plots.
 
 __version__ = "0.1.0"
 
-# Import contexts module to register context tools with the MCP server
-from ansys.mapdl.mcp import contexts  # noqa: F401
+
 from ansys.mapdl.mcp.server import (
     app,
     launcher,
