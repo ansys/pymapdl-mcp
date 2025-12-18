@@ -77,6 +77,8 @@ jobs:
           GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
           git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global credential.helper store
+          echo "https://x-access-token:${GH_TOKEN}@github.com" > ~/.git-credentials
 
       - name: "Build wheelhouse and perform smoke test"
         id: build-wheelhouse
