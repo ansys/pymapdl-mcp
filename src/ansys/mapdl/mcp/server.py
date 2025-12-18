@@ -170,7 +170,7 @@ def _validate_port(port: int) -> int:
     return port
 
 
-def main(argv: list[str] | None = None) -> None:
+def launcher(argv: list[str] | None = None) -> None:
     """Entry point for the MCP server.
 
     Parameters

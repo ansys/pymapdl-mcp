@@ -12,11 +12,11 @@ __version__ = "0.1.0"
 # Import contexts module to register context tools with the MCP server
 from ansys.mapdl.mcp.server import (
     app,
-    main,
+    launcher,
 )
 
 __all__ = [
     "app",
-    "main",
+    "launcher",
     "__version__",
 ]
