@@ -60,8 +60,8 @@ jobs:
           mypy src/ansys/mapdl/mcp --ignore-missing-imports
         continue-on-error: true
 
-  smoke-tests:
-    name: "Smoke tests ${{ matrix.python-version }} on ${{ matrix.os }}"
+  smoke-test:
+    name: "Smoke test ${{ matrix.python-version }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -92,6 +92,8 @@ jobs:
   test:
     name: "Test Python ${{ matrix.python-version }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
