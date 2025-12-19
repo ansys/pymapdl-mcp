@@ -571,10 +571,10 @@ Edit `.env` with your settings:
 
 ```bash
 # Start MAPDL container and MCP server
-docker compose up --build
+docker compose up
 
 # Or run in detached mode
-docker compose up -d --build
+docker compose up -d
 ```
 
 The MCP server will be available at `http://localhost:8080`.
@@ -596,16 +596,20 @@ To connect to a local MAPDL instance instead of the container:
 To build the MCP server image without Docker Compose:
 
 #### On Linux
+For the repository root:
+
 ```bash
 export GITHUB_TOKEN="your_token_here"
-DOCKER_BUILDKIT=1 docker build --secret id=github_token,env=GITHUB_TOKEN -t pymapdl-mcp .
+DOCKER_BUILDKIT=1 docker build --secret id=github_token,env=GITHUB_TOKEN -f docker/Dockerfile -t pymapdl-mcp .
 ```
 
 #### On Windows
+For the repository root:
+
 ```pwsh
 $env:GITHUB_TOKEN = "your_token_here"
 $env:DOCKER_BUILDKIT=1
-docker build --secret id=github_token,env=GITHUB_TOKEN -t pymapdl-mcp .
+docker build --secret id=github_token,env=GITHUB_TOKEN -f docker\Dockerfile -t pymapdl-mcp .
 ```
 
 ### Running Standalone Container

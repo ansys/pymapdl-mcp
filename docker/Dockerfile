@@ -1,16 +1,17 @@
 FROM python:3.12
 
-# Create non-root user
-RUN addgroup -g 1000 ansys && \
-	adduser -D -u 1000 -G ansys -s /bin/sh ansys && \
-	mkdir -p /app /workspace && \
-	chown -R ansys:ansys /app /workspace
-
+# Install utilities needed for user creation and install
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     git \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -g 1000 ansys && \
+    useradd -d /home/ansys -s /bin/bash -g ansys -u 1000 ansys && \
+    mkdir -p /app /workspace && \
+    chown -R ansys:ansys /app /workspace
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
