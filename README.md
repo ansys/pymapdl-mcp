@@ -137,6 +137,7 @@ python -m ansys.mapdl.mcp --transport stdio
 
 HTTP transport enables remote access to the MCP server over HTTP with Server-Sent Events (SSE), allowing web-based clients and remote integrations.
 
+> [!NOTE]
 > **Note**: When using HTTP transport, you must start the MCP server separately before configuring your client. Unlike STDIO transport (which auto-starts the server), HTTP transport requires the server to be running independently.
 
 **VS Code Configuration** (`.vscode/mcp.json`):
@@ -282,7 +283,8 @@ Execute multiple MAPDL commands in sequence efficiently.
 
 **Returns**: Execution result with summary of commands executed
 
-**Note**: This tool uses MAPDL's `input_strings` method for batch processing, which is significantly faster than executing commands individually. Perfect for running multiple setup commands or creating complex geometries.
+> [!NOTE]
+> **Note**: This tool uses MAPDL's `input_strings` method for batch processing, which is significantly faster than executing commands individually. Perfect for running multiple setup commands or creating complex geometries.
 
 ## Development
 
@@ -542,6 +544,118 @@ This project is licensed under the MIT License. See the LICENSE file for details
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [FastMCP Documentation](https://github.com/jlowin/fastmcp)
 - [Ansys MAPDL](https://www.ansys.com/products/structures/ansys-mechanical-apdl)
+
+## Docker Deployment
+
+Deploy PyMAPDL MCP Server as a containerized application with HTTP transport for remote access. The server can connect to either a containerized MAPDL instance or a local MAPDL installation.
+
+> [!WARNING]
+> The HTTP transport is not encrypted. Use only in trusted networks or with a reverse proxy (Nginx, HAProxy) providing TLS/SSL.
+
+### Quick Start with Docker Compose
+
+The easiest way to run both MAPDL and the MCP server is using Docker Compose.
+
+**1. Configure environment:**
+
+```bash
+# Copy and edit the environment file
+cp env.example .env
+```
+
+Edit `.env` with your settings:
+- `PYMAPDL_IP`: Set to `mapdl` (container), `host.docker.internal` (local Windows/Mac), or IP address (remote)
+- `ANSYSLMD_LICENSE_FILE`: Your ANSYS license server
+
+**2. Start services:**
+
+```bash
+# Start MAPDL container and MCP server
+docker compose up
+
+# Or run in detached mode
+docker compose up -d
+```
+
+The MCP server will be available at `http://localhost:8080`.
+
+### Docker Compose Configuration
+
+The `docker-compose.yml` includes two services:
+
+- **pymapdl-mcp**: MCP server with HTTP transport
+- **mapdl**: ANSYS MAPDL container (optional, can connect to local instance instead)
+
+To connect to a local MAPDL instance instead of the container:
+1. Remove or comment out the `mapdl` service and `depends_on` in `docker-compose.yml`
+2. Set `PYMAPDL_IP=host.docker.internal` (Windows/Mac)
+3. Start MAPDL locally: `pymapdl start --port 50052`
+
+### Building Standalone Image
+
+To build the MCP server image without Docker Compose:
+
+#### On Linux
+For the repository root:
+
+```bash
+export GITHUB_TOKEN="your_token_here"
+DOCKER_BUILDKIT=1 docker build --secret id=github_token,env=GITHUB_TOKEN -f docker/Dockerfile -t pymapdl-mcp .
+```
+
+#### On Windows
+For the repository root:
+
+```pwsh
+$env:GITHUB_TOKEN = "your_token_here"
+$env:DOCKER_BUILDKIT=1
+docker build --secret id=github_token,env=GITHUB_TOKEN -f docker\Dockerfile -t pymapdl-mcp .
+```
+
+### Running Standalone Container
+
+**Connect to local MAPDL:**
+```bash
+# Windows/Mac
+docker run -p 8080:8080 -e PYMAPDL_IP=host.docker.internal pymapdl-mcp
+
+# Linux
+docker run --network host -e PYMAPDL_IP=localhost pymapdl-mcp
+```
+
+**Connect to remote MAPDL:**
+```bash
+docker run -p 8080:8080 \
+  -e PYMAPDL_IP=192.168.1.100 \
+  -e PYMAPDL_PORT=50053 \
+  pymapdl-mcp
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PYMAPDL_IP` | `host.docker.internal` | MAPDL IP/hostname |
+| `PYMAPDL_PORT` | `50052` | MAPDL gRPC port |
+| `HTTP_HOST` | `0.0.0.0` | HTTP server host |
+| `HTTP_PORT` | `8080` | HTTP server port |
+| `ANSYSLMD_LICENSE_FILE` | - | License server (format: `port@server`) |
+
+### MCP Client Configuration
+
+Configure your MCP client to connect to the HTTP server:
+
+**VS Code** (`.vscode/mcp.json`):
+```json
+{
+  "servers": {
+    "pymapdl": {
+      "type": "http",
+      "url": "http://localhost:8080"
+    }
+  }
+}
+```
 
 ## Support
 
