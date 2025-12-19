@@ -156,6 +156,7 @@ class SessionContext:
     """Session context for storing CLI options."""
 
     connect_on_startup: bool = False
+    on_aali: bool = False
 
     @property
     def locked_connection(self) -> bool:
@@ -237,6 +238,12 @@ def launcher(argv: list[str] | None = None) -> None:
         default=None,
         help="Allowed CORS origins (comma-separated URLs, for http transport)",
     )
+    parser.add_argument(
+        "--on-aali",
+        dest="on_aali",
+        action="store_true",
+        help="To specify whether the MCP server is running on an AALI environment.",
+    )
 
     args = parser.parse_args(argv)
 
@@ -247,6 +254,7 @@ def launcher(argv: list[str] | None = None) -> None:
 
     # Attach CLI config to server so lifespan can read it
     session.connect_on_startup = bool(args.connect_on_startup)
+    session.on_aali = bool(args.on_aali)
 
     if session.connect_on_startup:
         logger.info(
@@ -265,6 +273,7 @@ def launcher(argv: list[str] | None = None) -> None:
             "http_host": args.http_host,
             "http_port": args.http_port,
             "cors_origins": cors_origins,
+            "on_aali": session.on_aali,
         },
     )
 
@@ -272,7 +281,8 @@ def launcher(argv: list[str] | None = None) -> None:
     import asyncio
 
     # import tools, context and resources to register them
-    from ansys.mapdl.mcp import contexts  # noqa: F401
+    if not session.on_aali:
+        from ansys.mapdl.mcp import contexts  # noqa: F401
     from ansys.mapdl.mcp import tools  # noqa: F401
 
     if args.transport_type == "stdio":
