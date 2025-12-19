@@ -775,7 +775,7 @@ class TestConnectToMapdl:
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50052
 
-        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
             result = connect_to_mapdl.fn(mock_context_no_mapdl)
 
             # Verify successful connection
@@ -794,7 +794,7 @@ class TestConnectToMapdl:
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50053
 
-        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_mapdl_class:
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
             result = connect_to_mapdl.fn(mock_context_no_mapdl, port=50053)
 
             # Verify connection with custom port
@@ -817,7 +817,7 @@ class TestConnectToMapdl:
         mock_mapdl._ip = "192.168.1.100"
         mock_mapdl._port = 50052
 
-        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_mapdl_class:
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
             result = connect_to_mapdl.fn(mock_context_no_mapdl, ip="192.168.1.100")
 
             # Verify connection with custom IP
@@ -841,7 +841,7 @@ class TestConnectToMapdl:
         mock_mapdl._ip = "10.0.0.50"
         mock_mapdl._port = 50099
 
-        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_mapdl_class:
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
             result = connect_to_mapdl.fn(mock_context_no_mapdl, port=50099, ip="10.0.0.50")
 
             # Verify connection with custom parameters
@@ -868,7 +868,7 @@ class TestConnectToMapdl:
 
     def test_connect_connection_error(self, mock_context_no_mapdl):
         """Test handling connection errors."""
-        with patch("ansys.mapdl.core.launch_mapdl", side_effect=Exception("Connection refused")):
+        with patch("ansys.mapdl.core.Mapdl", side_effect=Exception("Connection refused")):
             result = connect_to_mapdl.fn(mock_context_no_mapdl, port=50052, ip="localhost")
 
             # Verify error message is returned
@@ -880,9 +880,7 @@ class TestConnectToMapdl:
 
     def test_connect_network_error(self, mock_context_no_mapdl):
         """Test handling network errors during connection."""
-        with patch(
-            "ansys.mapdl.core.launch_mapdl", side_effect=ConnectionError("Network unreachable")
-        ):
+        with patch("ansys.mapdl.core.Mapdl", side_effect=ConnectionError("Network unreachable")):
             result = connect_to_mapdl.fn(mock_context_no_mapdl, port=50052, ip="192.168.1.999")
 
             # Verify error message
@@ -891,9 +889,7 @@ class TestConnectToMapdl:
 
     def test_connect_timeout_error(self, mock_context_no_mapdl):
         """Test handling timeout errors during connection."""
-        with patch(
-            "ansys.mapdl.core.launch_mapdl", side_effect=TimeoutError("Connection timed out")
-        ):
+        with patch("ansys.mapdl.core.Mapdl", side_effect=TimeoutError("Connection timed out")):
             result = connect_to_mapdl.fn(mock_context_no_mapdl)
 
             # Verify timeout error is handled
@@ -910,7 +906,7 @@ class TestConnectToMapdl:
         # Verify context starts with no MAPDL
         assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is None
 
-        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
             result = connect_to_mapdl.fn(mock_context_no_mapdl)
 
             # Verify successful connection
@@ -927,7 +923,7 @@ class TestConnectToMapdl:
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50052
 
-        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
             result = connect_to_mapdl.fn(mock_context_no_mapdl)
 
             # Verify the result contains connection information
@@ -1360,7 +1356,7 @@ class TestConnectionLifecycle:
         mock_mapdl.mesh.n_elem = 0
 
         # Step 1: Connect
-        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
             result = connect_to_mapdl.fn(mock_context_no_mapdl)
             assert "Successfully connected" in result
 
@@ -1397,7 +1393,7 @@ class TestConnectionLifecycle:
         mock_mapdl2._port = 50053
 
         # First connection
-        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl1):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl1):
             result = connect_to_mapdl.fn(mock_context_no_mapdl, port=50052)
             assert "Successfully connected" in result
             assert "50052" in result
@@ -1406,7 +1402,7 @@ class TestConnectionLifecycle:
         disconnect_from_mapdl.fn(mock_context_no_mapdl)
 
         # Second connection with different parameters
-        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl2):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl2):
             result = connect_to_mapdl.fn(mock_context_no_mapdl, port=50053)
             assert "Successfully connected" in result
             assert "50053" in result
@@ -1534,7 +1530,7 @@ class TestLaunchWorkflow:
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50052
 
-        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
             connect_result = connect_to_mapdl.fn(mock_context_no_mapdl)
             assert "Successfully connected" in connect_result
 
