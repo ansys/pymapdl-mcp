@@ -595,13 +595,17 @@ To connect to a local MAPDL instance instead of the container:
 
 To build the MCP server image without Docker Compose:
 
+#### On Linux
 ```bash
-# Set GitHub token
-export GITHUB_TOKEN="your_token_here"  # Linux/macOS
-$env:GITHUB_TOKEN = "your_token_here"  # Windows PowerShell
-
-# Build
+export GITHUB_TOKEN="your_token_here"
 DOCKER_BUILDKIT=1 docker build --secret id=github_token,env=GITHUB_TOKEN -t pymapdl-mcp .
+```
+
+#### On Windows
+```pwsh
+$env:GITHUB_TOKEN = "your_token_here"
+$env:DOCKER_BUILDKIT=1
+docker build --secret id=github_token,env=GITHUB_TOKEN -t pymapdl-mcp .
 ```
 
 ### Running Standalone Container
