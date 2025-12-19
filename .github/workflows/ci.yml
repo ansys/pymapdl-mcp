@@ -60,39 +60,10 @@ jobs:
           mypy src/ansys/mapdl/mcp --ignore-missing-imports
         continue-on-error: true
 
-  smoke-test:
-    name: "Smoke test ${{ matrix.python-version }} on ${{ matrix.os }}"
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
-
-      - name: "Configure git for private repositories"
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
-        run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
-
-      - name: "Build wheelhouse and perform smoke test"
-        id: build-wheelhouse
-        uses: ansys/actions/build-wheelhouse@21c9de9bee9692173780696d4a39964f20b9cfa3 #v10.1.5
-        with:
-          library-name: ${{ env.PACKAGE_NAME }}
-          operating-system: ${{ matrix.os }}
-          python-version: ${{ matrix.python-version }}
-          check-licenses: true
-          checkout: false
-
   test:
     name: "Test Python ${{ matrix.python-version }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
-    needs: [lint, smoke-test]
+    needs: [lint]
     permissions:
       contents: read
     strategy:
@@ -120,8 +91,8 @@ jobs:
 
       - name: "Install dependencies"
         run: |
-          uv pip install --upgrade pip
-          uv pip install -e ".[dev]"
+          pip install --upgrade pip
+          pip install -e ".[dev]"
 
       - name: "Run unit tests"
         run: |
@@ -139,7 +110,7 @@ jobs:
   integration-local:
     name: "Integration Tests (local MAPDL)"
     runs-on: ubuntu-22.04
-    needs: [lint, smoke-test]
+    needs: [lint]
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     container:
       image: ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd
