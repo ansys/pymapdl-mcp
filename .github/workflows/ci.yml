@@ -323,6 +323,7 @@ jobs:
         with:
           name: ${{ env.PACKAGE_NAME }}-artifacts
           path: ${{ env.PACKAGE_NAME }}-artifacts
+          pattern: ${{ env.PACKAGE_NAME }}-artifacts
 
       - name: "Display structure of downloaded files"
         run: ls -Rla
