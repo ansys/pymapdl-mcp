@@ -313,7 +313,7 @@ jobs:
     needs: [package] # needs: [package, docker-build-and-push]
     runs-on: ubuntu-latest
     # Specifying a GitHub environment is optional, but strongly encouraged
-    environment: release
+    # environment: release # to be reverted
     permissions:
       id-token: write
       contents: write
