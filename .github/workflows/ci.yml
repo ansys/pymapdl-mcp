@@ -309,11 +309,11 @@ jobs:
 
   release:
     name: "Release project"
-    # if: ${{ github.event_name == 'push' && contains(github.ref, 'refs/tags') }}
-    needs: [package] # needs: [package, docker-build-and-push]
+    if: ${{ github.event_name == 'push' && contains(github.ref, 'refs/tags') }}
+    needs: [package]
     runs-on: ubuntu-latest
     # Specifying a GitHub environment is optional, but strongly encouraged
-    # environment: release # to be reverted
+    environment: release
     permissions:
       id-token: write
       contents: write
@@ -334,7 +334,6 @@ jobs:
           library-name: ${{ env.PACKAGE_NAME }}
           token: ${{ secrets.GITHUB_TOKEN }}
           only-code: true
-          dry-run: true
 
       - name: "Release to private PyPI"
         uses: ansys/actions/release-pypi-private@41f86da4c9ead510db9135e428e33df9cc6f92e1 #v10.2.3
@@ -342,4 +341,3 @@ jobs:
           library-name: ${{ env.PACKAGE_NAME }}
           twine-username: "__token__"
           twine-token: ${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}
-          dry-run: true
