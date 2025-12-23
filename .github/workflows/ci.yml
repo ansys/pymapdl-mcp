@@ -36,11 +36,9 @@ jobs:
           python-version: "3.11"
           cache: 'pip'
 
-      - name: "Configure git for private repositories"
-        env:
-          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
+      - name: "Configure pip for private PyPI"
         run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
       - name: "Install dependencies"
         run: |
@@ -82,12 +80,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
-      - name: "Configure git for private repositories"
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
+      - name: "Configure pip for private PyPI"
         run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
       - name: "Install dependencies"
         run: |
@@ -126,33 +121,23 @@ jobs:
       PYMAPDL_NPROC: 1
 
     steps:
-      - name: "Install Git and checkout project"
+      - name: "Checkout code"
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
-        with:
-          repository: ansys/pymapdl-mcp
 
       - name: "Install gcc"
         shell: bash
         run: |
           apt-get update && apt-get -y install gcc mono-mcs g++ libgl1 libglx-mesa0 xvfb libgomp1 graphviz curl git && apt-get clean
 
-      - name: "Setup Python"
+      - name: "Set up Python"
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c #v6.0.0
         with:
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
 
-      - name: "Checking Python"
-        shell: bash
+      - name: "Install and configure pip for private PyPI"
         run: |
-          python --version
           python -m pip install --upgrade pip
-
-      - name: "Configure git for private repositories"
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
-        run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          python -m pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
       - name: "Install dependencies"
         run: |
@@ -211,11 +196,9 @@ jobs:
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
           cache: 'pip'
 
-      - name: "Configure git for private repositories"
-        env:
-          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
+      - name: "Configure pip for private PyPI"
         run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
       - name: "Install dependencies"
         run: |
@@ -250,14 +233,10 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
 
-      - name: "Configure git for private repositories"
-        env:
-          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
-        run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
-
       - name: "Build library source and wheel artifacts"
         uses: ansys/actions/build-library@41f86da4c9ead510db9135e428e33df9cc6f92e1 #v10.2.3
+        env:
+          UV_EXTRA_INDEX_URL: 'https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/'
         with:
           library-name: ${{ env.PACKAGE_NAME }}
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
