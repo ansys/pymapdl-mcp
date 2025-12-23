@@ -132,6 +132,3 @@ exclude = [
     "build",
     "dist",
 ]
-
-[tool.uv]
-version = "0.9.15"
