@@ -83,11 +83,12 @@ jobs:
           cache: 'pip'
 
       - name: "Configure git for private repositories"
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://x-access-token:${{ secrets.PYANSYS_CI_BOT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: "Configure pip for private PyPI"
+        run: |
+          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
       - name: "Install dependencies"
         run: |
@@ -148,11 +149,12 @@ jobs:
           python -m pip install --upgrade pip
 
       - name: "Configure git for private repositories"
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://x-access-token:${{ secrets.PYANSYS_CI_BOT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: "Configure pip for private PyPI"
+        run: |
+          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
       - name: "Install dependencies"
         run: |
@@ -212,10 +214,12 @@ jobs:
           cache: 'pip'
 
       - name: "Configure git for private repositories"
-        env:
-          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://x-access-token:${{ secrets.PYANSYS_CI_BOT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: "Configure pip for private PyPI"
+        run: |
+          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
       - name: "Install dependencies"
         run: |
@@ -251,10 +255,12 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
 
       - name: "Configure git for private repositories"
-        env:
-          GH_TOKEN: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
         run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://x-access-token:${{ secrets.PYANSYS_CI_BOT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: "Configure pip for private PyPI"
+        run: |
+          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
       - name: "Build library source and wheel artifacts"
         uses: ansys/actions/build-library@41f86da4c9ead510db9135e428e33df9cc6f92e1 #v10.2.3
