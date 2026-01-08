@@ -6,26 +6,32 @@ A Model Context Protocol (MCP) server that provides AI assistants with the abili
 
 This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing you to:
 
-- Discover and list running MAPDL instances on your system
-- Dynamically connect to and disconnect from MAPDL instances
-- Execute MAPDL commands through natural language
-- Check MAPDL instance status, version information, and connection details
-- Write comments and run custom commands
+- **Discover and manage MAPDL instances**: List running instances and get detailed status information
+- **Dynamic connection management**: Launch new MAPDL instances, connect to existing ones, or disconnect as needed
+- **Execute MAPDL commands**: Run single commands or batch multiple commands for efficiency
+- **Custom Python execution**: Run arbitrary Python and PyMAPDL code in a persistent session
+- **Advanced visualization**: Create custom matplotlib and PyVista plots, or capture MAPDL native plots
+- **Workflow guidance**: Access comprehensive context and best practices for all phases of MAPDL simulations
+- **Flexible deployment**: Works with MAPDL running locally, remotely, or in Docker containers
 
 ## Features
 
-- **Dynamic Connection Management**: Connect to and disconnect from MAPDL instances on demand
+- **Dynamic Connection Management**: Connect to and disconnect from MAPDL instances on demand, or launch new instances programmatically
 - **Instance Discovery**: Automatically discover running MAPDL instances on your system
 - **Flexible Deployment**: Supports MAPDL running locally, remotely, or in Docker containers
 - **Type-Safe Context**: Strongly typed application context for reliable operations
 - **Comprehensive Tools**: Specialized tools for MAPDL interaction, including enhanced error handling
+- **Python Session Support**: Execute custom Python code and create advanced visualizations using a persistent Python session
+- **Workflow Guidance**: Built-in context tools provide comprehensive guidelines and best practices for MAPDL workflows
+- **Automatic Initialization**: The server automatically provides necessary context for MAPDL/PyMAPDL queries on first interaction
 
 ## Prerequisites
 
-- Python 3.10 or higher
+- Python 3.10 or higher (up to 3.13)
 - Ansys MAPDL installation (optional - can connect to remote instances)
 - PyMAPDL library (ansys-mapdl-core >= 0.68.0)
-- MCP library (mcp >= 0.1.0)
+- FastMCP library (fastmcp >= 0.1.0)
+- Ansys Common MCP library (ansys-common-mcp >= 0.1.0)
 
 ## Quick Start
 
@@ -174,7 +180,13 @@ python -m ansys.mapdl.mcp --transport http --cors-origins "http://localhost:3000
 
 After starting the server, configure your MCP client to connect to the specified URL (e.g., `http://127.0.0.1:8080`).
 
-### MAPDL Connection Arguments (Works with Both Transports)
+### Command Line Arguments
+
+#### Transport Options
+
+- `--transport {stdio,http}`: Transport type. Default: `stdio`
+
+#### MAPDL Connection Options (Works with Both Transports)
 
 The following MAPDL connection arguments work with both STDIO and HTTP transports:
 
@@ -186,14 +198,48 @@ python -m ansys.mapdl.mcp --connect-on-startup --ip 192.168.1.100 --port 50053
 python -m ansys.mapdl.mcp --transport http --connect-on-startup --ip 192.168.1.100 --port 50053
 ```
 
-**MAPDL Connection Options**:
+**Options**:
 - `--ip`: MAPDL IP address or hostname (default: `127.0.0.1`)
 - `--port`: MAPDL gRPC port (default: `50052`, range: 1-65535)
 - `--connect-on-startup`: Automatically connect to MAPDL when the server starts
 
+> [!WARNING]
+> When `--connect-on-startup` is used, the connection is locked and the following tools are disabled: `launch_mapdl`, `connect_to_mapdl`, and `disconnect_from_mapdl`.
+
+#### HTTP Transport Options
+
+- `--http-host`: HTTP server host address (default: `127.0.0.1`)
+- `--http-port`: HTTP server port (default: `8080`, range: 1-65535)
+- `--cors-origins`: Comma-separated list of allowed CORS origins (optional)
+
+#### Special Environment Options
+
+- `--on-aali`: Specify that the MCP server is running on an AALI environment. This disables certain tools that are not compatible with AALI
+
 ## Usage
 
-### Connect to an MAPDL instance
+### Starting a MAPDL Instance
+
+You have several options to start and connect to MAPDL:
+
+#### Option 1: Launch MAPDL through MCP (Recommended for new instances)
+
+Use the `launch_mapdl` tool to start a new MAPDL instance that will be automatically connected:
+
+Through your AI assistant:
+
+> "Launch a new MAPDL instance"
+
+or with specific options:
+
+> "Launch MAPDL with 4 processors in /tmp/mapdl_work"
+
+This flexible approach allows you to:
+- Start new MAPDL instances on-demand
+- Specify custom settings (processors, working directory, etc.)
+- Automatically establish connection to the launched instance
+
+#### Option 2: Connect to an existing MAPDL instance
 
 Use the `connect_to_mapdl` tool to establish connections dynamically:
 
@@ -209,11 +255,22 @@ This flexible approach allows you to:
 
 - Connect to different MAPDL instances during a session
 - Discover available instances using `list_mapdl_instances` before connecting
-- Work with multiple MAPDL servers without restarting the MCP server.
+- Work with multiple MAPDL servers without restarting the MCP server
 
-By default, the server connects to MAPDL on `localhost:50052`.
+#### Option 3: Auto-connect on MCP startup
 
-## Run commands
+Use the `--connect-on-startup` flag to automatically connect when the MCP server starts:
+
+```console
+python -m ansys.mapdl.mcp --connect-on-startup --ip 127.0.0.1 --port 50052
+```
+
+> [!WARNING]
+> When using `--connect-on-startup`, the connection is locked and you cannot use `launch_mapdl`, `connect_to_mapdl`, or `disconnect_from_mapdl` tools.
+
+By default, the server connects to MAPDL on `localhost:50052` when using Option 2 or 3.
+
+### Run commands
 
 Use `run_mapdl_command` tool to run single MAPDL commands. For instance:
 
@@ -225,66 +282,244 @@ For running multiple commands efficiently, use `run_multiple_commands` tool:
 
 This tool uses MAPDL's `input_strings` method for batch command execution, which is significantly faster than running commands one by one.
 
+### Custom Python Code Execution
+
+Use `run_python_code` tool to execute custom Python and PyMAPDL code:
+
+> Execute this Python code: displacements = mapdl.get_array("NODE", item1="U", it1num="Y"); print(f"Max displacement: {displacements.max()}")
+
+This is useful for:
+- Custom data processing and analysis
+- Advanced PyVista visualizations
+- NumPy/Pandas data manipulation
+- Complex computations not available through direct MAPDL commands
+
+### Creating Custom Plots
+
+Use `create_custom_plot` tool to create custom matplotlib or PyVista plots:
+
+> Create a matplotlib plot showing nodal displacements vs node number
+
+This tool is specifically for custom plots not available in MAPDL's native plotting. For standard MAPDL plots (APLOT, LPLOT, KPLOT, PLNSOL, etc.), use the normal MAPDL commands with the `screenshot` tool.
+
+### Capturing Plots
+
+After running MAPDL plot commands (APLOT, LPLOT, KPLOT, PLNSOL, PLESOL, etc.), use the `screenshot` tool to capture the visualization:
+
+> Show me a plot of the geometry
+
+or
+
+> Capture the current MAPDL plot
+
 
 ## Available Tools
 
-### `check_mapdl_installed`
+### MAPDL Connection and Instance Management
+
+#### `check_mapdl_installed`
 
 Check if MAPDL is installed on the system.
 
 **Returns**: Status message indicating whether MAPDL is installed, and if so, the installation path
 
-### `list_mapdl_instances`
+> [!NOTE]
+> This tool is disabled when running on AALI environments (use `--on-aali` flag).
+
+#### `list_mapdl_instances`
 
 Discover all MAPDL instances running on the local machine.
 
 **Returns**: Formatted table with instance information including names, status, gRPC ports, IP addresses, PIDs, and working directories
 
-### `connect_to_mapdl`
+#### `launch_mapdl`
+
+Launch a new MAPDL instance and automatically connect to it.
+
+**Parameters**:
+- `exec_file` (string, optional): Path to the MAPDL executable. If None, PyMAPDL will attempt to find it automatically
+- `port` (int, optional): gRPC port for MAPDL to listen on. If None, a default port will be used
+- `run_location` (string, optional): Directory where MAPDL will run and store files. If None, a temporary directory will be created
+- `nproc` (int, optional): Number of processors to use. Default is None (MAPDL will decide based on available resources)
+- `additional_switches` (string, optional): Additional command line switches to pass to MAPDL. Default is empty string
+
+**Returns**: Launch status message with MAPDL version and connection information
+
+> [!NOTE]
+> This tool is disabled when `--connect-on-startup` is used or when running on AALI environments.
+
+#### `connect_to_mapdl`
 
 Connect to an existing MAPDL instance.
 
 **Parameters**:
-
 - `ip` (string, optional): IP address where MAPDL is running. Default: "localhost"
 - `port` (int, optional): gRPC port where MAPDL is listening. Default: 50052
 
 **Returns**: Connection status with MAPDL version information
 
-### `disconnect_from_mapdl`
+> [!NOTE]
+> This tool is disabled when `--connect-on-startup` is used or when running on AALI environments.
+
+#### `disconnect_from_mapdl`
 
 Disconnect from the currently connected MAPDL instance.
 
 **Returns**: Disconnection status message
 
-### `check_mapdl_status`
+> [!NOTE]
+> This tool is disabled when `--connect-on-startup` is used or when running on AALI environments.
 
-Check the status and version of the connected MAPDL instance.
+### MAPDL Status and Information
 
-**Returns**: Confirmation of comment execution
+#### `check_mapdl_status`
 
-### `run_mapdl_command`
+Check the status and comprehensive information of the connected MAPDL instance.
 
-Execute arbitrary MAPDL commands.
+**Returns**: JSON string containing comprehensive MAPDL status information including:
+- Connection details (version, port, IP, directory, is_alive)
+- Information class data (title, jobname, routine, units, etc.)
+- Geometry statistics (number of keypoints, lines, areas, volumes)
+- Post-processing availability and result sets
+- Mesh statistics (number of nodes and elements)
+
+### MAPDL Command Execution
+
+#### `write_comment`
+
+Write a comment in the MAPDL session using the `/COM` command.
 
 **Parameters**:
+- `comment` (string): The comment text to write in MAPDL
 
+**Returns**: Confirmation message with the comment execution result
+
+> [!NOTE]
+> This tool is disabled when running on AALI environments.
+
+#### `run_mapdl_command`
+
+Execute a single MAPDL command.
+
+**Parameters**:
 - `cmd` (string): The MAPDL command to execute
 
 **Returns**: Command execution result
 
-### `run_multiple_commands`
+#### `run_multiple_commands`
 
-Execute multiple MAPDL commands in sequence efficiently.
+Execute multiple MAPDL commands in sequence efficiently using batch processing.
 
 **Parameters**:
-
 - `commands` (list of strings): List of MAPDL commands to execute
 
 **Returns**: Execution result with summary of commands executed
 
 > [!NOTE]
-> **Note**: This tool uses MAPDL's `input_strings` method for batch processing, which is significantly faster than executing commands individually. Perfect for running multiple setup commands or creating complex geometries.
+> This tool uses MAPDL's `input_strings` method for batch processing, which is significantly faster than executing commands individually. Perfect for running multiple setup commands or creating complex geometries. This tool is disabled when running on AALI environments.
+
+### Python Session and Custom Processing
+
+#### `run_python_code`
+
+Execute arbitrary Python and PyMAPDL code in a persistent Python session.
+
+**Parameters**:
+- `code` (string): The Python code to execute
+- `timeout` (int, optional): Maximum time in seconds to allow for code execution. Default: 60 seconds
+
+**Returns**: JSON string with execution result containing:
+- `success` (boolean): Whether execution succeeded
+- `stdout` (string): Standard output from the code
+- `stderr` (string): Standard error output
+- `message` or `error` (string): Status message or error details
+
+**Use cases**:
+- Custom data processing and analysis
+- Advanced PyVista visualizations
+- NumPy/Pandas data manipulation
+- Custom matplotlib plots not available in MAPDL
+
+> [!NOTE]
+> For standard MAPDL plots (aplot, lplot, kplot, post_processing plots), use the normal MAPDL session commands with the `screenshot` tool instead.
+
+#### `create_custom_plot`
+
+Create custom plots using matplotlib or PyVista in the persistent Python session.
+
+**Parameters**:
+- `plot_code` (string): Python code to create the plot. Should use matplotlib.pyplot or PyVista
+- `plot_type` (string, optional): Type of plot: "matplotlib" or "pyvista". Default: "matplotlib"
+- `timeout` (int, optional): Maximum time in seconds for plot generation. Default: 60 seconds
+
+**Returns**: List containing:
+- TextContent with the plot creation status message
+- ImageContent with the base64-encoded image data (if successful)
+
+**Pre-configured helpers in persistent session**:
+- `save_matplotlib_plot(filename, dpi)`: Save matplotlib plots
+- `save_plot(plotter, filename)`: Save PyVista plots
+
+> [!IMPORTANT]
+> This tool is specifically designed for custom plots that are NOT available in MAPDL's native plotting capabilities. For standard MAPDL plots, use the normal MAPDL commands with the `screenshot` tool. This tool is disabled when running on AALI environments.
+
+### Visualization
+
+#### `screenshot`
+
+Capture a screenshot of the current MAPDL graphics window.
+
+**Returns**: List containing:
+- TextContent with the screenshot file path
+- ImageContent with the base64-encoded image data
+
+**Use with MAPDL native plot commands**:
+- Geometry: `APLOT`, `LPLOT`, `KPLOT`, `VPLOT`
+- Mesh: `EPLOT`, `NPLOT`
+- Post-processing: `PLNSOL`, `PLESOL`, `PLDISP`
+
+> [!NOTE]
+> For custom matplotlib or PyVista plots, use the `create_custom_plot` tool instead. This tool is disabled when running on AALI environments.
+
+### Workflow Context and Guidance
+
+The following context tools provide comprehensive guidelines and best practices for MAPDL workflows:
+
+#### `get_context_for_workflow_overview`
+
+Get general MAPDL simulation workflow overview context covering the complete simulation process independent of analysis type.
+
+#### `get_context_for_preprocessing_geometry`
+
+Get geometry and meshing guidelines for MAPDL preprocessing.
+
+#### `get_context_for_preprocessing_elements`
+
+Get element type selection and definition guidelines including commonly used element types for various analyses.
+
+#### `get_context_for_preprocessing_materials`
+
+Get material model definition guidelines with default assumptions for structural and thermal analyses.
+
+#### `get_context_for_preprocessing_mesh`
+
+Get mesh generation guidelines including quality considerations and best practices.
+
+#### `get_context_for_preprocessing_boundary_conditions`
+
+Get boundary conditions and loads application guidelines for different analysis types.
+
+#### `get_context_for_solution_phase`
+
+Get solution phase guidelines including analysis type selection, solver configuration, and convergence monitoring.
+
+#### `get_context_for_postprocessing_phase`
+
+Get postprocessing phase guidelines for extracting and visualizing results, including when to use MAPDL native plots vs. custom Python plots.
+
+#### `get_context_for_general_rules`
+
+Get general rules and best practices for MAPDL simulations including accuracy factors, verification steps, and common pitfalls to avoid.
 
 ## Development
 
@@ -511,26 +746,79 @@ pre-commit run --all-files
 
 ## Architecture
 
-The server uses the FastMCP framework with lifespan management:
+The server uses the PyAnsysBaseMCP framework (built on FastMCP) with lifespan management:
 
-1. **Startup**: Connects to an existing MAPDL instance
-2. **Runtime**: Exposes tools for MAPDL interaction
-3. **Shutdown**: Gracefully disconnects from MAPDL
+1. **Startup**:
+   - Initializes a persistent Python session for custom code execution
+   - Optionally connects to an existing MAPDL instance (if `--connect-on-startup` is used)
+   - Otherwise, waits for dynamic connection through tools
+2. **Runtime**:
+   - Exposes tools for MAPDL interaction
+   - Manages dynamic MAPDL connections
+   - Executes commands in both MAPDL and Python sessions
+   - Provides workflow guidance through context tools
+3. **Shutdown**:
+   - Gracefully disconnects from MAPDL
+   - Cleans up persistent Python session resources
+
+### Application Context
+
+The server uses a strongly-typed `PyMAPDLAppContext` that includes:
+- MAPDL instance connection
+- Persistent Python session for custom code
+- Transport configuration (STDIO or HTTP)
+- Connection settings (IP, port, auto-connect options)
+- Command history tracking
 
 ### Adding New Tools
 
-To add new MAPDL tools, edit `src/ansys/mapdl/mcp/mcp.py` and use the `@mcp.tool()` decorator:
+To add new MAPDL tools, edit `src/ansys/mapdl/mcp/tools.py` and use the `@app.tool()` decorator:
 
 ```python
-@mcp.tool()
+@app.tool()
 def your_new_tool(ctx: Context, param: str) -> str:
     """Description of your tool."""
-    mapdl = ctx.mapdl
+    mapdl = ctx.request_context.lifespan_context.mapdl
+
+    if mapdl is None:
+        return "No MAPDL connection available. Use connect_to_mapdl to establish a connection."
 
     # Your MAPDL operations here
     result = mapdl.your_command()
 
     return f"Result: {result}"
+```
+
+### Adding Context Tools
+
+To add workflow guidance tools, edit `src/ansys/mapdl/mcp/contexts.py` and use the `@add_tool` decorator:
+
+```python
+@add_tool
+def get_context_for_your_topic() -> str:
+    """Get guidance for your specific topic.
+
+    Returns
+    -------
+    str
+        Detailed guidelines and best practices.
+    """
+    return """# Your Topic Guidelines
+
+    Your comprehensive guidance here...
+    """
+```
+
+### Tool Enabling/Disabling
+
+Tools can be conditionally enabled or disabled based on server configuration:
+
+```python
+# Disable tool when connection is locked or on AALI
+@app.tool(enabled=not (session.locked_connection or session.on_aali))
+def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> str:
+    # Tool implementation
+    pass
 ```
 
 
