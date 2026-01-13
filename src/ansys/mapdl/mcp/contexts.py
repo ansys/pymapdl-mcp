@@ -13,8 +13,10 @@ from ansys.mapdl.mcp.server import add_tool
 
 
 @add_tool
-def get_context_for_workflow_overview() -> str:
-    """Get general MAPDL simulation workflow overview context.
+def get_guidelines_for_workflow_overview() -> str:
+    """Get general MAPDL simulation workflow guidelines.
+
+    Use this tool when explaining or generating PyMAPDL or Ansys MAPDL workflows.
 
     Returns
     -------
@@ -68,8 +70,10 @@ Always follow this general simulation process when explaining or generating PyMA
 
 
 @add_tool
-def get_context_for_preprocessing_geometry() -> str:
+def get_guidelines_for_preprocessing_geometry() -> str:
     """Get geometry and meshing guidelines for MAPDL preprocessing.
+
+    Use this tool when explaining or generating the geometry and meshing section of a MAPDL workflow.
 
     Returns
     -------
@@ -106,8 +110,10 @@ mapdl.com("Creating geometry")
 
 
 @add_tool
-def get_context_for_preprocessing_elements() -> str:
+def get_guidelines_for_preprocessing_elements() -> str:
     """Get element type selection and definition guidelines.
+
+    Use this tool when explaining or generating the element type definition section of a MAPDL workflow.
 
     Returns
     -------
@@ -176,8 +182,10 @@ The following element types are commonly used in MAPDL simulations:
 
 
 @add_tool
-def get_context_for_preprocessing_materials() -> str:
+def get_guidelines_for_preprocessing_materials() -> str:
     """Get material model definition guidelines.
+
+    Use this tool when explaining or generating the material properties section of a MAPDL workflow.
 
     Returns
     -------
@@ -247,8 +255,10 @@ mapdl.mp("DENS", 1, 7850)   # Density in kg/m³
 
 
 @add_tool
-def get_context_for_preprocessing_mesh() -> str:
+def get_guidelines_for_preprocessing_mesh() -> str:
     """Get mesh generation guidelines.
+
+    Use this tool when explaining or generating the mesh section of a MAPDL workflow.
 
     Returns
     -------
@@ -310,8 +320,10 @@ mapdl.vmesh("ALL")
 
 
 @add_tool
-def get_context_for_preprocessing_boundary_conditions() -> str:
+def get_guidelines_for_preprocessing_boundary_conditions() -> str:
     """Get boundary conditions and loads application guidelines.
+
+    Use this tool when explaining or generating the boundary conditions and loads section of a MAPDL workflow.
 
     Returns
     -------
@@ -404,8 +416,10 @@ mapdl.f(node_id, "FY", -1000)
 
 
 @add_tool
-def get_context_for_solution_phase() -> str:
+def get_guidelines_for_solution_phase() -> str:
     """Get solution phase guidelines for MAPDL analysis.
+
+    Use this tool when configuring and running the solution phase in a MAPDL workflow.
 
     Returns
     -------
@@ -500,8 +514,10 @@ mapdl.solve()
 
 
 @add_tool
-def get_context_for_postprocessing_phase() -> str:
+def get_guidelines_for_postprocessing_phase() -> str:
     """Get postprocessing phase guidelines for MAPDL analysis.
+
+    Use this tool when postprocessing results in a MAPDL workflow.
 
     Returns
     -------
@@ -512,9 +528,13 @@ def get_context_for_postprocessing_phase() -> str:
 
 ## Section Comment Requirement
 
-**ALWAYS** start the postprocessing section with a descriptive comment:
+**ALWAYS** start the postprocessing section with a descriptive comment,
+followed by the postprocessing commands:
 ```python
 mapdl.com("Post-processing results")
+mapdl.post1()
+mapdl.set(1, 1)  # Set load step and substep
+...
 ```
 
 ## Entering Postprocessing Mode
@@ -702,8 +722,13 @@ mapdl.plot_element_solution("SEQV")
 
 
 @add_tool
-def get_context_for_general_rules() -> str:
+def get_guidelines_for_general_rules() -> str:
     """Get general rules and best practices for MAPDL workflows.
+
+    Use this tool when working with MAPDL simulations or PyMAPDL workflows
+    to obtain general guidelines.
+    The use of this tool is strongly recommended to ensure high-quality
+    simulations, and it is independent of the analysis type.
 
     Returns
     -------
@@ -788,14 +813,3 @@ Keep the workflow structure consistent across all analysis types:
 - Not validating results
 - Using inconsistent coordinate systems
 """
-
-
-def register_all_context_tools():
-    """Register all workflow context tools with the MCP server.
-
-    This function is called to ensure all context tools are properly registered.
-    The actual registration happens via the @mcp.tool decorators above.
-    """
-    # Context tools are registered via decorators
-    # This function serves as a marker that all tools are loaded
-    pass
