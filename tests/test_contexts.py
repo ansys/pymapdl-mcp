@@ -34,7 +34,7 @@ def test_workflow_overview_content():
     """Test that workflow overview tool returns expected content."""
     from ansys.mapdl.mcp import contexts
 
-    content = contexts.get_guidelines_for_workflow_overview()
+    content = contexts.get_guidelines_for_workflow_overview.fn()
 
     # Check for key sections in the overview
     assert "MAPDL Simulation Workflow Overview" in content
@@ -48,7 +48,7 @@ def test_preprocessing_geometry_content():
     """Test preprocessing geometry tool content."""
     from ansys.mapdl.mcp import contexts
 
-    content = contexts.get_guidelines_for_preprocessing_geometry()
+    content = contexts.get_guidelines_for_preprocessing_geometry.fn()
 
     assert "Geometry Guidelines" in content
     assert "2D vs 3D" in content
@@ -59,7 +59,7 @@ def test_preprocessing_elements_content():
     """Test preprocessing elements tool content."""
     from ansys.mapdl.mcp import contexts
 
-    content = contexts.get_guidelines_for_preprocessing_elements()
+    content = contexts.get_guidelines_for_preprocessing_elements.fn()
 
     assert "Element Type Selection" in content
     assert "SOLID186" in content
@@ -71,7 +71,7 @@ def test_preprocessing_materials_content():
     """Test preprocessing materials tool content."""
     from ansys.mapdl.mcp import contexts
 
-    content = contexts.get_guidelines_for_preprocessing_materials()
+    content = contexts.get_guidelines_for_preprocessing_materials.fn()
 
     assert "Material Property Definition" in content
     assert "Steel" in content or "steel" in content
@@ -82,7 +82,7 @@ def test_preprocessing_mesh_content():
     """Test preprocessing mesh tool content."""
     from ansys.mapdl.mcp import contexts
 
-    content = contexts.get_guidelines_for_preprocessing_mesh()
+    content = contexts.get_guidelines_for_preprocessing_mesh.fn()
 
     assert "Mesh Generation Guidelines" in content
     assert "mesh quality" in content.lower()
@@ -93,7 +93,7 @@ def test_preprocessing_boundary_conditions_content():
     """Test preprocessing boundary conditions tool content."""
     from ansys.mapdl.mcp import contexts
 
-    content = contexts.get_guidelines_for_preprocessing_boundary_conditions()
+    content = contexts.get_guidelines_for_preprocessing_boundary_conditions.fn()
 
     assert "Boundary Conditions and Loads" in content
     assert "Fixed Supports" in content or "fixed supports" in content
@@ -104,7 +104,7 @@ def test_solution_phase_content():
     """Test solution phase tool content."""
     from ansys.mapdl.mcp import contexts
 
-    content = contexts.get_guidelines_for_solution_phase()
+    content = contexts.get_guidelines_for_solution_phase.fn()
 
     assert "Solution" in content
     assert "STATIC" in content
@@ -117,7 +117,7 @@ def test_postprocessing_phase_content():
     """Test postprocessing phase tool content."""
     from ansys.mapdl.mcp import contexts
 
-    content = contexts.get_guidelines_for_postprocessing_phase()
+    content = contexts.get_guidelines_for_postprocessing_phase.fn()
 
     assert "Postprocessing" in content
     assert "post1" in content
@@ -129,7 +129,7 @@ def test_general_rules_content():
     """Test general rules tool content."""
     from ansys.mapdl.mcp import contexts
 
-    content = contexts.get_guidelines_for_general_rules()
+    content = contexts.get_guidelines_for_general_rules.fn()
 
     assert "General Rules" in content
     assert "Accuracy" in content or "accuracy" in content
