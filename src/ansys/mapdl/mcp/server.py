@@ -167,19 +167,6 @@ class SessionContext:
 session = SessionContext()
 
 
-def add_tool(func):
-    """Wrap functions to register them as MCP tools.
-
-    It does return the original function unchanged.
-    """
-    app.tool(func)
-
-    def wrapped(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapped
-
-
 def _validate_port(port: int) -> int:
     if port < 1 or port > 65535:
         raise argparse.ArgumentTypeError("Port must be in range 1-65535")
