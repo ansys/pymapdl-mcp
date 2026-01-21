@@ -154,6 +154,6 @@ def test_all_context_tools_return_strings():
     ]
 
     for func in context_tool_functions:
-        result = func()
+        result = func.fn()
         assert isinstance(result, str), f"{func.__name__} should return a string"
         assert len(result) > 0, f"{func.__name__} should return non-empty string"
