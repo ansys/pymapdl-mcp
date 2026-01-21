@@ -485,39 +485,39 @@ Capture a screenshot of the current MAPDL graphics window.
 
 The following context tools provide comprehensive guidelines and best practices for MAPDL workflows:
 
-#### `get_context_for_workflow_overview`
+#### `get_guidelines_for_workflow_overview`
 
 Get general MAPDL simulation workflow overview context covering the complete simulation process independent of analysis type.
 
-#### `get_context_for_preprocessing_geometry`
+#### `get_guidelines_for_preprocessing_geometry`
 
 Get geometry and meshing guidelines for MAPDL preprocessing.
 
-#### `get_context_for_preprocessing_elements`
+#### `get_guidelines_for_preprocessing_elements`
 
 Get element type selection and definition guidelines including commonly used element types for various analyses.
 
-#### `get_context_for_preprocessing_materials`
+#### `get_guidelines_for_preprocessing_materials`
 
 Get material model definition guidelines with default assumptions for structural and thermal analyses.
 
-#### `get_context_for_preprocessing_mesh`
+#### `get_guidelines_for_preprocessing_mesh`
 
 Get mesh generation guidelines including quality considerations and best practices.
 
-#### `get_context_for_preprocessing_boundary_conditions`
+#### `get_guidelines_for_preprocessing_boundary_conditions`
 
 Get boundary conditions and loads application guidelines for different analysis types.
 
-#### `get_context_for_solution_phase`
+#### `get_guidelines_for_solution_phase`
 
 Get solution phase guidelines including analysis type selection, solver configuration, and convergence monitoring.
 
-#### `get_context_for_postprocessing_phase`
+#### `get_guidelines_for_postprocessing_phase`
 
 Get postprocessing phase guidelines for extracting and visualizing results, including when to use MAPDL native plots vs. custom Python plots.
 
-#### `get_context_for_general_rules`
+#### `get_guidelines_for_general_rules`
 
 Get general rules and best practices for MAPDL simulations including accuracy factors, verification steps, and common pitfalls to avoid.
 
@@ -795,7 +795,7 @@ To add workflow guidance tools, edit `src/ansys/mapdl/mcp/contexts.py` and use t
 
 ```python
 @add_tool
-def get_context_for_your_topic() -> str:
+def get_guidelines_for_your_topic() -> str:
     """Get guidance for your specific topic.
 
     Returns
