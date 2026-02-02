@@ -24,7 +24,7 @@ env:
 
 jobs:
   lint:
-    name: "Code Quality"
+    name: "Code style checks"
     runs-on: ubuntu-latest
 
     steps:
