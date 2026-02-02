@@ -20,6 +20,7 @@ env:
   PACKAGE_NAME: "ansys-mapdl-mcp"
   MAPDL_IMAGE: "ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd"
   PYMAPDL_PORT: "21000"
+  PYMAPDL_GRPC_TRANSPORT: "insecure"
 
 jobs:
   lint:
