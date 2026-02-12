@@ -7,12 +7,9 @@ from typing import Any, Optional
 
 from ansys.common.mcp import (
     PyAnsysBaseMCP,
-    get_logger,
 )
 from ansys.common.mcp.context import PyAnsysBaseAppContext
-from ansys.common.mcp.helpers import PersistentPythonSession
-
-logger = get_logger(__name__)
+from ansys.common.mcp.helpers import PersistentPythonSession, logger
 
 
 @dataclass

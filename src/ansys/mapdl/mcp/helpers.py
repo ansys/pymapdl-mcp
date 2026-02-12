@@ -1,12 +1,10 @@
-import logging
 from typing import TYPE_CHECKING, Any
 
+from ansys.common.mcp.helpers import logger
 from fastmcp.server import Context
 
 if TYPE_CHECKING:
     from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
-
-logger = logging.getLogger(__name__)
 
 
 def list_instances(
