@@ -34,7 +34,7 @@
 				".devcontainer/welcome.rst"
 			],
 			"extensions": [
-					"ms-python.python"
+				"ms-python.python"
 			],
 			"settings": {
 				"python.defaultInterpreterPath": "/home/mapdl/pymapdl-mcp/.venv/bin/python",

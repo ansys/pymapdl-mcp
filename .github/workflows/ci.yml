@@ -21,43 +21,27 @@ env:
   MAPDL_IMAGE: "ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd"
   PYMAPDL_PORT: "21000"
   DOCUMENTATION_CNAME: "mapdl-mcp.docs.pyansys.com"
+  PYMAPDL_GRPC_TRANSPORT: "insecure"
 
 jobs:
   lint:
-    name: "Code Quality"
+    name: "Code style checks"
     runs-on: ubuntu-latest
 
     steps:
       - name: "Checkout code"
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
 
-      - name: "Set up Python"
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c #v6.0.0
-        with:
-          python-version: "3.11"
-          cache: 'pip'
-
       - name: "Configure pip for private PyPI"
         run: |
           pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
-      - name: "Install dependencies"
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+      - name: "Run PyAnsys code style checks"
+        uses: ansys/actions/code-style@41f86da4c9ead510db9135e428e33df9cc6f92e1 #v10.2.3
+        with:
+          checkout: false
+          python-version: ${{ env.MAIN_PYTHON_VERSION }}
 
-      - name: "Check code formatting with black"
-        run: |
-          black --check src tests
-
-      - name: "Check import sorting with isort"
-        run: |
-          isort --check-only src tests
-
-      - name: "Type check with mypy"
-        run: |
-          mypy src/ansys/mapdl/mcp --ignore-missing-imports
-        continue-on-error: true
 
   test:
     name: "Test Python ${{ matrix.python-version }} on ${{ matrix.os }}"
