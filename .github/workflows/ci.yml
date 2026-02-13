@@ -16,10 +16,11 @@ concurrency:
 
 env:
   ON_CI: "true"
-  MAIN_PYTHON_VERSION: "3.10"
+  MAIN_PYTHON_VERSION: "3.13"
   PACKAGE_NAME: "ansys-mapdl-mcp"
   MAPDL_IMAGE: "ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd"
   PYMAPDL_PORT: "21000"
+  DOCUMENTATION_CNAME: "mapdl-mcp.docs.pyansys.com"
   PYMAPDL_GRPC_TRANSPORT: "insecure"
 
 jobs:
@@ -207,6 +208,69 @@ jobs:
           docker stop mapdl || true
           docker rm mapdl || true
 
+  build-docs:
+    name: "Build documentation"
+    runs-on: ubuntu-latest
+    needs: [lint]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "Install OS packages"
+        shell: bash
+        run: |
+          sudo apt update && sudo apt install -y zip libgl1 libglx-mesa0 xvfb
+
+      - name: Set up Python ${{ env.MAIN_PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.MAIN_PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: |
+            pyproject.toml
+
+      - name: "Configure pip for private PyPI"
+        run: |
+          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[doc]
+
+      - name: Build documentation
+        run: |
+          cd doc
+          make clean
+          xvfb-run make html | tee doc_build.log
+        env:
+          SPHINXOPTS: "-W --keep-going"
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: documentation-html
+          path: doc/_build/html/
+          retention-days: 30
+
+  upload-dev-docs:
+    name: "Upload dev documentation"
+    if: github.ref == 'refs/heads/main' && !contains(github.ref, 'refs/tags')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed to push documentation to gh-pages branch
+    needs: [build-docs]
+    steps:
+      - name: "Deploy the latest documentation"
+        uses: ansys/actions/doc-deploy-dev@36cd86710c966963f4dcec56a9670171618cf76a #v10.2.4
+        with:
+          cname: ${{ env.DOCUMENTATION_CNAME }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          bot-user: ${{ secrets.PYANSYS_CI_BOT_USERNAME }}
+          bot-email: ${{ secrets.PYANSYS_CI_BOT_EMAIL }}
+
   package:
     name: "Package library"
     needs: [test, integration-local, integration-remote]
@@ -216,6 +280,10 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+
+      - name: "Configure pip for private PyPI"
+        run: |
+          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
       - name: "Build library source and wheel artifacts"
         uses: ansys/actions/build-library@41f86da4c9ead510db9135e428e33df9cc6f92e1 #v10.2.3
@@ -304,3 +372,20 @@ jobs:
           library-name: ${{ env.PACKAGE_NAME }}
           twine-username: "__token__"
           twine-token: ${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}
+
+  upload-docs-release:
+    name: "Upload release documentation"
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed to push documentation to gh-pages branch
+    needs: [release]
+    steps:
+      - name: "Deploy the stable documentation"
+        uses: ansys/actions/doc-deploy-stable@36cd86710c966963f4dcec56a9670171618cf76a #v10.2.4
+        with:
+          cname: ${{ env.DOCUMENTATION_CNAME }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          render-last: '5'
+          bot-user: ${{ secrets.PYANSYS_CI_BOT_USERNAME }}
+          bot-email: ${{ secrets.PYANSYS_CI_BOT_EMAIL }}
