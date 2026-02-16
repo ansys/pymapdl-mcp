@@ -1,0 +1,20 @@
+
+External Links
+--------------
+
+.. _Python: https://www.python.org/
+.. _MAPDL: https://www.ansys.com/products/structures/ansys-mapdl
+.. _PyMAPDL: https://mapdl.docs.pyansys.com/
+.. _Ansys: https://www.ansys.com/
+.. _MCP: https://modelcontextprotocol.io/
+.. _Claude: https://claude.ai/
+.. _GitHub: https://github.com/
+.. _Sphinx: https://www.sphinx-doc.org/
+.. _ReadTheDocs: https://readthedocs.org/
+.. _FEA: https://en.wikipedia.org/wiki/Finite_element_method
+
+Relevant links are:
+
+- `PyMAPDL Documentation <https://mapdl.docs.pyansys.com/>`_
+
+- `Model Context Protocol (MCP) Documentation <https://modelcontextprotocol.io/docs/>`_
