@@ -663,7 +663,7 @@ ansys     True          running         50052  12345  ansys242 -grpc -port 50052
 ansys     True          running         50053  12346  ansys242 -grpc -port 50053  /tmp/ansys_tmp2"""
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances.fn()
+            result = list_mapdl_instances()
 
             # Verify the function returns the output from list_instances
             assert result == mock_output
@@ -677,7 +677,7 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
 ------  -------------  --------  -----------  -----  --------------  -------------------"""
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances.fn()
+            result = list_mapdl_instances()
 
             # Verify appropriate message is returned
             assert result == mock_output
@@ -687,7 +687,7 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
         mock_list_instances = Mock(return_value="Sample output")
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", mock_list_instances):
-            result = list_mapdl_instances.fn()
+            result = list_mapdl_instances()
 
             # Verify list_instances was called with long=True
             mock_list_instances.assert_called_once_with(long=True, instances=True)
@@ -703,7 +703,7 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
 ansys     True          running         50054  12347  ansys242 -grpc -port 50054  /tmp/ansys_workdir3"""
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances.fn()
+            result = list_mapdl_instances()
 
             # Verify all instances are included in output
             assert "ansys" in result
@@ -713,7 +713,7 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
         """Test that list_mapdl_instances correctly propagates the return value from helpers.list_instances."""
         mock_output = "Sample output with instance information"
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output) as mock_list:
-            result = list_mapdl_instances.fn()
+            result = list_mapdl_instances()
 
             # Verify the helper function was called with correct parameters
             mock_list.assert_called_once_with(long=True, instances=True)
@@ -729,7 +729,7 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
 ansys     True          running         50052  12345  ansys242 -grpc -port 50052  /tmp/ansys_tmp"""
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances.fn()
+            result = list_mapdl_instances()
 
             # Verify all expected headers are present
             assert "Name" in result
@@ -742,7 +742,7 @@ ansys     True          running         50052  12345  ansys242 -grpc -port 50052
         # Mock the list_instances to return a valid string even in error cases
         mock_output = "Error: Unable to list instances"
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances.fn()
+            result = list_mapdl_instances()
 
             # Should return a string, not raise exception
             assert isinstance(result, str)
@@ -754,8 +754,8 @@ ansys     True          running         50052  12345  ansys242 -grpc -port 50052
 ------  --------  -----------  -----  -------------------------  -------------------"""
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result1 = list_mapdl_instances.fn()
-            result2 = list_mapdl_instances.fn()
+            result1 = list_mapdl_instances()
+            result2 = list_mapdl_instances()
 
             # Both should be strings with same format
             assert isinstance(result1, str)
