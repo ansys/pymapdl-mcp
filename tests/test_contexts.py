@@ -9,7 +9,7 @@ async def test_context_tools_registered():
     from ansys.mapdl.mcp.server import app
 
     # Get list of registered tools
-    tool_list = await app.get_tools()
+    tool_list = await app.list_tools()
 
     # Expected tool names
     expected_tools = [
