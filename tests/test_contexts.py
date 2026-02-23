@@ -13,6 +13,7 @@ async def test_context_tools_registered():
 
     # Expected tool names
     expected_tools = [
+        "launch_mapdl",
         "get_guidelines_for_workflow_overview",
         "get_guidelines_for_preprocessing_geometry",
         "get_guidelines_for_preprocessing_elements",
@@ -25,7 +26,7 @@ async def test_context_tools_registered():
     ]
 
     # Check each expected tool is registered
-    tool_names = [t.name for t in tool_list.values()]
+    tool_names = [t.name for t in tool_list]
     for expected_name in expected_tools:
         assert expected_name in tool_names, f"Tool {expected_name} not found"
 
