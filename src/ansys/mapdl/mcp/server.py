@@ -282,3 +282,13 @@ def launcher(argv: list[str] | None = None) -> None:
                 port=args.http_port,
             )
         )
+
+    # Disable the connect and disconnect tools when on AALI or when connection is locked,
+    # since they won't work in those environments and can cause confusion.
+    # The tools will still be visible but will return a message indicating they are not available
+    # in the current environment.
+
+    if session.on_aali:
+        app.disable(tags={"aali"})
+    if session.locked_connection:
+        app.disable(tags={"locked_connection"})
