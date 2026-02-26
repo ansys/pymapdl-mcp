@@ -28,10 +28,11 @@ switcher_version = get_version_match(version)
 # General configuration
 extensions = [
     "numpydoc",
+    "sphinx_design",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
-    "sphinx_design",
+    "sphinxcontrib.video",
 ]
 
 templates_path = ["_templates"]
