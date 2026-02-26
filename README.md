@@ -25,7 +25,8 @@ This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing 
 - **Workflow Guidance**: Built-in context tools provide comprehensive guidelines and best practices for MAPDL workflows
 - **Automatic Initialization**: The server automatically provides necessary context for MAPDL/PyMAPDL queries on first interaction
 
-[![Watch the video]()](https://raw.githubusercontent.com/ansys/pymapdl-mcp/blob/docs/adding-video-gifs/doc/source/_static/videos/PyMAPDL-MCP-demo.mp4)
+https://github.com/user-attachments/assets/99b68fbd-2308-46a0-aa44-9684ae7400b7
+
 
 
 ## Prerequisites
