@@ -15,12 +15,10 @@ This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing 
 - **Flexible deployment**: Works with MAPDL running locally, remotely, or in Docker containers
 
 <p align="center">
-<img src="https://example.com/image.png" alt="Image Description" width="600">
 
 https://github.com/user-attachments/assets/99b68fbd-2308-46a0-aa44-9684ae7400b7
 
-**Video 1: PyMAPDL MCP Demo**
-
+<b>Video 1: PyMAPDL MCP Demo</b>
 </p>
 
 
