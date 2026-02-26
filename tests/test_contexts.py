@@ -6,6 +6,8 @@ import pytest
 @pytest.mark.asyncio
 async def test_context_tools_registered():
     """Test that all context tools are registered with the MCP server."""
+    # Import contexts and tools to register them with the app
+    from ansys.mapdl.mcp import contexts, tools  # noqa: F401
     from ansys.mapdl.mcp.server import app
 
     # Get list of registered tools

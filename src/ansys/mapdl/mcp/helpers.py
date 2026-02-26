@@ -279,7 +279,7 @@ def connect_to_mapdl_in_persistent_python(
         if mapdl_instance is None:
             return (
                 "No MAPDL instance available in lifespan context. "
-                "Please launch or connect to MAPDL first using launch_mapdl"
+                "Please launch or connect to MAPDL first using launch_mapdl "
                 "or connect_to_mapdl tool."
             )
 
