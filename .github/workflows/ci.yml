@@ -36,11 +36,20 @@ jobs:
         run: |
           pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
+      - name: Cache pre-commit hooks
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            pre-commit-${{ runner.os }}-
+
       - name: "Run PyAnsys code style checks"
         uses: ansys/actions/code-style@41f86da4c9ead510db9135e428e33df9cc6f92e1 #v10.2.3
         with:
           checkout: false
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
+          use-python-cache: true
 
 
   test:
