@@ -18,8 +18,6 @@ env:
   ON_CI: "true"
   MAIN_PYTHON_VERSION: "3.13"
   PACKAGE_NAME: "ansys-mapdl-mcp"
-  MAPDL_IMAGE: "ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd"
-  PYMAPDL_PORT: "21000"
   DOCUMENTATION_CNAME: "mapdl-mcp.docs.pyansys.com"
   PYMAPDL_GRPC_TRANSPORT: "insecure"
 
@@ -144,7 +142,6 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
     env:
-      MAPDL_IMAGE: "ghcr.io/ansys/mapdl:v25.2-ubuntu-cicd"
       PYMAPDL_PORT: 21000
       ON_LOCAL: "false"
 
@@ -162,7 +159,7 @@ jobs:
       - name: "Launch first MAPDL instance using action"
         uses: ansys/pymapdl/.github/actions/launch-mapdl-docker@main
         with:
-          mapdl-image: ${{ env.MAPDL_IMAGE }}
+          mapdl-image: "ghcr.io/ansys/mapdl:v25.2-ubuntu-cicd"
           license-server: ${{ secrets.LICENSE_SERVER }}
           pymapdl-port: ${{ env.PYMAPDL_PORT }}
 
