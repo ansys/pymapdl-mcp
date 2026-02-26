@@ -814,11 +814,21 @@ def get_guidelines_for_your_topic() -> str:
 Tools can be conditionally enabled or disabled based on server configuration:
 
 ```python
-# Disable tool when connection is locked or on AALI
-@app.tool(enabled=not (session.locked_connection or session.on_aali))
+# Add a tag to the adequate tools
+@app.tool(tags={"locked_connection"})
 def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> str:
     # Tool implementation
     pass
+```
+
+```python
+# Disable tool when connection is locked or on AALI
+
+app = PyMAPDLMCP(
+  "pymapdl-mcp"
+)
+
+app.disable(tags={"locked_connection"})
 ```
 
 
