@@ -19,7 +19,7 @@ class TestErrorHandling:
         )
 
         with pytest.raises(RuntimeError) as exc_info:
-            run_mapdl_command.fn(mock_context, "INVALID_COMMAND")
+            run_mapdl_command(mock_context, "INVALID_COMMAND")
 
         assert "MAPDL command failed" in str(exc_info.value)
 
@@ -31,14 +31,14 @@ class TestErrorHandling:
         )
 
         with pytest.raises(RuntimeError) as exc_info:
-            write_comment.fn(mock_context, "Test comment")
+            write_comment(mock_context, "Test comment")
 
         assert "Failed to write comment" in str(exc_info.value)
 
     def test_none_mapdl_instance(self, mock_context_no_mapdl):
         """Test handling when MAPDL instance is None."""
         # Should return helpful error message instead of raising exception
-        result = check_mapdl_status.fn(mock_context_no_mapdl)
+        result = check_mapdl_status(mock_context_no_mapdl)
         assert isinstance(result, str)
         assert "No MAPDL connection available" in result
 
@@ -50,7 +50,7 @@ class TestErrorHandling:
         invalid_context.request_context.lifespan_context = MagicMock()
         invalid_context.request_context.lifespan_context.mapdl = None
 
-        result = check_mapdl_status.fn(invalid_context)
+        result = check_mapdl_status(invalid_context)
         assert "No MAPDL connection available" in result
 
     def test_mapdl_timeout(self, mock_context):
@@ -61,14 +61,14 @@ class TestErrorHandling:
         )
 
         with pytest.raises(TimeoutError) as exc_info:
-            run_mapdl_command.fn(mock_context, "/SOLVE")
+            run_mapdl_command(mock_context, "/SOLVE")
 
         assert "timed out" in str(exc_info.value)
 
     def test_empty_command_string(self, mock_context):
         """Test handling of empty command string."""
         # This should not raise an error, but pass empty string to MAPDL
-        result = run_mapdl_command.fn(mock_context, "")
+        result = run_mapdl_command(mock_context, "")
 
         assert "executed successfully" in result
         mock_context.request_context.lifespan_context.mapdl.run.assert_called_once_with("")
@@ -77,6 +77,6 @@ class TestErrorHandling:
         """Test handling of very long commands."""
         # MAPDL has line length limits, but our code should pass it through
         long_command = "COMMENT" + "X" * 1000
-        result = run_mapdl_command.fn(mock_context, long_command)
+        result = run_mapdl_command(mock_context, long_command)
 
         assert "executed successfully" in result
