@@ -18,8 +18,15 @@ This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing 
 
 https://github.com/user-attachments/assets/99b68fbd-2308-46a0-aa44-9684ae7400b7
 
+
 <b>Video 1: PyMAPDL MCP Demo</b>
+
 </p>
+
+
+<video controls width="720" src="_static/videos/PyMAPDL-MCP-demo.mp4">
+  Your browser does not support the video tag.
+</video>
 
 
 ## Features
