@@ -166,7 +166,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "Launch first MAPDL instance using action"
-        uses: ansys/pymapdl/.github/actions/launch-mapdl-docker@junk/tmp-launch_on_docker
+        uses: ansys/pymapdl/.github/actions/launch-mapdl-docker@main
         with:
           mapdl-image: "ghcr.io/ansys/mapdl:v25.2-ubuntu-cicd"
           license-server: ${{ secrets.LICENSE_SERVER }}
