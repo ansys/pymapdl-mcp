@@ -95,7 +95,7 @@ class TestMapdlIntegration:
         """Test checking MAPDL status with a real connection."""
         import json
 
-        result = check_mapdl_status.fn(real_context)
+        result = check_mapdl_status(real_context)
 
         assert isinstance(result, str)
         # Check for JSON structure
@@ -107,7 +107,7 @@ class TestMapdlIntegration:
     def test_real_write_comment(self, real_context):
         """Test writing a comment with a real MAPDL connection."""
         comment = "Integration test comment"
-        result = write_comment.fn(real_context, comment)
+        result = write_comment(real_context, comment)
 
         assert isinstance(result, str)
         assert "Comment written successfully" in result
@@ -116,7 +116,7 @@ class TestMapdlIntegration:
         """Test running a MAPDL command with a real connection."""
         # Use a safe command that doesn't affect the model
         command = "/INQUIRE,RELEASE"
-        result = run_mapdl_command.fn(real_context, command)
+        result = run_mapdl_command(real_context, command)
 
         assert isinstance(result, str)
         assert "MAPDL command executed successfully" in result
@@ -124,28 +124,28 @@ class TestMapdlIntegration:
     def test_real_prep7_workflow(self, real_context):
         """Test a basic PREP7 workflow with real MAPDL."""
         # Clear any existing model
-        run_mapdl_command.fn(real_context, "/CLEAR")
+        run_mapdl_command(real_context, "/CLEAR")
 
         # Enter preprocessor
-        result = run_mapdl_command.fn(real_context, "/PREP7")
+        result = run_mapdl_command(real_context, "/PREP7")
         assert "executed successfully" in result
 
         # Write a comment
-        result = write_comment.fn(real_context, "Starting PREP7 workflow")
+        result = write_comment(real_context, "Starting PREP7 workflow")
         assert "Comment written successfully" in result
 
         # Define element type
-        result = run_mapdl_command.fn(real_context, "ET,1,SOLID185")
+        result = run_mapdl_command(real_context, "ET,1,SOLID185")
         assert "executed successfully" in result
 
         # Define material property
-        result = run_mapdl_command.fn(real_context, "MP,EX,1,200E9")
+        result = run_mapdl_command(real_context, "MP,EX,1,200E9")
         assert "executed successfully" in result
 
     def test_real_run_multiple_commands(self, real_context):
         """Test running multiple commands with real MAPDL."""
         # Clear any existing model
-        run_mapdl_command.fn(real_context, "/CLEAR")
+        run_mapdl_command(real_context, "/CLEAR")
 
         # Run multiple commands
         commands = [
@@ -155,7 +155,7 @@ class TestMapdlIntegration:
             "MP,PRXY,1,0.3",
         ]
 
-        result = run_multiple_commands.fn(real_context, commands)
+        result = run_multiple_commands(real_context, commands)
 
         assert isinstance(result, str)
         assert "Successfully executed 4 MAPDL commands" in result
@@ -164,7 +164,7 @@ class TestMapdlIntegration:
     def test_real_run_multiple_commands_with_geometry(self, real_context):
         """Test running multiple commands to create simple geometry."""
         # Clear any existing model
-        run_mapdl_command.fn(real_context, "/CLEAR")
+        run_mapdl_command(real_context, "/CLEAR")
 
         # Create a simple block using multiple commands
         commands = [
@@ -175,21 +175,21 @@ class TestMapdlIntegration:
             "BLC4,0,0,1,1,1",  # Create a block
         ]
 
-        result = run_multiple_commands.fn(real_context, commands)
+        result = run_multiple_commands(real_context, commands)
 
         assert "Successfully executed 5 MAPDL commands" in result
         assert "BLC4,0,0,1,1,1" in result
 
     def test_real_run_multiple_commands_empty_list(self, real_context):
         """Test error handling with empty command list."""
-        result = run_multiple_commands.fn(real_context, [])
+        result = run_multiple_commands(real_context, [])
 
         assert "No commands provided" in result
 
     def test_real_run_multiple_commands_vs_single(self, real_context):
         """Compare run_multiple_commands with sequential single commands."""
         # Clear any existing model
-        run_mapdl_command.fn(real_context, "/CLEAR")
+        run_mapdl_command(real_context, "/CLEAR")
 
         commands = [
             "/PREP7",
@@ -198,15 +198,15 @@ class TestMapdlIntegration:
         ]
 
         # Test multiple commands
-        result_multi = run_multiple_commands.fn(real_context, commands)
+        result_multi = run_multiple_commands(real_context, commands)
         assert "Successfully executed 3 MAPDL commands" in result_multi
 
         # Clear and test single commands
-        run_mapdl_command.fn(real_context, "/CLEAR")
+        run_mapdl_command(real_context, "/CLEAR")
 
         results_single = []
         for cmd in commands:
-            result = run_mapdl_command.fn(real_context, cmd)
+            result = run_mapdl_command(real_context, cmd)
             results_single.append(result)
             assert "executed successfully" in result
 
@@ -216,13 +216,13 @@ class TestMapdlIntegration:
     def test_multiple_commands_large_batch(self, real_context, mapdl):
         """Test running a large batch of commands."""
         # Clear model
-        run_mapdl_command.fn(real_context, "/CLEAR")
-        run_mapdl_command.fn(real_context, "/PREP7")
+        run_mapdl_command(real_context, "/CLEAR")
+        run_mapdl_command(real_context, "/PREP7")
 
         # Create many keypoints
         commands = [f"K,{i},{i*0.1},{i*0.1},{i*0.1}" for i in range(1, 51)]
 
-        result = run_multiple_commands.fn(real_context, commands)
+        result = run_multiple_commands(real_context, commands)
 
         assert "Successfully executed 50 MAPDL commands" in result
 
@@ -230,7 +230,7 @@ class TestMapdlIntegration:
 
     def test_multiple_commands_with_comments(self, real_context, mapdl):
         """Test running multiple commands including comments."""
-        run_mapdl_command.fn(real_context, "/CLEAR")
+        run_mapdl_command(real_context, "/CLEAR")
 
         commands = [
             "/COM, Starting material definition",
@@ -242,7 +242,7 @@ class TestMapdlIntegration:
             "MP,PRXY,1,0.3",
         ]
 
-        result = run_multiple_commands.fn(real_context, commands)
+        result = run_multiple_commands(real_context, commands)
 
         assert "Successfully executed 7 MAPDL commands" in result
 
@@ -253,7 +253,7 @@ class TestMapdlIntegration:
 
     def test_multiple_commands_error_handling(self, real_context):
         """Test error handling with invalid commands."""
-        run_mapdl_command.fn(real_context, "/CLEAR")
+        run_mapdl_command(real_context, "/CLEAR")
 
         # Include an invalid command
         commands = [
@@ -262,7 +262,7 @@ class TestMapdlIntegration:
             "INVALID_MAPDL_COMMAND_XYZ",  # This should cause an error
         ]
 
-        result = run_multiple_commands.fn(real_context, commands)
+        result = run_multiple_commands(real_context, commands)
 
         # Should get error message
         assert isinstance(result, str)
@@ -277,23 +277,23 @@ class TestMapdlIntegration:
         """Test that multiple commands are faster than sequential single commands."""
         import time
 
-        run_mapdl_command.fn(real_context, "/CLEAR")
+        run_mapdl_command(real_context, "/CLEAR")
 
         commands = ["/PREP7", "ET,1,SOLID185", "MP,EX,1,200E9", "MP,PRXY,1,0.3"]
 
         # Time multiple commands approach
         start_multi = time.time()
-        result_multi = run_multiple_commands.fn(real_context, commands)
+        result_multi = run_multiple_commands(real_context, commands)
         time_multi = time.time() - start_multi
 
         assert "Successfully executed 4 MAPDL commands" in result_multi
 
         # Clear and time single commands approach
-        run_mapdl_command.fn(real_context, "/CLEAR")
+        run_mapdl_command(real_context, "/CLEAR")
 
         start_single = time.time()
         for cmd in commands:
-            run_mapdl_command.fn(real_context, cmd)
+            run_mapdl_command(real_context, cmd)
         time_single = time.time() - start_single
 
         # Multiple commands should be at least as fast (usually faster)
@@ -314,7 +314,7 @@ class TestMapdlIntegration:
         Other tests are covered by unit tests in test_tools.py.
         """
         # If we get here, MAPDL is running
-        result = list_mapdl_instances.fn()
+        result = list_mapdl_instances()
 
         assert isinstance(result, str)
         assert len(result) > 0
@@ -365,7 +365,7 @@ class TestLaunchMapdlIntegration:
 
         try:
             # Launch MAPDL
-            result = launch_mapdl.fn(clean_context)
+            result = launch_mapdl(clean_context)
 
             # Verify successful launch
             assert isinstance(result, str)
@@ -386,12 +386,12 @@ class TestLaunchMapdlIntegration:
             assert f"{mapdl.ip}:{mapdl.port}" in result
 
             # Execute a simple command
-            cmd_result = run_mapdl_command.fn(clean_context, "/PREP7")
+            cmd_result = run_mapdl_command(clean_context, "/PREP7")
             assert "MAPDL command executed successfully" in cmd_result
             assert mapdl.parameters.routine == "PREP7"
 
             # Check status
-            status_result = check_mapdl_status.fn(clean_context)
+            status_result = check_mapdl_status(clean_context)
             import json
 
             status_data = json.loads(status_result)
@@ -400,13 +400,13 @@ class TestLaunchMapdlIntegration:
             assert status_data["connection"]["status"] == "Running"
 
             # Test launching when already connected
-            result2 = launch_mapdl.fn(clean_context)
+            result2 = launch_mapdl(clean_context)
             assert "Already connected to MAPDL" in result2
             assert "disconnect first" in result2
 
         finally:
             # Clean up
-            disconnect_from_mapdl.fn(clean_context)
+            disconnect_from_mapdl(clean_context)
 
     def test_launch_mapdl_custom_parameters(self, clean_context):
         """Test launching MAPDL with custom parameters.
@@ -423,7 +423,7 @@ class TestLaunchMapdlIntegration:
         tmpdir = tempfile.mkdtemp()
 
         try:
-            result = launch_mapdl.fn(clean_context, nproc=1, run_location=tmpdir)
+            result = launch_mapdl(clean_context, nproc=1, run_location=tmpdir)
 
             # Verify successful launch
             assert isinstance(result, str)
@@ -439,7 +439,7 @@ class TestLaunchMapdlIntegration:
 
         finally:
             # Disconnect MAPDL first to release file locks
-            disconnect_from_mapdl.fn(clean_context)
+            disconnect_from_mapdl(clean_context)
 
             # Clean up the temporary directory manually
             import shutil
@@ -580,7 +580,7 @@ class TestPythonPersistentSessionIntegration:
         persistent_real_context.request_context.lifespan_context.python_session = session
 
         with capsys.disabled():
-            result = run_python_code.fn(persistent_real_context, code="print('hello')")
+            result = run_python_code(persistent_real_context, code="print('hello')")
         data = json.loads(result)
         assert data["success"] is True
         assert data["stdout"].strip() == "hello"
