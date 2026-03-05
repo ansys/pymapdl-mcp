@@ -7,3 +7,4 @@ Practical examples demonstrating PyMAPDL-MCP capabilities.
    :maxdepth: 2
 
    implementing_a_tool
+   usage_examples

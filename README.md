@@ -14,6 +14,21 @@ This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing 
 - **Workflow guidance**: Access comprehensive context and best practices for all phases of MAPDL simulations
 - **Flexible deployment**: Works with MAPDL running locally, remotely, or in Docker containers
 
+<p align="center">
+
+https://github.com/user-attachments/assets/99b68fbd-2308-46a0-aa44-9684ae7400b7
+
+
+<b>Video 1: PyMAPDL MCP Demo</b>
+
+</p>
+
+
+<video controls width="720" src="_static/videos/PyMAPDL-MCP-demo.mp4">
+  Your browser does not support the video tag.
+</video>
+
+
 ## Features
 
 - **Dynamic Connection Management**: Connect to and disconnect from MAPDL instances on demand, or launch new instances programmatically
@@ -24,6 +39,7 @@ This MCP server bridges the gap between AI assistants and Ansys MAPDL, allowing 
 - **Python Session Support**: Execute custom Python code and create advanced visualizations using a persistent Python session
 - **Workflow Guidance**: Built-in context tools provide comprehensive guidelines and best practices for MAPDL workflows
 - **Automatic Initialization**: The server automatically provides necessary context for MAPDL/PyMAPDL queries on first interaction
+
 
 ## Prerequisites
 
@@ -814,11 +830,21 @@ def get_guidelines_for_your_topic() -> str:
 Tools can be conditionally enabled or disabled based on server configuration:
 
 ```python
-# Disable tool when connection is locked or on AALI
-@app.tool(enabled=not (session.locked_connection or session.on_aali))
+# Add a tag to the adequate tools
+@app.tool(tags={"locked_connection"})
 def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> str:
     # Tool implementation
     pass
+```
+
+```python
+# Disable tool when connection is locked or on AALI
+
+app = PyMAPDLMCP(
+  "pymapdl-mcp"
+)
+
+app.disable(tags={"locked_connection"})
 ```
 
 

@@ -71,7 +71,7 @@ def check_mapdl_status(ctx: Context) -> str:
         return error_msg
 
 
-@app.tool(enabled=not session.on_aali)
+@app.tool(tags={"aali"})
 def check_mapdl_installed(ctx: Context) -> str:
     """Check if MAPDL is installed on the system.
 
@@ -110,7 +110,7 @@ def check_mapdl_installed(ctx: Context) -> str:
         return error_msg
 
 
-@app.tool(enabled=not session.on_aali)
+@app.tool(tags={"aali"})
 def write_comment(ctx: Context, comment: str) -> str:
     """Write a comment in the MAPDL session.
 
@@ -166,7 +166,7 @@ def run_mapdl_command(ctx: Context, cmd: str) -> str:
     return f"MAPDL command executed successfully: {result}"
 
 
-@app.tool(enabled=not session.on_aali)
+@app.tool(tags={"aali"})
 def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
     """Execute multiple MAPDL commands in sequence using input_strings.
 
@@ -230,7 +230,7 @@ def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
         return error_msg
 
 
-@app.tool(enabled=not (session.locked_connection or session.on_aali))
+@app.tool(tags={"aali", "locked_connection"})
 def launch_mapdl(
     ctx: Context,
     exec_file: str | None = None,
@@ -315,7 +315,7 @@ def launch_mapdl(
         return error_msg
 
 
-@app.tool(enabled=not (session.locked_connection or session.on_aali))
+@app.tool(tags={"aali", "locked_connection"})
 def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> str:
     """Connect to an existing MAPDL instance.
 
@@ -372,7 +372,7 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
         return error_msg
 
 
-@app.tool(enabled=not (session.locked_connection or session.on_aali))
+@app.tool(tags={"aali", "locked_connection"})
 def disconnect_from_mapdl(ctx: Context) -> str:
     """Disconnect from the dynamically connected MAPDL instance.
 
@@ -441,7 +441,7 @@ def list_mapdl_instances() -> str:
     return list_instances(long=True, instances=True)
 
 
-@app.tool(enabled=not session.on_aali)
+@app.tool(tags={"aali"})
 def screenshot(
     ctx: Context,
 ) -> list[TextContent | ImageContent]:
@@ -623,7 +623,7 @@ def run_python_code(
     return result
 
 
-@app.tool(enabled=not session.on_aali)
+@app.tool(tags={"aali"})
 def custom_plot(
     ctx: Context,
     plot_code: str,
