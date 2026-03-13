@@ -16,7 +16,6 @@ from mcp.types import ImageContent, TextContent
 from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 from ansys.mapdl.mcp import app
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
-from ansys.mapdl.mcp.server import session
 
 
 # Access type-safe lifespan context in tools
