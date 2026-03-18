@@ -590,7 +590,7 @@ Use the normal MAPDL session for:
 
 #### When to Use Persistent Python Session
 
-Use the persistent Python session with `run_python_code ` or `create_custom_plot` tool ONLY for:
+Use the persistent Python session with `run_python_code ` or `custom_plot` tool ONLY for:
 
 1. **Advanced post-processing tasks** that require Python libraries such as NumPy, Matplotlib,
    or PyVista. Examples include:
@@ -620,7 +620,7 @@ Use the persistent Python session with `run_python_code ` or `create_custom_plot
 4. **Data Processing and Visualization** - Combining NumPy/Pandas with custom plots
 
 5. **Capturing plots**
-   Use the ``create_custom_plot`` tool to create custom plots and capture them.
+   Use the ``custom_plot`` tool to create custom plots and capture them.
    Helpers available:
    - `save_matplotlib_plot` helper function: capture and return plots as base64 strings
    - `save_plot` helper function: capture and return other plot types
@@ -659,7 +659,7 @@ If you want to use `*GET` commands to extract specific results, use `mapdl.get_v
 
 **NOTE: Use NumPy and Matplotlib ONLY when MAPDL native plots don't meet your needs. These require the persistent Python session.**
 
-When you need custom plots not available in MAPDL, use the `run_python_code ` or `create_custom_plot` tool:
+When you need custom plots not available in MAPDL, use the `run_python_code ` or `custom_plot` tool:
 
 1. **Import required libraries** at the beginning of the code:
    ```python

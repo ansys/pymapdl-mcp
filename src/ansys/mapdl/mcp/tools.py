@@ -156,12 +156,7 @@ def run_mapdl_command(ctx: Context, cmd: str) -> str:
     if mapdl is None:
         return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
 
-    try:
-        result = mapdl.run(cmd)  # type: ignore[union-attr]
-    except Exception as e:
-        error_msg = f"Error executing command '{cmd}': {str(e)}"
-        logger.error(error_msg)
-
+    result = mapdl.run(cmd)  # type: ignore[union-attr]
     return f"MAPDL command executed successfully: {result}"
 
 
@@ -230,7 +225,7 @@ def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
 
 
 @app.tool(tags={"aali", "locked_connection"})
-def launch_mapdl(
+def launch_mapdl_session(
     ctx: Context,
     exec_file: str | None = None,
     port: int | None = None,
@@ -454,7 +449,7 @@ def screenshot(
     - Mesh: EPLOT, NPLOT
     - Post-processing: PLNSOL, PLESOL, PLDISP
 
-    For custom matplotlib or PyVista plots, use the create_custom_plot tool instead.
+    For custom matplotlib or PyVista plots, use the custom_plot tool instead.
 
     Parameters
     ----------
@@ -538,7 +533,7 @@ def screenshot(
 
 
 @app.tool()
-def run_python_code(
+async def run_python_code(
     ctx: Context,
     code: str,
     timeout: int = 60,
@@ -614,7 +609,7 @@ def run_python_code(
                 indent=2,
             )
 
-    result: str = execute_python_code(
+    result: str = await execute_python_code(
         ctx=ctx,
         code=code,
         timeout=timeout,
@@ -689,7 +684,7 @@ def custom_plot(
     ... result = save_matplotlib_plot(dpi=150)
     ... print(result)
     ... '''
-    >>> create_custom_plot(ctx, plot_code, plot_type="matplotlib")
+    >>> custom_plot(ctx, plot_code, plot_type="matplotlib")
     """
     session = ctx.request_context.lifespan_context.python_session
 

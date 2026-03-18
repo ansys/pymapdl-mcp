@@ -220,7 +220,7 @@ python -m ansys.mapdl.mcp --transport http --connect-on-startup --ip 192.168.1.1
 - `--connect-on-startup`: Automatically connect to MAPDL when the server starts
 
 > [!WARNING]
-> When `--connect-on-startup` is used, the connection is locked and the following tools are disabled: `launch_mapdl`, `connect_to_mapdl`, and `disconnect_from_mapdl`.
+> When `--connect-on-startup` is used, the connection is locked and the following tools are disabled: `launch_mapdl_session`, `connect_to_mapdl`, and `disconnect_from_mapdl`.
 
 #### HTTP Transport Options
 
@@ -240,7 +240,7 @@ You have several options to start and connect to MAPDL:
 
 #### Option 1: Launch MAPDL through MCP (Recommended for new instances)
 
-Use the `launch_mapdl` tool to start a new MAPDL instance that will be automatically connected:
+Use the `launch_mapdl_session` tool to start a new MAPDL instance that will be automatically connected:
 
 Through your AI assistant:
 
@@ -282,7 +282,7 @@ python -m ansys.mapdl.mcp --connect-on-startup --ip 127.0.0.1 --port 50052
 ```
 
 > [!WARNING]
-> When using `--connect-on-startup`, the connection is locked and you cannot use `launch_mapdl`, `connect_to_mapdl`, or `disconnect_from_mapdl` tools.
+> When using `--connect-on-startup`, the connection is locked and you cannot use `launch_mapdl_session`, `connect_to_mapdl`, or `disconnect_from_mapdl` tools.
 
 By default, the server connects to MAPDL on `localhost:50052` when using Option 2 or 3.
 
@@ -312,7 +312,7 @@ This is useful for:
 
 ### Creating Custom Plots
 
-Use `create_custom_plot` tool to create custom matplotlib or PyVista plots:
+Use `custom_plot` tool to create custom matplotlib or PyVista plots:
 
 > Create a matplotlib plot showing nodal displacements vs node number
 
@@ -348,7 +348,7 @@ Discover all MAPDL instances running on the local machine.
 
 **Returns**: Formatted table with instance information including names, status, gRPC ports, IP addresses, PIDs, and working directories
 
-#### `launch_mapdl`
+#### `launch_mapdl_session`
 
 Launch a new MAPDL instance and automatically connect to it.
 
@@ -459,7 +459,7 @@ Execute arbitrary Python and PyMAPDL code in a persistent Python session.
 > [!NOTE]
 > For standard MAPDL plots (aplot, lplot, kplot, post_processing plots), use the normal MAPDL session commands with the `screenshot` tool instead.
 
-#### `create_custom_plot`
+#### `custom_plot`
 
 Create custom plots using matplotlib or PyVista in the persistent Python session.
 
@@ -495,7 +495,7 @@ Capture a screenshot of the current MAPDL graphics window.
 - Post-processing: `PLNSOL`, `PLESOL`, `PLDISP`
 
 > [!NOTE]
-> For custom matplotlib or PyVista plots, use the `create_custom_plot` tool instead. This tool is disabled when running on AALI environments.
+> For custom matplotlib or PyVista plots, use the `custom_plot` tool instead. This tool is disabled when running on AALI environments.
 
 ### Workflow Context and Guidance
 
