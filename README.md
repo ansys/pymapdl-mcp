@@ -570,7 +570,7 @@ This will install the package in editable mode along with all dependencies defin
 For development with additional tools (pytest, black, mypy, pre-commit, etc.):
 
 ```bash
-pip install -e ".[dev]"
+pip install -e .[tests]
 ```
 
 After installing development dependencies, set up pre-commit hooks:
@@ -748,7 +748,7 @@ Contributions are welcome! Please:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Install development dependencies: `pip install -e ".[dev]"`
+3. Install development dependencies: `pip install -e .[tests]`
 4. Install pre-commit hooks: `pre-commit install`
 5. Make your changes
 6. Add tests for new functionality (aim for >80% coverage)
