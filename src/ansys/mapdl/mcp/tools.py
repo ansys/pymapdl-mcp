@@ -7,17 +7,15 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from ansys.common.mcp.tools import create_custom_plot, execute_python_code
 from fastmcp.server import Context
-from fastmcp.server.server import get_logger
 from mcp.types import ImageContent, TextContent
 
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 from ansys.mapdl.mcp import app
-from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
-
-logger = get_logger(__name__)
+from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
 
 
 # Access type-safe lifespan context in tools
@@ -227,7 +225,7 @@ def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
 
 
 @app.tool(tags={"aali", "locked_connection"})
-def launch_mapdl(
+def launch_mapdl_session(
     ctx: Context,
     exec_file: str | None = None,
     port: int | None = None,
@@ -451,7 +449,7 @@ def screenshot(
     - Mesh: EPLOT, NPLOT
     - Post-processing: PLNSOL, PLESOL, PLDISP
 
-    For custom matplotlib or PyVista plots, use the create_custom_plot tool instead.
+    For custom matplotlib or PyVista plots, use the custom_plot tool instead.
 
     Parameters
     ----------
@@ -535,7 +533,7 @@ def screenshot(
 
 
 @app.tool()
-def run_python_code(
+async def run_python_code(
     ctx: Context,
     code: str,
     timeout: int = 60,
@@ -610,73 +608,17 @@ def run_python_code(
                 ensure_ascii=False,
                 indent=2,
             )
-    try:
-        # Sanitize the input code to remove problematic Unicode characters
-        # This prevents encoding issues on Windows systems with limited charsets
-        sanitized_code = _sanitize_output(code)
 
-        logger.info(f"Executing Python code in persistent session:\n{sanitized_code}")
-
-        # Execute code in persistent session
-        # The 'mapdl' object is already stored in session.metadata and should be accessible
-        result = session.execute(sanitized_code, timeout=timeout)
-
-        # Parse the result which should be a dict with 'success', 'stdout', 'stderr', 'error'
-        if isinstance(result, dict):
-            # Result is already a structured dict from PersistentPythonSession
-            # Sanitize stdout and stderr to handle encoding issues
-            stdout = _sanitize_output(result.get("stdout", ""))
-            stderr = _sanitize_output(result.get("stderr", ""))
-
-            if result.get("success"):
-                return json.dumps(
-                    {
-                        "success": True,
-                        "stdout": stdout,
-                        "stderr": stderr,
-                        "message": "Python code executed successfully",
-                    },
-                    ensure_ascii=False,
-                    indent=2,
-                )
-            else:
-                # Execution failed - provide detailed error information
-                error_msg = result.get("error", "Unknown error occurred")
-                error_msg = _sanitize_output(error_msg)
-                return json.dumps(
-                    {"success": False, "stdout": stdout, "stderr": stderr, "error": error_msg},
-                    ensure_ascii=False,
-                    indent=2,
-                )
-        else:
-            # Fallback if result is not a dict
-            return json.dumps(
-                {
-                    "success": True,
-                    "stdout": _sanitize_output(str(result)) if result else "",
-                    "stderr": "",
-                    "message": "Python code executed successfully",
-                },
-                ensure_ascii=False,
-                indent=2,
-            )
-
-    except TimeoutError:
-        error_dict = {
-            "success": False,
-            "error": f"Python code execution timed out after {timeout} seconds",
-        }
-        logger.error(error_dict["error"])
-        return json.dumps(error_dict, ensure_ascii=False)
-
-    except Exception as e:
-        error_dict = {"success": False, "error": f"Error executing Python code: {str(e)}"}
-        logger.error(error_dict["error"])
-        return json.dumps(error_dict, ensure_ascii=False)
+    result: str = await execute_python_code(
+        ctx=ctx,
+        code=code,
+        timeout=timeout,
+    )
+    return result
 
 
 @app.tool(tags={"aali"})
-def create_custom_plot(
+def custom_plot(
     ctx: Context,
     plot_code: str,
     plot_type: str = "matplotlib",
@@ -742,7 +684,7 @@ def create_custom_plot(
     ... result = save_matplotlib_plot(dpi=150)
     ... print(result)
     ... '''
-    >>> create_custom_plot(ctx, plot_code, plot_type="matplotlib")
+    >>> custom_plot(ctx, plot_code, plot_type="matplotlib")
     """
     session = ctx.request_context.lifespan_context.python_session
 
@@ -771,152 +713,10 @@ def create_custom_plot(
             )
         ]
 
-    try:
-        logger.info(f"Creating custom {plot_type} plot in persistent session")
-
-        # Sanitize the plot code to remove problematic Unicode characters
-        # This prevents encoding issues on Windows systems with limited charsets
-        sanitized_plot_code = _sanitize_output(plot_code)
-
-        # Execute the plot code
-        result = session.execute(sanitized_plot_code, timeout=timeout)
-
-        # Parse the result
-        if isinstance(result, dict):
-            stdout = _sanitize_output(result.get("stdout", ""))
-            stderr = _sanitize_output(result.get("stderr", ""))
-
-            if result.get("success"):
-                # Try to extract plot data from stdout
-                # The helper functions return data URI format:
-                # "data:image/png;base64,<base64_string>"
-                plot_data = stdout.strip()
-
-                # Check if the output contains a base64 data URI
-                if "data:image/png;base64," in plot_data:
-                    # Extract the base64 part
-                    base64_data = plot_data.split("data:image/png;base64,")[1].strip()
-
-                    return [
-                        TextContent(
-                            type="text",
-                            text=f"Custom {plot_type} plot created successfully",
-                        ),
-                        ImageContent(type="image", data=base64_data, mimeType="image/png"),
-                    ]
-                elif plot_data.startswith("Plot saved to"):
-                    # File path returned
-                    return [
-                        TextContent(
-                            type="text",
-                            text=f"Custom {plot_type} plot created successfully\n{plot_data}",
-                        )
-                    ]
-                else:
-                    # Unexpected output format
-                    return [
-                        TextContent(
-                            type="text",
-                            text=f"Plot created but unexpected output format:\n{stdout}",
-                        )
-                    ]
-            else:
-                error_msg = result.get("error", "Unknown error occurred")
-                error_msg = _sanitize_output(error_msg)
-                return [
-                    TextContent(
-                        type="text",
-                        text=f"Error creating custom {plot_type} plot: {error_msg}\nStdout: {stdout}\nStderr: {stderr}",  # noqa: E501
-                    )
-                ]
-        else:
-            # Fallback if result is not a dict
-            return [
-                TextContent(
-                    type="text",
-                    text=f"Unexpected result format: {_sanitize_output(str(result)) if result else 'No result'}",  # noqa: E501
-                )
-            ]
-
-    except TimeoutError:
-        error_msg = f"Plot creation timed out after {timeout} seconds"
-        logger.error(error_msg)
-        return [TextContent(type="text", text=error_msg)]
-
-    except Exception as e:
-        error_msg = f"Error creating custom plot: {str(e)}"
-        logger.error(error_msg)
-        return [TextContent(type="text", text=error_msg)]
-
-
-def _sanitize_output(text: str) -> str:
-    """Sanitize output text to handle encoding issues.
-
-    This function removes or replaces problematic Unicode characters that can cause
-    encoding issues on Windows systems with limited character sets (e.g., charmap).
-
-    Parameters
-    ----------
-    text : str
-        The text to sanitize.
-
-    Returns
-    -------
-    str
-        The sanitized text with problematic characters removed or replaced.
-    """
-    if not isinstance(text, str):
-        return text
-
-    # Replace common problematic Unicode characters with ASCII alternatives
-    replacements = {
-        # Checkmarks and crosses
-        "\u2713": "[OK]",  # checkmark
-        "\u2717": "[X]",  # cross
-        # Box drawing characters
-        "\u2514": "\\",  # box drawing
-        "\u2502": "|",  # box drawing
-        "\u2500": "-",  # box drawing
-        "\u2510": "\\",  # box drawing
-        "\u250c": "/",  # box drawing
-        "\u2518": "/",  # box drawing
-        # Block elements
-        "\u2588": "#",  # block
-        "\u2589": "#",  # block
-        "\u258a": "#",  # block
-        "\u258c": "|",  # block
-        "\u2590": "|",  # block
-        # Superscript and subscript characters
-        "\u00b9": "^1",  # superscript 1
-        "\u00b2": "^2",  # superscript 2
-        "\u00b3": "^3",  # superscript 3
-        "\u2074": "^4",  # superscript 4
-        "\u2075": "^5",  # superscript 5
-        "\u2076": "^6",  # superscript 6
-        "\u2077": "^7",  # superscript 7
-        "\u2078": "^8",  # superscript 8
-        "\u2079": "^9",  # superscript 9
-        "\u2070": "^0",  # superscript 0
-        # Other commonly problematic characters
-        "\u2022": "*",  # bullet
-        "\u2023": "*",  # triangular bullet
-        "\u2219": "*",  # bullet operator
-        "\u00a0": " ",  # non-breaking space
-        "\u200b": "",  # zero-width space
-        "\u200c": "",  # zero-width non-joiner
-        "\u200d": "",  # zero-width joiner
-        "\ufeff": "",  # zero-width no-break space
-    }
-
-    for unicode_char, replacement in replacements.items():
-        text = text.replace(unicode_char, replacement)
-
-    # Remove any remaining characters that can't be encoded in ascii
-    try:
-        # Try to encode as ASCII to check for problematic characters
-        text.encode("ascii")
-    except UnicodeEncodeError:
-        # If there are non-ASCII characters, replace them with a replacement character
-        text = text.encode("ascii", errors="replace").decode("ascii")
-
-    return text
+    result: list[TextContent | ImageContent] | str = create_custom_plot(
+        ctx=ctx,
+        plot_code=plot_code,
+        plot_type=plot_type,
+        timeout=timeout,
+    )
+    return result

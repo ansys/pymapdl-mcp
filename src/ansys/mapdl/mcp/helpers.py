@@ -1,12 +1,10 @@
-import logging
 from typing import TYPE_CHECKING, Any
 
+from ansys.common.mcp.helpers import logger
 from fastmcp.server import Context
 
 if TYPE_CHECKING:
     from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
-
-logger = logging.getLogger(__name__)
 
 
 def list_instances(
@@ -279,8 +277,8 @@ def connect_to_mapdl_in_persistent_python(
         if mapdl_instance is None:
             return (
                 "No MAPDL instance available in lifespan context. "
-                "Please launch or connect to MAPDL first using launch_mapdl"
-                "or connect_to_mapdl tool."
+                "Please launch or connect to MAPDL first using ``launch_mapdl_session``"
+                "or ``connect_to_mapdl`` tools."
             )
 
         connection_code = f"""
