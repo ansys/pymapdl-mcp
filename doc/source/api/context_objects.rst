@@ -58,7 +58,7 @@ Connection Lifecycle
 ~~~~~~~~~~~~~~~~~~~~
 
 1. **Initialize**: Server starts with no connection
-2. **Connect**: ``launch_mapdl`` or ``connect_to_mapdl`` creates connection
+2. **Connect**: ``launch_mapdl_session`` or ``connect_to_mapdl`` creates connection
 3. **Active**: Commands execute in the connected session
 4. **Disconnect**: ``disconnect_from_mapdl`` closes connection
 5. **Reset**: Context cleared for new connection

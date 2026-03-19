@@ -32,7 +32,7 @@ class TestMCPProtocol:
         # Tools should be accessible through the MCP server
         from ansys.mapdl.mcp.tools import (
             check_mapdl_status,
-            launch_mapdl,
+            launch_mapdl_session,
             run_mapdl_command,
             run_multiple_commands,
             write_comment,
@@ -40,7 +40,7 @@ class TestMCPProtocol:
 
         tools = [
             check_mapdl_status,
-            launch_mapdl,
+            launch_mapdl_session,
             run_mapdl_command,
             run_multiple_commands,
             write_comment,

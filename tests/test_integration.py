@@ -6,18 +6,25 @@ Run with: pytest -m integration
 To skip integration tests, run: pytest -m "not integration"
 """
 
+import json
 import os
+import tempfile
+import time
 from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
+from ansys.mapdl.core import launch_mapdl
 
 from ansys.mapdl.mcp.server import PyMAPDLAppContext
 from ansys.mapdl.mcp.tools import (
     check_mapdl_status,
+    disconnect_from_mapdl,
+    launch_mapdl_session,
     list_mapdl_instances,
     run_mapdl_command,
     run_multiple_commands,
+    run_python_code,
     write_comment,
 )
 
@@ -56,8 +63,6 @@ class TestMapdlIntegration:
         Skip these tests if MAPDL is not available.
         """
         try:
-            from ansys.mapdl.core import launch_mapdl
-
             mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
 
             yield mapdl
@@ -81,10 +86,6 @@ class TestMapdlIntegration:
     @pytest.fixture
     def real_context(self, real_mapdl):
         """Create a real context with actual MAPDL connection."""
-        from unittest.mock import MagicMock
-
-        from ansys.mapdl.mcp.server import PyMAPDLAppContext
-
         context = MagicMock()
         context.request_context = MagicMock()
         context.request_context.lifespan_context = PyMAPDLAppContext(mapdl=real_mapdl)
@@ -93,8 +94,6 @@ class TestMapdlIntegration:
 
     def test_real_check_mapdl_status(self, real_context):
         """Test checking MAPDL status with a real connection."""
-        import json
-
         result = check_mapdl_status(real_context)
 
         assert isinstance(result, str)
@@ -275,7 +274,6 @@ class TestMapdlIntegration:
 
     def test_multiple_commands_performance(self, real_context):
         """Test that multiple commands are faster than sequential single commands."""
-        import time
 
         run_mapdl_command(real_context, "/CLEAR")
 
@@ -328,18 +326,11 @@ class TestMapdlIntegration:
 @pytest.mark.slow
 @pytest.mark.skipif(not ON_LOCAL, reason="Only run on local environments")
 class TestLaunchMapdlIntegration:
-    """Integration tests for launch_mapdl tool.
-
-    Consolidated to minimize expensive launch_mapdl calls.
-    Other test cases are covered by unit tests in test_tools.py.
-    """
+    """Integration tests for launch_mapdl_session tool."""
 
     @pytest.fixture
     def clean_context(self):
         """Create a clean context with no MAPDL connection."""
-        from unittest.mock import MagicMock
-
-        from ansys.mapdl.mcp.server import PyMAPDLAppContext
 
         context = MagicMock()
         context.request_context = MagicMock()
@@ -356,16 +347,9 @@ class TestLaunchMapdlIntegration:
         - Execute commands
         - Check status
         """
-        from ansys.mapdl.mcp.tools import (
-            check_mapdl_status,
-            disconnect_from_mapdl,
-            launch_mapdl,
-            run_mapdl_command,
-        )
-
         try:
             # Launch MAPDL
-            result = launch_mapdl(clean_context)
+            result = launch_mapdl_session(ctx=clean_context)
 
             # Verify successful launch
             assert isinstance(result, str)
@@ -400,7 +384,7 @@ class TestLaunchMapdlIntegration:
             assert status_data["connection"]["status"] == "Running"
 
             # Test launching when already connected
-            result2 = launch_mapdl(clean_context)
+            result2 = launch_mapdl_session(ctx=clean_context)
             assert "Already connected to MAPDL" in result2
             assert "disconnect first" in result2
 
@@ -408,22 +392,18 @@ class TestLaunchMapdlIntegration:
             # Clean up
             disconnect_from_mapdl(clean_context)
 
-    def test_launch_mapdl_custom_parameters(self, clean_context):
+    def test_launch_mapdl_session_custom_parameters(self, clean_context):
         """Test launching MAPDL with custom parameters.
 
         This test combines:
         - Custom nproc
         - Custom run location
         """
-        import tempfile
-
-        from ansys.mapdl.mcp.tools import disconnect_from_mapdl, launch_mapdl
-
         # Create a temporary directory for MAPDL to run in
         tmpdir = tempfile.mkdtemp()
 
         try:
-            result = launch_mapdl(clean_context, nproc=1, run_location=tmpdir)
+            result = launch_mapdl_session(ctx=clean_context, nproc=1, run_location=tmpdir)
 
             # Verify successful launch
             assert isinstance(result, str)
@@ -467,8 +447,6 @@ class TestPythonPersistentSessionIntegration:
         Skip these tests if MAPDL is not available.
         """
         try:
-            from ansys.mapdl.core import launch_mapdl
-
             mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
 
             yield mapdl
@@ -565,13 +543,9 @@ class TestPythonPersistentSessionIntegration:
         # On failure, function returns whatever is in metadata (likely None)
         assert result is None
 
-    def test_run_python_code_executes_simple(self, persistent_real_context, capsys):
+    @pytest.mark.asyncio
+    async def test_run_python_code_executes_simple(self, persistent_real_context, capsys):
         """Light-weight execution test using mocked python_session near integration suite."""
-        import json
-        from unittest.mock import MagicMock
-
-        from ansys.mapdl.mcp.tools import run_python_code
-
         # Attach a mocked persistent python session to the real_context lifespan
         session = MagicMock()
         session.metadata = {"mapdl": persistent_real_context.request_context.lifespan_context.mapdl}
@@ -580,7 +554,7 @@ class TestPythonPersistentSessionIntegration:
         persistent_real_context.request_context.lifespan_context.python_session = session
 
         with capsys.disabled():
-            result = run_python_code(persistent_real_context, code="print('hello')")
+            result = await run_python_code(persistent_real_context, code="print('hello')")
         data = json.loads(result)
         assert data["success"] is True
         assert data["stdout"].strip() == "hello"

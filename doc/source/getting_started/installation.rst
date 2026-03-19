@@ -35,7 +35,7 @@ If you plan to contribute to development:
 
 .. code-block:: bash
 
-   pip install -e ".[dev]"
+   pip install -e .[tests]
 
 For documentation building:
 
