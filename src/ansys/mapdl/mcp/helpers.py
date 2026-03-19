@@ -278,7 +278,7 @@ def connect_to_mapdl_in_persistent_python(
             return (
                 "No MAPDL instance available in lifespan context. "
                 "Please launch or connect to MAPDL first using ``launch_mapdl_session``"
-                "or ``connect_to_mapdl`` tool."
+                "or ``connect_to_mapdl`` tools."
             )
 
         connection_code = f"""
