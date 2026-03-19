@@ -13,7 +13,7 @@ echo "Installing PyMAPDL-MCP package and dependencies for development"
 git fetch && git pull
 
 # Installation should be fast because the image is built with the dependencies installed.
-pip install -e '.[tests]'
+pip install -e .[tests]
 
 echo "Setting pre-commit..."
 pre-commit install --install-hooks

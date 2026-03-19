@@ -6,8 +6,8 @@ This document provides complete reference documentation for all PyMAPDL-MCP tool
 Instance Management Tools
 --------------------------
 
-launch_mapdl
-~~~~~~~~~~~~
+launch_mapdl_session
+~~~~~~~~~~~~~~~~~~~~
 
 **Description**: Launch a new MAPDL instance
 
@@ -25,7 +25,7 @@ launch_mapdl
 
 .. code-block:: python
 
-    result = launch_mapdl(
+    result = launch_mapdl_session(
         exec_file=None,
         nproc=4,
         additional_switches="-check"
@@ -209,8 +209,8 @@ screenshot
 
     result = screenshot()
 
-create_custom_plot
-~~~~~~~~~~~~~~~~~~
+custom_plot
+~~~~~~~~~~~
 
 **Description**: Create a custom matplotlib or PyVista visualization
 
@@ -245,7 +245,7 @@ create_custom_plot
     result = save_matplotlib_plot(dpi=150)
     print(result)
     '''
-    result = create_custom_plot(plot_code, plot_type="matplotlib")
+    result = custom_plot(plot_code, plot_type="matplotlib")
 
 Guidelines and Documentation Tools
 ----------------------------------

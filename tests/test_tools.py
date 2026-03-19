@@ -11,7 +11,7 @@ from ansys.mapdl.mcp.tools import (
     check_mapdl_status,
     connect_to_mapdl,
     disconnect_from_mapdl,
-    launch_mapdl,
+    launch_mapdl_session,
     list_mapdl_instances,
     run_mapdl_command,
     run_multiple_commands,
@@ -1036,7 +1036,7 @@ class TestDisconnectFromMapdl:
 
 @pytest.mark.unit
 class TestLaunchMapdl:
-    """Tests for launch_mapdl tool."""
+    """Tests for launch_mapdl_session tool."""
 
     def test_launch_default_parameters(self, mock_context_no_mapdl):
         """Test launching MAPDL with default parameters."""
@@ -1050,7 +1050,7 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(mock_context_no_mapdl)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl)
 
             # Verify successful launch
             assert isinstance(result, str)
@@ -1076,7 +1076,7 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(mock_context_no_mapdl, nproc=4)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl, nproc=4)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result
@@ -1097,7 +1097,7 @@ class TestLaunchMapdl:
         exec_path = "/usr/ansys_inc/v242/ansys/bin/ansys242"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(mock_context_no_mapdl, exec_file=exec_path)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl, exec_file=exec_path)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result
@@ -1120,7 +1120,7 @@ class TestLaunchMapdl:
         run_loc = "/custom/working/dir"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(mock_context_no_mapdl, run_location=run_loc)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl, run_location=run_loc)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result
@@ -1144,7 +1144,7 @@ class TestLaunchMapdl:
         switches = "-smp"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(mock_context_no_mapdl, additional_switches=switches)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl, additional_switches=switches)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result
@@ -1169,8 +1169,8 @@ class TestLaunchMapdl:
         switches = "-smp -db 1024"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(
-                mock_context_no_mapdl,
+            result = launch_mapdl_session(
+                ctx=mock_context_no_mapdl,
                 exec_file=exec_path,
                 run_location=run_loc,
                 nproc=8,
@@ -1195,7 +1195,7 @@ class TestLaunchMapdl:
     def test_launch_already_connected(self, mock_context):
         """Test launching when already connected to MAPDL."""
         # Context already has a MAPDL connection
-        result = launch_mapdl(mock_context)
+        result = launch_mapdl_session(ctx=mock_context)
 
         # Verify appropriate error message
         assert "Already connected to MAPDL" in result
@@ -1207,7 +1207,7 @@ class TestLaunchMapdl:
             "ansys.mapdl.core.launch_mapdl",
             side_effect=Exception("MAPDL executable not found"),
         ):
-            result = launch_mapdl(mock_context_no_mapdl)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl)
 
             # Verify error message is returned
             assert "Failed to launch MAPDL" in result
@@ -1222,7 +1222,7 @@ class TestLaunchMapdl:
             "ansys.mapdl.core.launch_mapdl",
             side_effect=Exception("No ANSYS license available"),
         ):
-            result = launch_mapdl(mock_context_no_mapdl)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl)
 
             # Verify error message
             assert "Failed to launch MAPDL" in result
@@ -1242,7 +1242,7 @@ class TestLaunchMapdl:
         assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is None
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
-            result = launch_mapdl(mock_context_no_mapdl)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result
@@ -1252,7 +1252,7 @@ class TestLaunchMapdl:
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl == mock_mapdl
 
     def test_launch_result_message(self, mock_context_no_mapdl):
-        """Test that launch_mapdl returns informative success message."""
+        """Test that launch_mapdl_session returns informative success message."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
         mock_mapdl._ip = "127.0.0.1"
@@ -1262,7 +1262,7 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
-            result = launch_mapdl(mock_context_no_mapdl)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl)
 
             # Verify the result contains launch information
             assert isinstance(result, str)
@@ -1281,7 +1281,7 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl(mock_context_no_mapdl, port=50060)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl, port=50060)
 
             # Verify successful launch
             assert isinstance(result, str)
@@ -1302,7 +1302,7 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/home/user/mapdl_work"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
-            result = launch_mapdl(mock_context_no_mapdl)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl)
 
             # Verify all connection details are in result
             assert "192.168.1.50:50055" in result
@@ -1466,7 +1466,7 @@ class TestLaunchWorkflow:
 
         # Step 1: Launch
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
-            result = launch_mapdl(mock_context_no_mapdl, nproc=4)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl, nproc=4)
             assert "Successfully launched MAPDL" in result
 
         # Step 2: Use MAPDL
@@ -1509,7 +1509,7 @@ class TestLaunchWorkflow:
 
         # First launch
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl1):
-            result = launch_mapdl(mock_context_no_mapdl, nproc=None)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl, nproc=None)
             assert "Successfully launched MAPDL" in result
             assert "50052" in result
 
@@ -1518,7 +1518,7 @@ class TestLaunchWorkflow:
 
         # Second launch
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl2):
-            result = launch_mapdl(mock_context_no_mapdl, nproc=4)
+            result = launch_mapdl_session(ctx=mock_context_no_mapdl, nproc=4)
             assert "Successfully launched MAPDL" in result
             assert "50053" in result
 
@@ -1535,7 +1535,7 @@ class TestLaunchWorkflow:
             assert "Successfully connected" in connect_result
 
         # Now try to launch - should fail
-        launch_result = launch_mapdl(mock_context_no_mapdl)
+        launch_result = launch_mapdl_session(ctx=mock_context_no_mapdl)
         assert "Already connected to MAPDL" in launch_result
         assert "disconnect first" in launch_result
 
