@@ -60,7 +60,7 @@ Setting Up Your Development Environment
 
 .. code-block:: bash
 
-   pip install -e ".[dev]"
+   pip install -e .[tests]
 
 4. Install pre-commit hooks:
 

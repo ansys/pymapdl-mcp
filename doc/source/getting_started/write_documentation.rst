@@ -166,7 +166,7 @@ Include practical code examples:
    .. code-block:: python
 
       # Launch MAPDL with 4 processors
-      mapdl = launch_mapdl(nproc=4)
+      mapdl = launch_mapdl_session(nproc=4)
 
 **Explain Why, Not Just How**
 
@@ -188,14 +188,14 @@ Include practical code examples:
    See :doc:`../api/tools` for complete tool reference.
    Learn more in :doc:`../user_guide/best_practices`.
 
-Documenting Code
+Documenting code
 ================
 
 Add comprehensive docstrings to functions using NumPy style:
 
 .. code-block:: python
 
-   def launch_mapdl(ctx: Context, nproc: int = 4) -> str:
+   def launch_mapdl_session(ctx: Context, nproc: int = 4) -> str:
        """
        Launch a new MAPDL instance.
 
@@ -216,7 +216,7 @@ Add comprehensive docstrings to functions using NumPy style:
 
        Examples
        --------
-       >>> launch_mapdl(nproc=4)
+       >>> launch_mapdl_session(nproc=4)
        'MAPDL launched with 4 processors'
 
        Notes

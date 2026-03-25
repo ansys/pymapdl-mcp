@@ -15,7 +15,7 @@ async def test_context_tools_registered():
 
     # Expected tool names
     expected_tools = [
-        "launch_mapdl",
+        "launch_mapdl_session",
         "get_guidelines_for_workflow_overview",
         "get_guidelines_for_preprocessing_geometry",
         "get_guidelines_for_preprocessing_elements",

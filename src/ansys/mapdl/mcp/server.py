@@ -7,12 +7,9 @@ from typing import Any, Optional
 
 from ansys.common.mcp import (
     PyAnsysBaseMCP,
-    get_logger,
 )
 from ansys.common.mcp.context import PyAnsysBaseAppContext
-from ansys.common.mcp.helpers import PersistentPythonSession
-
-logger = get_logger(__name__)
+from ansys.common.mcp.helpers import PersistentPythonSession, logger
 
 
 @dataclass
@@ -246,7 +243,7 @@ def launcher(argv: list[str] | None = None) -> None:
     if session.connect_on_startup:
         logger.info(
             f"MCP will attempt to connect to an MAPDL in {args.mapdl_ip}:{args.mapdl_port} on startup. "  # noqa: E501
-            "The tools 'launch_mapdl', 'connect_to_mapdl' and 'disconnect_from_mapdl' will be disabled."  # noqa: E501
+            "The tools 'launch_mapdl_session', 'connect_to_mapdl' and 'disconnect_from_mapdl' will be disabled."  # noqa: E501
         )
 
     setattr(
