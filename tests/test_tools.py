@@ -238,9 +238,12 @@ class TestCheckMapdlInstalled:
 
     def test_check_installed_true(self):
         """Test checking MAPDL installation when MAPDL is installed."""
-        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True), patch(
-            "ansys.mapdl.core.launcher.get_default_ansys_path",
-            return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
+        with (
+            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
+            patch(
+                "ansys.mapdl.core.launcher.get_default_ansys_path",
+                return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
+            ),
         ):
             result = check_mapdl_installed(MagicMock())
 
@@ -297,8 +300,9 @@ class TestCheckMapdlInstalled:
     def test_check_installed_with_custom_path(self):
         """Test checking installation with custom ANSYS path."""
         custom_path = "/opt/ansys/v251/ansys/bin/ansys251"
-        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True), patch(
-            "ansys.mapdl.core.launcher.get_default_ansys_path", return_value=custom_path
+        with (
+            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
+            patch("ansys.mapdl.core.launcher.get_default_ansys_path", return_value=custom_path),
         ):
             result = check_mapdl_installed(MagicMock())
 
@@ -307,9 +311,12 @@ class TestCheckMapdlInstalled:
 
     def test_check_installed_logging(self):
         """Test that check_mapdl_installed logs messages."""
-        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True), patch(
-            "ansys.mapdl.core.launcher.get_default_ansys_path",
-            return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
+        with (
+            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
+            patch(
+                "ansys.mapdl.core.launcher.get_default_ansys_path",
+                return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
+            ),
         ):
             output = check_mapdl_installed(MagicMock())
 

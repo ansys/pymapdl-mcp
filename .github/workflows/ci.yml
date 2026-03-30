@@ -16,7 +16,7 @@ concurrency:
 
 env:
   ON_CI: "true"
-  MAIN_PYTHON_VERSION: "3.13"
+  MAIN_PYTHON_VERSION: "3.14"
   PACKAGE_NAME: "ansys-mapdl-mcp"
   DOCUMENTATION_CNAME: "mapdl-mcp.docs.pyansys.com"
   PYMAPDL_GRPC_TRANSPORT: "insecure"
@@ -60,7 +60,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
       - name: "Checkout code"
