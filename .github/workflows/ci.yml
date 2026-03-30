@@ -28,14 +28,14 @@ jobs:
 
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
 
       - name: "Configure pip for private PyPI"
         run: |
           pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
-      - name: Cache pre-commit hooks
-        uses: actions/cache@v4
+      - name: "Cache pre-commit hooks"
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 #v5.0.4
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
@@ -43,7 +43,7 @@ jobs:
             pre-commit-${{ runner.os }}-
 
       - name: "Run PyAnsys code style checks"
-        uses: ansys/actions/code-style@41f86da4c9ead510db9135e428e33df9cc6f92e1 #v10.2.3
+        uses: ansys/actions/code-style@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
         with:
           checkout: false
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
@@ -64,10 +64,10 @@ jobs:
 
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
 
       - name: "Set up Python ${{ matrix.python-version }}"
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c #v6.0.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -114,7 +114,7 @@ jobs:
 
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
 
       - name: "Install gcc"
         shell: bash
@@ -122,7 +122,7 @@ jobs:
           apt-get update && apt-get -y install gcc mono-mcs g++ libgl1 libglx-mesa0 xvfb libgomp1 graphviz curl git && apt-get clean
 
       - name: "Set up Python"
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c #v6.0.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v6.2.0
         with:
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
 
@@ -156,10 +156,10 @@ jobs:
 
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
 
       - name: "Login to GitHub Container Registry"
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef #v3.6.0
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 #v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -173,7 +173,7 @@ jobs:
           pymapdl-port: ${{ env.PYMAPDL_PORT }}
 
       - name: "Set up Python"
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c #v6.0.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v6.2.0
         with:
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
           cache: 'pip'
@@ -236,7 +236,7 @@ jobs:
           SPHINXOPTS: "-W --keep-going"
 
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f #v7.0.0
         with:
           name: documentation-html
           path: doc/_build/html/
@@ -251,7 +251,7 @@ jobs:
     needs: [build-docs]
     steps:
       - name: "Deploy the latest documentation"
-        uses: ansys/actions/doc-deploy-dev@36cd86710c966963f4dcec56a9670171618cf76a #v10.2.4
+        uses: ansys/actions/doc-deploy-dev@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
         with:
           cname: ${{ env.DOCUMENTATION_CNAME }}
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -266,14 +266,14 @@ jobs:
       contents: read
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
 
       - name: "Configure pip for private PyPI"
         run: |
           pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
 
       - name: "Build library source and wheel artifacts"
-        uses: ansys/actions/build-library@41f86da4c9ead510db9135e428e33df9cc6f92e1 #v10.2.3
+        uses: ansys/actions/build-library@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
         env:
           UV_EXTRA_INDEX_URL: 'https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/'
         with:
@@ -337,7 +337,7 @@ jobs:
       contents: write
     steps:
       - name: "Download the library artifacts from build-library step"
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c #v8.0.1
         with:
           name: ${{ env.PACKAGE_NAME }}-artifacts
           path: ${{ env.PACKAGE_NAME }}-artifacts
@@ -347,14 +347,14 @@ jobs:
         run: ls -Rla
 
       - name: "Release to GitHub"
-        uses: ansys/actions/release-github@41f86da4c9ead510db9135e428e33df9cc6f92e1 #v10.2.3
+        uses: ansys/actions/release-github@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
         with:
           library-name: ${{ env.PACKAGE_NAME }}
           token: ${{ secrets.GITHUB_TOKEN }}
           only-code: true
 
       - name: "Release to private PyPI"
-        uses: ansys/actions/release-pypi-private@41f86da4c9ead510db9135e428e33df9cc6f92e1 #v10.2.3
+        uses: ansys/actions/release-pypi-private@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
         with:
           library-name: ${{ env.PACKAGE_NAME }}
           twine-username: "__token__"
@@ -369,7 +369,7 @@ jobs:
     needs: [release]
     steps:
       - name: "Deploy the stable documentation"
-        uses: ansys/actions/doc-deploy-stable@36cd86710c966963f4dcec56a9670171618cf76a #v10.2.4
+        uses: ansys/actions/doc-deploy-stable@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
         with:
           cname: ${{ env.DOCUMENTATION_CNAME }}
           token: ${{ secrets.GITHUB_TOKEN }}
