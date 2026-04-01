@@ -22,10 +22,10 @@
 
 """Tests for MCP tools functionality."""
 
+import base64
 import json
 from unittest.mock import MagicMock, Mock, patch
 
-import base64
 from mcp.types import ImageContent, TextContent
 import pytest
 
