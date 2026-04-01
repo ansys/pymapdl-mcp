@@ -47,7 +47,7 @@ https://github.com/user-attachments/assets/99b68fbd-2308-46a0-aa44-9684ae7400b7
 - Ansys MAPDL installation (optional - can connect to remote instances)
 - PyMAPDL library (ansys-mapdl-core >= 0.68.0)
 - FastMCP library (fastmcp >= 0.1.0)
-- Ansys Common MCP library (ansys-common-mcp >= 0.1.0)
+- PyAnsys Common MCP library (ansys-common-mcp >= 0.1.0)
 
 ## Quick Start
 

@@ -1,3 +1,5 @@
+.. _ref_implementing_a_tool:
+
 Implementing a Custom Tool
 ==========================
 
