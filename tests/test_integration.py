@@ -1,3 +1,25 @@
+# Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
+# SPDX-License-Identifier: MIT
+#
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 """Integration tests for PyMAPDL MCP Server.
 
 These tests require a running MAPDL instance and are marked as 'integration'.
@@ -12,9 +34,9 @@ import tempfile
 import time
 from unittest.mock import MagicMock
 
+from ansys.mapdl.core import launch_mapdl
 import numpy as np
 import pytest
-from ansys.mapdl.core import launch_mapdl
 
 from ansys.mapdl.mcp.server import PyMAPDLAppContext
 from ansys.mapdl.mcp.tools import (
@@ -219,7 +241,7 @@ class TestMapdlIntegration:
         run_mapdl_command(real_context, "/PREP7")
 
         # Create many keypoints
-        commands = [f"K,{i},{i*0.1},{i*0.1},{i*0.1}" for i in range(1, 51)]
+        commands = [f"K,{i},{i * 0.1},{i * 0.1},{i * 0.1}" for i in range(1, 51)]
 
         result = run_multiple_commands(real_context, commands)
 
@@ -298,7 +320,7 @@ class TestMapdlIntegration:
         # We allow some tolerance since timing can vary
         print(f"Multiple commands time: {time_multi:.4f}s")
         print(f"Single commands time: {time_single:.4f}s")
-        print(f"Speedup: {time_single/time_multi:.2f}x")
+        print(f"Speedup: {time_single / time_multi:.2f}x")
 
         # Just verify both completed successfully
         assert time_multi > 0
@@ -550,7 +572,11 @@ class TestPythonPersistentSessionIntegration:
         session = MagicMock()
         session.metadata = {"mapdl": persistent_real_context.request_context.lifespan_context.mapdl}
         # Simulate a normal dict-shaped execution result
-        session.execute.return_value = {"success": True, "stdout": "hello\n", "stderr": ""}
+        session.execute.return_value = {
+            "success": True,
+            "stdout": "hello\n",
+            "stderr": "",
+        }
         persistent_real_context.request_context.lifespan_context.python_session = session
 
         with capsys.disabled():

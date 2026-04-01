@@ -1,21 +1,44 @@
+# Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
+# SPDX-License-Identifier: MIT
+#
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 """List of tools in PyMAPDL-MCP."""
 
 import base64
 import json
 import os
-import tempfile
 from pathlib import Path
+import tempfile
 from typing import Any
 
-from ansys.common.mcp.tools import create_custom_plot, execute_python_code
 from fastmcp.server import Context
-from mcp.types import ImageContent, TextContent
+
+from ansys.common.mcp.tools import create_custom_plot, execute_python_code
 
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 from ansys.mapdl.mcp import app
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
+from mcp.types import ImageContent, TextContent
 
 
 # Access type-safe lifespan context in tools
@@ -205,7 +228,7 @@ def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
 
         success_msg = (
             f"Successfully executed {len(valid_commands)} MAPDL commands:\n"
-            f"Commands:\n" + "\n".join(f"  {i+1}. {cmd}" for i, cmd in enumerate(valid_commands))
+            f"Commands:\n" + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
         )
 
         if result:
@@ -218,7 +241,7 @@ def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
             f"Error executing commands. Executed {len(valid_commands)} commands "
             f"but encountered error: {str(e)}\n"
             f"Commands that were attempted:\n"
-            + "\n".join(f"  {i+1}. {cmd}" for i, cmd in enumerate(valid_commands))
+            + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
         )
         logger.error(error_msg)
         return error_msg
@@ -356,9 +379,7 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
         ctx.request_context.lifespan_context.mapdl = mapdl
 
         logger.info(f"Connected to MAPDL successfully at {ip}:{port}!")
-        return (
-            f"Successfully connected to MAPDL at {ip}:{port}\n" f"MAPDL Version: {mapdl.version}\n"
-        )
+        return f"Successfully connected to MAPDL at {ip}:{port}\nMAPDL Version: {mapdl.version}\n"
 
     except Exception as e:
         error_msg = f"Failed to connect to MAPDL at {ip}:{port}: {str(e)}"
@@ -496,7 +517,7 @@ def screenshot(
             return [TextContent(type="text", text=error_msg)]
 
         # Read image data
-        with open(image_path, "rb") as f:
+        with image_path.open("rb") as f:
             image_data = f.read()
 
         # Encode to base64
@@ -659,7 +680,7 @@ def custom_plot(
     list[TextContent | ImageContent]
         A list containing:
         - TextContent with the plot creation status message
-        - ImageContent with the base64-encoded image data if successfull
+        - ImageContent with the base64-encoded image data if successful
         or a JSON string with error details if failed.
 
     Examples

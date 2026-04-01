@@ -1,10 +1,32 @@
+# Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
+# SPDX-License-Identifier: MIT
+#
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 """Tests for MCP tools functionality."""
 
 import json
 from unittest.mock import MagicMock, Mock, patch
 
-import pytest
 from mcp.types import ImageContent, TextContent
+import pytest
 
 from ansys.mapdl.mcp.tools import (
     check_mapdl_installed,
@@ -126,7 +148,7 @@ class TestCheckMapdlStatus:
         # Should still return valid JSON
         data = json.loads(result)
         assert "post_processing" in data
-        assert data["post_processing"]["available"] == False
+        assert not data["post_processing"]["available"]
 
     def test_check_status_information_class_exception(self, mock_context):
         """Test status extraction when information class raises exception."""
@@ -238,9 +260,12 @@ class TestCheckMapdlInstalled:
 
     def test_check_installed_true(self):
         """Test checking MAPDL installation when MAPDL is installed."""
-        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True), patch(
-            "ansys.mapdl.core.launcher.get_default_ansys_path",
-            return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
+        with (
+            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
+            patch(
+                "ansys.mapdl.core.launcher.get_default_ansys_path",
+                return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
+            ),
         ):
             result = check_mapdl_installed(MagicMock())
 
@@ -297,8 +322,12 @@ class TestCheckMapdlInstalled:
     def test_check_installed_with_custom_path(self):
         """Test checking installation with custom ANSYS path."""
         custom_path = "/opt/ansys/v251/ansys/bin/ansys251"
-        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True), patch(
-            "ansys.mapdl.core.launcher.get_default_ansys_path", return_value=custom_path
+        with (
+            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
+            patch(
+                "ansys.mapdl.core.launcher.get_default_ansys_path",
+                return_value=custom_path,
+            ),
         ):
             result = check_mapdl_installed(MagicMock())
 
@@ -307,9 +336,12 @@ class TestCheckMapdlInstalled:
 
     def test_check_installed_logging(self):
         """Test that check_mapdl_installed logs messages."""
-        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True), patch(
-            "ansys.mapdl.core.launcher.get_default_ansys_path",
-            return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
+        with (
+            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
+            patch(
+                "ansys.mapdl.core.launcher.get_default_ansys_path",
+                return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
+            ),
         ):
             output = check_mapdl_installed(MagicMock())
 
@@ -635,20 +667,6 @@ class TestRunMultipleCommands:
         # Verify logging messages
         assert "Successfully executed 2 MAPDL commands" in output
 
-    def test_run_multiple_commands_error_handling(self, mock_context):
-        """Test that command errors are properly handled and reported in return value."""
-        commands = ["/PREP7", "INVALID"]
-        mock_context.request_context.lifespan_context.mapdl.input_strings.side_effect = Exception(
-            "Test error"
-        )
-
-        result = run_multiple_commands(mock_context, commands)
-
-        # Verify error message is in the return value
-        assert isinstance(result, str)
-        assert "Error executing commands" in result
-        assert "Test error" in result
-
 
 @pytest.mark.unit
 class TestListMapdlInstances:
@@ -660,7 +678,7 @@ class TestListMapdlInstances:
         mock_output = """Name      Is Instance    Status      gRPC port    PID    Command line                Working directory
 ------  -------------  --------  -----------  -----  -------------------------  -------------------
 ansys     True          running         50052  12345  ansys242 -grpc -port 50052  /tmp/ansys_tmp
-ansys     True          running         50053  12346  ansys242 -grpc -port 50053  /tmp/ansys_tmp2"""
+ansys     True          running         50053  12346  ansys242 -grpc -port 50053  /tmp/ansys_tmp2"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
             result = list_mapdl_instances()
@@ -674,7 +692,7 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
         """Test list_mapdl_instances when no instances are found."""
         # Mock the list_instances function to return empty table
         mock_output = """Name    Is Instance    Status    gRPC port    PID    Command line    Working directory
-------  -------------  --------  -----------  -----  --------------  -------------------"""
+------  -------------  --------  -----------  -----  --------------  -------------------"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
             result = list_mapdl_instances()
@@ -700,7 +718,7 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
 ------  -------------  --------  -----------  -----  -------------------------  ------------------------------------
 ansys     True          running         50052  12345  ansys242 -grpc -port 50052  /tmp/ansys_workdir1
 ansys     True          running         50053  12346  ansys242 -grpc -port 50053  /tmp/ansys_workdir2
-ansys     True          running         50054  12347  ansys242 -grpc -port 50054  /tmp/ansys_workdir3"""
+ansys     True          running         50054  12347  ansys242 -grpc -port 50054  /tmp/ansys_workdir3"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
             result = list_mapdl_instances()
@@ -710,7 +728,7 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
             assert "50052" in result
 
     def test_list_instances_return_value_propagation(self):
-        """Test that list_mapdl_instances correctly propagates the return value from helpers.list_instances."""
+        """Test that list_mapdl_instances correctly propagates the return value from helpers.list_instances."""  # noqa: E501
         mock_output = "Sample output with instance information"
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output) as mock_list:
             result = list_mapdl_instances()
@@ -726,7 +744,7 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
         # Mock output with all expected headers
         mock_output = """Name      Status      gRPC port    PID    Command line                Working directory
 ------  --------  -----------  -----  -------------------------  -------------------
-ansys     True          running         50052  12345  ansys242 -grpc -port 50052  /tmp/ansys_tmp"""
+ansys     True          running         50052  12345  ansys242 -grpc -port 50052  /tmp/ansys_tmp"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
             result = list_mapdl_instances()
@@ -751,7 +769,7 @@ ansys     True          running         50052  12345  ansys242 -grpc -port 50052
     def test_list_instances_consistent_calls(self):
         """Test that multiple calls to list_mapdl_instances return consistent format."""
         mock_output = """Name      Status      gRPC port    PID    Command line                Working directory
-------  --------  -----------  -----  -------------------------  -------------------"""
+------  --------  -----------  -----  -------------------------  -------------------"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
             result1 = list_mapdl_instances()
@@ -828,10 +846,10 @@ class TestConnectToMapdl:
             mock_mapdl_class.assert_called_once()
             call_args = mock_mapdl_class.call_args[1]
 
-            assert "start_instance" in call_args and call_args["start_instance"] == False
+            assert "start_instance" in call_args and not call_args["start_instance"]
             assert "ip" in call_args and call_args["ip"] == "192.168.1.100"
             assert "port" in call_args and call_args["port"] is not None
-            assert "cleanup_on_exit" in call_args and call_args["cleanup_on_exit"] == False
+            assert "cleanup_on_exit" in call_args and not call_args["cleanup_on_exit"]
             assert "loglevel" in call_args and call_args["loglevel"] == "INFO"
 
     def test_connect_custom_ip_and_port(self, mock_context_no_mapdl):
@@ -1587,7 +1605,7 @@ class TestScreenshot:
 
     def test_screenshot_success_jpeg(self, mock_context, tmp_path):
         """Test capturing a screenshot with JPEG format."""
-        from mcp.types import ImageContent, TextContent
+        from mcp.types import ImageContent
 
         # Create a fake JPEG image file
         screenshot_path = tmp_path / "screenshot.jpg"

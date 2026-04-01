@@ -71,7 +71,7 @@ You should add the following to your `.vscode/mcp.json` file in your project dir
 }
 ```
 
-For more information visit [Use MCP servers in VS Code](https://code.visualstudio.com/docs/copilot/customization/mcp-servers). In this page, you can find information about adding an MCP server globaly to the user.
+For more information visit [Use MCP servers in VS Code](https://code.visualstudio.com/docs/copilot/customization/mcp-servers). In this page, you can find information about adding an MCP server globally to the user.
 
 Make sure you enabled the access to MCPs in your VS Code settings as presented here:
 ![VS Code settings](enable_mcp.png)
