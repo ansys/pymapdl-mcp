@@ -25,6 +25,7 @@
 import json
 from unittest.mock import MagicMock, Mock, patch
 
+import base64
 from mcp.types import ImageContent, TextContent
 import pytest
 
@@ -51,9 +52,8 @@ class TestCheckMapdlStatus:
         result = check_mapdl_status(mock_context)
 
         assert isinstance(result, str)
-        # Check for JSON structure
-        import json
 
+        # Check for JSON structure
         data = json.loads(result)
         assert "connection" in data
         assert "information" in data
@@ -92,8 +92,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_missing_information_attributes(self, mock_context):
         """Test status extraction when information class attributes are missing."""
-        import json
-
         # Remove some information attributes
         delattr(mock_context.request_context.lifespan_context.mapdl.information, "title")
         delattr(mock_context.request_context.lifespan_context.mapdl.information, "product")
@@ -108,8 +106,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_missing_geometry_attributes(self, mock_context):
         """Test status extraction when geometry class attributes are missing."""
-        import json
-
         # Remove geometry attributes
         delattr(mock_context.request_context.lifespan_context.mapdl.geometry, "n_keypoint")
         delattr(mock_context.request_context.lifespan_context.mapdl.geometry, "n_line")
@@ -124,8 +120,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_missing_mesh_attributes(self, mock_context):
         """Test status extraction when mesh class attributes are missing."""
-        import json
-
         # Remove mesh attributes
         delattr(mock_context.request_context.lifespan_context.mapdl.mesh, "n_node")
 
@@ -138,8 +132,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_missing_post_processing(self, mock_context):
         """Test status extraction when post_processing is not available."""
-        import json
-
         # Remove post_processing attribute
         delattr(mock_context.request_context.lifespan_context.mapdl, "post_processing")
 
@@ -152,8 +144,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_information_class_exception(self, mock_context):
         """Test status extraction when information class raises exception."""
-        import json
-
         # Make information.title raise an exception
         type(mock_context.request_context.lifespan_context.mapdl.information).title = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Information error"))
@@ -168,8 +158,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_geometry_class_exception(self, mock_context):
         """Test status extraction when geometry class raises exception."""
-        import json
-
         # Make geometry raise an exception
         type(mock_context.request_context.lifespan_context.mapdl.geometry).n_keypoint = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Geometry error"))
@@ -184,8 +172,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_mesh_class_exception(self, mock_context):
         """Test status extraction when mesh class raises exception."""
-        import json
-
         # Make mesh raise an exception
         type(mock_context.request_context.lifespan_context.mapdl.mesh).n_node = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Mesh error"))
@@ -200,8 +186,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_post_processing_exception(self, mock_context):
         """Test status extraction when post_processing raises exception."""
-        import json
-
         # Make post_processing.nsets raise an exception
         type(mock_context.request_context.lifespan_context.mapdl.post_processing).nsets = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Post error"))
@@ -216,8 +200,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_all_data_present(self, mock_context):
         """Test status extraction when all data is properly available."""
-        import json
-
         result = check_mapdl_status(mock_context)
 
         data = json.loads(result)
@@ -1564,8 +1546,6 @@ class TestScreenshot:
 
     def test_screenshot_success_png(self, mock_context, tmp_path):
         """Test capturing a screenshot successfully with PNG format."""
-        from mcp.types import ImageContent, TextContent
-
         # Create a fake PNG image file
         screenshot_path = tmp_path / "screenshot.png"
         fake_image_data = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
@@ -1597,16 +1577,11 @@ class TestScreenshot:
         assert image_content.data is not None
         assert len(image_content.data) > 0
 
-        # Verify base64 encoding is correct
-        import base64
-
         decoded_data = base64.b64decode(image_content.data)
         assert decoded_data == fake_image_data
 
     def test_screenshot_success_jpeg(self, mock_context, tmp_path):
         """Test capturing a screenshot with JPEG format."""
-        from mcp.types import ImageContent
-
         # Create a fake JPEG image file
         screenshot_path = tmp_path / "screenshot.jpg"
         fake_image_data = b"\xff\xd8\xff\xe0\x00\x10JFIF"
@@ -1630,8 +1605,6 @@ class TestScreenshot:
 
     def test_screenshot_success_jpeg_extension(self, mock_context, tmp_path):
         """Test capturing a screenshot with .jpeg extension."""
-        from mcp.types import ImageContent
-
         # Create a fake image file with .jpeg extension
         screenshot_path = tmp_path / "screenshot.jpeg"
         fake_image_data = b"\xff\xd8\xff\xe0\x00\x10JFIF"
@@ -1651,8 +1624,6 @@ class TestScreenshot:
 
     def test_screenshot_success_bmp(self, mock_context, tmp_path):
         """Test capturing a screenshot with BMP format."""
-        from mcp.types import ImageContent
-
         # Create a fake BMP image file
         screenshot_path = tmp_path / "screenshot.bmp"
         fake_image_data = b"BM\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -1672,8 +1643,6 @@ class TestScreenshot:
 
     def test_screenshot_success_gif(self, mock_context, tmp_path):
         """Test capturing a screenshot with GIF format."""
-        from mcp.types import ImageContent
-
         # Create a fake GIF image file
         screenshot_path = tmp_path / "screenshot.gif"
         fake_image_data = b"GIF89a\x00\x00\x00\x00"
@@ -1693,7 +1662,6 @@ class TestScreenshot:
 
     def test_screenshot_without_mapdl(self, mock_context_no_mapdl):
         """Test screenshot when MAPDL is not available."""
-        from mcp.types import TextContent
 
         result = screenshot(mock_context_no_mapdl)
 
@@ -1706,7 +1674,6 @@ class TestScreenshot:
 
     def test_screenshot_file_not_found(self, mock_context):
         """Test screenshot when the generated file is not found."""
-        from mcp.types import TextContent
 
         # Mock MAPDL screenshot to return a non-existent path
         nonexistent_path = "/tmp/nonexistent_screenshot.png"
@@ -1725,7 +1692,6 @@ class TestScreenshot:
 
     def test_screenshot_mapdl_error(self, mock_context):
         """Test screenshot when MAPDL raises an error."""
-        from mcp.types import TextContent
 
         # Mock MAPDL screenshot to raise an exception
         mock_context.request_context.lifespan_context.mapdl.screenshot.side_effect = Exception(
@@ -1743,7 +1709,6 @@ class TestScreenshot:
 
     def test_screenshot_permission_error(self, mock_context, tmp_path):
         """Test screenshot when file cannot be read due to permissions."""
-        from mcp.types import TextContent
 
         # Create a screenshot file
         screenshot_path = tmp_path / "screenshot.png"
@@ -1767,10 +1732,6 @@ class TestScreenshot:
 
     def test_screenshot_base64_encoding(self, mock_context, tmp_path):
         """Test that screenshot data is properly base64 encoded."""
-        import base64
-
-        from mcp.types import ImageContent
-
         # Create a fake image with known content
         screenshot_path = tmp_path / "screenshot.png"
         original_data = b"This is test image data with special chars: \x00\x01\x02\xff"
@@ -1793,7 +1754,6 @@ class TestScreenshot:
 
     def test_screenshot_large_image(self, mock_context, tmp_path):
         """Test screenshot with a large image file."""
-        from mcp.types import ImageContent
 
         # Create a larger fake image (1MB)
         screenshot_path = tmp_path / "screenshot.png"
@@ -1816,8 +1776,6 @@ class TestScreenshot:
 
     def test_screenshot_empty_file(self, mock_context, tmp_path):
         """Test screenshot with an empty file."""
-        from mcp.types import ImageContent
-
         # Create an empty file
         screenshot_path = tmp_path / "screenshot.png"
         screenshot_path.write_bytes(b"")
@@ -1855,8 +1813,6 @@ class TestScreenshot:
 
     def test_screenshot_unknown_extension_defaults_to_png(self, mock_context, tmp_path):
         """Test that unknown file extensions default to PNG MIME type."""
-        from mcp.types import ImageContent
-
         # Create a file with unknown extension
         screenshot_path = tmp_path / "screenshot.xyz"
         screenshot_path.write_bytes(b"fake image data")
@@ -1875,8 +1831,6 @@ class TestScreenshot:
 
     def test_screenshot_case_insensitive_extension(self, mock_context, tmp_path):
         """Test that file extension matching is case-insensitive."""
-        from mcp.types import ImageContent
-
         # Create files with uppercase extensions
         for ext, expected_mime in [
             (".PNG", "image/png"),
