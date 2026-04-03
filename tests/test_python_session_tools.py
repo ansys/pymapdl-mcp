@@ -1,11 +1,33 @@
+# Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
+# SPDX-License-Identifier: MIT
+#
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 """Tests for tools that use the persistent Python session."""
 
 import base64
 import json
 from unittest.mock import MagicMock, patch
 
-import pytest
 from mcp.types import ImageContent, TextContent
+import pytest
 
 from ansys.mapdl.mcp.tools import custom_plot, run_python_code
 
@@ -22,7 +44,11 @@ class TestRunPythonCode:
     @pytest.mark.asyncio
     async def test_no_python_session(self, mock_context_no_mapdl):
         # Ensure no python_session attribute or explicit None
-        setattr(mock_context_no_mapdl.request_context.lifespan_context, "python_session", None)
+        setattr(
+            mock_context_no_mapdl.request_context.lifespan_context,
+            "python_session",
+            None,
+        )
 
         result = await run_python_code(mock_context_no_mapdl, code="print('hi')")
 
@@ -105,7 +131,11 @@ class TestRunPythonCode:
     async def test_code_is_sanitized_before_execute(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
         mock_python_session.metadata["mapdl"] = MagicMock()
-        mock_python_session.execute.return_value = {"success": True, "stdout": "", "stderr": ""}
+        mock_python_session.execute.return_value = {
+            "success": True,
+            "stdout": "",
+            "stderr": "",
+        }
 
         dirty = "print('bullet:\u2022 and check:\u2713 and nbsp:\u00a0')"
         await run_python_code(mock_context, code=dirty)

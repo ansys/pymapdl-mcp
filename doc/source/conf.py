@@ -1,15 +1,16 @@
 # Configuration file for the Sphinx documentation builder.
 
-import os
-import sys
 from datetime import datetime
+import os
+from pathlib import Path
+import sys
 
 from ansys_sphinx_theme import ansys_favicon, get_version_match
 
 from ansys.mapdl.mcp import __version__ as version
 
 # Add source directory to path
-sys.path.insert(0, os.path.abspath("../.."))
+sys.path.insert(0, str(Path("../..").resolve()))
 
 # Project information
 project = "PyMAPDL-MCP"
