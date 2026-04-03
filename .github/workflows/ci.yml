@@ -225,15 +225,29 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y zip libgl1 libglx-mesa0 xvfb
 
+      - name: Set up Python ${{ env.MAIN_PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.MAIN_PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: |
+            pyproject.toml
+
       - name: "Configure pip for private PyPI"
         run: |
           pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
+
+      - name: "Install dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[doc]
 
       - name: "Run Ansys documentation building action"
         uses: ansys/actions/doc-build@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
         with:
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
           checkout: false
+          skip-install: true
 
   package:
     name: "Package library"
