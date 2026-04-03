@@ -3,9 +3,30 @@
 # See https://pre-commit.com/hooks.html for more hooks
 
 repos:
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.7
+    hooks:
+      # Run the linter.
+      - id: ruff-check
+      # Run the formatter.
+      - id: ruff-format
+
+  # Add copyright statement to files
+  - repo: https://github.com/ansys/pre-commit-hooks
+    rev: v0.5.2
+    hooks:
+    - id: add-license-headers
+      exclude: |
+          (?x)^(
+              examples/src/pyexample_mcp/.*
+          )$
+      args:
+      - --start_year=2025
+
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -19,31 +40,9 @@ repos:
       - id: debug-statements
       - id: mixed-line-ending
 
-  # Python code formatting with Black
-  - repo: https://github.com/psf/black
-    rev: 6305bf1ae645ab7541be4f5028a86239316178eb  # frozen: 26.1.0
-    hooks:
-      - id: black
-        args: ['--line-length=100']
-
-  # Import sorting with isort
-  - repo: https://github.com/PyCQA/isort
-    rev: 0a09c783808cfe77bb3269250f663ff733d23302  # frozen: 7.0.0
-    hooks:
-      - id: isort
-        args: ['--profile=black', '--line-length=100']
-
-  # Linting with flake8
-  - repo: https://github.com/pyCQA/flake8
-    rev: d93590f5be797aabb60e3b09f2f52dddb02f349f  # frozen: 7.3.0
-    hooks:
-      - id: flake8
-        args: ['--max-line-length=100', '--extend-ignore=E203,W503']
-        exclude: ^tests/
-
   # Type checking with mypy (official mirror)
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: a66e98df7b4aeeb3724184b332785976d062b92e  # frozen: v1.19.1
+    rev: v1.8.0
     hooks:
       - id: mypy
         args: [--config-file=pyproject.toml]
@@ -51,19 +50,19 @@ repos:
         additional_dependencies:
           - types-tabulate
 
-  # Docstring checks
-  - repo: https://github.com/PyCQA/pydocstyle
-    rev: 07f6707e2c5612960347f7c00125620457f490a7  # frozen: 6.3.0
-    hooks:
-      - id: pydocstyle
-        args: ['--convention=numpy', '--add-ignore=D100,D104']
-        exclude: ^tests/
-
   # Security checks with bandit
   - repo: https://github.com/PyCQA/bandit
-    rev: 765f00d3f202f83f61d03f882f80a2d5142d81f8  # frozen: 1.9.3
+    rev: 1.8.0
     hooks:
       - id: bandit
         args: ['-c', 'pyproject.toml']
         additional_dependencies: ['bandit[toml]']
         exclude: ^tests/
+
+  # Spell checking with typos
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.44.0
+    hooks:
+      - id: typos
+        args: ["--config", "doc/styles/typos.toml"]
+        exclude: "doc/styles/config/vocabularies"
