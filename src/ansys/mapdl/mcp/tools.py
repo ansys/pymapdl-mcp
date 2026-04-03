@@ -517,7 +517,7 @@ def screenshot(
             return [TextContent(type="text", text=error_msg)]
 
         # Read image data
-        with image_path.open("rb") as f:
+        with open(screenshot_path, "rb") as f:  # noqa: PTH123
             image_data = f.read()
 
         # Encode to base64
