@@ -517,6 +517,7 @@ def screenshot(
             return [TextContent(type="text", text=error_msg)]
 
         # Read image data
+        # Ignoring PTH123 since the file is created by MAPDL
         with open(screenshot_path, "rb") as f:  # noqa: PTH123
             image_data = f.read()
 
