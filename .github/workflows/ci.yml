@@ -242,11 +242,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .[doc]
 
-      - name: "Run Ansys documentation building action"
-        uses: ansys/actions/doc-build@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
+      - name: "Build documentation"
+        run: |
+          cd doc
+          make clean
+          xvfb-run make html | tee doc_build.log
+        env:
+          SPHINXOPTS: "-W --keep-going"
+
+      - name: "Upload documentation artifact"
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f #v7.0.0
         with:
-          checkout: false
-          skip-install: true
+          name: documentation-html
+          path: doc/_build/html/
+          retention-days: 30
 
   package:
     name: "Package library"
