@@ -13,6 +13,7 @@
    user_guide/index
    api/index
    examples/index
+   changelog
 
 
 .. image:: ../source/_static/pymapdl_dark_logo_large.png
