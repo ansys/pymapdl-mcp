@@ -11,15 +11,15 @@ There are several ways to contribute to PyMAPDL-MCP.
 * :ref:`write_documentation`
 
 Overall guidance on contributing to a PyAnsys library appears in the
-`Contributing <https://dev.docs.pyansys.com/contributing.html>`_ topic
+`Contributing <https://dev.docs.pyansys.com/how-to/contributing.html>`_ topic
 in the *PyAnsys Developer's Guide*. Ensure that you are thoroughly familiar
 with it and the `Coding style <https://dev.docs.pyansys.com/coding-style/index.html>`_
 before attempting to contribute to PyMAPDL-MCP.
 
 In order to have a nice release notes section, it is important to follow
 the branch and commit names conventions as described in the *PyAnsys Developer's Guide*
-`branch <https://dev.docs.pyansys.com/how-to/version-control.html#branch-naming>`_
-and `commit <https://dev.docs.pyansys.com/how-to/version-control.html#commit-message>`_
+`branch <https://dev.docs.pyansys.com/how-to/contributing.html#branch-naming-conventions>`_
+and `commit <https://dev.docs.pyansys.com/how-to/contributing.html#commit-naming-conventions>`_
 naming sections.
 
 
