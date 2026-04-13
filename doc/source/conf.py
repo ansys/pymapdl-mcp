@@ -13,7 +13,7 @@ project = "pymapdl-mcp"
 copyright = f"(c) {datetime.now().year} ANSYS, Inc. All rights reserved"
 author = "ANSYS, Inc."
 release = version = __version__
-cname = os.getenv("DOCUMENTATION_CNAME", "")
+cname = os.getenv("DOCUMENTATION_CNAME", "mapdl-mcp.docs.pyansys.com")
 switcher_version = get_version_match(__version__)
 
 REPOSITORY_NAME = "pymapdl-mcp"
@@ -45,10 +45,10 @@ html_theme_options = {
             "icon": "fa fa-comment fa-fw",
         },
     ],
-    "switcher": {
-        "json_url": f"https://{cname}/versions.json",
-        "version_match": switcher_version,
-    },
+    # "switcher": {
+    #     "json_url": f"https://{cname}/versions.json",
+    #     "version_match": switcher_version,
+    # },
     "ansys_sphinx_theme_autoapi": {
         "project": project,
     },
