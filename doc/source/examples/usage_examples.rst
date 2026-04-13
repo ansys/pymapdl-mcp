@@ -1,3 +1,5 @@
+.. _ref_usage_examples:
+
 Usage examples - Video demos
 ============================
 
