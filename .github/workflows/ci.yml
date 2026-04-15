@@ -295,7 +295,7 @@ jobs:
         uses: ansys/actions/doc-deploy-dev@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
         with:
           cname: ${{ env.DOCUMENTATION_CNAME }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
           bot-user: ${{ secrets.PYANSYS_CI_BOT_USERNAME }}
           bot-email: ${{ secrets.PYANSYS_CI_BOT_EMAIL }}
 
@@ -409,7 +409,7 @@ jobs:
         uses: ansys/actions/doc-deploy-stable@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
         with:
           cname: ${{ env.DOCUMENTATION_CNAME }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
           render-last: '5'
           bot-user: ${{ secrets.PYANSYS_CI_BOT_USERNAME }}
           bot-email: ${{ secrets.PYANSYS_CI_BOT_EMAIL }}
