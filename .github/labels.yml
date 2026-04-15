@@ -29,3 +29,7 @@
 - name: testing
   description: Tests and test related changes
   color: c5def5
+
+- name: pr-preview
+  description: PR preview related
+  color: 051e7f

@@ -29,9 +29,8 @@ from pathlib import Path
 import tempfile
 from typing import Any
 
-from fastmcp.server import Context
-
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
+from fastmcp.server import Context
 
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active

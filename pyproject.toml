@@ -98,11 +98,11 @@ lint.ignore = [
 lint.per-file-ignores."!src/**.py" = [ "D" ]
 # Ignore `F401` (import violations) in all `__init__.py` files.
 lint.per-file-ignores."__init__.py" = [ "F401" ]
-# Ignore `E402` (module level import not at top of file) in `src/ansys/common/mcp/__init__.py`.
-lint.per-file-ignores."src/ansys/common/mcp/__init__.py" = [ "E402" ]
+# Ignore `E402` (module level import not at top of file) in `src/ansys/mapdl/mcp/__init__.py`.
+lint.per-file-ignores."src/ansys/mapdl/mcp/__init__.py" = [ "E402" ]
 lint.isort.combine-as-imports = true
 lint.isort.force-sort-within-sections = true
-lint.isort.known-first-party = [ "ansys.common.mcp" ]
+lint.isort.known-first-party = [ "ansys.mapdl.mcp" ]
 lint.pydocstyle.convention = "numpy"
 
 [tool.mypy]
@@ -160,13 +160,13 @@ exclude = [
 ]
 
 [tool.towncrier]
-package = "ansys.common.mcp"
+package = "ansys.mapdl.mcp"
 directory = "doc/changelog.d"
 filename = "doc/source/changelog.rst"
 template = "doc/changelog.d/changelog_template.jinja"
 start_string = ".. towncrier release notes start\n"
-title_format = "`{version} <https://github.com/ansys/pyansys-common-mcp/releases/tag/v{version}>`_ - {project_date}"
-issue_format = "`#{issue} <https://github.com/ansys/pyansys-common-mcp/pull/{issue}>`_"
+title_format = "`{version} <https://github.com/ansys/pymapdl-mcp/releases/tag/v{version}>`_ - {project_date}"
+issue_format = "`#{issue} <https://github.com/ansys/pymapdl-mcp/pull/{issue}>`_"
 
 [[tool.towncrier.type]]
 directory = "added"
