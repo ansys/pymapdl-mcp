@@ -289,8 +289,10 @@ def launcher(argv: list[str] | None = None) -> None:
     # import tools, contexts, and prompts to register them
     if not session.on_aali:
         from ansys.mapdl.mcp import contexts  # noqa: F401
-    from ansys.mapdl.mcp import prompts  # noqa: F401
-    from ansys.mapdl.mcp import tools  # noqa: F401
+    from ansys.mapdl.mcp import (
+        prompts,  # noqa: F401
+        tools,  # noqa: F401
+    )
 
     # Guarantee the system prompt is delivered during the MCP initialize handshake
     app.instructions = prompts.SYSTEM_PROMPT
