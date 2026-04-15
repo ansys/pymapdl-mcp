@@ -4,7 +4,6 @@
    :keywords: pymapdl, mapdl, mcp, ai, llm, simulation, finite elements, python
    :description: Welcome to PyMAPDL-MCP documentation.
 
-
 .. toctree::
    :hidden:
    :maxdepth: 3
@@ -13,6 +12,7 @@
    user_guide/index
    api/index
    examples/index
+   changelog
 
 
 .. image:: ../source/_static/pymapdl_dark_logo_large.png

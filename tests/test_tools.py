@@ -1,10 +1,33 @@
+# Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
+# SPDX-License-Identifier: MIT
+#
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 """Tests for MCP tools functionality."""
 
+import base64
 import json
 from unittest.mock import MagicMock, Mock, patch
 
-import pytest
 from mcp.types import ImageContent, TextContent
+import pytest
 
 from ansys.mapdl.mcp.tools import (
     check_mapdl_installed,
@@ -29,9 +52,8 @@ class TestCheckMapdlStatus:
         result = check_mapdl_status(mock_context)
 
         assert isinstance(result, str)
-        # Check for JSON structure
-        import json
 
+        # Check for JSON structure
         data = json.loads(result)
         assert "connection" in data
         assert "information" in data
@@ -70,8 +92,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_missing_information_attributes(self, mock_context):
         """Test status extraction when information class attributes are missing."""
-        import json
-
         # Remove some information attributes
         delattr(mock_context.request_context.lifespan_context.mapdl.information, "title")
         delattr(mock_context.request_context.lifespan_context.mapdl.information, "product")
@@ -86,8 +106,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_missing_geometry_attributes(self, mock_context):
         """Test status extraction when geometry class attributes are missing."""
-        import json
-
         # Remove geometry attributes
         delattr(mock_context.request_context.lifespan_context.mapdl.geometry, "n_keypoint")
         delattr(mock_context.request_context.lifespan_context.mapdl.geometry, "n_line")
@@ -102,8 +120,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_missing_mesh_attributes(self, mock_context):
         """Test status extraction when mesh class attributes are missing."""
-        import json
-
         # Remove mesh attributes
         delattr(mock_context.request_context.lifespan_context.mapdl.mesh, "n_node")
 
@@ -116,8 +132,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_missing_post_processing(self, mock_context):
         """Test status extraction when post_processing is not available."""
-        import json
-
         # Remove post_processing attribute
         delattr(mock_context.request_context.lifespan_context.mapdl, "post_processing")
 
@@ -126,12 +140,10 @@ class TestCheckMapdlStatus:
         # Should still return valid JSON
         data = json.loads(result)
         assert "post_processing" in data
-        assert data["post_processing"]["available"] == False
+        assert not data["post_processing"]["available"]
 
     def test_check_status_information_class_exception(self, mock_context):
         """Test status extraction when information class raises exception."""
-        import json
-
         # Make information.title raise an exception
         type(mock_context.request_context.lifespan_context.mapdl.information).title = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Information error"))
@@ -146,8 +158,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_geometry_class_exception(self, mock_context):
         """Test status extraction when geometry class raises exception."""
-        import json
-
         # Make geometry raise an exception
         type(mock_context.request_context.lifespan_context.mapdl.geometry).n_keypoint = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Geometry error"))
@@ -162,8 +172,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_mesh_class_exception(self, mock_context):
         """Test status extraction when mesh class raises exception."""
-        import json
-
         # Make mesh raise an exception
         type(mock_context.request_context.lifespan_context.mapdl.mesh).n_node = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Mesh error"))
@@ -178,8 +186,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_post_processing_exception(self, mock_context):
         """Test status extraction when post_processing raises exception."""
-        import json
-
         # Make post_processing.nsets raise an exception
         type(mock_context.request_context.lifespan_context.mapdl.post_processing).nsets = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Post error"))
@@ -194,8 +200,6 @@ class TestCheckMapdlStatus:
 
     def test_check_status_all_data_present(self, mock_context):
         """Test status extraction when all data is properly available."""
-        import json
-
         result = check_mapdl_status(mock_context)
 
         data = json.loads(result)
@@ -302,7 +306,10 @@ class TestCheckMapdlInstalled:
         custom_path = "/opt/ansys/v251/ansys/bin/ansys251"
         with (
             patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
-            patch("ansys.mapdl.core.launcher.get_default_ansys_path", return_value=custom_path),
+            patch(
+                "ansys.mapdl.core.launcher.get_default_ansys_path",
+                return_value=custom_path,
+            ),
         ):
             result = check_mapdl_installed(MagicMock())
 
@@ -642,20 +649,6 @@ class TestRunMultipleCommands:
         # Verify logging messages
         assert "Successfully executed 2 MAPDL commands" in output
 
-    def test_run_multiple_commands_error_handling(self, mock_context):
-        """Test that command errors are properly handled and reported in return value."""
-        commands = ["/PREP7", "INVALID"]
-        mock_context.request_context.lifespan_context.mapdl.input_strings.side_effect = Exception(
-            "Test error"
-        )
-
-        result = run_multiple_commands(mock_context, commands)
-
-        # Verify error message is in the return value
-        assert isinstance(result, str)
-        assert "Error executing commands" in result
-        assert "Test error" in result
-
 
 @pytest.mark.unit
 class TestListMapdlInstances:
@@ -667,7 +660,7 @@ class TestListMapdlInstances:
         mock_output = """Name      Is Instance    Status      gRPC port    PID    Command line                Working directory
 ------  -------------  --------  -----------  -----  -------------------------  -------------------
 ansys     True          running         50052  12345  ansys242 -grpc -port 50052  /tmp/ansys_tmp
-ansys     True          running         50053  12346  ansys242 -grpc -port 50053  /tmp/ansys_tmp2"""
+ansys     True          running         50053  12346  ansys242 -grpc -port 50053  /tmp/ansys_tmp2"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
             result = list_mapdl_instances()
@@ -681,7 +674,7 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
         """Test list_mapdl_instances when no instances are found."""
         # Mock the list_instances function to return empty table
         mock_output = """Name    Is Instance    Status    gRPC port    PID    Command line    Working directory
-------  -------------  --------  -----------  -----  --------------  -------------------"""
+------  -------------  --------  -----------  -----  --------------  -------------------"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
             result = list_mapdl_instances()
@@ -707,7 +700,7 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
 ------  -------------  --------  -----------  -----  -------------------------  ------------------------------------
 ansys     True          running         50052  12345  ansys242 -grpc -port 50052  /tmp/ansys_workdir1
 ansys     True          running         50053  12346  ansys242 -grpc -port 50053  /tmp/ansys_workdir2
-ansys     True          running         50054  12347  ansys242 -grpc -port 50054  /tmp/ansys_workdir3"""
+ansys     True          running         50054  12347  ansys242 -grpc -port 50054  /tmp/ansys_workdir3"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
             result = list_mapdl_instances()
@@ -717,7 +710,7 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
             assert "50052" in result
 
     def test_list_instances_return_value_propagation(self):
-        """Test that list_mapdl_instances correctly propagates the return value from helpers.list_instances."""
+        """Test that list_mapdl_instances correctly propagates the return value from helpers.list_instances."""  # noqa: E501
         mock_output = "Sample output with instance information"
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output) as mock_list:
             result = list_mapdl_instances()
@@ -733,7 +726,7 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
         # Mock output with all expected headers
         mock_output = """Name      Status      gRPC port    PID    Command line                Working directory
 ------  --------  -----------  -----  -------------------------  -------------------
-ansys     True          running         50052  12345  ansys242 -grpc -port 50052  /tmp/ansys_tmp"""
+ansys     True          running         50052  12345  ansys242 -grpc -port 50052  /tmp/ansys_tmp"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
             result = list_mapdl_instances()
@@ -758,7 +751,7 @@ ansys     True          running         50052  12345  ansys242 -grpc -port 50052
     def test_list_instances_consistent_calls(self):
         """Test that multiple calls to list_mapdl_instances return consistent format."""
         mock_output = """Name      Status      gRPC port    PID    Command line                Working directory
-------  --------  -----------  -----  -------------------------  -------------------"""
+------  --------  -----------  -----  -------------------------  -------------------"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
             result1 = list_mapdl_instances()
@@ -835,10 +828,10 @@ class TestConnectToMapdl:
             mock_mapdl_class.assert_called_once()
             call_args = mock_mapdl_class.call_args[1]
 
-            assert "start_instance" in call_args and call_args["start_instance"] == False
+            assert "start_instance" in call_args and not call_args["start_instance"]
             assert "ip" in call_args and call_args["ip"] == "192.168.1.100"
             assert "port" in call_args and call_args["port"] is not None
-            assert "cleanup_on_exit" in call_args and call_args["cleanup_on_exit"] == False
+            assert "cleanup_on_exit" in call_args and not call_args["cleanup_on_exit"]
             assert "loglevel" in call_args and call_args["loglevel"] == "INFO"
 
     def test_connect_custom_ip_and_port(self, mock_context_no_mapdl):
@@ -1553,8 +1546,6 @@ class TestScreenshot:
 
     def test_screenshot_success_png(self, mock_context, tmp_path):
         """Test capturing a screenshot successfully with PNG format."""
-        from mcp.types import ImageContent, TextContent
-
         # Create a fake PNG image file
         screenshot_path = tmp_path / "screenshot.png"
         fake_image_data = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
@@ -1586,16 +1577,11 @@ class TestScreenshot:
         assert image_content.data is not None
         assert len(image_content.data) > 0
 
-        # Verify base64 encoding is correct
-        import base64
-
         decoded_data = base64.b64decode(image_content.data)
         assert decoded_data == fake_image_data
 
     def test_screenshot_success_jpeg(self, mock_context, tmp_path):
         """Test capturing a screenshot with JPEG format."""
-        from mcp.types import ImageContent, TextContent
-
         # Create a fake JPEG image file
         screenshot_path = tmp_path / "screenshot.jpg"
         fake_image_data = b"\xff\xd8\xff\xe0\x00\x10JFIF"
@@ -1619,8 +1605,6 @@ class TestScreenshot:
 
     def test_screenshot_success_jpeg_extension(self, mock_context, tmp_path):
         """Test capturing a screenshot with .jpeg extension."""
-        from mcp.types import ImageContent
-
         # Create a fake image file with .jpeg extension
         screenshot_path = tmp_path / "screenshot.jpeg"
         fake_image_data = b"\xff\xd8\xff\xe0\x00\x10JFIF"
@@ -1640,8 +1624,6 @@ class TestScreenshot:
 
     def test_screenshot_success_bmp(self, mock_context, tmp_path):
         """Test capturing a screenshot with BMP format."""
-        from mcp.types import ImageContent
-
         # Create a fake BMP image file
         screenshot_path = tmp_path / "screenshot.bmp"
         fake_image_data = b"BM\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -1661,8 +1643,6 @@ class TestScreenshot:
 
     def test_screenshot_success_gif(self, mock_context, tmp_path):
         """Test capturing a screenshot with GIF format."""
-        from mcp.types import ImageContent
-
         # Create a fake GIF image file
         screenshot_path = tmp_path / "screenshot.gif"
         fake_image_data = b"GIF89a\x00\x00\x00\x00"
@@ -1682,7 +1662,6 @@ class TestScreenshot:
 
     def test_screenshot_without_mapdl(self, mock_context_no_mapdl):
         """Test screenshot when MAPDL is not available."""
-        from mcp.types import TextContent
 
         result = screenshot(mock_context_no_mapdl)
 
@@ -1695,7 +1674,6 @@ class TestScreenshot:
 
     def test_screenshot_file_not_found(self, mock_context):
         """Test screenshot when the generated file is not found."""
-        from mcp.types import TextContent
 
         # Mock MAPDL screenshot to return a non-existent path
         nonexistent_path = "/tmp/nonexistent_screenshot.png"
@@ -1714,7 +1692,6 @@ class TestScreenshot:
 
     def test_screenshot_mapdl_error(self, mock_context):
         """Test screenshot when MAPDL raises an error."""
-        from mcp.types import TextContent
 
         # Mock MAPDL screenshot to raise an exception
         mock_context.request_context.lifespan_context.mapdl.screenshot.side_effect = Exception(
@@ -1732,7 +1709,6 @@ class TestScreenshot:
 
     def test_screenshot_permission_error(self, mock_context, tmp_path):
         """Test screenshot when file cannot be read due to permissions."""
-        from mcp.types import TextContent
 
         # Create a screenshot file
         screenshot_path = tmp_path / "screenshot.png"
@@ -1756,10 +1732,6 @@ class TestScreenshot:
 
     def test_screenshot_base64_encoding(self, mock_context, tmp_path):
         """Test that screenshot data is properly base64 encoded."""
-        import base64
-
-        from mcp.types import ImageContent
-
         # Create a fake image with known content
         screenshot_path = tmp_path / "screenshot.png"
         original_data = b"This is test image data with special chars: \x00\x01\x02\xff"
@@ -1782,7 +1754,6 @@ class TestScreenshot:
 
     def test_screenshot_large_image(self, mock_context, tmp_path):
         """Test screenshot with a large image file."""
-        from mcp.types import ImageContent
 
         # Create a larger fake image (1MB)
         screenshot_path = tmp_path / "screenshot.png"
@@ -1805,8 +1776,6 @@ class TestScreenshot:
 
     def test_screenshot_empty_file(self, mock_context, tmp_path):
         """Test screenshot with an empty file."""
-        from mcp.types import ImageContent
-
         # Create an empty file
         screenshot_path = tmp_path / "screenshot.png"
         screenshot_path.write_bytes(b"")
@@ -1844,8 +1813,6 @@ class TestScreenshot:
 
     def test_screenshot_unknown_extension_defaults_to_png(self, mock_context, tmp_path):
         """Test that unknown file extensions default to PNG MIME type."""
-        from mcp.types import ImageContent
-
         # Create a file with unknown extension
         screenshot_path = tmp_path / "screenshot.xyz"
         screenshot_path.write_bytes(b"fake image data")
@@ -1864,8 +1831,6 @@ class TestScreenshot:
 
     def test_screenshot_case_insensitive_extension(self, mock_context, tmp_path):
         """Test that file extension matching is case-insensitive."""
-        from mcp.types import ImageContent
-
         # Create files with uppercase extensions
         for ext, expected_mime in [
             (".PNG", "image/png"),

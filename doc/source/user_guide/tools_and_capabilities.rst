@@ -1,4 +1,4 @@
-Tools and Capabilities
+Tools and capabilities
 ======================
 
 Available Tools
