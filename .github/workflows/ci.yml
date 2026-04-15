@@ -308,12 +308,13 @@ jobs:
       contents: write
     steps:
       - name: "Deploy the PR documentation"
-        uses: ansys/actions/doc-deploy-dev@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
+        uses: ansys/actions/doc-deploy-pr@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
         with:
           cname: ${{ env.DOCUMENTATION_CNAME }}
           token: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
           bot-user: ${{ secrets.PYANSYS_CI_BOT_USERNAME }}
           bot-email: ${{ secrets.PYANSYS_CI_BOT_EMAIL }}
+          maximum-pr-doc-deployments: 10
 
   # docker-build-and-push:
   #   name: "Build and push Docker image"
