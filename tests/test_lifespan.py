@@ -62,9 +62,7 @@ def test_mcp_server_has_tools():
     from ansys.mapdl.mcp.tools import (
         check_mapdl_status,
         run_mapdl_command,
-        write_comment,
     )
 
     assert callable(check_mapdl_status)
     assert callable(run_mapdl_command)
-    assert callable(write_comment)

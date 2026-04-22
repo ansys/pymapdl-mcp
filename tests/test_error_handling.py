@@ -27,7 +27,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from ansys.mapdl.mcp.tools import check_mapdl_status, run_mapdl_command, write_comment
+from ansys.mapdl.mcp.tools import check_mapdl_status, run_mapdl_command
 
 
 @pytest.mark.unit
@@ -45,18 +45,6 @@ class TestErrorHandling:
             run_mapdl_command(mock_context, "INVALID_COMMAND")
 
         assert "MAPDL command failed" in str(exc_info.value)
-
-    def test_write_comment_failure(self, mock_context):
-        """Test handling of comment writing failures."""
-        # Make the com method raise an exception
-        mock_context.request_context.lifespan_context.mapdl.com.side_effect = RuntimeError(
-            "Failed to write comment"
-        )
-
-        with pytest.raises(RuntimeError) as exc_info:
-            write_comment(mock_context, "Test comment")
-
-        assert "Failed to write comment" in str(exc_info.value)
 
     def test_none_mapdl_instance(self, mock_context_no_mapdl):
         """Test handling when MAPDL instance is None."""

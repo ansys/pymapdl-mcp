@@ -401,18 +401,6 @@ Check the status and comprehensive information of the connected MAPDL instance.
 
 ### MAPDL Command Execution
 
-#### `write_comment`
-
-Write a comment in the MAPDL session using the `/COM` command.
-
-**Parameters**:
-- `comment` (string): The comment text to write in MAPDL
-
-**Returns**: Confirmation message with the comment execution result
-
-> [!NOTE]
-> This tool is disabled when running on AALI environments.
-
 #### `run_mapdl_command`
 
 Execute a single MAPDL command.
@@ -737,9 +725,6 @@ pytest -v
 # Generate HTML coverage report
 pytest --cov=ansys.mapdl.mcp --cov-report=html
 # Open htmlcov/index.html to view
-
-# Run specific test
-pytest tests/test_tools.py::TestWriteComment::test_write_comment_success
 ```
 
 ## Contributing
