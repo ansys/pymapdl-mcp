@@ -58,7 +58,6 @@ class TestMCPProtocol:
             launch_mapdl_session,
             run_mapdl_command,
             run_multiple_commands,
-            write_comment,
         )
 
         tools = [
@@ -66,7 +65,6 @@ class TestMCPProtocol:
             launch_mapdl_session,
             run_mapdl_command,
             run_multiple_commands,
-            write_comment,
         ]
 
         for tool in tools:
