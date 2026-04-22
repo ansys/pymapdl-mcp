@@ -48,7 +48,6 @@ from ansys.mapdl.mcp.tools import (
     run_mapdl_command,
     run_multiple_commands,
     run_python_code,
-    write_comment,
 )
 
 ON_LOCAL = os.getenv("ON_LOCAL", "true") == "true"
@@ -126,14 +125,6 @@ class TestMapdlIntegration:
         assert "version" in data["connection"]
         assert data["connection"]["status"] == "Running"
 
-    def test_real_write_comment(self, real_context):
-        """Test writing a comment with a real MAPDL connection."""
-        comment = "Integration test comment"
-        result = write_comment(real_context, comment)
-
-        assert isinstance(result, str)
-        assert "Comment written successfully" in result
-
     def test_real_run_command(self, real_context):
         """Test running a MAPDL command with a real connection."""
         # Use a safe command that doesn't affect the model
@@ -151,10 +142,6 @@ class TestMapdlIntegration:
         # Enter preprocessor
         result = run_mapdl_command(real_context, "/PREP7")
         assert "executed successfully" in result
-
-        # Write a comment
-        result = write_comment(real_context, "Starting PREP7 workflow")
-        assert "Comment written successfully" in result
 
         # Define element type
         result = run_mapdl_command(real_context, "ET,1,SOLID185")
