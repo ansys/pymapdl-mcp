@@ -148,23 +148,6 @@ run_multiple_commands
         "ET,1,SOLID185"
     ])
 
-write_comment
-~~~~~~~~~~~~~
-
-**Description**: Write a comment in the MAPDL session
-
-**Parameters**:
-
-- ``comment`` (str): Comment text to write
-
-**Returns**: Confirmation message
-
-**Example**:
-
-.. code-block:: python
-
-    result = write_comment("Starting linear static analysis")
-
 Python Code Execution Tools
 ----------------------------
 
