@@ -40,7 +40,6 @@ from ansys.mapdl.mcp.tools import (
     run_mapdl_command,
     run_multiple_commands,
     screenshot,
-    write_comment,
 )
 
 
@@ -345,48 +344,6 @@ class TestCheckMapdlInstalled:
 
 
 @pytest.mark.unit
-class TestWriteComment:
-    """Tests for write_comment tool."""
-
-    def test_write_comment_success(self, mock_context):
-        """Test writing a comment successfully."""
-        comment = "This is a test comment"
-        result = write_comment(mock_context, comment)
-
-        assert isinstance(result, str)
-        assert "Comment written successfully" in result
-
-        # Verify that MAPDL's com method was called
-        mock_context.request_context.lifespan_context.mapdl.com.assert_called_once()
-        call_args = mock_context.request_context.lifespan_context.mapdl.com.call_args
-        assert comment in call_args[0][0]
-
-    def test_write_comment_empty_string(self, mock_context):
-        """Test writing an empty comment."""
-        result = write_comment(mock_context, "")
-
-        assert isinstance(result, str)
-        assert "Comment written successfully" in result
-
-    def test_write_comment_special_characters(self, mock_context):
-        """Test writing a comment with special characters."""
-        comment = "Comment with special chars: !@#$%^&*()"
-        result = write_comment(mock_context, comment)
-
-        assert isinstance(result, str)
-        assert "Comment written successfully" in result
-
-    def test_write_comment_without_mapdl(self, mock_context_no_mapdl):
-        """Test writing a comment when MAPDL is not available."""
-        result = write_comment(mock_context_no_mapdl, "Test comment")
-
-        # Should return helpful error message instead of raising exception
-        assert isinstance(result, str)
-        assert "No MAPDL connection available" in result
-        assert "connect_to_mapdl" in result
-
-
-@pytest.mark.unit
 class TestRunMapdlCommand:
     """Tests for run_mapdl_command tool."""
 
@@ -428,6 +385,87 @@ class TestRunMapdlCommand:
 
         # Verify all commands were called
         assert mock_context.request_context.lifespan_context.mapdl.run.call_count == len(commands)
+
+    def test_run_command_with_header(self, mock_context):
+        """Test running a MAPDL command with header."""
+        command = "/PREP7"
+        header = "Preprocessing setup"
+        result = run_mapdl_command(mock_context, command, header=header)
+
+        assert isinstance(result, str)
+        assert "MAPDL command executed successfully" in result
+
+        # Verify that header was written as a comment
+        mock_context.request_context.lifespan_context.mapdl.com.assert_called_with(
+            f"# {header}", mute=True
+        )
+
+    def test_run_command_with_comment(self, mock_context):
+        """Test running a MAPDL command with comment."""
+        command = "/PREP7"
+        comment = "Setting up the model"
+        result = run_mapdl_command(mock_context, command, comment=comment)
+
+        assert isinstance(result, str)
+        assert "MAPDL command executed successfully" in result
+
+        # Verify that comment was written
+        mock_context.request_context.lifespan_context.mapdl.com.assert_called_with(
+            comment, mute=True
+        )
+
+    def test_run_command_with_header_and_comment(self, mock_context):
+        """Test running a MAPDL command with both header and comment."""
+        command = "/PREP7"
+        header = "Setup Phase"
+        comment = "Initializing model parameters"
+        result = run_mapdl_command(mock_context, command, comment=comment, header=header)
+
+        assert isinstance(result, str)
+        assert "MAPDL command executed successfully" in result
+
+        # Verify that both header and comment were written
+        calls = mock_context.request_context.lifespan_context.mapdl.com.call_args_list
+        assert any(f"# {header}" in str(call) for call in calls)
+        assert any(comment in str(call) for call in calls)
+
+    def test_run_command_with_multiline_comment(self, mock_context):
+        """Test running a MAPDL command with multiline comment."""
+        command = "/PREP7"
+        comment = "Line 1\nLine 2\nLine 3"
+        result = run_mapdl_command(mock_context, command, comment=comment)
+
+        assert isinstance(result, str)
+        assert "MAPDL command executed successfully" in result
+
+        # Verify that each line of the comment was written
+        calls = mock_context.request_context.lifespan_context.mapdl.com.call_args_list
+        assert any("Line 1" in str(call) for call in calls)
+        assert any("Line 2" in str(call) for call in calls)
+        assert any("Line 3" in str(call) for call in calls)
+
+    def test_run_command_with_empty_header(self, mock_context):
+        """Test running a MAPDL command with empty header."""
+        command = "/PREP7"
+        result = run_mapdl_command(mock_context, command, header="")
+
+        assert isinstance(result, str)
+        assert "MAPDL command executed successfully" in result
+
+        # Verify that com was only called for the command execution, not for empty header
+        # (since header is empty, it shouldn't call com for header)
+        mock_context.request_context.lifespan_context.mapdl.com.assert_not_called()
+
+    def test_run_command_with_empty_comment(self, mock_context):
+        """Test running a MAPDL command with empty comment."""
+        command = "/PREP7"
+        result = run_mapdl_command(mock_context, command, comment="")
+
+        assert isinstance(result, str)
+        assert "MAPDL command executed successfully" in result
+
+        # Verify that com was not called for empty comment
+        mock_context.request_context.lifespan_context.mapdl.com.assert_not_called()
 
 
 @pytest.mark.unit
@@ -649,6 +687,126 @@ class TestRunMultipleCommands:
 
         # Verify logging messages
         assert "Successfully executed 2 MAPDL commands" in output
+
+    def test_run_multiple_commands_with_header(self, mock_context):
+        """Test running multiple MAPDL commands with header."""
+        commands = ["/PREP7", "ET,1,SOLID185"]
+        header = "Model Setup Phase"
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands, header=header)
+
+        assert isinstance(result, str)
+        assert "Successfully executed 2 MAPDL commands" in result
+
+        # Verify that header was written as a comment
+        mock_context.request_context.lifespan_context.mapdl.com.assert_called_with(
+            f"# {header}", mute=True
+        )
+
+    def test_run_multiple_commands_with_comment(self, mock_context):
+        """Test running multiple MAPDL commands with comment."""
+        commands = ["/PREP7", "ET,1,SOLID185"]
+        comment = "Building finite element model"
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands, comment=comment)
+
+        assert isinstance(result, str)
+        assert "Successfully executed 2 MAPDL commands" in result
+
+        # Verify that comment was written
+        mock_context.request_context.lifespan_context.mapdl.com.assert_called_with(
+            comment, mute=True
+        )
+
+    def test_run_multiple_commands_with_header_and_comment(self, mock_context):
+        """Test running multiple MAPDL commands with both header and comment."""
+        commands = ["/PREP7", "ET,1,SOLID185"]
+        header = "Initialization"
+        comment = "Setting up element types and material properties"
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands, comment=comment, header=header)
+
+        assert isinstance(result, str)
+        assert "Successfully executed 2 MAPDL commands" in result
+
+        # Verify that both header and comment were written
+        calls = mock_context.request_context.lifespan_context.mapdl.com.call_args_list
+        assert any(f"# {header}" in str(call) for call in calls)
+        assert any(comment in str(call) for call in calls)
+
+    def test_run_multiple_commands_with_multiline_comment(self, mock_context):
+        """Test running multiple MAPDL commands with multiline comment."""
+        commands = ["/PREP7", "ET,1,SOLID185"]
+        comment = "Creating model\nDefining elements\nSetting parameters"
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands, comment=comment)
+
+        assert isinstance(result, str)
+        assert "Successfully executed 2 MAPDL commands" in result
+
+        # Verify that each line of the comment was written
+        calls = mock_context.request_context.lifespan_context.mapdl.com.call_args_list
+        assert any("Creating model" in str(call) for call in calls)
+        assert any("Defining elements" in str(call) for call in calls)
+        assert any("Setting parameters" in str(call) for call in calls)
+
+    def test_run_multiple_commands_with_empty_header(self, mock_context):
+        """Test running multiple commands with empty header."""
+        commands = ["/PREP7", "ET,1,SOLID185"]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands, header="")
+
+        assert isinstance(result, str)
+        assert "Successfully executed 2 MAPDL commands" in result
+
+        # Verify that com was not called for empty header
+        mock_context.request_context.lifespan_context.mapdl.com.assert_not_called()
+
+    def test_run_multiple_commands_with_empty_comment(self, mock_context):
+        """Test running multiple commands with empty comment."""
+        commands = ["/PREP7", "ET,1,SOLID185"]
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        result = run_multiple_commands(mock_context, commands, comment="")
+
+        assert isinstance(result, str)
+        assert "Successfully executed 2 MAPDL commands" in result
+
+        # Verify that com was not called for empty comment
+        mock_context.request_context.lifespan_context.mapdl.com.assert_not_called()
+
+    def test_run_multiple_commands_header_called_before_input_strings(self, mock_context):
+        """Test that header/comment are written before input_strings is called."""
+        commands = ["/PREP7", "ET,1,SOLID185"]
+        header = "Setup"
+        mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
+
+        run_multiple_commands(mock_context, commands, header=header)
+
+        # Verify that com was called before input_strings
+        com_call_count = mock_context.request_context.lifespan_context.mapdl.com.call_count
+        input_strings_called = (
+            mock_context.request_context.lifespan_context.mapdl.input_strings.called
+        )
+
+        assert com_call_count > 0
+        assert input_strings_called
+
+        # Get the order of calls
+        all_calls = mock_context.request_context.lifespan_context.mapdl.method_calls
+        com_indices = [i for i, call in enumerate(all_calls) if call[0] == "com"]
+        input_strings_indices = [
+            i for i, call in enumerate(all_calls) if call[0] == "input_strings"
+        ]
+
+        # com should be called before input_strings
+        if com_indices and input_strings_indices:
+            assert max(com_indices) < min(input_strings_indices)
 
 
 @pytest.mark.unit
@@ -1407,9 +1565,6 @@ class TestConnectionLifecycle:
         assert "connection" in status_data
         assert status_data["connection"]["version"] == 24.2
 
-        comment_result = write_comment(mock_context_no_mapdl, "Test comment")
-        assert "Comment written successfully" in comment_result
-
         command_result = run_mapdl_command(mock_context_no_mapdl, "/PREP7")
         assert "MAPDL command executed successfully" in command_result
 
@@ -1453,10 +1608,6 @@ class TestConnectionLifecycle:
         # Check status without connection
         status = check_mapdl_status(mock_context_no_mapdl)
         assert "No MAPDL connection available" in status
-
-        # Try to write comment without connection
-        comment_result = write_comment(mock_context_no_mapdl, "Test")
-        assert "No MAPDL connection available" in comment_result
 
         # Try to run command without connection
         command_result = run_mapdl_command(mock_context_no_mapdl, "/PREP7")
@@ -1515,9 +1666,6 @@ class TestLaunchWorkflow:
         status_data = json.loads(status)
         assert "connection" in status_data
         assert status_data["connection"]["version"] == "2024 R2"
-
-        comment_result = write_comment(mock_context_no_mapdl, "Test comment")
-        assert "Comment written successfully" in comment_result
 
         command_result = run_mapdl_command(mock_context_no_mapdl, "/PREP7")
         assert "MAPDL command executed successfully" in command_result

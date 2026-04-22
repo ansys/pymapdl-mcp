@@ -132,34 +132,8 @@ def check_mapdl_installed(ctx: Context) -> str:
         return error_msg
 
 
-@app.tool(tags={"aali"})
-def write_comment(ctx: Context, comment: str) -> str:
-    """Write a comment in the MAPDL session.
-
-    Parameters
-    ----------
-    ctx : Context
-        The MCP context containing server session and application context.
-    comment : str
-        The comment text to write in MAPDL.
-
-    Returns
-    -------
-    str
-        Confirmation message with the comment execution result.
-    """
-    mapdl = ctx.request_context.lifespan_context.mapdl
-
-    if mapdl is None:
-        return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
-
-    logger.info(f"Writing comment: {comment}")
-    result = mapdl.com(f"{comment}", mute=True)  # type: ignore[union-attr]
-    return f"Comment written successfully: {result}"
-
-
 @app.tool()
-def run_mapdl_command(ctx: Context, cmd: str) -> str:
+def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "") -> str:
     """Execute an arbitrary MAPDL command.
 
     Parameters
@@ -168,6 +142,10 @@ def run_mapdl_command(ctx: Context, cmd: str) -> str:
         The MCP context containing server session and application context.
     cmd : str
         The MAPDL command to execute.
+    comment : str, optional
+        An optional comment to include before the command execution. Default is empty string.
+    header : str, optional
+        An optional header to include before the command execution. Default is empty string.
 
     Returns
     -------
@@ -179,12 +157,20 @@ def run_mapdl_command(ctx: Context, cmd: str) -> str:
     if mapdl is None:
         return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
 
+    if header:
+        mapdl.com(f"# {header}", mute=True)  # type: ignore[union-attr]
+    if comment:
+        for each_line in comment.splitlines():
+            mapdl.com(f"{each_line}", mute=True)  # type: ignore[union-attr]
+
     result = mapdl.run(cmd)  # type: ignore[union-attr]
     return f"MAPDL command executed successfully: {result}"
 
 
 @app.tool(tags={"aali"})
-def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
+def run_multiple_commands(
+    ctx: Context, commands: list[str], comment: str = "", header: str = ""
+) -> str:
     """Execute multiple MAPDL commands in sequence using input_strings.
 
     This tool is optimized for running multiple commands efficiently by using
@@ -197,6 +183,10 @@ def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
         The MCP context containing server session and application context.
     commands : list[str]
         List of MAPDL commands to execute in sequence.
+    comment : str, optional
+        An optional comment to include before the command execution. Default is empty string.
+    header : str, optional
+        An optional header to include before the command execution. Default is empty string.
 
     Returns
     -------
@@ -222,6 +212,12 @@ def run_multiple_commands(ctx: Context, commands: list[str]) -> str:
 
     try:
         logger.info(f"Executing {len(valid_commands)} MAPDL commands using input_strings")
+
+        if header:
+            mapdl.com(f"# {header}", mute=True)  # type: ignore[union-attr]
+        if comment:
+            for each_line in comment.splitlines():
+                mapdl.com(f"{each_line}", mute=True)  # type: ignore[union-attr]
 
         # Use input_strings for batch command execution
         result = mapdl.input_strings(valid_commands)  # type: ignore[union-attr]
