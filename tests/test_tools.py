@@ -655,7 +655,7 @@ class TestRunMultipleCommands:
 class TestListMapdlInstances:
     """Tests for list_mapdl_instances tool."""
 
-    def test_list_instances_success(self):
+    def test_list_instances_success(self, mock_context_no_mapdl):
         """Test list_mapdl_instances with successful instance discovery."""
         # Mock the list_instances function to return sample instances
         mock_output = """Name      Is Instance    Status      gRPC port    PID    Command line                Working directory
@@ -664,37 +664,37 @@ ansys     True          running         50052  12345  ansys242 -grpc -port 50052
 ansys     True          running         50053  12346  ansys242 -grpc -port 50053  /tmp/ansys_tmp2"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances()
+            result = list_mapdl_instances(mock_context_no_mapdl)
 
             # Verify the function returns the output from list_instances
             assert result == mock_output
             assert "ansys" in result
             assert "50052" in result
 
-    def test_list_instances_no_instances(self):
+    def test_list_instances_no_instances(self, mock_context_no_mapdl):
         """Test list_mapdl_instances when no instances are found."""
         # Mock the list_instances function to return empty table
         mock_output = """Name    Is Instance    Status    gRPC port    PID    Command line    Working directory
 ------  -------------  --------  -----------  -----  --------------  -------------------"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances()
+            result = list_mapdl_instances(mock_context_no_mapdl)
 
             # Verify appropriate message is returned
             assert result == mock_output
 
-    def test_list_instances_calls_with_long_flag(self):
+    def test_list_instances_calls_with_long_flag(self, mock_context_no_mapdl):
         """Test that list_mapdl_instances calls list_instances with long=True."""
         mock_list_instances = Mock(return_value="Sample output")
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", mock_list_instances):
-            result = list_mapdl_instances()
+            result = list_mapdl_instances(mock_context_no_mapdl)
 
             # Verify list_instances was called with long=True
             mock_list_instances.assert_called_once_with(long=True, instances=True)
             assert result == "Sample output"
 
-    def test_list_instances_multiple_instances(self):
+    def test_list_instances_multiple_instances(self, mock_context_no_mapdl):
         """Test list_mapdl_instances with multiple running instances."""
         # Mock the list_instances function with multiple instances
         mock_output = """Name      Is Instance    Status      gRPC port    PID    Command line                Working directory
@@ -704,17 +704,17 @@ ansys     True          running         50053  12346  ansys242 -grpc -port 50053
 ansys     True          running         50054  12347  ansys242 -grpc -port 50054  /tmp/ansys_workdir3"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances()
+            result = list_mapdl_instances(mock_context_no_mapdl)
 
             # Verify all instances are included in output
             assert "ansys" in result
             assert "50052" in result
 
-    def test_list_instances_return_value_propagation(self):
+    def test_list_instances_return_value_propagation(self, mock_context_no_mapdl):
         """Test that list_mapdl_instances correctly propagates the return value from helpers.list_instances."""  # noqa: E501
         mock_output = "Sample output with instance information"
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output) as mock_list:
-            result = list_mapdl_instances()
+            result = list_mapdl_instances(mock_context_no_mapdl)
 
             # Verify the helper function was called with correct parameters
             mock_list.assert_called_once_with(long=True, instances=True)
@@ -722,7 +722,7 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
             # Verify the result is correctly propagated
             assert result == mock_output
 
-    def test_list_instances_output_format(self):
+    def test_list_instances_output_format(self, mock_context_no_mapdl):
         """Test that list_mapdl_instances returns properly formatted output with table headers."""
         # Mock output with all expected headers
         mock_output = """Name      Status      gRPC port    PID    Command line                Working directory
@@ -730,7 +730,7 @@ ansys     True          running         50054  12347  ansys242 -grpc -port 50054
 ansys     True          running         50052  12345  ansys242 -grpc -port 50052  /tmp/ansys_tmp"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances()
+            result = list_mapdl_instances(mock_context_no_mapdl)
 
             # Verify all expected headers are present
             assert "Name" in result
@@ -738,30 +738,70 @@ ansys     True          running         50052  12345  ansys242 -grpc -port 50052
             assert "gRPC port" in result
             assert "PID" in result
 
-    def test_list_instances_no_crash(self):
+    def test_list_instances_no_crash(self, mock_context_no_mapdl):
         """Test that list_mapdl_instances never crashes even if helper raises exception."""
         # Mock the list_instances to return a valid string even in error cases
         mock_output = "Error: Unable to list instances"
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result = list_mapdl_instances()
+            result = list_mapdl_instances(mock_context_no_mapdl)
 
             # Should return a string, not raise exception
             assert isinstance(result, str)
             assert result is not None
 
-    def test_list_instances_consistent_calls(self):
+    def test_list_instances_consistent_calls(self, mock_context_no_mapdl):
         """Test that multiple calls to list_mapdl_instances return consistent format."""
         mock_output = """Name      Status      gRPC port    PID    Command line                Working directory
 ------  --------  -----------  -----  -------------------------  -------------------"""  # noqa: E501
 
         with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_output):
-            result1 = list_mapdl_instances()
-            result2 = list_mapdl_instances()
+            result1 = list_mapdl_instances(mock_context_no_mapdl)
+            result2 = list_mapdl_instances(mock_context_no_mapdl)
 
             # Both should be strings with same format
             assert isinstance(result1, str)
             assert isinstance(result2, str)
             assert result1 == result2
+
+    def test_list_instances_includes_remote_connected_instance(self, mock_context_no_mapdl):
+        """Test that list_mapdl_instances includes remotely connected instances from context."""
+        mock_local_output = """Name    Status    gRPC port    PID    Command line    Working directory
+------  --------  -----------  -----  --------------  -------------------"""  # noqa: E501
+
+        # Set up a remote MAPDL instance in the context
+        remote_mapdl = MagicMock()
+        remote_mapdl.is_local = False
+        remote_mapdl.ip = "192.168.1.100"
+        remote_mapdl.port = 50052
+        remote_mapdl.check_status = "RUNNING"
+        remote_mapdl.version = "2024 R2"
+        remote_mapdl.directory = "/remote/workdir"
+        mock_context_no_mapdl.request_context.lifespan_context.mapdl = remote_mapdl
+
+        with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_local_output):
+            result = list_mapdl_instances(mock_context_no_mapdl)
+
+        assert "Remotely connected instance" in result
+        assert "192.168.1.100" in result
+        assert "50052" in result
+        assert "RUNNING" in result
+        assert "2024 R2" in result
+        assert "/remote/workdir" in result
+
+    def test_list_instances_local_connected_instance_not_duplicated(self, mock_context):
+        """Test that a locally connected instance is not added as a remote section."""
+        mock_local_output = """Name    Status    gRPC port    PID
+------  --------  -----------  -----
+ansys   running   50052        12345"""
+
+        # mock_context has a local MAPDL instance (is_local=True)
+        assert mock_context.request_context.lifespan_context.mapdl.is_local is True
+
+        with patch("ansys.mapdl.mcp.helpers.list_instances", return_value=mock_local_output):
+            result = list_mapdl_instances(mock_context)
+
+        assert "Remotely connected instance" not in result
+        assert result == mock_local_output
 
 
 @pytest.mark.unit
