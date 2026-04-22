@@ -434,26 +434,46 @@ def disconnect_from_mapdl(ctx: Context) -> str:
 
 
 @app.tool()
-def list_mapdl_instances() -> str:
-    """List all MAPDL instances running on the local machine.
+def list_mapdl_instances(ctx: Context) -> str:
+    """List all MAPDL instances running on the local machine and any remotely connected instance.
 
     This tool uses PyMAPDL CLI's list_instances function to discover
     MAPDL instances running on the machine by scanning for active gRPC
-    servers and their associated metadata.
+    servers and their associated metadata. It also includes any remotely
+    connected MAPDL instance that was established via the connect_to_mapdl tool.
 
     Returns
     -------
     str
         Formatted table containing information about all running MAPDL instances
         including their names, status, gRPC ports, IP addresses, PIDs, and
-        working directories.
+        working directories. If a remote instance is connected, it is listed in a
+        separate section below the local instances.
     """
     logger.info("Searching for MAPDL instances using PyMAPDL CLI...")
+
+    from tabulate import tabulate
 
     from ansys.mapdl.mcp.helpers import list_instances
 
     # Use PyMAPDL CLI's list_instances function with long=True for detailed output
-    return list_instances(long=True, instances=True)
+    local_table = list_instances(long=True, instances=True)
+
+    # Also include any remotely connected instance from the current session context
+    mapdl = ctx.request_context.lifespan_context.mapdl
+    if mapdl is not None and not mapdl.is_local:
+        remote_headers = ["IP", "Port", "Status", "Version", "Working directory"]
+        remote_row = [
+            mapdl.ip,
+            mapdl.port,
+            mapdl.check_status,
+            mapdl.version,
+            str(mapdl.directory),
+        ]
+        remote_table = tabulate([remote_row], remote_headers)
+        return f"{local_table}\n\nRemotely connected instance:\n{remote_table}"
+
+    return local_table
 
 
 @app.tool(tags={"aali"})
