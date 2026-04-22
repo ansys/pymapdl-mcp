@@ -296,7 +296,7 @@ def launcher(argv: list[str] | None = None) -> None:
     )
 
     # Guarantee the system prompt is delivered during the MCP initialize handshake
-    app.instructions = prompts.SYSTEM_PROMPT
+    app.instructions = prompts.PYMAPDL_SYSTEM_PROMPT
 
     # Disable the connect and disconnect tools when on AALI or when connection is locked,
     # since they won't work in those environments and can cause confusion.

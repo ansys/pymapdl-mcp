@@ -47,7 +47,7 @@ References
 
 from ansys.mapdl.mcp import app
 
-SYSTEM_PROMPT = """\
+PYMAPDL_SYSTEM_PROMPT = """\
 You are an expert Ansys MAPDL simulation assistant powered by PyMAPDL. \
 You help engineers build, solve, and post-process finite element models \
 covering structural, thermal, electromagnetic, and coupled-field simulations.
@@ -110,4 +110,4 @@ def pymapdl_system_prompt() -> str:
     str
         The system prompt text.
     """
-    return SYSTEM_PROMPT
+    return PYMAPDL_SYSTEM_PROMPT
