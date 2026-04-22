@@ -112,8 +112,8 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
             command_history=[],
         )
 
-        # Populate context from CLI config on server if available
-        cli_cfg = getattr(self.server, "_cli_config", None)
+        # Populate context from CLI config if available
+        cli_cfg = getattr(self, "_cli_config", None)
 
         if cli_cfg is not None:
             context.transport_type = cli_cfg.get("transport_type", context.transport_type)
@@ -287,10 +287,26 @@ def launcher(argv: list[str] | None = None) -> None:
     # Run server using selected transport
     import asyncio
 
-    # import tools, context and resources to register them
+    # import tools, contexts, and prompts to register them
     if not session.on_aali:
         from ansys.mapdl.mcp import contexts  # noqa: F401
-    from ansys.mapdl.mcp import tools  # noqa: F401
+    from ansys.mapdl.mcp import (
+        prompts,  # noqa: F401
+        tools,  # noqa: F401
+    )
+
+    # Guarantee the system prompt is delivered during the MCP initialize handshake
+    app.instructions = prompts.SYSTEM_PROMPT
+
+    # Disable the connect and disconnect tools when on AALI or when connection is locked,
+    # since they won't work in those environments and can cause confusion.
+    # The tools will still be visible but will return a message indicating they are not available
+    # in the current environment.
+
+    if session.on_aali:
+        app.disable(tags={"aali"})
+    if session.locked_connection:
+        app.disable(tags={"locked_connection"})
 
     if args.transport_type == "stdio":
         asyncio.run(app.run_stdio_async())
@@ -302,13 +318,3 @@ def launcher(argv: list[str] | None = None) -> None:
                 port=args.http_port,
             )
         )
-
-    # Disable the connect and disconnect tools when on AALI or when connection is locked,
-    # since they won't work in those environments and can cause confusion.
-    # The tools will still be visible but will return a message indicating they are not available
-    # in the current environment.
-
-    if session.on_aali:
-        app.disable(tags={"aali"})
-    if session.locked_connection:
-        app.disable(tags={"locked_connection"})
