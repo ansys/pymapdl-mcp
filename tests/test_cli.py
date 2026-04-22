@@ -81,26 +81,23 @@ def test_product_startup_attempts_connect_on_startup():
     fake_mapdl = MagicMock()
     fake_mapdl.exit = MagicMock()
 
-    # Attach CLI config to server
-    setattr(
-        app,
-        "_cli_config",
-        {
-            "transport_type": "stdio",
-            "mapdl_ip": "127.0.0.1",
-            "mapdl_port": 50052,
-            "connect_on_startup": True,
-            "http_host": "127.0.0.1",
-            "http_port": 8080,
-            "cors_origins": None,
-        },
-    )
-
     # Mock launch_mapdl to return our fake instance
     with patch("ansys.mapdl.core.launch_mapdl", return_value=fake_mapdl) as mock_launch:
-        # Create MCP instance
+        # Create MCP instance and attach CLI config directly
         mcp = PyMAPDLMCP()
-        mcp.server = app  # Manually attach server
+        setattr(
+            mcp,
+            "_cli_config",
+            {
+                "transport_type": "stdio",
+                "mapdl_ip": "127.0.0.1",
+                "mapdl_port": 50052,
+                "connect_on_startup": True,
+                "http_host": "127.0.0.1",
+                "http_port": 8080,
+                "cors_origins": None,
+            },
+        )
         mcp.create_context()
         mcp.product_startup()
 
@@ -119,6 +116,3 @@ def test_product_startup_attempts_connect_on_startup():
         # Test cleanup
         mcp.product_cleanup()
         fake_mapdl.exit.assert_called_once()
-
-    # Clean up _cli_config
-    delattr(app, "_cli_config")
