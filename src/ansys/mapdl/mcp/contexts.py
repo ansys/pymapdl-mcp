@@ -111,24 +111,31 @@ def get_guidelines_for_preprocessing_geometry() -> str:
 ```python
 mapdl.com("Creating geometry")
 ```
+Or using the `/COM` command:
+```
+/COM, Creating geometry
+```
 
 ## Geometry Guidelines
 
-- If there is geometry, it must be meshed into finite elements.
-- If the user does not specify the geometry dimensions (2D vs 3D) or it is not obvious from the query (for instance, the user is mentioning "PLANE" elements), assume 3D.
-- If it is not specified, assume simple geometries (rectangles, circles, boxes, cylinders, spheres, etc.), instead of complex CAD geometries, imported meshed or elements/nodes models.
+- If the user does not specify the geometry dimensions (2D vs 3D) or it is not obvious from
+  the query (for instance, the user is mentioning "PLANE" elements), assume 3D.
+- If the user is considered not-advanced, prefer simple geometric shapes (boxes, cylinders,
+  spheres) over complex CAD imports, unless the user specifically requests otherwise.
+- MAPDL geometry capabilities are powerful, but you need to build up complexity little by
+  little. Start with small parts that you can reuse (by copying, moving, mirroring, symmetry,
+  etc.) to build more complex geometries with them. Avoid creating complex geometries in one step.
+- Show the geometry interactively from different angles at every major step of the geometry
+  creation process, to make sure it is correct and to allow the user to visualize it. Use the
+  `APLOT`, `LPLOT`, `KPLOT`, or `VPLOT` commands for that.
 
-## Key Considerations
-
-- **2D vs 3D**: Default to 3D unless explicitly specified or obvious from context
-- **Geometry Complexity**: Prefer simple geometric shapes over complex CAD imports
-- **Meshing Requirement**: All geometry must be converted to finite elements before analysis
 
 ## Common Geometry Types
 
 - **2D**: Rectangles, circles, polygons
 - **3D**: Boxes, cylinders, spheres, cones
-- **Special Cases**: Beams, shells, and other structural elements may use simplified geometry representations
+- **Special Cases**: Beams, shells, and other structural elements may use simplified geometry
+  representations
 """
 
 
