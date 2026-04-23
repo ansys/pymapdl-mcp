@@ -322,7 +322,7 @@ class TestMapdlIntegration:
         Other tests are covered by unit tests in test_tools.py.
         """
         # If we get here, MAPDL is running
-        result = list_mapdl_instances()
+        result = list_mapdl_instances(real_context)
 
         assert isinstance(result, str)
         assert len(result) > 0
