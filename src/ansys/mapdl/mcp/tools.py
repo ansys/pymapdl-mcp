@@ -475,6 +475,7 @@ def list_mapdl_instances(ctx: Context) -> str:
 @app.tool(tags={"aali"})
 def screenshot(
     ctx: Context,
+    commands: str = "",
 ) -> list[TextContent | ImageContent]:
     """Capture a screenshot of the current MAPDL graphics window.
 
@@ -492,6 +493,12 @@ def screenshot(
     ----------
     ctx : Context
         The MCP context containing server session and application context.
+    commands : str, optional
+        Optional MAPDL commands to execute before taking the screenshot.
+        Avoid running commands that are not related to plotting or visualization.
+        This can be used to set up the plot or visualization before capturing.
+        Avoid running long or complex commands that may delay the screenshot.
+        Default is empty string.
 
     Returns
     -------
@@ -521,6 +528,9 @@ def screenshot(
 
         # Close the file descriptor as MAPDL will write to the path
         os.close(temp_fd)
+
+        if commands:
+            mapdl.input_string(commands)  # type: ignore[union-attr]
 
         # Capture screenshot directly to the temporary location
         screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
