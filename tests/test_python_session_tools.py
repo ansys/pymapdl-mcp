@@ -27,6 +27,7 @@ import base64
 import json
 from unittest.mock import MagicMock, patch
 
+from fastmcp.tools.base import ToolResult
 from mcp.types import ImageContent, TextContent
 import pytest
 
@@ -53,7 +54,7 @@ class TestRunPythonCode:
 
         result = await run_python_code(mock_context_no_mapdl, code="print('hi')")
 
-        data = json.loads(result)
+        data = json.loads(result.content[0].text)
         assert data["success"] is False
         assert "persistent Python session was not initialized" in data["error"]
 
@@ -68,7 +69,7 @@ class TestRunPythonCode:
         ):
             result = await run_python_code(mock_context, code="print('x')")
 
-        data = json.loads(result)
+        data = json.loads(result.content[0].text)
         assert data["success"] is False
         assert "Failed to connect to MAPDL" in data["error"]
         assert "Connection failed" in data["error"]
@@ -84,7 +85,7 @@ class TestRunPythonCode:
         }
 
         result = await run_python_code(mock_context, code="print('ok')")
-        data = json.loads(result)
+        data = json.loads(result.content[0].text)
         assert data["success"] is True
         assert data["stdout"].strip() == "ok"
         assert data["stderr"] == ""
@@ -101,7 +102,7 @@ class TestRunPythonCode:
         }
 
         result = await run_python_code(mock_context, code="raise SystemExit")
-        data = json.loads(result)
+        data = json.loads(result.content[0].text)
         assert data["success"] is False
         assert data["error"].startswith("Boom!")
 
@@ -112,7 +113,7 @@ class TestRunPythonCode:
         mock_python_session.execute.return_value = "SOME OUTPUT"
 
         result = await run_python_code(mock_context, code="'SOME OUTPUT'")
-        data = json.loads(result)
+        data = json.loads(result.content[0].text)
         assert data["success"] is True
         assert data["stdout"] == "SOME OUTPUT"
         assert data["stderr"] == ""
@@ -124,7 +125,7 @@ class TestRunPythonCode:
         mock_python_session.execute.side_effect = TimeoutError("too slow")
 
         result = await run_python_code(mock_context, code="while True: pass", timeout=1)
-        data = json.loads(result)
+        data = json.loads(result.content[0].text)
         assert data["success"] is False
         assert "timed out" in data["error"].lower()
 
@@ -160,7 +161,7 @@ class TestRunPythonCode:
         }
 
         result = await run_python_code(mock_context, code="print('irrelevant')")
-        data = json.loads(result)
+        data = json.loads(result.content[0].text)
         assert data["success"] is True
         # Confirm mapped replacements are present and problematic chars gone
         assert "[OK]" in data["stdout"]
@@ -182,7 +183,7 @@ class TestRunPythonCode:
         }
 
         result = await run_python_code(mock_context, code="raise SystemExit")
-        data = json.loads(result)
+        data = json.loads(result.content[0].text)
         assert data["success"] is False
         assert "[X]" in data["stderr"]
         assert "|" in data["stderr"]
@@ -198,9 +199,9 @@ class TestCreateCustomPlot:
 
         result = custom_plot(mock_context, plot_code="import matplotlib.pyplot as plt")
 
-        assert isinstance(result, list)
-        assert isinstance(result[0], TextContent)
-        assert "persistent Python session was not initialized" in result[0].text
+        assert isinstance(result, ToolResult)
+        assert isinstance(result.content[0], TextContent)
+        assert "persistent Python session was not initialized" in result.content[0].text
 
     def test_connect_failure(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
@@ -209,11 +210,10 @@ class TestCreateCustomPlot:
             "ansys.mapdl.mcp.tools.connect_to_mapdl_in_persistent_python",
             return_value="No MAPDL instance available in lifespan context.",
         ):
-            # Function returns a JSON string in this error branch
             out = custom_plot(mock_context, plot_code="print('x')")
-            assert isinstance(out, list)
-            assert isinstance(out[0], TextContent)
-            assert "No MAPDL instance available" in out[0].text
+            assert isinstance(out, ToolResult)
+            assert isinstance(out.content[0], TextContent)
+            assert "No MAPDL instance available" in out.content[0].text
 
     def test_success_returns_image_content(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
@@ -232,11 +232,11 @@ class TestCreateCustomPlot:
             plot_type="matplotlib",
         )
 
-        assert isinstance(result, list)
-        assert isinstance(result[0], TextContent)
-        assert isinstance(result[1], ImageContent)
-        assert result[1].mimeType == "image/png"
-        assert result[1].data == payload
+        assert isinstance(result, ToolResult)
+        assert isinstance(result.content[0], TextContent)
+        assert isinstance(result.content[1], ImageContent)
+        assert result.content[1].mimeType == "image/png"
+        assert result.content[1].data == payload
 
     def test_success_returns_text_when_saved_to_file(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
@@ -248,9 +248,9 @@ class TestCreateCustomPlot:
         }
 
         result = custom_plot(mock_context, plot_code="print('Plot saved to x')")
-        assert isinstance(result, list)
-        assert isinstance(result[0], TextContent)
-        assert "Plot saved to" in result[0].text
+        assert isinstance(result, ToolResult)
+        assert isinstance(result.content[0], TextContent)
+        assert "Plot saved to" in result.content[0].text
 
     def test_unexpected_output_format(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
@@ -262,9 +262,9 @@ class TestCreateCustomPlot:
         }
 
         result = custom_plot(mock_context, plot_code="print('weird')")
-        assert isinstance(result, list)
-        assert isinstance(result[0], TextContent)
-        assert "unexpected output format" in result[0].text
+        assert isinstance(result, ToolResult)
+        assert isinstance(result.content[0], TextContent)
+        assert "unexpected output format" in result.content[0].text
 
     def test_pyvista_plot_branch(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
@@ -283,11 +283,11 @@ class TestCreateCustomPlot:
             plot_type="pyvista",
         )
 
-        assert isinstance(result, list)
-        assert isinstance(result[0], TextContent)
-        assert isinstance(result[1], ImageContent)
-        assert result[1].mimeType == "image/png"
-        assert result[1].data == payload
+        assert isinstance(result, ToolResult)
+        assert isinstance(result.content[0], TextContent)
+        assert isinstance(result.content[1], ImageContent)
+        assert result.content[1].mimeType == "image/png"
+        assert result.content[1].data == payload
 
     def test_error_branch_includes_message(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
@@ -300,10 +300,10 @@ class TestCreateCustomPlot:
         }
 
         result = custom_plot(mock_context, plot_code="raise SystemExit")
-        assert isinstance(result, list)
-        assert isinstance(result[0], TextContent)
-        assert "Error creating custom" in result[0].text
-        assert "Something bad" in result[0].text
+        assert isinstance(result, ToolResult)
+        assert isinstance(result.content[0], TextContent)
+        assert "Error creating custom" in result.content[0].text
+        assert "Something bad" in result.content[0].text
 
     def test_timeout(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
@@ -311,6 +311,6 @@ class TestCreateCustomPlot:
         mock_python_session.execute.side_effect = TimeoutError("too slow")
 
         result = custom_plot(mock_context, plot_code="while True: pass", timeout=1)
-        assert isinstance(result, list)
-        assert isinstance(result[0], TextContent)
-        assert "Plot creation timed out after" in result[0].text
+        assert isinstance(result, ToolResult)
+        assert isinstance(result.content[0], TextContent)
+        assert "Plot creation timed out after" in result.content[0].text
