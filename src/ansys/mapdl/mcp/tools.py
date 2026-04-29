@@ -275,7 +275,7 @@ def run_multiple_commands(
 
 
 @app.tool(tags={"aali", "locked_connection"})
-def launch_mapdl_session(
+async def launch_mapdl_session(
     ctx: Context,
     exec_file: str | None = None,
     port: int | None = None,
@@ -346,7 +346,7 @@ def launch_mapdl_session(
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
 
-        app.enable(tags={REQUIRES_MAPDL_TAG})
+        await ctx.enable_components(tags={REQUIRES_MAPDL_TAG})
         logger.info(f"MAPDL launched successfully at {mapdl.ip}:{mapdl.port}!")
         return _text_result(
             f"Successfully launched MAPDL at {mapdl.ip}:{mapdl.port}\n"
@@ -361,7 +361,7 @@ def launch_mapdl_session(
 
 
 @app.tool(tags={"aali", "locked_connection"})
-def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> ToolResult:
+async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> ToolResult:
     """Connect to an existing MAPDL instance.
 
     This tool establishes a connection to a running MAPDL instance using the
@@ -406,7 +406,7 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
 
-        app.enable(tags={REQUIRES_MAPDL_TAG})
+        await ctx.enable_components(tags={REQUIRES_MAPDL_TAG})
         logger.info(f"Connected to MAPDL successfully at {ip}:{port}!")
         return _text_result(
             f"Successfully connected to MAPDL at {ip}:{port}\nMAPDL Version: {mapdl.version}\n"
@@ -419,7 +419,7 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
 
 
 @app.tool(tags={"aali", "locked_connection", REQUIRES_MAPDL_TAG})
-def disconnect_from_mapdl(ctx: Context) -> ToolResult:
+async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
     """Disconnect from the dynamically connected MAPDL instance.
 
     This tool closes the connection to the MAPDL instance that was established
@@ -453,7 +453,7 @@ def disconnect_from_mapdl(ctx: Context) -> ToolResult:
         # Clear from context
         ctx.request_context.lifespan_context.mapdl = None
 
-        app.disable(tags={REQUIRES_MAPDL_TAG})
+        await ctx.disable_components(tags={REQUIRES_MAPDL_TAG})
         logger.info("Disconnected successfully!")
         return _text_result(f"Successfully disconnected from MAPDL at {ip}:{port}")
 
