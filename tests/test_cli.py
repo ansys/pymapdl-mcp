@@ -116,3 +116,34 @@ def test_product_startup_attempts_connect_on_startup():
         # Test cleanup
         mcp.product_cleanup()
         fake_mapdl.exit.assert_called_once()
+
+
+@pytest.mark.unit
+def test_launcher_disables_requires_mapdl_when_no_connect_on_startup():
+    """Without --connect-on-startup, the launcher must disable requires_mapdl tools."""
+    with (
+        patch.object(asyncio, "run"),
+        patch.object(app, "disable") as mock_disable,
+    ):
+        launcher([])
+
+    # requires_mapdl should be in the disabled tags
+    disabled_tags = {
+        tag for c in mock_disable.call_args_list for tag in (c.kwargs.get("tags") or set())
+    }
+    assert "requires_mapdl" in disabled_tags
+
+
+@pytest.mark.unit
+def test_launcher_does_not_disable_requires_mapdl_when_connect_on_startup():
+    """With --connect-on-startup, the launcher must NOT disable requires_mapdl tools."""
+    with (
+        patch.object(asyncio, "run"),
+        patch.object(app, "disable") as mock_disable,
+    ):
+        launcher(["--connect-on-startup"])
+
+    disabled_tags = {
+        tag for c in mock_disable.call_args_list for tag in (c.kwargs.get("tags") or set())
+    }
+    assert "requires_mapdl" not in disabled_tags

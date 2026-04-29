@@ -47,8 +47,14 @@ def _text_result(text: str) -> ToolResult:
     return ToolResult([TextContent(type="text", text=text)])
 
 
+# Tag applied to all tools that require an active MAPDL connection.
+# These tools are disabled at startup (before MAPDL is connected) and enabled
+# once a connection is established via connect_to_mapdl or launch_mapdl_session.
+REQUIRES_MAPDL_TAG = "requires_mapdl"
+
+
 # Access type-safe lifespan context in tools
-@app.tool()
+@app.tool(tags={REQUIRES_MAPDL_TAG})
 def check_mapdl_status(ctx: Context) -> ToolResult:
     """Check the status of MAPDL initialization.
 
@@ -143,7 +149,7 @@ def check_mapdl_installed(ctx: Context) -> ToolResult:
         return _text_result(error_msg)
 
 
-@app.tool()
+@app.tool(tags={REQUIRES_MAPDL_TAG})
 def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "") -> ToolResult:
     """Execute an arbitrary MAPDL command.
 
@@ -180,7 +186,7 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
     return _text_result(f"MAPDL command executed successfully: {result}")
 
 
-@app.tool(tags={"aali"})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG})
 def run_multiple_commands(
     ctx: Context, commands: list[str], comment: str = "", header: str = ""
 ) -> ToolResult:
@@ -340,6 +346,7 @@ def launch_mapdl_session(
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
 
+        app.enable(tags={REQUIRES_MAPDL_TAG})
         logger.info(f"MAPDL launched successfully at {mapdl.ip}:{mapdl.port}!")
         return _text_result(
             f"Successfully launched MAPDL at {mapdl.ip}:{mapdl.port}\n"
@@ -399,6 +406,7 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
 
+        app.enable(tags={REQUIRES_MAPDL_TAG})
         logger.info(f"Connected to MAPDL successfully at {ip}:{port}!")
         return _text_result(
             f"Successfully connected to MAPDL at {ip}:{port}\nMAPDL Version: {mapdl.version}\n"
@@ -410,7 +418,7 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
         return _text_result(error_msg)
 
 
-@app.tool(tags={"aali", "locked_connection"})
+@app.tool(tags={"aali", "locked_connection", REQUIRES_MAPDL_TAG})
 def disconnect_from_mapdl(ctx: Context) -> ToolResult:
     """Disconnect from the dynamically connected MAPDL instance.
 
@@ -445,6 +453,7 @@ def disconnect_from_mapdl(ctx: Context) -> ToolResult:
         # Clear from context
         ctx.request_context.lifespan_context.mapdl = None
 
+        app.disable(tags={REQUIRES_MAPDL_TAG})
         logger.info("Disconnected successfully!")
         return _text_result(f"Successfully disconnected from MAPDL at {ip}:{port}")
 
@@ -499,7 +508,7 @@ def list_mapdl_instances(ctx: Context) -> ToolResult:
     return _text_result(local_table)
 
 
-@app.tool(tags={"aali"})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG})
 def screenshot(
     ctx: Context,
     commands: str = "",
@@ -602,7 +611,7 @@ def screenshot(
 # Tools that uses the PythonPersistentSession
 
 
-@app.tool()
+@app.tool(tags={REQUIRES_MAPDL_TAG})
 async def run_python_code(
     ctx: Context,
     code: str,
@@ -690,7 +699,7 @@ async def run_python_code(
     return _text_result(result)
 
 
-@app.tool(tags={"aali"})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG})
 def custom_plot(
     ctx: Context,
     plot_code: str,

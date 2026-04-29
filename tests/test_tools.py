@@ -2146,3 +2146,121 @@ class TestScreenshot:
         assert isinstance(result.content[0], TextContent)
         assert "Failed to capture screenshot" in result.content[0].text
         assert "command failed" in result.content[0].text
+
+
+@pytest.mark.unit
+class TestRequiresMapdlVisibility:
+    """Tests for MAPDL-connection-aware tool visibility."""
+
+    def test_connect_to_mapdl_enables_requires_mapdl_tools(self, mock_context_no_mapdl):
+        """Successful connect_to_mapdl should call app.enable for requires_mapdl tag."""
+        mock_mapdl = MagicMock()
+        mock_mapdl.version = "2024 R2"
+        mock_mapdl._ip = "localhost"
+        mock_mapdl._port = 50052
+
+        with (
+            patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl),
+            patch("ansys.mapdl.mcp.tools.app") as mock_app,
+        ):
+            connect_to_mapdl(mock_context_no_mapdl)
+            mock_app.enable.assert_called_once_with(tags={"requires_mapdl"})
+
+    def test_connect_to_mapdl_does_not_enable_on_failure(self, mock_context_no_mapdl):
+        """Failed connect_to_mapdl should not call app.enable."""
+        with (
+            patch("ansys.mapdl.core.Mapdl", side_effect=Exception("Connection refused")),
+            patch("ansys.mapdl.mcp.tools.app") as mock_app,
+        ):
+            connect_to_mapdl(mock_context_no_mapdl)
+            mock_app.enable.assert_not_called()
+
+    def test_launch_mapdl_session_enables_requires_mapdl_tools(self, mock_context_no_mapdl):
+        """Successful launch_mapdl_session should call app.enable for requires_mapdl tag."""
+        mock_mapdl = MagicMock()
+        mock_mapdl.version = "2024 R2"
+        mock_mapdl.ip = "127.0.0.1"
+        mock_mapdl.port = 50052
+        mock_mapdl.directory = "/tmp"
+
+        with (
+            patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl),
+            patch("ansys.mapdl.mcp.tools.app") as mock_app,
+        ):
+            launch_mapdl_session(ctx=mock_context_no_mapdl)
+            mock_app.enable.assert_called_once_with(tags={"requires_mapdl"})
+
+    def test_launch_mapdl_session_does_not_enable_on_failure(self, mock_context_no_mapdl):
+        """Failed launch_mapdl_session should not call app.enable."""
+        with (
+            patch("ansys.mapdl.core.launch_mapdl", side_effect=Exception("Launch failed")),
+            patch("ansys.mapdl.mcp.tools.app") as mock_app,
+        ):
+            launch_mapdl_session(ctx=mock_context_no_mapdl)
+            mock_app.enable.assert_not_called()
+
+    def test_disconnect_from_mapdl_disables_requires_mapdl_tools(self, mock_context):
+        """Successful disconnect_from_mapdl should call app.disable for requires_mapdl tag."""
+        mock_context.request_context.lifespan_context.mapdl._ip = "localhost"
+        mock_context.request_context.lifespan_context.mapdl._port = 50052
+
+        with patch("ansys.mapdl.mcp.tools.app") as mock_app:
+            disconnect_from_mapdl(mock_context)
+            mock_app.disable.assert_called_once_with(tags={"requires_mapdl"})
+
+    def test_disconnect_from_mapdl_no_connection_does_not_disable(self, mock_context_no_mapdl):
+        """disconnect_from_mapdl with no connection should not change visibility."""
+        with patch("ansys.mapdl.mcp.tools.app") as mock_app:
+            disconnect_from_mapdl(mock_context_no_mapdl)
+            mock_app.disable.assert_not_called()
+
+    def test_requires_mapdl_tag_present_on_correct_tools(self):
+        """Tools that need MAPDL should have the requires_mapdl tag."""
+        import asyncio
+
+        from ansys.mapdl.mcp import app as mapdl_app
+
+        # Use the local provider's unfiltered list to avoid visibility-state interference
+        async def _check():
+            return {t.name: t for t in await mapdl_app._local_provider._list_tools()}
+
+        tool_registry = asyncio.run(_check())
+
+        expected_tagged = {
+            "check_mapdl_status",
+            "run_mapdl_command",
+            "run_multiple_commands",
+            "disconnect_from_mapdl",
+            "screenshot",
+            "run_python_code",
+            "custom_plot",
+        }
+        for tool_name in expected_tagged:
+            assert tool_name in tool_registry, f"Tool '{tool_name}' not found in registry"
+            assert "requires_mapdl" in (tool_registry[tool_name].tags or set()), (
+                f"Tool '{tool_name}' missing 'requires_mapdl' tag"
+            )
+
+    def test_pre_mapdl_tools_do_not_have_requires_mapdl_tag(self):
+        """Tools available before MAPDL connects must not have the requires_mapdl tag."""
+        import asyncio
+
+        from ansys.mapdl.mcp import app as mapdl_app
+
+        # Use the local provider's unfiltered list to avoid visibility-state interference
+        async def _check():
+            return {t.name: t for t in await mapdl_app._local_provider._list_tools()}
+
+        tool_registry = asyncio.run(_check())
+
+        always_available = {
+            "check_mapdl_installed",
+            "connect_to_mapdl",
+            "launch_mapdl_session",
+            "list_mapdl_instances",
+        }
+        for tool_name in always_available:
+            assert tool_name in tool_registry, f"Tool '{tool_name}' not found in registry"
+            assert "requires_mapdl" not in (tool_registry[tool_name].tags or set()), (
+                f"Tool '{tool_name}' should not have 'requires_mapdl' tag"
+            )

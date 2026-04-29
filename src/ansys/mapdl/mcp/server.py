@@ -298,6 +298,14 @@ def launcher(argv: list[str] | None = None) -> None:
     # Guarantee the system prompt is delivered during the MCP initialize handshake
     app.instructions = prompts.PYMAPDL_SYSTEM_PROMPT
 
+    # Disable tools that require an active MAPDL connection until one is established.
+    # When connect_on_startup is True, MAPDL will be connected during server startup,
+    # so these tools are available immediately and should not be disabled here.
+    if not session.connect_on_startup:
+        from ansys.mapdl.mcp.tools import REQUIRES_MAPDL_TAG
+
+        app.disable(tags={REQUIRES_MAPDL_TAG})
+
     # Disable the connect and disconnect tools when on AALI or when connection is locked,
     # since they won't work in those environments and can cause confusion.
     # The tools will still be visible but will return a message indicating they are not available
