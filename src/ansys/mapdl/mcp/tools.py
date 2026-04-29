@@ -32,6 +32,7 @@ from typing import Any
 
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
 from fastmcp.server import Context
+from fastmcp.tools.base import ToolResult
 
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
@@ -41,9 +42,14 @@ from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logge
 from mcp.types import ImageContent, TextContent
 
 
+def _text_result(text: str) -> ToolResult:
+    """Wrap a plain text string in a single-content ToolResult."""
+    return ToolResult([TextContent(type="text", text=text)])
+
+
 # Access type-safe lifespan context in tools
 @app.tool()
-def check_mapdl_status(ctx: Context) -> str:
+def check_mapdl_status(ctx: Context) -> ToolResult:
     """Check the status of MAPDL initialization.
 
     This tool executes the /STATUS command in MAPDL and extracts comprehensive
@@ -57,7 +63,7 @@ def check_mapdl_status(ctx: Context) -> str:
 
     Returns
     -------
-    str
+    ToolResult
         JSON string containing comprehensive MAPDL status information including:
         - connection: Basic connection info (version, port, ip, directory, is_alive)
         - information: Data from Information class (title, jobname, routine, units, etc.)
@@ -70,31 +76,36 @@ def check_mapdl_status(ctx: Context) -> str:
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
-        return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
+        return _text_result(
+            "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
+        )
 
     try:
         from ansys.mapdl.mcp.helpers import get_info
 
         # Check if MAPDL has exited
         if hasattr(mapdl, "_exited") and mapdl._exited:
-            return "MAPDL instance has exited. Please reconnect or launch a new instance."
+            return _text_result(
+                "MAPDL instance has exited. Please reconnect or launch a new instance."
+            )
 
         if hasattr(mapdl, "_exiting") and mapdl._exiting:
-            return "MAPDL instance is currently exiting. Please wait or launch a new instance."
+            return _text_result(
+                "MAPDL instance is currently exiting. Please wait or launch a new instance."
+            )
 
         info = get_info(mapdl)
 
-        # Return as formatted JSON
-        return json.dumps(info, indent=2)
+        return _text_result(json.dumps(info, indent=2))
 
     except Exception as e:
         error_msg = f"Error checking MAPDL status: {str(e)}"
         logger.error(error_msg)
-        return error_msg
+        return _text_result(error_msg)
 
 
 @app.tool(tags={"aali"})
-def check_mapdl_installed(ctx: Context) -> str:
+def check_mapdl_installed(ctx: Context) -> ToolResult:
     """Check if MAPDL is installed on the system.
 
     This tool uses PyMAPDL's check_valid_ansys function to verify if a valid
@@ -102,7 +113,7 @@ def check_mapdl_installed(ctx: Context) -> str:
 
     Returns
     -------
-    str
+    ToolResult
         Status message indicating whether MAPDL is installed or not.
     """
     logger.info("Checking if MAPDL is installed...")
@@ -117,10 +128,10 @@ def check_mapdl_installed(ctx: Context) -> str:
 
         if is_installed:
             logger.info("MAPDL installation found")
-            return f"MAPDL is installed on this system in: {get_default_ansys_path()}"
+            return _text_result(f"MAPDL is installed on this system in: {get_default_ansys_path()}")
         else:
             logger.info("MAPDL installation not found")
-            return (
+            return _text_result(
                 "MAPDL is not installed on this system or cannot be found in the "
                 "standard locations. Please ensure ANSYS/MAPDL is properly installed "
                 "and the installation path is correct."
@@ -129,11 +140,11 @@ def check_mapdl_installed(ctx: Context) -> str:
     except Exception as e:
         error_msg = f"Error checking MAPDL installation: {str(e)}"
         logger.error(error_msg)
-        return error_msg
+        return _text_result(error_msg)
 
 
 @app.tool()
-def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "") -> str:
+def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "") -> ToolResult:
     """Execute an arbitrary MAPDL command.
 
     Parameters
@@ -149,13 +160,15 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
 
     Returns
     -------
-    str
+    ToolResult
         Command execution result.
     """
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
-        return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
+        return _text_result(
+            "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
+        )
 
     if header:
         mapdl.com(f"# {header}", mute=True)  # type: ignore[union-attr]
@@ -164,13 +177,13 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
             mapdl.com(f"{each_line}", mute=True)  # type: ignore[union-attr]
 
     result = mapdl.run(cmd)  # type: ignore[union-attr]
-    return f"MAPDL command executed successfully: {result}"
+    return _text_result(f"MAPDL command executed successfully: {result}")
 
 
 @app.tool(tags={"aali"})
 def run_multiple_commands(
     ctx: Context, commands: list[str], comment: str = "", header: str = ""
-) -> str:
+) -> ToolResult:
     """Execute multiple MAPDL commands in sequence using input_strings.
 
     This tool is optimized for running multiple commands efficiently by using
@@ -190,25 +203,27 @@ def run_multiple_commands(
 
     Returns
     -------
-    str
+    ToolResult
         Execution result with summary of commands executed.
     """
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
-        return "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
+        return _text_result(
+            "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
+        )
 
     if not commands:
-        return "No commands provided. Please provide a list of commands to execute."
+        return _text_result("No commands provided. Please provide a list of commands to execute.")
 
     if not isinstance(commands, list):  # type: ignore
-        return "Commands must be provided as a list of strings."
+        return _text_result("Commands must be provided as a list of strings.")
 
     # Filter out empty commands
     valid_commands = [cmd.strip() for cmd in commands if cmd and cmd.strip()]
 
     if not valid_commands:
-        return "No valid commands found after filtering empty entries."
+        return _text_result("No valid commands found after filtering empty entries.")
 
     try:
         logger.info(f"Executing {len(valid_commands)} MAPDL commands using input_strings")
@@ -230,7 +245,17 @@ def run_multiple_commands(
         if result:
             success_msg += f"\n\nOutput:\n{result}"
 
-        return success_msg
+        return ToolResult(
+            [
+                TextContent(type="text", text="True"),
+                TextContent(type="text", text=success_msg),
+            ],
+            structured_content={
+                "success": True,
+                "commands_executed": valid_commands,
+                "output": result or "",
+            },
+        )
 
     except Exception as e:
         error_msg = (
@@ -240,7 +265,7 @@ def run_multiple_commands(
             + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
         )
         logger.error(error_msg)
-        return error_msg
+        return ToolResult([TextContent(type="text", text=error_msg)])
 
 
 @app.tool(tags={"aali", "locked_connection"})
@@ -251,7 +276,7 @@ def launch_mapdl_session(
     run_location: str | None = None,
     nproc: int | None = None,
     additional_switches: str = "",
-) -> str:
+) -> ToolResult:
     """Launch a new MAPDL instance.
 
     This tool starts a new MAPDL instance using PyMAPDL's launch_mapdl function.
@@ -278,7 +303,7 @@ def launch_mapdl_session(
 
     Returns
     -------
-    str
+    ToolResult
         Launch status message with MAPDL version and connection information.
     """
     logger.info("Launching new MAPDL instance...")
@@ -286,7 +311,7 @@ def launch_mapdl_session(
     try:
         # Check if there's already a connection
         if ctx.request_context.lifespan_context.mapdl is not None:
-            return (
+            return _text_result(
                 f"Already connected to MAPDL at "
                 f"{ctx.request_context.lifespan_context.mapdl._ip}:"
                 f"{ctx.request_context.lifespan_context.mapdl._port}. "
@@ -316,7 +341,7 @@ def launch_mapdl_session(
         ctx.request_context.lifespan_context.mapdl = mapdl
 
         logger.info(f"MAPDL launched successfully at {mapdl.ip}:{mapdl.port}!")
-        return (
+        return _text_result(
             f"Successfully launched MAPDL at {mapdl.ip}:{mapdl.port}\n"
             f"MAPDL Version: {mapdl.version}\n"
             f"Working Directory: {mapdl.directory}\n"
@@ -325,11 +350,11 @@ def launch_mapdl_session(
     except Exception as e:
         error_msg = f"Failed to launch MAPDL: {str(e)}"
         logger.error(error_msg)
-        return error_msg
+        return _text_result(error_msg)
 
 
 @app.tool(tags={"aali", "locked_connection"})
-def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> str:
+def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> ToolResult:
     """Connect to an existing MAPDL instance.
 
     This tool establishes a connection to a running MAPDL instance using the
@@ -347,7 +372,7 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
 
     Returns
     -------
-    str
+    ToolResult
         Connection status message with MAPDL version information.
     """
     logger.info(f"Connecting to MAPDL instance at {ip}:{port}...")
@@ -355,7 +380,7 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
     try:
         # Check if there's already a connection
         if ctx.request_context.lifespan_context.mapdl is not None:
-            return (
+            return _text_result(
                 f"Already connected to MAPDL at "
                 f"{ctx.request_context.lifespan_context.mapdl._ip}:"
                 f"{ctx.request_context.lifespan_context.mapdl._port}. "
@@ -375,16 +400,18 @@ def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> 
         ctx.request_context.lifespan_context.mapdl = mapdl
 
         logger.info(f"Connected to MAPDL successfully at {ip}:{port}!")
-        return f"Successfully connected to MAPDL at {ip}:{port}\nMAPDL Version: {mapdl.version}\n"
+        return _text_result(
+            f"Successfully connected to MAPDL at {ip}:{port}\nMAPDL Version: {mapdl.version}\n"
+        )
 
     except Exception as e:
         error_msg = f"Failed to connect to MAPDL at {ip}:{port}: {str(e)}"
         logger.error(error_msg)
-        return error_msg
+        return _text_result(error_msg)
 
 
 @app.tool(tags={"aali", "locked_connection"})
-def disconnect_from_mapdl(ctx: Context) -> str:
+def disconnect_from_mapdl(ctx: Context) -> ToolResult:
     """Disconnect from the dynamically connected MAPDL instance.
 
     This tool closes the connection to the MAPDL instance that was established
@@ -397,13 +424,13 @@ def disconnect_from_mapdl(ctx: Context) -> str:
 
     Returns
     -------
-    str
+    ToolResult
         Disconnection status message.
     """
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
-        return "No MAPDL connection to disconnect."
+        return _text_result("No MAPDL connection to disconnect.")
 
     try:
         ip = mapdl._ip
@@ -419,18 +446,18 @@ def disconnect_from_mapdl(ctx: Context) -> str:
         ctx.request_context.lifespan_context.mapdl = None
 
         logger.info("Disconnected successfully!")
-        return f"Successfully disconnected from MAPDL at {ip}:{port}"
+        return _text_result(f"Successfully disconnected from MAPDL at {ip}:{port}")
 
     except Exception as e:
         error_msg = f"Error during disconnect: {str(e)}"
         logger.error(error_msg)
         # Still clear the reference even if disconnect failed
         ctx.request_context.lifespan_context.mapdl = None
-        return error_msg
+        return _text_result(error_msg)
 
 
 @app.tool()
-def list_mapdl_instances(ctx: Context) -> str:
+def list_mapdl_instances(ctx: Context) -> ToolResult:
     """List all MAPDL instances running on the local machine and any remotely connected instance.
 
     This tool uses PyMAPDL CLI's list_instances function to discover
@@ -440,7 +467,7 @@ def list_mapdl_instances(ctx: Context) -> str:
 
     Returns
     -------
-    str
+    ToolResult
         Formatted table containing information about all running MAPDL instances
         including their names, status, gRPC ports, IP addresses, PIDs, and
         working directories. If a remote instance is connected, it is listed in a
@@ -467,16 +494,16 @@ def list_mapdl_instances(ctx: Context) -> str:
             str(mapdl.directory),
         ]
         remote_table = tabulate([remote_row], remote_headers)
-        return f"{local_table}\n\nRemotely connected instance:\n{remote_table}"
+        return _text_result(f"{local_table}\n\nRemotely connected instance:\n{remote_table}")
 
-    return local_table
+    return _text_result(local_table)
 
 
 @app.tool(tags={"aali"})
 def screenshot(
     ctx: Context,
     commands: str = "",
-) -> list[TextContent | ImageContent]:
+) -> ToolResult:
     """Capture a screenshot of the current MAPDL graphics window.
 
     This tool captures the current state of the MAPDL graphics window after using
@@ -502,23 +529,17 @@ def screenshot(
 
     Returns
     -------
-    list[TextContent | ImageContent]
-        A list containing:
+    ToolResult
+        A result containing:
         - TextContent with the screenshot file path
         - ImageContent with the base64-encoded image data
     """
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
-        return [
-            TextContent(
-                type="text",
-                text=(
-                    "No MAPDL connection available. "
-                    "Use connect_to_mapdl tool to establish a connection."
-                ),
-            )
-        ]
+        return _text_result(
+            "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
+        )
 
     try:
         logger.info("Capturing MAPDL screenshot...")
@@ -540,7 +561,7 @@ def screenshot(
         if not image_path.exists():
             error_msg = f"Screenshot file not found: {screenshot_path}"
             logger.error(error_msg)
-            return [TextContent(type="text", text=error_msg)]
+            return _text_result(error_msg)
 
         # Read image data
         # Ignoring PTH123 since the file is created by MAPDL
@@ -561,11 +582,12 @@ def screenshot(
 
         logger.info(f"Screenshot captured successfully: {screenshot_path}")
 
-        # Return both text (file path) and image content
-        return [
-            TextContent(type="text", text=f"Screenshot saved to: {screenshot_path}"),
-            ImageContent(type="image", data=base64_data, mimeType=mime_type),
-        ]
+        return ToolResult(
+            [
+                TextContent(type="text", text=f"Screenshot saved to: {screenshot_path}"),
+                ImageContent(type="image", data=base64_data, mimeType=mime_type),
+            ]
+        )
 
     except Exception as e:
         if "temp_path" in locals() and Path(temp_path).exists():  # type: ignore
@@ -573,7 +595,7 @@ def screenshot(
 
         error_msg = f"Failed to capture screenshot: {str(e)}"
         logger.error(error_msg)
-        return [TextContent(type="text", text=error_msg)]
+        return _text_result(error_msg)
 
 
 ####################################################################################################
@@ -585,7 +607,7 @@ async def run_python_code(
     ctx: Context,
     code: str,
     timeout: int = 60,
-) -> str:
+) -> ToolResult:
     """Execute arbitrary Python and PyMAPDL code in the persistent Python session.
 
     This tool should be used for custom Python code execution, particularly for:
@@ -609,9 +631,8 @@ async def run_python_code(
 
     Returns
     -------
-    str
-        Execution result or error message. Returns JSON for structured output
-        compatible with both stdio and http transports.
+    ToolResult
+        Execution result or error message.
 
     Examples
     --------
@@ -632,12 +653,14 @@ async def run_python_code(
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:
-        return json.dumps(
-            {
-                "success": False,
-                "error": "No Python session available. The persistent Python session was not initialized.",  # noqa: E501
-            },
-            ensure_ascii=False,
+        return _text_result(
+            json.dumps(
+                {
+                    "success": False,
+                    "error": "No Python session available. The persistent Python session was not initialized.",  # noqa: E501
+                },
+                ensure_ascii=False,
+            )
         )
 
     # Check if MAPDL is connected in the persistent session
@@ -651,10 +674,12 @@ async def run_python_code(
         except Exception as e:
             error_msg = f"Failed to connect to MAPDL in persistent Python session: {str(e)}"
             logger.error(error_msg)
-            return json.dumps(
-                {"success": False, "error": error_msg},
-                ensure_ascii=False,
-                indent=2,
+            return _text_result(
+                json.dumps(
+                    {"success": False, "error": error_msg},
+                    ensure_ascii=False,
+                    indent=2,
+                )
             )
 
     result: str = await execute_python_code(
@@ -662,7 +687,7 @@ async def run_python_code(
         code=code,
         timeout=timeout,
     )
-    return result
+    return _text_result(result)
 
 
 @app.tool(tags={"aali"})
@@ -671,7 +696,7 @@ def custom_plot(
     plot_code: str,
     plot_type: str = "matplotlib",
     timeout: int = 60,
-) -> list[TextContent | ImageContent] | str:
+) -> ToolResult:
     """Create a custom plot using matplotlib or PyVista in the persistent Python session.
 
     This tool is specifically designed for creating custom plots that are NOT available
@@ -704,11 +729,10 @@ def custom_plot(
 
     Returns
     -------
-    list[TextContent | ImageContent]
-        A list containing:
+    ToolResult
+        A result containing:
         - TextContent with the plot creation status message
         - ImageContent with the base64-encoded image data if successful
-        or a JSON string with error details if failed.
 
     Examples
     --------
@@ -737,12 +761,9 @@ def custom_plot(
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:
-        return [
-            TextContent(
-                type="text",
-                text="No Python session available. The persistent Python session was not initialized.",  # noqa: E501
-            )
-        ]
+        return _text_result(
+            "No Python session available. The persistent Python session was not initialized."
+        )
 
     # Check if MAPDL is connected in the persistent session
     mapdl_instance = session.metadata.get("mapdl", None)
@@ -754,12 +775,7 @@ def custom_plot(
             error_msg = mapdl_instance
         else:
             error_msg = "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again."  # noqa: E501
-        return [
-            TextContent(
-                type="text",
-                text=f"Failed to connect to MAPDL in persistent Python session: {error_msg}",
-            )
-        ]
+        return _text_result(f"Failed to connect to MAPDL in persistent Python session: {error_msg}")
 
     result: list[TextContent | ImageContent] | str = create_custom_plot(
         ctx=ctx,
@@ -767,4 +783,6 @@ def custom_plot(
         plot_type=plot_type,
         timeout=timeout,
     )
-    return result
+    if isinstance(result, str):
+        return _text_result(result)
+    return ToolResult(result)

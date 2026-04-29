@@ -25,6 +25,7 @@
 
 from unittest.mock import MagicMock
 
+from fastmcp.tools.base import ToolResult
 import pytest
 
 from ansys.mapdl.mcp.tools import check_mapdl_status, run_mapdl_command
@@ -50,8 +51,8 @@ class TestErrorHandling:
         """Test handling when MAPDL instance is None."""
         # Should return helpful error message instead of raising exception
         result = check_mapdl_status(mock_context_no_mapdl)
-        assert isinstance(result, str)
-        assert "No MAPDL connection available" in result
+        assert isinstance(result, ToolResult)
+        assert "No MAPDL connection available" in result.content[0].text
 
     def test_invalid_context_structure(self):
         """Test handling of invalid context structure."""
@@ -62,7 +63,7 @@ class TestErrorHandling:
         invalid_context.request_context.lifespan_context.mapdl = None
 
         result = check_mapdl_status(invalid_context)
-        assert "No MAPDL connection available" in result
+        assert "No MAPDL connection available" in result.content[0].text
 
     def test_mapdl_timeout(self, mock_context):
         """Test handling of MAPDL timeout scenarios."""
@@ -81,7 +82,7 @@ class TestErrorHandling:
         # This should not raise an error, but pass empty string to MAPDL
         result = run_mapdl_command(mock_context, "")
 
-        assert "executed successfully" in result
+        assert "executed successfully" in result.content[0].text
         mock_context.request_context.lifespan_context.mapdl.run.assert_called_once_with("")
 
     def test_very_long_command(self, mock_context):
@@ -90,4 +91,4 @@ class TestErrorHandling:
         long_command = "COMMENT" + "X" * 1000
         result = run_mapdl_command(mock_context, long_command)
 
-        assert "executed successfully" in result
+        assert "executed successfully" in result.content[0].text
