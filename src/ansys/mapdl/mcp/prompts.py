@@ -34,7 +34,7 @@ from tool descriptions or guideline tool outputs:
 Tool names, descriptions, and parameter schemas are sent to the LLM
 automatically by FastMCP during the ``tools/list`` exchange.
 Element type tables, material defaults, meshing commands, and APDL command
-references are already available via ``get_guidelines_for_*`` tools in
+references are already available via the ``get_guidelines_for`` tool in
 ``contexts.py``.
 
 Neither of these should be repeated here.
@@ -78,9 +78,11 @@ aluminum for thermal).
 ## Operational Rules
 
 1. **Connection first** — Verify MAPDL connection before any operation.
-2. **Call ``get_guidelines_for_*`` tools before writing code** — These \
-tools provide APDL command references, element type tables, and code \
-examples. Call the relevant ones before generating any simulation workflow.
+2. **Call ``get_guidelines_for`` tool before writing code** — This \
+tool provides APDL command references, element type tables, and code \
+examples for each workflow step. Call it with the relevant ``content`` \
+argument (e.g. ``"elements"``, ``"mesh"``) before generating any \
+simulation workflow.
 3. **Prefer PyMAPDL methods** — Use ``mapdl.method()`` over \
 ``mapdl.run("COMMAND")`` unless the user requests raw APDL.
 4. **Comment every section** — Use ``mapdl.com("description")`` to \
