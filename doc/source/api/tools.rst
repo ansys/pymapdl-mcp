@@ -3,6 +3,16 @@ Tools Reference
 
 This document provides complete reference documentation for all PyMAPDL-MCP tools.
 
+Tool Availability
+-----------------
+
+PyMAPDL-MCP dynamically enables and disables tools based on the MAPDL connection state.
+Tools tagged with ``requires_mapdl`` are hidden at startup and only become visible once
+MAPDL is connected via ``connect_to_mapdl`` or ``launch_mapdl_session``. They are hidden
+again when ``disconnect_from_mapdl`` is called.
+
+See :doc:`../user_guide/tools_and_capabilities` for the full breakdown.
+
 Instance Management Tools
 --------------------------
 
@@ -65,6 +75,9 @@ list_mapdl_instances
 check_mapdl_status
 ~~~~~~~~~~~~~~~~~~
 
+.. note::
+   This tool is only available when connected to MAPDL.
+
 **Description**: Get comprehensive MAPDL status information
 
 **Returns**: JSON string containing:
@@ -83,6 +96,10 @@ check_mapdl_status
 
 disconnect_from_mapdl
 ~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+   This tool is only available when connected to MAPDL. It is also disabled when
+   ``--connect-on-startup`` is used.
 
 **Description**: Disconnect from the currently connected MAPDL instance
 
@@ -113,6 +130,9 @@ Command Execution Tools
 run_mapdl_command
 ~~~~~~~~~~~~~~~~~
 
+.. note::
+   This tool is only available when connected to MAPDL.
+
 **Description**: Execute a single MAPDL command
 
 **Parameters**:
@@ -129,6 +149,9 @@ run_mapdl_command
 
 run_multiple_commands
 ~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+   This tool is only available when connected to MAPDL and is disabled on AALI environments.
 
 **Description**: Execute multiple MAPDL commands efficiently using batch mode
 
@@ -153,6 +176,9 @@ Python Code Execution Tools
 
 run_python_code
 ~~~~~~~~~~~~~~~
+
+.. note::
+   This tool is only available when connected to MAPDL.
 
 **Description**: Execute arbitrary Python code in the persistent session
 
@@ -179,6 +205,9 @@ Visualization Tools
 screenshot
 ~~~~~~~~~~
 
+.. note::
+   This tool is only available when connected to MAPDL and is disabled on AALI environments.
+
 **Description**: Capture a screenshot of the MAPDL graphics window
 
 **Returns**: List containing:
@@ -194,6 +223,9 @@ screenshot
 
 custom_plot
 ~~~~~~~~~~~
+
+.. note::
+   This tool is only available when connected to MAPDL and is disabled on AALI environments.
 
 **Description**: Create a custom matplotlib or PyVista visualization
 
