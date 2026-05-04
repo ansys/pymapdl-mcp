@@ -795,23 +795,23 @@ def get_guidelines_for(content: GuidelinesContent) -> str:
     content : str
         The guideline topic to retrieve. One of:
 
-        - ``"workflow"``            – Complete simulation workflow overview
+        - ``"workflow"``: Complete simulation workflow overview
           (preprocessing → solution → postprocessing).
-        - ``"geometry"``            – Geometry creation: 2D/3D defaults, primitive
+        - ``"geometry"``: Geometry creation: 2D/3D defaults, primitive
           shapes, meshing requirement.
-        - ``"elements"``            – Element type selection: SOLID186, SHELL181,
+        - ``"elements"``: Element type selection: SOLID186, SHELL181,
           BEAM189, PLANE183, thermal and contact elements.
-        - ``"materials"``           – Material property definition: elastic,
+        - ``"materials"``: Material property definition: elastic,
           plastic, thermal, damping; default steel/aluminum values.
-        - ``"mesh"``                – Mesh generation: sizing, quality, VMESH/
+        - ``"mesh"``: Mesh generation: sizing, quality, VMESH/
           AMESH commands, smart sizing.
-        - ``"boundary_conditions"`` – Boundary conditions and loads: fixed/pinned
+        - ``"boundary_conditions"``: Boundary conditions and loads: fixed/pinned
           supports, forces, pressures, beam element constraints.
-        - ``"solution"``            – Solution configuration: analysis type
+        - ``"solution"``: Solution configuration: analysis type
           (STATIC, MODAL, TRANSIENT, HARMONIC), solver options, SOLVE.
-        - ``"postprocessing"``      – Results extraction and visualization: POST1/
+        - ``"postprocessing"``: Results extraction and visualization: POST1/
           POST26, plot methods, data extraction.
-        - ``"general"``             – General rules and best practices: accuracy
+        - ``"general"``: General rules and best practices: accuracy
           factors, verification steps, code quality.
 
     Returns
