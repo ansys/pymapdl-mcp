@@ -288,6 +288,8 @@ async def launch_mapdl_session(
     This tool starts a new MAPDL instance using PyMAPDL's launch_mapdl function.
     The launched instance will be automatically connected and stored in the context
     for subsequent operations. The instance can be closed using the disconnect_from_mapdl tool.
+    Once you are connected to the launched instance, other tools become available
+    to interact with it, such as run_mapdl_command, check_mapdl_status, screenshot, and more.
 
     Parameters
     ----------
@@ -367,6 +369,8 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
     This tool establishes a connection to a running MAPDL instance using the
     provided port and IP address. The connection is stored for subsequent
     operations and can be closed using the disconnect_from_mapdl tool.
+    Once you are connected to the MAPDL instance, other tools become available
+    to interact with it, such as run_mapdl_command, check_mapdl_status, screenshot, and more.
 
     Parameters
     ----------
