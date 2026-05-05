@@ -33,7 +33,7 @@ import json
 import os
 import tempfile
 import time
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from ansys.mapdl.core import launch_mapdl
 from fastmcp.tools.base import ToolResult
@@ -352,6 +352,8 @@ class TestLaunchMapdlIntegration:
         context = MagicMock()
         context.request_context = MagicMock()
         context.request_context.lifespan_context = PyMAPDLAppContext(mapdl=None)
+        context.enable_components = AsyncMock()
+        context.disable_components = AsyncMock()
 
         return context
 
