@@ -331,6 +331,38 @@ or
 
 ## Available Tools
 
+PyMAPDL-MCP dynamically enables and disables tools based on the MAPDL connection state to reduce
+context usage when no MAPDL instance is connected.
+
+### Tool Availability by Connection State
+
+**Before connecting to MAPDL** (tools available at startup):
+
+| Tool | Description |
+|------|-------------|
+| `check_mapdl_installed` | Check if MAPDL is installed on the system |
+| `list_mapdl_instances` | Discover running MAPDL instances |
+| `connect_to_mapdl` | Connect to an existing MAPDL instance |
+| `launch_mapdl_session` | Launch and connect to a new MAPDL instance |
+| `get_guidelines_for_*` | Workflow guidance and best-practice context tools |
+
+**After connecting to MAPDL** (all tools become available, including the ones above):
+
+| Tool | Description |
+|------|-------------|
+| `check_mapdl_status` | Get comprehensive MAPDL status |
+| `run_mapdl_command` | Execute a single MAPDL command |
+| `run_multiple_commands` | Execute multiple MAPDL commands in batch |
+| `disconnect_from_mapdl` | Disconnect from the MAPDL instance |
+| `screenshot` | Capture the MAPDL graphics window |
+| `run_python_code` | Execute Python/PyMAPDL code in a persistent session |
+| `custom_plot` | Create custom matplotlib or PyVista plots |
+
+> [!NOTE]
+> When `--connect-on-startup` is used, MAPDL is already connected at startup so all tools are
+> immediately available (except `connect_to_mapdl`, `launch_mapdl_session`, and
+> `disconnect_from_mapdl`, which are locked in that mode).
+
 ### MAPDL Connection and Instance Management
 
 #### `check_mapdl_installed`
@@ -384,7 +416,7 @@ Disconnect from the currently connected MAPDL instance.
 **Returns**: Disconnection status message
 
 > [!NOTE]
-> This tool is disabled when `--connect-on-startup` is used or when running on AALI environments.
+> This tool is only available when connected to MAPDL. It is also disabled when `--connect-on-startup` is used or when running on AALI environments.
 
 ### MAPDL Status and Information
 
@@ -399,6 +431,9 @@ Check the status and comprehensive information of the connected MAPDL instance.
 - Post-processing availability and result sets
 - Mesh statistics (number of nodes and elements)
 
+> [!NOTE]
+> This tool is only available when connected to MAPDL.
+
 ### MAPDL Command Execution
 
 #### `run_mapdl_command`
@@ -410,6 +445,9 @@ Execute a single MAPDL command.
 
 **Returns**: Command execution result
 
+> [!NOTE]
+> This tool is only available when connected to MAPDL.
+
 #### `run_multiple_commands`
 
 Execute multiple MAPDL commands in sequence efficiently using batch processing.
@@ -420,7 +458,7 @@ Execute multiple MAPDL commands in sequence efficiently using batch processing.
 **Returns**: Execution result with summary of commands executed
 
 > [!NOTE]
-> This tool uses MAPDL's `input_strings` method for batch processing, which is significantly faster than executing commands individually. Perfect for running multiple setup commands or creating complex geometries. This tool is disabled when running on AALI environments.
+> This tool uses MAPDL's `input_strings` method for batch processing, which is significantly faster than executing commands individually. Perfect for running multiple setup commands or creating complex geometries. This tool is only available when connected to MAPDL and is disabled when running on AALI environments.
 
 ### Python Session and Custom Processing
 
@@ -445,7 +483,7 @@ Execute arbitrary Python and PyMAPDL code in a persistent Python session.
 - Custom matplotlib plots not available in MAPDL
 
 > [!NOTE]
-> For standard MAPDL plots (aplot, lplot, kplot, post_processing plots), use the normal MAPDL session commands with the `screenshot` tool instead.
+> This tool is only available when connected to MAPDL. For standard MAPDL plots (aplot, lplot, kplot, post_processing plots), use the normal MAPDL session commands with the `screenshot` tool instead.
 
 #### `custom_plot`
 
@@ -465,7 +503,7 @@ Create custom plots using matplotlib or PyVista in the persistent Python session
 - `save_plot(plotter, filename)`: Save PyVista plots
 
 > [!IMPORTANT]
-> This tool is specifically designed for custom plots that are NOT available in MAPDL's native plotting capabilities. For standard MAPDL plots, use the normal MAPDL commands with the `screenshot` tool. This tool is disabled when running on AALI environments.
+> This tool is specifically designed for custom plots that are NOT available in MAPDL's native plotting capabilities. For standard MAPDL plots, use the normal MAPDL commands with the `screenshot` tool. This tool is only available when connected to MAPDL and is disabled when running on AALI environments.
 
 ### Visualization
 
@@ -483,7 +521,7 @@ Capture a screenshot of the current MAPDL graphics window.
 - Post-processing: `PLNSOL`, `PLESOL`, `PLDISP`
 
 > [!NOTE]
-> For custom matplotlib or PyVista plots, use the `custom_plot` tool instead. This tool is disabled when running on AALI environments.
+> This tool is only available when connected to MAPDL. For custom matplotlib or PyVista plots, use the `custom_plot` tool instead. This tool is also disabled when running on AALI environments.
 
 ### Workflow Context and Guidance
 
