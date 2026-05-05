@@ -973,7 +973,8 @@ ansys   running   50052        12345"""
 class TestConnectToMapdl:
     """Tests for connect_to_mapdl tool."""
 
-    def test_connect_default_parameters(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_connect_default_parameters(self, mock_context_no_mapdl):
         """Test connecting to MAPDL with default parameters."""
         # Create a mock MAPDL instance
         mock_mapdl = MagicMock()
@@ -982,7 +983,7 @@ class TestConnectToMapdl:
         mock_mapdl._port = 50052
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
-            result = connect_to_mapdl(mock_context_no_mapdl)
+            result = await connect_to_mapdl(mock_context_no_mapdl)
 
             # Verify successful connection
             assert isinstance(result, ToolResult)
@@ -993,7 +994,8 @@ class TestConnectToMapdl:
             # Verify MAPDL was stored in context
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl == mock_mapdl
 
-    def test_connect_custom_port(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_connect_custom_port(self, mock_context_no_mapdl):
         """Test connecting to MAPDL with custom port."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R1"
@@ -1001,7 +1003,7 @@ class TestConnectToMapdl:
         mock_mapdl._port = 50053
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
-            result = connect_to_mapdl(mock_context_no_mapdl, port=50053)
+            result = await connect_to_mapdl(mock_context_no_mapdl, port=50053)
 
             # Verify connection with custom port
             assert "Successfully connected to MAPDL" in result.content[0].text
@@ -1016,7 +1018,8 @@ class TestConnectToMapdl:
                 loglevel="INFO",
             )
 
-    def test_connect_custom_ip(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_connect_custom_ip(self, mock_context_no_mapdl):
         """Test connecting to MAPDL with custom IP address."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
@@ -1024,7 +1027,7 @@ class TestConnectToMapdl:
         mock_mapdl._port = 50052
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
-            result = connect_to_mapdl(mock_context_no_mapdl, ip="192.168.1.100")
+            result = await connect_to_mapdl(mock_context_no_mapdl, ip="192.168.1.100")
 
             # Verify connection with custom IP
             assert "Successfully connected to MAPDL" in result.content[0].text
@@ -1040,7 +1043,8 @@ class TestConnectToMapdl:
             assert "cleanup_on_exit" in call_args and not call_args["cleanup_on_exit"]
             assert "loglevel" in call_args and call_args["loglevel"] == "INFO"
 
-    def test_connect_custom_ip_and_port(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_connect_custom_ip_and_port(self, mock_context_no_mapdl):
         """Test connecting to MAPDL with both custom IP and port."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
@@ -1048,7 +1052,7 @@ class TestConnectToMapdl:
         mock_mapdl._port = 50099
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl) as mock_mapdl_class:
-            result = connect_to_mapdl(mock_context_no_mapdl, port=50099, ip="10.0.0.50")
+            result = await connect_to_mapdl(mock_context_no_mapdl, port=50099, ip="10.0.0.50")
 
             # Verify connection with custom parameters
             assert "Successfully connected to MAPDL" in result.content[0].text
@@ -1063,19 +1067,21 @@ class TestConnectToMapdl:
                 loglevel="INFO",
             )
 
-    def test_connect_already_connected(self, mock_context):
+    @pytest.mark.asyncio
+    async def test_connect_already_connected(self, mock_context):
         """Test connecting when already connected."""
         # Context already has a MAPDL connection
-        result = connect_to_mapdl(mock_context)
+        result = await connect_to_mapdl(mock_context)
 
         # Verify appropriate error message
         assert "Already connected to MAPDL" in result.content[0].text
         assert "disconnect first" in result.content[0].text
 
-    def test_connect_connection_error(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_connect_connection_error(self, mock_context_no_mapdl):
         """Test handling connection errors."""
         with patch("ansys.mapdl.core.Mapdl", side_effect=Exception("Connection refused")):
-            result = connect_to_mapdl(mock_context_no_mapdl, port=50052, ip="localhost")
+            result = await connect_to_mapdl(mock_context_no_mapdl, port=50052, ip="localhost")
 
             # Verify error message is returned
             assert "Failed to connect to MAPDL" in result.content[0].text
@@ -1084,25 +1090,28 @@ class TestConnectToMapdl:
             # Verify context remains empty
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is None
 
-    def test_connect_network_error(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_connect_network_error(self, mock_context_no_mapdl):
         """Test handling network errors during connection."""
         with patch("ansys.mapdl.core.Mapdl", side_effect=ConnectionError("Network unreachable")):
-            result = connect_to_mapdl(mock_context_no_mapdl, port=50052, ip="192.168.1.999")
+            result = await connect_to_mapdl(mock_context_no_mapdl, port=50052, ip="192.168.1.999")
 
             # Verify error message
             assert "Failed to connect to MAPDL" in result.content[0].text
             assert "Network unreachable" in result.content[0].text
 
-    def test_connect_timeout_error(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_connect_timeout_error(self, mock_context_no_mapdl):
         """Test handling timeout errors during connection."""
         with patch("ansys.mapdl.core.Mapdl", side_effect=TimeoutError("Connection timed out")):
-            result = connect_to_mapdl(mock_context_no_mapdl)
+            result = await connect_to_mapdl(mock_context_no_mapdl)
 
             # Verify timeout error is handled
             assert "Failed to connect to MAPDL" in result.content[0].text
             assert "Connection timed out" in result.content[0].text
 
-    def test_connect_stores_mapdl_in_context(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_connect_stores_mapdl_in_context(self, mock_context_no_mapdl):
         """Test that connected MAPDL instance is properly stored in context."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
@@ -1113,7 +1122,7 @@ class TestConnectToMapdl:
         assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is None
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
-            result = connect_to_mapdl(mock_context_no_mapdl)
+            result = await connect_to_mapdl(mock_context_no_mapdl)
 
             # Verify successful connection
             assert "Successfully connected" in result.content[0].text
@@ -1122,7 +1131,8 @@ class TestConnectToMapdl:
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is not None
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl == mock_mapdl
 
-    def test_connect_result_message(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_connect_result_message(self, mock_context_no_mapdl):
         """Test that connect_to_mapdl returns informative success message."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
@@ -1130,7 +1140,7 @@ class TestConnectToMapdl:
         mock_mapdl._port = 50052
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
-            result = connect_to_mapdl(mock_context_no_mapdl)
+            result = await connect_to_mapdl(mock_context_no_mapdl)
 
             # Verify the result contains connection information
             assert isinstance(result, ToolResult)
@@ -1142,7 +1152,8 @@ class TestConnectToMapdl:
 class TestDisconnectFromMapdl:
     """Tests for disconnect_from_mapdl tool."""
 
-    def test_disconnect_success(self, mock_context):
+    @pytest.mark.asyncio
+    async def test_disconnect_success(self, mock_context):
         """Test disconnecting from MAPDL successfully."""
         # Set up IP and port attributes on mock MAPDL
         mock_context.request_context.lifespan_context.mapdl._ip = "localhost"
@@ -1151,7 +1162,7 @@ class TestDisconnectFromMapdl:
         # Store reference to check exit was called
         mapdl_ref = mock_context.request_context.lifespan_context.mapdl
 
-        result = disconnect_from_mapdl(mock_context)
+        result = await disconnect_from_mapdl(mock_context)
 
         # Verify successful disconnection
         assert isinstance(result, ToolResult)
@@ -1164,14 +1175,16 @@ class TestDisconnectFromMapdl:
         # Verify MAPDL was removed from context
         assert mock_context.request_context.lifespan_context.mapdl is None
 
-    def test_disconnect_no_connection(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_disconnect_no_connection(self, mock_context_no_mapdl):
         """Test disconnecting when no connection exists."""
-        result = disconnect_from_mapdl(mock_context_no_mapdl)
+        result = await disconnect_from_mapdl(mock_context_no_mapdl)
 
         # Verify appropriate message
         assert "No MAPDL connection to disconnect" in result.content[0].text
 
-    def test_disconnect_clears_context(self, mock_context):
+    @pytest.mark.asyncio
+    async def test_disconnect_clears_context(self, mock_context):
         """Test that disconnect properly clears the context."""
         mock_context.request_context.lifespan_context.mapdl._ip = "localhost"
         mock_context.request_context.lifespan_context.mapdl._port = 50052
@@ -1179,12 +1192,13 @@ class TestDisconnectFromMapdl:
         # Verify MAPDL exists before disconnect
         assert mock_context.request_context.lifespan_context.mapdl is not None
 
-        disconnect_from_mapdl(mock_context)
+        await disconnect_from_mapdl(mock_context)
 
         # Verify MAPDL is cleared after disconnect
         assert mock_context.request_context.lifespan_context.mapdl is None
 
-    def test_disconnect_error_during_exit(self, mock_context):
+    @pytest.mark.asyncio
+    async def test_disconnect_error_during_exit(self, mock_context):
         """Test handling errors during disconnection."""
         mock_context.request_context.lifespan_context.mapdl._ip = "localhost"
         mock_context.request_context.lifespan_context.mapdl._port = 50052
@@ -1192,7 +1206,7 @@ class TestDisconnectFromMapdl:
             "Disconnection error"
         )
 
-        result = disconnect_from_mapdl(mock_context)
+        result = await disconnect_from_mapdl(mock_context)
 
         # Verify error message is returned
         assert "Error during disconnect" in result.content[0].text
@@ -1201,7 +1215,8 @@ class TestDisconnectFromMapdl:
         # Verify context is still cleared even on error
         assert mock_context.request_context.lifespan_context.mapdl is None
 
-    def test_disconnect_connection_lost(self, mock_context):
+    @pytest.mark.asyncio
+    async def test_disconnect_connection_lost(self, mock_context):
         """Test disconnecting when connection is already lost."""
         mock_context.request_context.lifespan_context.mapdl._ip = "localhost"
         mock_context.request_context.lifespan_context.mapdl._port = 50052
@@ -1209,7 +1224,7 @@ class TestDisconnectFromMapdl:
             "Connection already closed"
         )
 
-        result = disconnect_from_mapdl(mock_context)
+        result = await disconnect_from_mapdl(mock_context)
 
         # Verify error is handled gracefully
         assert "Error during disconnect" in result.content[0].text
@@ -1218,23 +1233,25 @@ class TestDisconnectFromMapdl:
         # Context should still be cleared
         assert mock_context.request_context.lifespan_context.mapdl is None
 
-    def test_disconnect_return_message(self, mock_context):
+    @pytest.mark.asyncio
+    async def test_disconnect_return_message(self, mock_context):
         """Test that disconnect_from_mapdl returns informative message."""
         mock_context.request_context.lifespan_context.mapdl._ip = "localhost"
         mock_context.request_context.lifespan_context.mapdl._port = 50052
 
-        result = disconnect_from_mapdl(mock_context)
+        result = await disconnect_from_mapdl(mock_context)
 
         # Verify the result contains disconnection information
         assert isinstance(result, ToolResult)
         assert "Successfully disconnected from MAPDL at localhost:50052" in result.content[0].text
 
-    def test_disconnect_custom_ip_port(self, mock_context):
+    @pytest.mark.asyncio
+    async def test_disconnect_custom_ip_port(self, mock_context):
         """Test disconnecting from MAPDL with custom IP and port."""
         mock_context.request_context.lifespan_context.mapdl._ip = "192.168.1.100"
         mock_context.request_context.lifespan_context.mapdl._port = 50053
 
-        result = disconnect_from_mapdl(mock_context)
+        result = await disconnect_from_mapdl(mock_context)
 
         # Verify disconnection message includes custom IP and port
         assert (
@@ -1246,7 +1263,8 @@ class TestDisconnectFromMapdl:
 class TestLaunchMapdl:
     """Tests for launch_mapdl_session tool."""
 
-    def test_launch_default_parameters(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_default_parameters(self, mock_context_no_mapdl):
         """Test launching MAPDL with default parameters."""
         # Create a mock MAPDL instance
         mock_mapdl = MagicMock()
@@ -1258,7 +1276,7 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl)
 
             # Verify successful launch
             assert isinstance(result, ToolResult)
@@ -1273,7 +1291,8 @@ class TestLaunchMapdl:
             # Verify MAPDL was stored in context
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl == mock_mapdl
 
-    def test_launch_custom_nproc(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_custom_nproc(self, mock_context_no_mapdl):
         """Test launching MAPDL with custom number of processors."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
@@ -1284,7 +1303,7 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl, nproc=4)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl, nproc=4)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result.content[0].text
@@ -1292,7 +1311,8 @@ class TestLaunchMapdl:
             # Verify launch_mapdl was called with correct nproc
             mock_launch.assert_called_once_with(nproc=4, loglevel="INFO", port=None)
 
-    def test_launch_custom_exec_file(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_custom_exec_file(self, mock_context_no_mapdl):
         """Test launching MAPDL with custom executable path."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
@@ -1305,7 +1325,7 @@ class TestLaunchMapdl:
         exec_path = "/usr/ansys_inc/v242/ansys/bin/ansys242"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl, exec_file=exec_path)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl, exec_file=exec_path)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result.content[0].text
@@ -1315,7 +1335,8 @@ class TestLaunchMapdl:
                 nproc=None, loglevel="INFO", port=None, exec_file=exec_path
             )
 
-    def test_launch_custom_run_location(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_custom_run_location(self, mock_context_no_mapdl):
         """Test launching MAPDL with custom working directory."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
@@ -1328,7 +1349,7 @@ class TestLaunchMapdl:
         run_loc = "/custom/working/dir"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl, run_location=run_loc)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl, run_location=run_loc)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result.content[0].text
@@ -1339,7 +1360,8 @@ class TestLaunchMapdl:
                 nproc=None, loglevel="INFO", port=None, run_location=run_loc
             )
 
-    def test_launch_with_additional_switches(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_with_additional_switches(self, mock_context_no_mapdl):
         """Test launching MAPDL with additional command line switches."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
@@ -1352,7 +1374,9 @@ class TestLaunchMapdl:
         switches = "-smp"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl, additional_switches=switches)
+            result = await launch_mapdl_session(
+                ctx=mock_context_no_mapdl, additional_switches=switches
+            )
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result.content[0].text
@@ -1362,7 +1386,8 @@ class TestLaunchMapdl:
                 nproc=None, loglevel="INFO", port=None, additional_switches=switches
             )
 
-    def test_launch_all_custom_parameters(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_all_custom_parameters(self, mock_context_no_mapdl):
         """Test launching MAPDL with all custom parameters."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R1"
@@ -1377,7 +1402,7 @@ class TestLaunchMapdl:
         switches = "-smp -db 1024"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl_session(
+            result = await launch_mapdl_session(
                 ctx=mock_context_no_mapdl,
                 exec_file=exec_path,
                 run_location=run_loc,
@@ -1400,22 +1425,24 @@ class TestLaunchMapdl:
                 additional_switches=switches,
             )
 
-    def test_launch_already_connected(self, mock_context):
+    @pytest.mark.asyncio
+    async def test_launch_already_connected(self, mock_context):
         """Test launching when already connected to MAPDL."""
         # Context already has a MAPDL connection
-        result = launch_mapdl_session(ctx=mock_context)
+        result = await launch_mapdl_session(ctx=mock_context)
 
         # Verify appropriate error message
         assert "Already connected to MAPDL" in result.content[0].text
         assert "disconnect first" in result.content[0].text
 
-    def test_launch_error(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_error(self, mock_context_no_mapdl):
         """Test handling launch errors."""
         with patch(
             "ansys.mapdl.core.launch_mapdl",
             side_effect=Exception("MAPDL executable not found"),
         ):
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl)
 
             # Verify error message is returned
             assert "Failed to launch MAPDL" in result.content[0].text
@@ -1424,19 +1451,21 @@ class TestLaunchMapdl:
             # Verify context remains empty
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is None
 
-    def test_launch_license_error(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_license_error(self, mock_context_no_mapdl):
         """Test handling license errors during launch."""
         with patch(
             "ansys.mapdl.core.launch_mapdl",
             side_effect=Exception("No ANSYS license available"),
         ):
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl)
 
             # Verify error message
             assert "Failed to launch MAPDL" in result.content[0].text
             assert "No ANSYS license available" in result.content[0].text
 
-    def test_launch_stores_mapdl_in_context(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_stores_mapdl_in_context(self, mock_context_no_mapdl):
         """Test that launched MAPDL instance is properly stored in context."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
@@ -1450,7 +1479,7 @@ class TestLaunchMapdl:
         assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is None
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl)
 
             # Verify successful launch
             assert "Successfully launched MAPDL" in result.content[0].text
@@ -1459,7 +1488,8 @@ class TestLaunchMapdl:
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl is not None
             assert mock_context_no_mapdl.request_context.lifespan_context.mapdl == mock_mapdl
 
-    def test_launch_result_message(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_result_message(self, mock_context_no_mapdl):
         """Test that launch_mapdl_session returns informative success message."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
@@ -1470,7 +1500,7 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl)
 
             # Verify the result contains launch information
             assert isinstance(result, ToolResult)
@@ -1478,7 +1508,8 @@ class TestLaunchMapdl:
             assert "2024 R2" in result.content[0].text
             assert "/tmp/ansys_mapdl_1234" in result.content[0].text
 
-    def test_launch_with_port_parameter(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_with_port_parameter(self, mock_context_no_mapdl):
         """Test launching MAPDL with specific port parameter."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
@@ -1489,7 +1520,7 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/tmp/ansys_mapdl_1234"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl) as mock_launch:
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl, port=50060)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl, port=50060)
 
             # Verify successful launch
             assert isinstance(result, ToolResult)
@@ -1499,7 +1530,8 @@ class TestLaunchMapdl:
             # Verify launch_mapdl was called with port
             mock_launch.assert_called_once_with(nproc=None, loglevel="INFO", port=50060)
 
-    def test_launch_connection_info_in_result(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_connection_info_in_result(self, mock_context_no_mapdl):
         """Test that launch result contains all connection info."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
@@ -1510,7 +1542,7 @@ class TestLaunchMapdl:
         mock_mapdl.directory = "/home/user/mapdl_work"
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl)
 
             # Verify all connection details are in result
             assert "192.168.1.50:50055" in result.content[0].text
@@ -1522,7 +1554,8 @@ class TestLaunchMapdl:
 class TestConnectionLifecycle:
     """Tests for the full connection lifecycle."""
 
-    def test_connect_use_disconnect_workflow(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_connect_use_disconnect_workflow(self, mock_context_no_mapdl):
         """Test complete workflow: connect, use, disconnect."""
         # Create mock MAPDL
         mock_mapdl = MagicMock()
@@ -1565,7 +1598,7 @@ class TestConnectionLifecycle:
 
         # Step 1: Connect
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
-            result = connect_to_mapdl(mock_context_no_mapdl)
+            result = await connect_to_mapdl(mock_context_no_mapdl)
             assert "Successfully connected" in result.content[0].text
 
         # Step 2: Use MAPDL
@@ -1578,14 +1611,15 @@ class TestConnectionLifecycle:
         assert "MAPDL command executed successfully" in command_result.content[0].text
 
         # Step 3: Disconnect
-        result = disconnect_from_mapdl(mock_context_no_mapdl)
+        result = await disconnect_from_mapdl(mock_context_no_mapdl)
         assert "Successfully disconnected" in result.content[0].text
 
         # Step 4: Verify connection is cleared
         status_after = check_mapdl_status(mock_context_no_mapdl)
         assert "No MAPDL connection available" in status_after.content[0].text
 
-    def test_reconnect_after_disconnect(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_reconnect_after_disconnect(self, mock_context_no_mapdl):
         """Test that we can reconnect after disconnecting."""
         mock_mapdl1 = MagicMock()
         mock_mapdl1.version = "2024 R2"
@@ -1599,20 +1633,21 @@ class TestConnectionLifecycle:
 
         # First connection
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl1):
-            result = connect_to_mapdl(mock_context_no_mapdl, port=50052)
+            result = await connect_to_mapdl(mock_context_no_mapdl, port=50052)
             assert "Successfully connected" in result.content[0].text
             assert "50052" in result.content[0].text
 
         # Disconnect
-        disconnect_from_mapdl(mock_context_no_mapdl)
+        await disconnect_from_mapdl(mock_context_no_mapdl)
 
         # Second connection with different parameters
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl2):
-            result = connect_to_mapdl(mock_context_no_mapdl, port=50053)
+            result = await connect_to_mapdl(mock_context_no_mapdl, port=50053)
             assert "Successfully connected" in result.content[0].text
             assert "50053" in result.content[0].text
 
-    def test_tools_without_connection(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_tools_without_connection(self, mock_context_no_mapdl):
         """Test that tools return appropriate messages without connection."""
         # Check status without connection
         status = check_mapdl_status(mock_context_no_mapdl)
@@ -1627,7 +1662,8 @@ class TestConnectionLifecycle:
 class TestLaunchWorkflow:
     """Tests for launch and usage workflow."""
 
-    def test_launch_use_disconnect_workflow(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_use_disconnect_workflow(self, mock_context_no_mapdl):
         """Test complete workflow: launch, use, disconnect."""
         # Create mock MAPDL
         mock_mapdl = MagicMock()
@@ -1667,7 +1703,7 @@ class TestLaunchWorkflow:
 
         # Step 1: Launch
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl, nproc=4)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl, nproc=4)
             assert "Successfully launched MAPDL" in result.content[0].text
 
         # Step 2: Use MAPDL
@@ -1680,14 +1716,15 @@ class TestLaunchWorkflow:
         assert "MAPDL command executed successfully" in command_result.content[0].text
 
         # Step 3: Disconnect
-        result = disconnect_from_mapdl(mock_context_no_mapdl)
+        result = await disconnect_from_mapdl(mock_context_no_mapdl)
         assert "Successfully disconnected" in result.content[0].text
 
         # Step 4: Verify connection is cleared
         status_after = check_mapdl_status(mock_context_no_mapdl)
         assert "No MAPDL connection available" in status_after.content[0].text
 
-    def test_launch_after_disconnect(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_launch_after_disconnect(self, mock_context_no_mapdl):
         """Test that we can launch after disconnecting."""
         mock_mapdl1 = MagicMock()
         mock_mapdl1.version = "2024 R2"
@@ -1707,20 +1744,21 @@ class TestLaunchWorkflow:
 
         # First launch
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl1):
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl, nproc=None)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl, nproc=None)
             assert "Successfully launched MAPDL" in result.content[0].text
             assert "50052" in result.content[0].text
 
         # Disconnect
-        disconnect_from_mapdl(mock_context_no_mapdl)
+        await disconnect_from_mapdl(mock_context_no_mapdl)
 
         # Second launch
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl2):
-            result = launch_mapdl_session(ctx=mock_context_no_mapdl, nproc=4)
+            result = await launch_mapdl_session(ctx=mock_context_no_mapdl, nproc=4)
             assert "Successfully launched MAPDL" in result.content[0].text
             assert "50053" in result.content[0].text
 
-    def test_cannot_launch_when_connected(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_cannot_launch_when_connected(self, mock_context_no_mapdl):
         """Test that launching fails when already connected."""
         # First, connect to an existing instance
         mock_mapdl = MagicMock()
@@ -1729,11 +1767,11 @@ class TestLaunchWorkflow:
         mock_mapdl._port = 50052
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
-            connect_result = connect_to_mapdl(mock_context_no_mapdl)
+            connect_result = await connect_to_mapdl(mock_context_no_mapdl)
             assert "Successfully connected" in connect_result.content[0].text
 
         # Now try to launch - should fail
-        launch_result = launch_mapdl_session(ctx=mock_context_no_mapdl)
+        launch_result = await launch_mapdl_session(ctx=mock_context_no_mapdl)
         assert "Already connected to MAPDL" in launch_result.content[0].text
         assert "disconnect first" in launch_result.content[0].text
 
@@ -2152,67 +2190,61 @@ class TestScreenshot:
 class TestRequiresMapdlVisibility:
     """Tests for MAPDL-connection-aware tool visibility."""
 
-    def test_connect_to_mapdl_enables_requires_mapdl_tools(self, mock_context_no_mapdl):
-        """Successful connect_to_mapdl should call app.enable for requires_mapdl tag."""
+    @pytest.mark.asyncio
+    async def test_connect_to_mapdl_enables_requires_mapdl_tools(self, mock_context_no_mapdl):
+        """Successful connect_to_mapdl should call ctx.enable_components for requires_mapdl tag."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
         mock_mapdl._ip = "localhost"
         mock_mapdl._port = 50052
 
-        with (
-            patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl),
-            patch("ansys.mapdl.mcp.tools.app") as mock_app,
-        ):
-            connect_to_mapdl(mock_context_no_mapdl)
-            mock_app.enable.assert_called_once_with(tags={"requires_mapdl"})
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
+            await connect_to_mapdl(mock_context_no_mapdl)
+            mock_context_no_mapdl.enable_components.assert_called_once_with(tags={"requires_mapdl"})
 
-    def test_connect_to_mapdl_does_not_enable_on_failure(self, mock_context_no_mapdl):
-        """Failed connect_to_mapdl should not call app.enable."""
-        with (
-            patch("ansys.mapdl.core.Mapdl", side_effect=Exception("Connection refused")),
-            patch("ansys.mapdl.mcp.tools.app") as mock_app,
-        ):
-            connect_to_mapdl(mock_context_no_mapdl)
-            mock_app.enable.assert_not_called()
+    @pytest.mark.asyncio
+    async def test_connect_to_mapdl_does_not_enable_on_failure(self, mock_context_no_mapdl):
+        """Failed connect_to_mapdl should not call ctx.enable_components."""
+        with patch("ansys.mapdl.core.Mapdl", side_effect=Exception("Connection refused")):
+            await connect_to_mapdl(mock_context_no_mapdl)
+            mock_context_no_mapdl.enable_components.assert_not_called()
 
-    def test_launch_mapdl_session_enables_requires_mapdl_tools(self, mock_context_no_mapdl):
-        """Successful launch_mapdl_session should call app.enable for requires_mapdl tag."""
+    @pytest.mark.asyncio
+    async def test_launch_mapdl_session_enables_requires_mapdl_tools(self, mock_context_no_mapdl):
+        """Successful launch_mapdl_session should call ctx.enable_components for requires_mapdl."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
         mock_mapdl.ip = "127.0.0.1"
         mock_mapdl.port = 50052
         mock_mapdl.directory = "/tmp"
 
-        with (
-            patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl),
-            patch("ansys.mapdl.mcp.tools.app") as mock_app,
-        ):
-            launch_mapdl_session(ctx=mock_context_no_mapdl)
-            mock_app.enable.assert_called_once_with(tags={"requires_mapdl"})
+        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
+            await launch_mapdl_session(ctx=mock_context_no_mapdl)
+            mock_context_no_mapdl.enable_components.assert_called_once_with(tags={"requires_mapdl"})
 
-    def test_launch_mapdl_session_does_not_enable_on_failure(self, mock_context_no_mapdl):
-        """Failed launch_mapdl_session should not call app.enable."""
-        with (
-            patch("ansys.mapdl.core.launch_mapdl", side_effect=Exception("Launch failed")),
-            patch("ansys.mapdl.mcp.tools.app") as mock_app,
-        ):
-            launch_mapdl_session(ctx=mock_context_no_mapdl)
-            mock_app.enable.assert_not_called()
+    @pytest.mark.asyncio
+    async def test_launch_mapdl_session_does_not_enable_on_failure(self, mock_context_no_mapdl):
+        """Failed launch_mapdl_session should not call ctx.enable_components."""
+        with patch("ansys.mapdl.core.launch_mapdl", side_effect=Exception("Launch failed")):
+            await launch_mapdl_session(ctx=mock_context_no_mapdl)
+            mock_context_no_mapdl.enable_components.assert_not_called()
 
-    def test_disconnect_from_mapdl_disables_requires_mapdl_tools(self, mock_context):
-        """Successful disconnect_from_mapdl should call app.disable for requires_mapdl tag."""
+    @pytest.mark.asyncio
+    async def test_disconnect_from_mapdl_disables_requires_mapdl_tools(self, mock_context):
+        """Successful disconnect_from_mapdl should call ctx.disable_components."""
         mock_context.request_context.lifespan_context.mapdl._ip = "localhost"
         mock_context.request_context.lifespan_context.mapdl._port = 50052
 
-        with patch("ansys.mapdl.mcp.tools.app") as mock_app:
-            disconnect_from_mapdl(mock_context)
-            mock_app.disable.assert_called_once_with(tags={"requires_mapdl"})
+        await disconnect_from_mapdl(mock_context)
+        mock_context.disable_components.assert_called_once_with(tags={"requires_mapdl"})
 
-    def test_disconnect_from_mapdl_no_connection_does_not_disable(self, mock_context_no_mapdl):
+    @pytest.mark.asyncio
+    async def test_disconnect_from_mapdl_no_connection_does_not_disable(
+        self, mock_context_no_mapdl
+    ):
         """disconnect_from_mapdl with no connection should not change visibility."""
-        with patch("ansys.mapdl.mcp.tools.app") as mock_app:
-            disconnect_from_mapdl(mock_context_no_mapdl)
-            mock_app.disable.assert_not_called()
+        await disconnect_from_mapdl(mock_context_no_mapdl)
+        mock_context_no_mapdl.disable_components.assert_not_called()
 
     def test_requires_mapdl_tag_present_on_correct_tools(self):
         """Tools that need MAPDL should have the requires_mapdl tag."""

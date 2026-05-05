@@ -1,6 +1,29 @@
 Tools and capabilities
 ======================
 
+Tool Availability
+-----------------
+
+PyMAPDL-MCP dynamically enables and disables tools based on whether an MAPDL instance is
+connected. This keeps the AI assistant's context small when MAPDL is not in use.
+
+**Before connecting to MAPDL**, only the following tools are available:
+
+- ``check_mapdl_installed``
+- ``list_mapdl_instances``
+- ``connect_to_mapdl``
+- ``launch_mapdl_session``
+- All ``get_guidelines_for_*`` workflow guidance tools
+
+**After connecting to MAPDL** (via ``connect_to_mapdl`` or ``launch_mapdl_session``), the full
+set of tools becomes available. When ``disconnect_from_mapdl`` is called, the MAPDL-specific
+tools are hidden again.
+
+.. note::
+   When ``--connect-on-startup`` is used, MAPDL is already connected at startup so all tools
+   are immediately available (except ``connect_to_mapdl``, ``launch_mapdl_session``, and
+   ``disconnect_from_mapdl``, which are locked in that mode).
+
 Available Tools
 ---------------
 
@@ -12,14 +35,14 @@ MAPDL Instance Management
 - **Launch MAPDL**: Start a new MAPDL instance with custom settings
 - **Connect to MAPDL**: Connect to an existing running MAPDL instance
 - **List Instances**: Discover MAPDL instances running on the system
-- **Check Status**: Get detailed information about MAPDL status
-- **Disconnect**: Cleanly close the MAPDL connection
+- **Check Status**: Get detailed information about MAPDL status *(requires MAPDL connection)*
+- **Disconnect**: Cleanly close the MAPDL connection *(requires MAPDL connection)*
 
 Command Execution
 ~~~~~~~~~~~~~~~~~~
 
-- **Run MAPDL Command**: Execute individual MAPDL commands
-- **Run Multiple Commands**: Execute sequences of commands efficiently
+- **Run MAPDL Command**: Execute individual MAPDL commands *(requires MAPDL connection)*
+- **Run Multiple Commands**: Execute sequences of commands efficiently *(requires MAPDL connection)*
 - **Write Comments**: Add comments to the MAPDL session
 
 Data Extraction
@@ -33,14 +56,14 @@ Data Extraction
 Visualization
 ~~~~~~~~~~~~~~
 
-- **Take Screenshots**: Capture MAPDL graphics window
-- **Create Custom Plots**: Generate matplotlib or PyVista visualizations
+- **Take Screenshots**: Capture MAPDL graphics window *(requires MAPDL connection)*
+- **Create Custom Plots**: Generate matplotlib or PyVista visualizations *(requires MAPDL connection)*
 - **Export Results**: Export data for external visualization
 
 Python Code Execution
 ~~~~~~~~~~~~~~~~~~~~~~
 
-- **Run Python Code**: Execute arbitrary Python code in the persistent session
+- **Run Python Code**: Execute arbitrary Python code in the persistent session *(requires MAPDL connection)*
 - **Integrate with Data Analysis**: Use NumPy, Pandas, and other Python libraries
 
 Workflow Examples
