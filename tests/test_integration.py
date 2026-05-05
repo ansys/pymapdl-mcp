@@ -355,7 +355,8 @@ class TestLaunchMapdlIntegration:
 
         return context
 
-    def test_launch_mapdl_basic_workflow(self, clean_context):
+    @pytest.mark.asyncio
+    async def test_launch_mapdl_basic_workflow(self, clean_context):
         """Test launching MAPDL with default parameters and executing commands.
 
         This test combines multiple scenarios:
@@ -366,7 +367,7 @@ class TestLaunchMapdlIntegration:
         """
         try:
             # Launch MAPDL
-            result = launch_mapdl_session(ctx=clean_context)
+            result = await launch_mapdl_session(ctx=clean_context)
 
             # Verify successful launch
             assert isinstance(result, ToolResult)
@@ -401,15 +402,16 @@ class TestLaunchMapdlIntegration:
             assert status_data["connection"]["status"] == "Running"
 
             # Test launching when already connected
-            result2 = launch_mapdl_session(ctx=clean_context)
+            result2 = await launch_mapdl_session(ctx=clean_context)
             assert "Already connected to MAPDL" in result2.content[0].text
             assert "disconnect first" in result2.content[0].text
 
         finally:
             # Clean up
-            disconnect_from_mapdl(clean_context)
+            await disconnect_from_mapdl(clean_context)
 
-    def test_launch_mapdl_session_custom_parameters(self, clean_context):
+    @pytest.mark.asyncio
+    async def test_launch_mapdl_session_custom_parameters(self, clean_context):
         """Test launching MAPDL with custom parameters.
 
         This test combines:
@@ -420,7 +422,7 @@ class TestLaunchMapdlIntegration:
         tmpdir = tempfile.mkdtemp()
 
         try:
-            result = launch_mapdl_session(ctx=clean_context, nproc=1, run_location=tmpdir)
+            result = await launch_mapdl_session(ctx=clean_context, nproc=1, run_location=tmpdir)
 
             # Verify successful launch
             assert isinstance(result, ToolResult)
@@ -436,7 +438,7 @@ class TestLaunchMapdlIntegration:
 
         finally:
             # Disconnect MAPDL first to release file locks
-            disconnect_from_mapdl(clean_context)
+            await disconnect_from_mapdl(clean_context)
 
             # Clean up the temporary directory manually
             import shutil
