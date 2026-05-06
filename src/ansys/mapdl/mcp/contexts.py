@@ -31,21 +31,26 @@ MAPDL simulations.
 
 # flake8: noqa: E501
 
+from typing import Literal
+
 # Import the mcp instance from mcp.py
 from ansys.mapdl.mcp import app
 
+GuidelinesContent = Literal[
+    "workflow",
+    "geometry",
+    "elements",
+    "materials",
+    "mesh",
+    "boundary_conditions",
+    "solution",
+    "postprocessing",
+    "general",
+]
 
-@app.tool()
+
 def get_guidelines_for_workflow_overview() -> str:
-    """Get general MAPDL simulation workflow guidelines.
-
-    Use this tool when explaining or generating PyMAPDL or Ansys MAPDL workflows.
-
-    Returns
-    -------
-    str
-        Overview of the general simulation process for all MAPDL analysis types.
-    """
+    """Get general MAPDL simulation workflow guidelines."""
     return """# MAPDL Simulation Workflow Overview
 
 When explaining or generating PyMAPDL or Ansys MAPDL workflows, ALWAYS FOLLOW this general simulation process, independent of the specific analysis type (static, modal, thermal, nonlinear, etc.):
@@ -92,17 +97,8 @@ Always follow this general simulation process when explaining or generating PyMA
 """
 
 
-@app.tool()
 def get_guidelines_for_preprocessing_geometry() -> str:
-    """Get geometry and meshing guidelines for MAPDL preprocessing.
-
-    Use this tool when explaining or generating the geometry and meshing section of a MAPDL workflow.
-
-    Returns
-    -------
-    str
-        Guidelines for geometry definition and meshing in MAPDL.
-    """
+    """Get geometry and meshing guidelines for MAPDL preprocessing."""
     return """# Preprocessing: Geometry
 
 ## Section Comment Requirement
@@ -132,17 +128,8 @@ mapdl.com("Creating geometry")
 """
 
 
-@app.tool()
 def get_guidelines_for_preprocessing_elements() -> str:
-    """Get element type selection and definition guidelines.
-
-    Use this tool when explaining or generating the element type definition section of a MAPDL workflow.
-
-    Returns
-    -------
-    str
-        Guidelines for selecting and defining element types in MAPDL.
-    """
+    """Get element type selection and definition guidelines."""
     return """# Preprocessing: Finite Element Model
 
 ## Section Comment Requirement
@@ -204,17 +191,8 @@ The following element types are commonly used in MAPDL simulations:
 """
 
 
-@app.tool()
 def get_guidelines_for_preprocessing_materials() -> str:
-    """Get material model definition guidelines.
-
-    Use this tool when explaining or generating the material properties section of a MAPDL workflow.
-
-    Returns
-    -------
-    str
-        Guidelines for defining material properties in MAPDL.
-    """
+    """Get material model definition guidelines."""
     return """# Preprocessing: Material Models
 
 ## Section Comment Requirement
@@ -277,17 +255,8 @@ mapdl.mp("DENS", 1, 7850)   # Density in kg/m³
 """
 
 
-@app.tool()
 def get_guidelines_for_preprocessing_mesh() -> str:
-    """Get mesh generation guidelines.
-
-    Use this tool when explaining or generating the mesh section of a MAPDL workflow.
-
-    Returns
-    -------
-    str
-        Guidelines for generating finite element meshes in MAPDL.
-    """
+    """Get mesh generation guidelines."""
     return """# Preprocessing: Mesh
 
 ## Section Comment Requirement
@@ -342,17 +311,8 @@ mapdl.vmesh("ALL")
 """
 
 
-@app.tool()
 def get_guidelines_for_preprocessing_boundary_conditions() -> str:
-    """Get boundary conditions and loads application guidelines.
-
-    Use this tool when explaining or generating the boundary conditions and loads section of a MAPDL workflow.
-
-    Returns
-    -------
-    str
-        Guidelines for applying boundary conditions and loads in MAPDL.
-    """
+    """Get boundary conditions and loads application guidelines."""
     return """# Preprocessing: Boundary Conditions and Loads
 
 ## Section Comment Requirement
@@ -438,17 +398,8 @@ mapdl.f(node_id, "FY", -1000)
 """
 
 
-@app.tool()
 def get_guidelines_for_solution_phase() -> str:
-    """Get solution phase guidelines for MAPDL analysis.
-
-    Use this tool when configuring and running the solution phase in a MAPDL workflow.
-
-    Returns
-    -------
-    str
-        Guidelines for configuring and running the solution in MAPDL.
-    """
+    """Get solution phase guidelines for MAPDL analysis."""
     return """# Solution Phase
 
 ## Section Comment Requirement
@@ -536,17 +487,8 @@ mapdl.solve()
 """
 
 
-@app.tool()
 def get_guidelines_for_postprocessing_phase() -> str:
-    """Get postprocessing phase guidelines for MAPDL analysis.
-
-    Use this tool when postprocessing results in a MAPDL workflow.
-
-    Returns
-    -------
-    str
-        Guidelines for extracting and visualizing results in MAPDL.
-    """
+    """Get postprocessing phase guidelines for MAPDL analysis."""
     return """# Postprocessing Phase
 
 ## Section Comment Requirement
@@ -744,20 +686,8 @@ mapdl.plot_element_solution("SEQV")
 """
 
 
-@app.tool()
 def get_guidelines_for_general_rules() -> str:
-    """Get general rules and best practices for MAPDL workflows.
-
-    Use this tool when working with MAPDL simulations or PyMAPDL workflows
-    to obtain general guidelines.
-    The use of this tool is strongly recommended to ensure high-quality
-    simulations, and it is independent of the analysis type.
-
-    Returns
-    -------
-    str
-        General rules and best practices for MAPDL simulations.
-    """
+    """Get general rules and best practices for MAPDL workflows."""
     return """# General Rules and Best Practices
 
 ## Accuracy Factors
@@ -836,3 +766,57 @@ Keep the workflow structure consistent across all analysis types:
 - Not validating results
 - Using inconsistent coordinate systems
 """
+
+
+_CONTENT_MAP = {
+    "workflow": get_guidelines_for_workflow_overview,
+    "geometry": get_guidelines_for_preprocessing_geometry,
+    "elements": get_guidelines_for_preprocessing_elements,
+    "materials": get_guidelines_for_preprocessing_materials,
+    "mesh": get_guidelines_for_preprocessing_mesh,
+    "boundary_conditions": get_guidelines_for_preprocessing_boundary_conditions,
+    "solution": get_guidelines_for_solution_phase,
+    "postprocessing": get_guidelines_for_postprocessing_phase,
+    "general": get_guidelines_for_general_rules,
+}
+
+
+@app.tool()
+def get_guidelines_for(content: GuidelinesContent) -> str:
+    """Get MAPDL simulation guidelines for a specific topic.
+
+    Use this tool before writing any PyMAPDL or MAPDL code to retrieve the
+    relevant guidelines for the workflow step you are about to implement.
+    Call it once per topic needed; it is strongly recommended before every
+    code-generation task.
+
+    Parameters
+    ----------
+    content : str
+        The guideline topic to retrieve. One of:
+
+        - ``"workflow"``: Complete simulation workflow overview
+          (preprocessing → solution → postprocessing).
+        - ``"geometry"``: Geometry creation: 2D/3D defaults, primitive
+          shapes, meshing requirement.
+        - ``"elements"``: Element type selection: SOLID186, SHELL181,
+          BEAM189, PLANE183, thermal and contact elements.
+        - ``"materials"``: Material property definition: elastic,
+          plastic, thermal, damping; default steel/aluminum values.
+        - ``"mesh"``: Mesh generation: sizing, quality, VMESH/
+          AMESH commands, smart sizing.
+        - ``"boundary_conditions"``: Boundary conditions and loads: fixed/pinned
+          supports, forces, pressures, beam element constraints.
+        - ``"solution"``: Solution configuration: analysis type
+          (STATIC, MODAL, TRANSIENT, HARMONIC), solver options, SOLVE.
+        - ``"postprocessing"``: Results extraction and visualization: POST1/
+          POST26, plot methods, data extraction.
+        - ``"general"``: General rules and best practices: accuracy
+          factors, verification steps, code quality.
+
+    Returns
+    -------
+    str
+        Guideline text for the requested topic.
+    """
+    return _CONTENT_MAP[content]()

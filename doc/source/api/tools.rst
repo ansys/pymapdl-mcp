@@ -279,20 +279,22 @@ get_guidelines_for_general_rules
 
 **Returns**: General guidelines for high-quality simulations
 
-get_guidelines_for_preprocessing_*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+get_guidelines_for
+~~~~~~~~~~~~~~~~~~
 
-**Description**: Get guidelines for specific preprocessing phases
+**Description**: Get MAPDL simulation guidelines for a specific topic using the unified tool ``get_guidelines_for(content)``.
 
-Available topics:
+**Parameters**:
 
-- ``get_guidelines_for_preprocessing_geometry``: Geometry and meshing
-- ``get_guidelines_for_preprocessing_elements``: Element type selection
-- ``get_guidelines_for_preprocessing_materials``: Material properties
-- ``get_guidelines_for_preprocessing_mesh``: Mesh generation
-- ``get_guidelines_for_preprocessing_boundary_conditions``: Boundary conditions and loads
+- ``content`` (str): One of the following values: ``"workflow"``, ``"geometry"``, ``"elements"``, ``"materials"``, ``"mesh"``, ``"boundary_conditions"``, ``"solution"``, ``"postprocessing"``, ``"general"``.
 
-**Returns**: Specific guidelines for the requested phase
+**Returns**: Guideline text for the requested topic.
+
+**Example**::
+
+    result = get_guidelines_for(content="mesh")
+
+This unified tool replaces the previous per-topic guideline tools (e.g. ``get_guidelines_for_preprocessing_mesh``) to reduce the number of registered tools and simplify client usage.
 
 get_guidelines_for_solution_phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
