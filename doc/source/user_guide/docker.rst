@@ -1,0 +1,144 @@
+Docker Deployment
+=================
+
+PyMAPDL-MCP can be deployed as a containerized application using Docker with HTTP
+transport for remote access. The server can connect to either a containerized MAPDL
+instance or a local MAPDL installation.
+
+.. warning::
+   HTTP transport is not encrypted. Use only in trusted networks or behind a
+   reverse proxy (such as Nginx or HAProxy) that provides TLS/SSL.
+
+Quick Start with Docker Compose
+---------------------------------
+
+The easiest way to run both MAPDL and the MCP server together is using Docker Compose.
+
+1. **Configure the environment:**
+
+   .. code-block:: bash
+
+      cp docker/env.example docker/.env
+
+   Edit ``docker/.env`` with your settings:
+
+   - ``PYMAPDL_IP``: Set to ``mapdl`` (container), ``host.docker.internal``
+     (local Windows/Mac), or the IP address of a remote MAPDL instance.
+   - ``ANSYSLMD_LICENSE_FILE``: Your ANSYS license server (format: ``port@server``).
+
+2. **Start services:**
+
+   .. code-block:: bash
+
+      docker compose -f docker/docker-compose.yml up
+
+   Or run in detached mode:
+
+   .. code-block:: bash
+
+      docker compose -f docker/docker-compose.yml up -d
+
+   The MCP server will be available at ``http://localhost:8080``.
+
+Docker Compose Services
+------------------------
+
+The ``docker-compose.yml`` defines two services:
+
+- **pymapdl-mcp**: The MCP server with HTTP transport enabled.
+- **mapdl**: An ANSYS MAPDL container (optional — you can connect to a local instance
+  instead).
+
+To connect to a **local** MAPDL instance instead of the container:
+
+1. Remove or comment out the ``mapdl`` service and ``depends_on`` in ``docker-compose.yml``.
+2. Set ``PYMAPDL_IP=host.docker.internal`` (Windows/Mac) or the appropriate IP address.
+3. Start MAPDL locally: ``pymapdl start --port 50052``.
+
+Building a Standalone Image
+-----------------------------
+
+To build the MCP server image without Docker Compose, run from the repository root.
+
+On Linux:
+
+.. code-block:: bash
+
+   export GITHUB_TOKEN="your_token_here"
+   DOCKER_BUILDKIT=1 docker build --secret id=github_token,env=GITHUB_TOKEN \
+     -f docker/Dockerfile -t pymapdl-mcp .
+
+On Windows (PowerShell):
+
+.. code-block:: powershell
+
+   $env:GITHUB_TOKEN = "your_token_here"
+   $env:DOCKER_BUILDKIT = "1"
+   docker build --secret id=github_token,env=GITHUB_TOKEN `
+     -f docker\Dockerfile -t pymapdl-mcp .
+
+Running the Standalone Container
+----------------------------------
+
+Connect to a local MAPDL instance:
+
+.. code-block:: bash
+
+   # Windows/Mac
+   docker run -p 8080:8080 -e PYMAPDL_IP=host.docker.internal pymapdl-mcp
+
+   # Linux
+   docker run --network host -e PYMAPDL_IP=localhost pymapdl-mcp
+
+Connect to a remote MAPDL instance:
+
+.. code-block:: bash
+
+   docker run -p 8080:8080 \
+     -e PYMAPDL_IP=192.168.1.100 \
+     -e PYMAPDL_PORT=50053 \
+     pymapdl-mcp
+
+Environment Variables
+----------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 20 55
+
+   * - Variable
+     - Default
+     - Description
+   * - ``PYMAPDL_IP``
+     - ``host.docker.internal``
+     - MAPDL IP address or hostname
+   * - ``PYMAPDL_PORT``
+     - ``50052``
+     - MAPDL gRPC port
+   * - ``HTTP_HOST``
+     - ``0.0.0.0``
+     - HTTP server bind address
+   * - ``HTTP_PORT``
+     - ``8080``
+     - HTTP server port
+   * - ``ANSYSLMD_LICENSE_FILE``
+     - *(required)*
+     - License server in ``port@server`` format
+
+MCP Client Configuration
+--------------------------
+
+Once the container is running, configure your MCP client to connect to the HTTP server.
+
+VS Code (``.vscode/mcp.json``):
+
+.. code-block:: json
+
+   {
+     "servers": {
+       "pymapdl": {
+         "type": "http",
+         "url": "http://localhost:8080"
+       }
+     }
+   }

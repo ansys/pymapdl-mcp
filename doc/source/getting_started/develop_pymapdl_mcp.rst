@@ -6,6 +6,43 @@ Developing PyMAPDL-MCP
 
 This guide helps you set up your development environment and start contributing code to PyMAPDL-MCP.
 
+Architecture
+============
+
+PyMAPDL-MCP is built on the ``PyAnsysBaseMCP`` framework (from ``ansys-common-mcp``), which
+is itself built on top of FastMCP. The server lifecycle has three phases:
+
+**Startup**
+
+- Initializes a persistent Python session for custom code execution.
+- If ``--connect-on-startup`` is used, connects to an existing MAPDL instance.
+- Otherwise, waits for a dynamic connection through the ``connect_to_mapdl`` or
+  ``launch_mapdl_session`` tools.
+
+**Runtime**
+
+- Exposes MCP tools for MAPDL interaction.
+- Manages dynamic MAPDL connections through the tools.
+- Executes commands in both the MAPDL session and the persistent Python session.
+- Provides workflow guidance through the ``get_guidelines_for`` context tool.
+- Dynamically enables and disables tools based on the MAPDL connection state.
+
+**Shutdown**
+
+- Gracefully disconnects from MAPDL.
+- Cleans up the persistent Python session resources.
+
+Application Context
+-------------------
+
+The server uses a strongly-typed ``PyMAPDLAppContext`` dataclass that holds:
+
+- The active MAPDL instance connection.
+- The persistent Python session for custom code execution.
+- Transport configuration (STDIO or HTTP).
+- Connection settings (IP, port, auto-connect flags).
+- Command history tracking.
+
 Prerequisites
 =============
 
@@ -227,6 +264,23 @@ To add a new MCP tool to PyMAPDL-MCP:
 4. **Document the tool** in ``doc/source/api/tools.rst``
 
 5. **Add usage example** if appropriate in ``doc/source/examples/``
+
+Conditionally Enabling or Disabling a Tool
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tools can be tagged so they are selectively disabled at runtime. Apply a tag via the
+``@app.tool()`` decorator, then call ``app.disable()`` with that tag when the condition
+applies (for example, when ``--connect-on-startup`` locks the connection):
+
+.. code-block:: python
+
+   # Tag the tool so it can be disabled as a group
+   @app.tool(tags={"locked_connection"})
+   def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> str:
+       ...
+
+   # Disable all tools with this tag when the connection is locked
+   app.disable(tags={"locked_connection"})
 
 Adding Documentation
 ====================
