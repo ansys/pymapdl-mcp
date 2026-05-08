@@ -241,24 +241,64 @@ class TestCheckMapdlStatus:
 class TestCheckMapdlInstalled:
     """Tests for check_mapdl_installed tool."""
 
-    def test_check_installed_true(self):
-        """Test checking MAPDL installation when MAPDL is installed."""
-        with (
-            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
-            patch(
-                "ansys.mapdl.core.launcher.get_default_ansys_path",
-                return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
-            ),
+    def test_check_installed_single(self):
+        """Test checking MAPDL installation when one installation is found."""
+        installations = {242: "/usr/ansys_inc/v242"}
+        with patch(
+            "ansys.tools.common.path.get_available_ansys_installations",
+            return_value=installations,
         ):
             result = check_mapdl_installed(MagicMock())
 
             assert isinstance(result, ToolResult)
             assert "MAPDL is installed" in result.content[0].text
-            assert "/usr/ansys_inc/v242/ansys/bin/ansys242" in result.content[0].text
+            assert "1 installation" in result.content[0].text
+            assert "242" in result.content[0].text
+            assert "ansys242" in result.content[0].text
+
+    def test_check_installed_multiple(self):
+        """Test that all installations are listed when multiple are found."""
+        installations = {
+            251: "/usr/ansys_inc/v251",
+            242: "/usr/ansys_inc/v242",
+        }
+        with patch(
+            "ansys.tools.common.path.get_available_ansys_installations",
+            return_value=installations,
+        ):
+            result = check_mapdl_installed(MagicMock())
+
+            assert isinstance(result, ToolResult)
+            assert "MAPDL is installed" in result.content[0].text
+            assert "2 installation" in result.content[0].text
+            assert "251" in result.content[0].text
+            assert "242" in result.content[0].text
+            assert "ansys251" in result.content[0].text
+            assert "ansys242" in result.content[0].text
+
+    def test_check_installed_student(self):
+        """Test that student installations are labelled correctly."""
+        installations = {
+            251: "/usr/ansys_inc/v251",
+            -242: "/usr/ansys_inc/ANSYS Student/v242",
+        }
+        with patch(
+            "ansys.tools.common.path.get_available_ansys_installations",
+            return_value=installations,
+        ):
+            result = check_mapdl_installed(MagicMock())
+
+            assert isinstance(result, ToolResult)
+            assert "Student" in result.content[0].text
+            assert "ansys251" in result.content[0].text
+            assert "ansys242" in result.content[0].text
 
     def test_check_installed_false(self):
-        """Test checking MAPDL installation when MAPDL is not installed."""
-        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=False):
+        """Test checking MAPDL installation when no installation is found."""
+        with patch(
+            "ansys.tools.common.path.get_available_ansys_installations",
+            return_value={},
+        ):
             result = check_mapdl_installed(MagicMock())
 
             assert isinstance(result, ToolResult)
@@ -269,7 +309,7 @@ class TestCheckMapdlInstalled:
     def test_check_installed_exception(self):
         """Test error handling when checking MAPDL installation fails."""
         with patch(
-            "ansys.mapdl.core.launcher.check_valid_ansys",
+            "ansys.tools.common.path.get_available_ansys_installations",
             side_effect=Exception("System error"),
         ):
             result = check_mapdl_installed(MagicMock())
@@ -281,7 +321,7 @@ class TestCheckMapdlInstalled:
     def test_check_installed_no_ansys_env(self):
         """Test checking installation when ANSYS environment variables not set."""
         with patch(
-            "ansys.mapdl.core.launcher.check_valid_ansys",
+            "ansys.tools.common.path.get_available_ansys_installations",
             side_effect=EnvironmentError("ANSYS environment not configured"),
         ):
             result = check_mapdl_installed(MagicMock())
@@ -293,7 +333,7 @@ class TestCheckMapdlInstalled:
     def test_check_installed_import_error(self):
         """Test handling import errors gracefully."""
         with patch(
-            "ansys.mapdl.core.launcher.check_valid_ansys",
+            "ansys.tools.common.path.get_available_ansys_installations",
             side_effect=ImportError("Failed to import MAPDL module"),
         ):
             result = check_mapdl_installed(MagicMock())
@@ -302,41 +342,12 @@ class TestCheckMapdlInstalled:
             assert "Error checking MAPDL installation" in result.content[0].text
             assert "Failed to import MAPDL module" in result.content[0].text
 
-    def test_check_installed_with_custom_path(self):
-        """Test checking installation with custom ANSYS path."""
-        custom_path = "/opt/ansys/v251/ansys/bin/ansys251"
-        with (
-            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
-            patch(
-                "ansys.mapdl.core.launcher.get_default_ansys_path",
-                return_value=custom_path,
-            ),
-        ):
-            result = check_mapdl_installed(MagicMock())
-
-            assert "MAPDL is installed" in result.content[0].text
-            assert custom_path in result.content[0].text
-
-    def test_check_installed_logging(self):
-        """Test that check_mapdl_installed logs messages."""
-        with (
-            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
-            patch(
-                "ansys.mapdl.core.launcher.get_default_ansys_path",
-                return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
-            ),
-        ):
-            output = check_mapdl_installed(MagicMock())
-
-            # Verify logging messages
-            assert (
-                "MAPDL is installed on this system in: /usr/ansys_inc/v242/ansys/bin/ansys242"
-                in output.content[0].text
-            )
-
     def test_check_not_installed_logging(self):
         """Test that check_mapdl_installed logs when not installed."""
-        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=False):
+        with patch(
+            "ansys.tools.common.path.get_available_ansys_installations",
+            return_value={},
+        ):
             output = check_mapdl_installed(MagicMock())
 
             assert (

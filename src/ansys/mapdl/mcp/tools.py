@@ -114,34 +114,49 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
 def check_mapdl_installed(ctx: Context) -> ToolResult:
     """Check if MAPDL is installed on the system.
 
-    This tool uses PyMAPDL's check_valid_ansys function to verify if a valid
-    ANSYS/MAPDL installation is available on the system.
+    This tool lists all ANSYS/MAPDL installations found on the system,
+    including their version numbers and executable paths.
 
     Returns
     -------
     ToolResult
-        Status message indicating whether MAPDL is installed or not.
+        Status message listing all found MAPDL installations, or a message
+        indicating that no installation was found.
     """
+    import os
+    from pathlib import Path
+
     logger.info("Checking if MAPDL is installed...")
 
     try:
-        from ansys.mapdl.core.launcher import (  # type: ignore
-            check_valid_ansys,
-            get_default_ansys_path,
+        from ansys.tools.common.path import (  # type: ignore
+            get_available_ansys_installations,
         )
 
-        is_installed = check_valid_ansys()
+        installations = get_available_ansys_installations()
 
-        if is_installed:
-            logger.info("MAPDL installation found")
-            return _text_result(f"MAPDL is installed on this system in: {get_default_ansys_path()}")
-        else:
+        if not installations:
             logger.info("MAPDL installation not found")
             return _text_result(
                 "MAPDL is not installed on this system or cannot be found in the "
                 "standard locations. Please ensure ANSYS/MAPDL is properly installed "
                 "and the installation path is correct."
             )
+
+        lines = [f"MAPDL is installed on this system. Found {len(installations)} installation(s):"]
+        for version_int, base_path in installations.items():
+            is_student = version_int < 0
+            abs_version = abs(version_int)
+            ansys_bin_path = Path(base_path) / "ansys" / "bin"
+            if os.name == "nt":
+                ansys_bin = ansys_bin_path / "winx64" / f"ansys{abs_version}.exe"
+            else:
+                ansys_bin = ansys_bin_path / f"ansys{abs_version}"
+            student_label = " (Student)" if is_student else ""
+            lines.append(f"  - Version {abs_version}{student_label}: {ansys_bin}")
+
+        logger.info(f"Found {len(installations)} MAPDL installation(s)")
+        return _text_result("\n".join(lines))
 
     except Exception as e:
         error_msg = f"Error checking MAPDL installation: {str(e)}"
