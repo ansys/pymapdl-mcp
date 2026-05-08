@@ -59,6 +59,10 @@ def save_plot(plotter: pv.Plotter) -> str:
         # Capture screenshot
         img_array = plotter.screenshot(return_img=True, transparent_background=False)
 
+        if img_array is None:
+            plotter.close()
+            return "Error: screenshot returned None"
+
         # Convert to PIL Image
         img = Image.fromarray(img_array)
 

@@ -19,7 +19,7 @@
 import argparse
 from dataclasses import dataclass
 import sys
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from ansys.common.mcp import (
     PyAnsysBaseMCP,
@@ -126,20 +126,22 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         """Allow PyMAPDL-MCP specific startup actions."""
         logger.info("PyMAPDL MCP server starting up...")
 
-        context = self.context
+        context = cast(PyMAPDLAppContext, self.context)
 
         if context.connect_on_startup:
-            from ansys.mapdl.core import launch_mapdl
+            from ansys.mapdl.core import Mapdl
 
             try:
                 logger.info(
                     f"Attempting to connect to MAPDL at {context.mapdl_ip}:{context.mapdl_port}..."
                 )
-                context.mapdl = launch_mapdl(
-                    start_instance=False,
-                    ip=context.mapdl_ip,
-                    port=context.mapdl_port,
-                )
+                _connect_kwargs: dict[str, Any] = {
+                    "start_instance": False,
+                    "ip": context.mapdl_ip,
+                    "port": context.mapdl_port,
+                    "cleanup_on_exit": False,
+                }
+                context.mapdl = Mapdl(**_connect_kwargs)
                 logger.info("Successfully connected to MAPDL on startup.")
 
             except Exception as e:
@@ -149,7 +151,7 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
 
     def product_cleanup(self):
         """Perform cleanup actions for MAPDL instances on shutdown."""
-        context = self.context
+        context = cast(PyMAPDLAppContext, self.context)
         # Cleanup on shutdown
         if context.mapdl is not None:
             try:

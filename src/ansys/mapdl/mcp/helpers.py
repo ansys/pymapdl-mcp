@@ -197,20 +197,14 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
     # Information class attributes
     info_class: dict[str, str] = {}
     try:
-        info_class["title"] = mapdl.information.title if hasattr(mapdl.information, "title") else ""
-        info_class["jobname"] = (
-            mapdl.information.jobname if hasattr(mapdl.information, "jobname") else ""
-        )
-        info_class["routine"] = (
-            mapdl.information.routine if hasattr(mapdl.information, "routine") else ""
-        )
-        info_class["units"] = mapdl.information.units if hasattr(mapdl.information, "units") else ""
-        info_class["revision"] = (
-            mapdl.information.revision if hasattr(mapdl.information, "revision") else ""
-        )
-        info_class["product"] = (
-            mapdl.information.product if hasattr(mapdl.information, "product") else ""
-        )
+        information = getattr(mapdl, "information", None)
+        if information is not None:
+            info_class["title"] = getattr(information, "title", "")
+            info_class["jobname"] = getattr(information, "jobname", "")
+            info_class["routine"] = getattr(information, "routine", "")
+            info_class["units"] = getattr(information, "units", "")
+            info_class["revision"] = getattr(information, "revision", "")
+            info_class["product"] = getattr(information, "product", "")
     except Exception as e:
         logger.warning(f"Error extracting information class data: {e}")
         info_class["error"] = str(e)
@@ -279,6 +273,8 @@ def connect_to_mapdl_in_persistent_python(
     str
         Connection status message.
     """
+    if ctx.request_context is None:
+        return "No request context available."
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:
