@@ -266,7 +266,7 @@ To add a new MCP tool to PyMAPDL-MCP:
 5. **Add usage example** if appropriate in ``doc/source/examples/``
 
 Conditionally Enabling or Disabling a Tool
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------------
 
 Tools can be tagged so they are selectively disabled at runtime. Apply a tag via the
 ``@app.tool()`` decorator, then call ``app.disable()`` with that tag when the condition
@@ -333,7 +333,7 @@ PyMAPDL-MCP includes a comprehensive test suite with 40+ tests.
    pytest -m integration
 
 Test Coverage Goal
-~~~~~~~~~~~~~~~~~~
+------------------
 
 Aim for >80% test coverage on new code:
 

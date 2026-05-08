@@ -112,5 +112,3 @@ that provides seamless integration between AI assistants and Ansys MAPDL through
         Contribute to PyMAPDL-MCP by answering questions,
         reporting bugs, writing code, or improving documentation.
         All contributions are welcomed!
-
-.. include:: links.rst

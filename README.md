@@ -19,6 +19,21 @@ Key features:
 - **Workflow guidance**: Access comprehensive context and best practices for all phases of MAPDL simulations
 - **Flexible deployment**: Works with MAPDL running locally, remotely, or in Docker containers
 
+<p align="center">
+
+https://github.com/user-attachments/assets/99b68fbd-2308-46a0-aa44-9684ae7400b7
+
+
+<b>Video 1: PyMAPDL MCP Demo</b>
+
+</p>
+
+
+<video controls width="720" src="_static/videos/PyMAPDL-MCP-demo.mp4">
+  Your browser does not support the video tag.
+</video>
+
+
 ## Installation
 
 ### For users
@@ -43,31 +58,13 @@ cd pymapdl-mcp
 pip install -e .[tests]
 ```
 
-## Quick start
+## Usage
 
-Add PyMAPDL-MCP to VS Code by creating a `.vscode/mcp.json` file in your project:
+For step-by-step setup instructions for VS Code, Claude Code, Claude Desktop, and other
+MCP-compatible clients, see the
+[IDE and Client Configuration](https://mapdl-mcp.docs.pyansys.com/getting_started/ide_configuration.html)
+page in the documentation.
 
-```json
-{
-  "servers": {
-    "pymapdl": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": [
-        "--from", "git+https://github.com/ansys/pymapdl-mcp", "ansys-mapdl-mcp"
-      ]
-    }
-  }
-}
-```
-
-For more information visit [Use MCP servers in VS Code](https://code.visualstudio.com/docs/copilot/customization/mcp-servers). In this page, you can find information about adding an MCP server globally to the user.
-
-Make sure you enabled the access to MCPs in your VS Code settings as presented here:
-![VS Code settings](enable_mcp.png)
-
-For Claude Desktop, Claude Code, HTTP transport, Docker deployment, and full CLI reference,
-see the [PyMAPDL-MCP documentation](https://mapdl-mcp.docs.pyansys.com).
 ## License
 
 This project is licensed under the Apache 2.0 license agreement. See the [LICENSE](./LICENSE) file for details.
