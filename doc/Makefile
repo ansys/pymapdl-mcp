@@ -31,5 +31,6 @@ html:
 
 pdf:
 	@echo "No PDF documentation build available..."
+	touch $(BUILDDIR)/ansys-mapdl-mcp.pdf
 
 .DEFAULT_GOAL := help

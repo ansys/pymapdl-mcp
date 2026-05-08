@@ -46,7 +46,8 @@ goto end
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 
 :pdf
-echo "No PDF documentation build available..."
+echo No PDF documentation build available...
+type nul > %BUILDDIR%\ansys-mapdl-mcp.pdf
 goto end
 
 :end

@@ -221,7 +221,6 @@ jobs:
           with:
             token: ${{ secrets.GITHUB_TOKEN }}
             library-name: ${{ env.PACKAGE_NAME }}
-            only-code: true
             add-artifact-attestation-notes: true
             changelog-release-notes: true
 
