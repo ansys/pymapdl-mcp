@@ -33,4 +33,7 @@ pdf:
 	@echo "No PDF documentation build available..."
 	touch $(BUILDDIR)/ansys-mapdl-mcp.pdf
 
+linkcheck:
+	@$(SPHINXBUILD) -M linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
 .DEFAULT_GOAL := help

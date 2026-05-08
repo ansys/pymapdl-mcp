@@ -50,5 +50,9 @@ echo No PDF documentation build available...
 type nul > %BUILDDIR%\ansys-mapdl-mcp.pdf
 goto end
 
+:linkcheck
+%SPHINXBUILD% -M linkcheck %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
+goto end
+
 :end
 popd

@@ -151,15 +151,12 @@ rst_epilog = ""
 with Path("links.rst").open() as f:
     rst_epilog += f.read()
 
+linkcheck_exclude_documents = ["404", "changelog"]
 linkcheck_ignore = [
-    r"index.html",
-    r"api/index.html",
-    r"examples/index.html",
-    r"getting_started/index.html",
-    r"contributing/index.html",
-    r"user_guide/index.html",
     "https://github.com/ansys/pyansys-common-mcp/*",
     "https://github.com/ansys/pymapdl-mcp/*",
+    "https://modelcontextprotocol.io/*",
+    "https://www.sphinx-doc.org/*",
 ]
 
 linkcheck_allowed_redirect = [
