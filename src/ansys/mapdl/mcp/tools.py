@@ -47,6 +47,15 @@ def _text_result(text: str) -> ToolResult:
     return ToolResult([TextContent(type="text", text=text)])
 
 
+def _is_mapdl_crashed(mapdl: Any) -> bool:
+    """Return True if the cached MAPDL instance has crashed or exited."""
+    if hasattr(mapdl, "_exited") and mapdl._exited is True:
+        return True
+    if hasattr(mapdl, "_exiting") and mapdl._exiting is True:
+        return True
+    return False
+
+
 # Tag applied to all tools that require an active MAPDL connection.
 # These tools are disabled at startup (before MAPDL is connected) and enabled
 # once a connection is established via connect_to_mapdl or launch_mapdl_session.
@@ -319,12 +328,18 @@ async def launch_mapdl_session(
     try:
         # Check if there's already a connection
         if ctx.request_context.lifespan_context.mapdl is not None:
-            return _text_result(
-                f"Already connected to MAPDL at "
-                f"{ctx.request_context.lifespan_context.mapdl._ip}:"
-                f"{ctx.request_context.lifespan_context.mapdl._port}. "
-                f"Please disconnect first using disconnect_from_mapdl tool."
-            )
+            if _is_mapdl_crashed(ctx.request_context.lifespan_context.mapdl):
+                logger.warning(
+                    "Cached MAPDL instance has crashed or exited. Clearing the cached instance."
+                )
+                ctx.request_context.lifespan_context.mapdl = None
+            else:
+                return _text_result(
+                    f"Already connected to MAPDL at "
+                    f"{ctx.request_context.lifespan_context.mapdl._ip}:"
+                    f"{ctx.request_context.lifespan_context.mapdl._port}. "
+                    f"Please disconnect first using disconnect_from_mapdl tool."
+                )
 
         # Launch new MAPDL instance
         kwargs: dict[str, Any] = {
@@ -391,12 +406,18 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
     try:
         # Check if there's already a connection
         if ctx.request_context.lifespan_context.mapdl is not None:
-            return _text_result(
-                f"Already connected to MAPDL at "
-                f"{ctx.request_context.lifespan_context.mapdl._ip}:"
-                f"{ctx.request_context.lifespan_context.mapdl._port}. "
-                f"Please disconnect first using disconnect_from_mapdl tool."
-            )
+            if _is_mapdl_crashed(ctx.request_context.lifespan_context.mapdl):
+                logger.warning(
+                    "Cached MAPDL instance has crashed or exited. Clearing the cached instance."
+                )
+                ctx.request_context.lifespan_context.mapdl = None
+            else:
+                return _text_result(
+                    f"Already connected to MAPDL at "
+                    f"{ctx.request_context.lifespan_context.mapdl._ip}:"
+                    f"{ctx.request_context.lifespan_context.mapdl._port}. "
+                    f"Please disconnect first using disconnect_from_mapdl tool."
+                )
 
         # Connect to existing MAPDL instance
         mapdl = pymapdl.Mapdl(

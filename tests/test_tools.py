@@ -1078,6 +1078,40 @@ class TestConnectToMapdl:
         assert "disconnect first" in result.content[0].text
 
     @pytest.mark.asyncio
+    async def test_connect_with_crashed_mapdl(self, mock_context):
+        """Test connecting when cached MAPDL instance has crashed (_exited=True)."""
+        mock_context.request_context.lifespan_context.mapdl._exited = True
+
+        mock_new_mapdl = MagicMock()
+        mock_new_mapdl.version = "2024 R2"
+        mock_new_mapdl._ip = "127.0.0.1"
+        mock_new_mapdl._port = 50052
+
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_new_mapdl):
+            result = await connect_to_mapdl(mock_context)
+
+        # Should succeed, not return "Already connected" error
+        assert "Successfully connected" in result.content[0].text
+        assert mock_context.request_context.lifespan_context.mapdl is mock_new_mapdl
+
+    @pytest.mark.asyncio
+    async def test_connect_with_exiting_mapdl(self, mock_context):
+        """Test connecting when cached MAPDL instance is exiting (_exiting=True)."""
+        mock_context.request_context.lifespan_context.mapdl._exiting = True
+
+        mock_new_mapdl = MagicMock()
+        mock_new_mapdl.version = "2024 R2"
+        mock_new_mapdl._ip = "127.0.0.1"
+        mock_new_mapdl._port = 50052
+
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_new_mapdl):
+            result = await connect_to_mapdl(mock_context)
+
+        # Should succeed, not return "Already connected" error
+        assert "Successfully connected" in result.content[0].text
+        assert mock_context.request_context.lifespan_context.mapdl is mock_new_mapdl
+
+    @pytest.mark.asyncio
     async def test_connect_connection_error(self, mock_context_no_mapdl):
         """Test handling connection errors."""
         with patch("ansys.mapdl.core.Mapdl", side_effect=Exception("Connection refused")):
@@ -1434,6 +1468,42 @@ class TestLaunchMapdl:
         # Verify appropriate error message
         assert "Already connected to MAPDL" in result.content[0].text
         assert "disconnect first" in result.content[0].text
+
+    @pytest.mark.asyncio
+    async def test_launch_with_crashed_mapdl(self, mock_context):
+        """Test launching when cached MAPDL instance has crashed (_exited=True)."""
+        mock_context.request_context.lifespan_context.mapdl._exited = True
+
+        mock_new_mapdl = MagicMock()
+        mock_new_mapdl.version = "2024 R2"
+        mock_new_mapdl.ip = "127.0.0.1"
+        mock_new_mapdl.port = 50052
+        mock_new_mapdl.directory = "/tmp"
+
+        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_new_mapdl):
+            result = await launch_mapdl_session(ctx=mock_context)
+
+        # Should succeed, not return "Already connected" error
+        assert "Successfully launched MAPDL" in result.content[0].text
+        assert mock_context.request_context.lifespan_context.mapdl is mock_new_mapdl
+
+    @pytest.mark.asyncio
+    async def test_launch_with_exiting_mapdl(self, mock_context):
+        """Test launching when cached MAPDL instance is exiting (_exiting=True)."""
+        mock_context.request_context.lifespan_context.mapdl._exiting = True
+
+        mock_new_mapdl = MagicMock()
+        mock_new_mapdl.version = "2024 R2"
+        mock_new_mapdl.ip = "127.0.0.1"
+        mock_new_mapdl.port = 50052
+        mock_new_mapdl.directory = "/tmp"
+
+        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_new_mapdl):
+            result = await launch_mapdl_session(ctx=mock_context)
+
+        # Should succeed, not return "Already connected" error
+        assert "Successfully launched MAPDL" in result.content[0].text
+        assert mock_context.request_context.lifespan_context.mapdl is mock_new_mapdl
 
     @pytest.mark.asyncio
     async def test_launch_error(self, mock_context_no_mapdl):
