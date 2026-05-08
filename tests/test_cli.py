@@ -70,12 +70,12 @@ def test_main_invalid_port_raises():
 
 def test_product_startup_attempts_connect_on_startup():
     """When connect_on_startup is True, MCP should attempt to connect to MAPDL."""
-    # Prepare a fake Mapdl instance to be returned by launch_mapdl
+    # Prepare a fake Mapdl instance to be returned by Mapdl constructor
     fake_mapdl = MagicMock()
     fake_mapdl.exit = MagicMock()
 
-    # Mock launch_mapdl to return our fake instance
-    with patch("ansys.mapdl.core.launch_mapdl", return_value=fake_mapdl) as mock_launch:
+    # Mock Mapdl to return our fake instance
+    with patch("ansys.mapdl.core.Mapdl", return_value=fake_mapdl) as mock_mapdl:
         # Create MCP instance and attach CLI config directly
         mcp = PyMAPDLMCP()
         setattr(
@@ -96,11 +96,12 @@ def test_product_startup_attempts_connect_on_startup():
 
         assert mcp.context.connect_on_startup is True
 
-        # Verify launch_mapdl was called with correct parameters
-        mock_launch.assert_called_once_with(
+        # Verify Mapdl was instantiated with correct parameters
+        mock_mapdl.assert_called_once_with(
             start_instance=False,
             ip="127.0.0.1",
             port=50052,
+            cleanup_on_exit=False,
         )
 
         # Verify MAPDL instance was stored in context
