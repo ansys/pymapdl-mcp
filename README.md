@@ -856,7 +856,7 @@ app.disable(tags={"locked_connection"})
 
 ## License
 
-This project is licensed under the ANSYS MCP SERVER TECHNOLOGY PREVIEW LICENSE AGREEMENT. See the LICENSE file for details.
+This project is licensed under the Apache 2.0 license agreement. See the [LICENSE](./LICENSE) file for details.
 
 ## Resources
 
