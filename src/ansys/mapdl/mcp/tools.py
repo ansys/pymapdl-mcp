@@ -69,6 +69,15 @@ def _open_image_in_viewer(image_path: str | Path) -> None:
         logger.warning(f"Failed to open image in viewer: {e}")
 
 
+def _is_mapdl_crashed(mapdl: Any) -> bool:
+    """Return True if the cached MAPDL instance has crashed or exited."""
+    if hasattr(mapdl, "_exited") and mapdl._exited is True:
+        return True
+    if hasattr(mapdl, "_exiting") and mapdl._exiting is True:
+        return True
+    return False
+
+
 # Tag applied to all tools that require an active MAPDL connection.
 # These tools are disabled at startup (before MAPDL is connected) and enabled
 # once a connection is established via connect_to_mapdl or launch_mapdl_session.
@@ -136,34 +145,49 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
 def check_mapdl_installed(ctx: Context) -> ToolResult:
     """Check if MAPDL is installed on the system.
 
-    This tool uses PyMAPDL's check_valid_ansys function to verify if a valid
-    ANSYS/MAPDL installation is available on the system.
+    This tool lists all ANSYS/MAPDL installations found on the system,
+    including their version numbers and executable paths.
 
     Returns
     -------
     ToolResult
-        Status message indicating whether MAPDL is installed or not.
+        Status message listing all found MAPDL installations, or a message
+        indicating that no installation was found.
     """
+    import os
+    from pathlib import Path
+
     logger.info("Checking if MAPDL is installed...")
 
     try:
-        from ansys.mapdl.core.launcher import (  # type: ignore
-            check_valid_ansys,
-            get_default_ansys_path,
+        from ansys.tools.common.path import (  # type: ignore
+            get_available_ansys_installations,
         )
 
-        is_installed = check_valid_ansys()
+        installations = get_available_ansys_installations()
 
-        if is_installed:
-            logger.info("MAPDL installation found")
-            return _text_result(f"MAPDL is installed on this system in: {get_default_ansys_path()}")
-        else:
+        if not installations:
             logger.info("MAPDL installation not found")
             return _text_result(
                 "MAPDL is not installed on this system or cannot be found in the "
                 "standard locations. Please ensure ANSYS/MAPDL is properly installed "
                 "and the installation path is correct."
             )
+
+        lines = [f"MAPDL is installed on this system. Found {len(installations)} installation(s):"]
+        for version_int, base_path in installations.items():
+            is_student = version_int < 0
+            abs_version = abs(version_int)
+            ansys_bin_path = Path(base_path) / "ansys" / "bin"
+            if os.name == "nt":
+                ansys_bin = ansys_bin_path / "winx64" / f"ansys{abs_version}.exe"
+            else:
+                ansys_bin = ansys_bin_path / f"ansys{abs_version}"
+            student_label = " (Student)" if is_student else ""
+            lines.append(f"  - Version {abs_version}{student_label}: {ansys_bin}")
+
+        logger.info(f"Found {len(installations)} MAPDL installation(s)")
+        return _text_result("\n".join(lines))
 
     except Exception as e:
         error_msg = f"Error checking MAPDL installation: {str(e)}"
@@ -341,12 +365,18 @@ async def launch_mapdl_session(
     try:
         # Check if there's already a connection
         if ctx.request_context.lifespan_context.mapdl is not None:
-            return _text_result(
-                f"Already connected to MAPDL at "
-                f"{ctx.request_context.lifespan_context.mapdl._ip}:"
-                f"{ctx.request_context.lifespan_context.mapdl._port}. "
-                f"Please disconnect first using disconnect_from_mapdl tool."
-            )
+            if _is_mapdl_crashed(ctx.request_context.lifespan_context.mapdl):
+                logger.warning(
+                    "Cached MAPDL instance has crashed or exited. Clearing the cached instance."
+                )
+                ctx.request_context.lifespan_context.mapdl = None
+            else:
+                return _text_result(
+                    f"Already connected to MAPDL at "
+                    f"{ctx.request_context.lifespan_context.mapdl._ip}:"
+                    f"{ctx.request_context.lifespan_context.mapdl._port}. "
+                    f"Please disconnect first using disconnect_from_mapdl tool."
+                )
 
         # Launch new MAPDL instance
         kwargs: dict[str, Any] = {
@@ -413,12 +443,18 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
     try:
         # Check if there's already a connection
         if ctx.request_context.lifespan_context.mapdl is not None:
-            return _text_result(
-                f"Already connected to MAPDL at "
-                f"{ctx.request_context.lifespan_context.mapdl._ip}:"
-                f"{ctx.request_context.lifespan_context.mapdl._port}. "
-                f"Please disconnect first using disconnect_from_mapdl tool."
-            )
+            if _is_mapdl_crashed(ctx.request_context.lifespan_context.mapdl):
+                logger.warning(
+                    "Cached MAPDL instance has crashed or exited. Clearing the cached instance."
+                )
+                ctx.request_context.lifespan_context.mapdl = None
+            else:
+                return _text_result(
+                    f"Already connected to MAPDL at "
+                    f"{ctx.request_context.lifespan_context.mapdl._ip}:"
+                    f"{ctx.request_context.lifespan_context.mapdl._port}. "
+                    f"Please disconnect first using disconnect_from_mapdl tool."
+                )
 
         # Connect to existing MAPDL instance
         mapdl = pymapdl.Mapdl(
