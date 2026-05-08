@@ -29,4 +29,7 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
+pdf:
+	@echo "No PDF documentation build available..."
+
 .DEFAULT_GOAL := help
