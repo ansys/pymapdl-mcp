@@ -102,7 +102,7 @@ jobs:
       - name: "Run integration tests"
         uses: ansys/actions/tests-pytest@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.MAIN_PYTHON_VERSION }}
           pytest-markers: '-m "integration"'
         env:
           PYMAPDL_ADDITIONAL_SWITCHES: "-mpi openmpi"
@@ -136,7 +136,7 @@ jobs:
       - name: "Run integration tests"
         uses: ansys/actions/tests-pytest@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.MAIN_PYTHON_VERSION }}
           pytest-markers: '-m "integration"'
         env:
           PYMAPDL_START_INSTANCE: "false"
