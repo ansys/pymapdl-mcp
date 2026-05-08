@@ -34,6 +34,6 @@ pdf:
 	touch $(BUILDDIR)/ansys-mapdl-mcp.pdf
 
 linkcheck:
-	@$(SPHINXBUILD) -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
 
 .DEFAULT_GOAL := help
