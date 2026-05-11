@@ -14,6 +14,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions: {}
+
 env:
   ON_CI: "true"
   MAIN_PYTHON_VERSION: "3.13"
@@ -36,9 +38,11 @@ jobs:
           bot-user: ${{ secrets.PYANSYS_CI_BOT_USERNAME }}
           bot-email: ${{ secrets.PYANSYS_CI_BOT_EMAIL }}
 
-  lint:
+  code-style:
     name: "Code style checks"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Needed to checkout the code
     steps:
       - name: "Run PyAnsys code style checks"
         uses: ansys/actions/code-style@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
@@ -48,6 +52,8 @@ jobs:
   docs-style:
     name: "Documentation style checks"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Needed to checkout the code
     steps:
       - name: "Run Ansys documentation style checks"
         uses: ansys/actions/doc-style@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
@@ -57,6 +63,9 @@ jobs:
   pr-name:
     if: github.event_name == 'pull_request'
     name: "Check the name of the PR"
+    permissions:
+      contents: read
+      pull-requests: read # Needed to read pull request title for checks
     runs-on: ubuntu-latest
     steps:
       - name: Check commit name
@@ -67,6 +76,8 @@ jobs:
   actions-security:
     name: "Actions security"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Needed to checkout and scan workflows
     steps:
       - uses: ansys/actions/check-actions-security@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
@@ -88,7 +99,9 @@ jobs:
   smoke-tests:
     name: "Build and smoke tests"
     runs-on: ${{ matrix.os }}
-    needs: [lint]
+    needs: [code-style]
+    permissions:
+      contents: read # Needed to checkout the code
     strategy:
       fail-fast: false
       matrix:
@@ -139,8 +152,11 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [smoke-tests]
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read # Needed to checkout the code
+      packages: read # Needed to pull the MAPDL container image
     container:
-      image: ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd
+      image: ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd # zizmor: ignore[unpinned-images]
       options: -u=0:0 --oom-kill-disable --memory=6656MB --memory-swap=16896MB --shm-size=1gb --entrypoint /bin/bash
       credentials:
         username: ${{ github.actor }}
@@ -170,6 +186,9 @@ jobs:
     needs: [smoke-tests]
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read # Needed to checkout the code
+      packages: read # Needed to pull the MAPDL container image
     env:
       PYMAPDL_PORT: 21000
       ON_LOCAL: "false"
@@ -201,6 +220,8 @@ jobs:
     name: "Build documentation"
     runs-on: ubuntu-latest
     needs: [docs-style]
+    permissions:
+      contents: read # Needed to checkout the code
     steps:
       - name: "Run Ansys documentation building action"
         uses: ansys/actions/doc-build@73fa84c704bb6691f254cfe4d4b928c338b0d4da # v10.3.0
@@ -248,7 +269,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-docs]
     permissions:
-      contents: write
+      contents: write # Needed to push documentation to gh-pages branch
     steps:
       - name: "Deploy the PR documentation"
         uses: ansys/actions/doc-deploy-pr@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
