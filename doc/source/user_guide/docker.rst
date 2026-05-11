@@ -1,7 +1,7 @@
 Docker deployment
 =================
 
-PyMAPDL-MCP can be deployed as a containerized application using Docker with HTTP
+PyMAPDL-MCP can be deployed as a containerized app using Docker with HTTP
 transport for remote access. The server can connect to either a containerized MAPDL
 instance or a local MAPDL installation.
 
@@ -46,7 +46,7 @@ Docker Compose services
 The ``docker-compose.yml`` defines two services:
 
 - **pymapdl-mcp**: The MCP server with HTTP transport enabled.
-- **mapdl**: An ANSYS MAPDL container (optional — you can connect to a local instance
+- **mapdl**: An ANSYS MAPDL container (optional—you can connect to a local instance
   instead).
 
 To connect to a **local** MAPDL instance instead of the container:

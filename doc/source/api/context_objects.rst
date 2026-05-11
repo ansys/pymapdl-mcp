@@ -6,7 +6,7 @@ This document describes the internal context objects used by PyMAPDL-MCP.
 Application context
 -------------------
 
-The Application Context maintains the state of the PyMAPDL-MCP server.
+The app context maintains the state of the PyMAPDL-MCP server.
 
 **Key attributes**:
 
@@ -18,14 +18,14 @@ The Application Context maintains the state of the PyMAPDL-MCP server.
 
 - Managing the MAPDL connection lifecycle
 - Storing session state
-- Providing access to PyMAPDL functionality
+- Providing access to PyMAPDL features
 
 Tool context
 ------------
 
 Each tool receives a Context object that provides:
 
-- Access to the application context
+- Access to the app context
 - Request/response handling
 - Logging capabilities
 
@@ -96,4 +96,4 @@ API compatibility
 -----------------
 
 The context API is internal to PyMAPDL-MCP and may change without notice.
-Use only the documented tool interfaces in application code.
+Use only the documented tool interfaces in app code.

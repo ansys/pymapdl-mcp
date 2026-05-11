@@ -16,20 +16,20 @@ See :doc:`../user_guide/tools_and_capabilities` for the full breakdown.
 Instance management tools
 --------------------------
 
-launch_mapdl_session
-~~~~~~~~~~~~~~~~~~~~
+``launch_mapdl_session``
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Description**: Launch a new MAPDL instance
+**Description**: launch a new MAPDL instance
 
 **Parameters**:
 
-- ``exec_file`` (str, optional): Path to MAPDL executable. If None, PyMAPDL will auto-detect.
+- ``exec_file`` (str, optional): Path to MAPDL executable. If None, PyMAPDL auto-detects.
 - ``port`` (int, optional): gRPC port for MAPDL. If None, uses default.
-- ``run_location`` (str, optional): Directory where MAPDL will run. If None, uses temporary directory.
+- ``run_location`` (str, optional): Directory where MAPDL runs. If None, uses temporary directory.
 - ``nproc`` (int, optional): Number of processors to use. Default is None (MAPDL decides).
 - ``additional_switches`` (str, optional): Additional command-line switches for MAPDL.
 
-**Returns**: Launch status message with MAPDL version and connection information
+**Returns**: launch status message with MAPDL version and connection information
 
 **Example**:
 
@@ -41,17 +41,17 @@ launch_mapdl_session
         additional_switches="-check"
     )
 
-connect_to_mapdl
-~~~~~~~~~~~~~~~~
+``connect_to_mapdl``
+~~~~~~~~~~~~~~~~~~~~
 
-**Description**: Connect to an existing running MAPDL instance
+**Description**: connect to an existing running MAPDL instance
 
 **Parameters**:
 
 - ``ip`` (str, optional): IP address where MAPDL is running. Default: "localhost"
 - ``port`` (int, optional): gRPC port where MAPDL is listening. Default: 50052
 
-**Returns**: Connection status message with MAPDL version information
+**Returns**: connection status message with MAPDL version information
 
 **Example**:
 
@@ -59,12 +59,12 @@ connect_to_mapdl
 
     result = connect_to_mapdl(ip="localhost", port=50052)
 
-list_mapdl_instances
-~~~~~~~~~~~~~~~~~~~~
+``list_mapdl_instances``
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Description**: List all MAPDL instances running on the local machine
+**Description**: list all MAPDL instances running on the local machine
 
-**Returns**: Formatted table with instance information (name, status, port, IP, PID, directory)
+**Returns**: formatted table with instance information (name, status, port, IP, PID, directory)
 
 **Example**:
 
@@ -72,17 +72,17 @@ list_mapdl_instances
 
     instances = list_mapdl_instances()
 
-check_mapdl_status
-~~~~~~~~~~~~~~~~~~
+``check_mapdl_status``
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
    This tool is only available when connected to MAPDL.
 
-**Description**: Get comprehensive MAPDL status information
+**Description**: get comprehensive MAPDL status information
 
-**Returns**: JSON string containing:
+**Returns**: a JSON string containing:
 
-- connection info (version, port, IP, directory, is_alive)
+- connection info (version, port, IP, directory, ``is_alive``)
 - information (title, jobname, routine, units, etc.)
 - geometry statistics
 - post-processing data
@@ -94,16 +94,16 @@ check_mapdl_status
 
     status = check_mapdl_status()
 
-disconnect_from_mapdl
-~~~~~~~~~~~~~~~~~~~~~
+``disconnect_from_mapdl``
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
-   This tool is only available when connected to MAPDL. It is also disabled when
+   This tool is only available when connected to MAPDL. It is also turned off when
    ``--connect-on-startup`` is used.
 
-**Description**: Disconnect from the currently connected MAPDL instance
+**Description**: disconnect from the currently connected MAPDL instance
 
-**Returns**: Disconnection status message
+**Returns**: disconnection status message
 
 **Example**:
 
@@ -111,12 +111,12 @@ disconnect_from_mapdl
 
     result = disconnect_from_mapdl()
 
-check_mapdl_installed
-~~~~~~~~~~~~~~~~~~~~~
+``check_mapdl_installed``
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Description**: Check if MAPDL is installed on the system
+**Description**: check if MAPDL is installed on the system
 
-**Returns**: Status message indicating installation status
+**Returns**: status message indicating installation status
 
 **Example**:
 
@@ -127,19 +127,20 @@ check_mapdl_installed
 Command execution tools
 -----------------------
 
-run_mapdl_command
-~~~~~~~~~~~~~~~~~
+``run_mapdl_command``
+~~~~~~~~~~~~~~~~~~~~~
+
 
 .. note::
    This tool is only available when connected to MAPDL.
 
-**Description**: Execute a single MAPDL command
+**Description**: execute a single MAPDL command
 
 **Parameters**:
 
 - ``cmd`` (str): The MAPDL command to execute
 
-**Returns**: Command execution result
+**Returns**: command execution result
 
 **Example**:
 
@@ -147,19 +148,19 @@ run_mapdl_command
 
     result = run_mapdl_command("FINISH")
 
-run_multiple_commands
-~~~~~~~~~~~~~~~~~~~~~
+``run_multiple_commands``
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
-   This tool is only available when connected to MAPDL and is disabled on AALI environments.
+   This tool is only available when connected to MAPDL and is turned off on AALI environments.
 
-**Description**: Execute multiple MAPDL commands efficiently using batch mode
+**Description**: execute multiple MAPDL commands efficiently using batch mode
 
 **Parameters**:
 
 - ``commands`` (list[str]): List of MAPDL commands to execute
 
-**Returns**: Execution result with summary of commands executed
+**Returns**: execution result with summary of commands executed
 
 **Example**:
 
@@ -174,20 +175,20 @@ run_multiple_commands
 Python code execution tools
 ----------------------------
 
-run_python_code
-~~~~~~~~~~~~~~~
+``run_python_code``
+~~~~~~~~~~~~~~~~~~
 
 .. note::
    This tool is only available when connected to MAPDL.
 
-**Description**: Execute arbitrary Python code in the persistent session
+**Description**: execute arbitrary Python code in the persistent session
 
 **Parameters**:
 
 - ``code`` (str): Python code to execute
 - ``timeout`` (int, optional): Maximum execution time in seconds. Default: 60
 
-**Returns**: Execution result or error message
+**Returns**: execution result or error message
 
 **Example**:
 
@@ -202,17 +203,17 @@ run_python_code
 Visualization tools
 -------------------
 
-screenshot
-~~~~~~~~~~
+``screenshot``
+~~~~~~~~~~~~~~
 
 .. note::
-   This tool is only available when connected to MAPDL and is disabled on AALI environments.
+   This tool is only available when connected to MAPDL and is turned off on AALI environments.
 
-**Description**: Capture a screenshot of the MAPDL graphics window
+**Description**: capture a screenshot of the MAPDL graphics window
 
-**Returns**: List containing:
+**Returns**: list containing:
 
-- TextContent with screenshot file path
+- TextContent with screenshot path
 - ImageContent with base64-encoded image data
 
 **Example**:
@@ -221,21 +222,21 @@ screenshot
 
     result = screenshot()
 
-custom_plot
-~~~~~~~~~~~
+``custom_plot``
+~~~~~~~~~~~~~~~
 
 .. note::
-   This tool is only available when connected to MAPDL and is disabled on AALI environments.
+   This tool is only available when connected to MAPDL and is turned off on AALI environments.
 
-**Description**: Create a custom matplotlib or PyVista visualization
+**Description**: create a custom ``matplotlib`` or ``pyvista`` visualization
 
 **Parameters**:
 
 - ``plot_code`` (str): Python code to create the plot
-- ``plot_type`` (str, optional): "matplotlib" or "pyvista". Default: "matplotlib"
+- ``plot_type`` (str, optional): ``matplotlib`` or ``pyvista``. Default: ``matplotlib``
 - ``timeout`` (int, optional): Maximum execution time in seconds. Default: 60
 
-**Returns**: List containing:
+**Returns**: list containing:
 
 - TextContent with status message
 - ImageContent with base64-encoded image data
@@ -265,30 +266,30 @@ custom_plot
 Guidelines and documentation tools
 ----------------------------------
 
-get_guidelines_for_workflow_overview
+``get_guidelines_for_workflow_overview``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Description**: get general MAPDL simulation workflow guidelines
+
+**Returns**: overview of the general simulation process
+
+``get_guidelines_for_general_rules``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Description**: Get general MAPDL simulation workflow guidelines
+**Description**: get general rules and best practices for MAPDL workflows
 
-**Returns**: Overview of the general simulation process
+**Returns**: general guidelines for high-quality simulations
 
-get_guidelines_for_general_rules
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``get_guidelines_for``
+~~~~~~~~~~~~~~~~~~~~~~
 
-**Description**: Get general rules and best practices for MAPDL workflows
-
-**Returns**: General guidelines for high-quality simulations
-
-get_guidelines_for
-~~~~~~~~~~~~~~~~~~
-
-**Description**: Get MAPDL simulation guidelines for a specific topic using the unified tool ``get_guidelines_for(content)``.
+**Description**: get MAPDL simulation guidelines for a specific topic using the unified tool ``get_guidelines_for(content)``.
 
 **Parameters**:
 
 - ``content`` (str): One of the following values: ``"workflow"``, ``"geometry"``, ``"elements"``, ``"materials"``, ``"mesh"``, ``"boundary_conditions"``, ``"solution"``, ``"postprocessing"``, ``"general"``.
 
-**Returns**: Guideline text for the requested topic.
+**Returns**: guideline text for the requested topic.
 
 **Example**::
 
@@ -296,34 +297,34 @@ get_guidelines_for
 
 This unified tool replaces the previous per-topic guideline tools (for example, ``get_guidelines_for_preprocessing_mesh``) to reduce the number of registered tools and simplify client usage.
 
-get_guidelines_for_solution_phase
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``get_guidelines_for_solution_phase``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Description**: Get guidelines for the solution phase
+**Description**: get guidelines for the solution phase
 
-**Returns**: Guidelines for configuring and running the solution
+**Returns**: guidelines for configuring and running the solution
 
-get_guidelines_for_postprocessing_phase
+``get_guidelines_for_postprocessing_phase``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Description**: Get guidelines for postprocessing results
+**Description**: get guidelines for postprocessing results
 
-**Returns**: Guidelines for extracting and visualizing results
+**Returns**: guidelines for extracting and visualizing results
 
 Tool return values
 ------------------
 
 Most tools return structured information:
 
-**Success**: Text describing the result or status
+**Success**: text describing the result or status
 
-**Error**: Detailed error message including:
+**Error**: detailed error message including:
 
 - Error type
 - Description of what went wrong
 - Suggested corrective action
 
-**Data**: Structured data (JSON, arrays, etc.) depending on the tool
+**Data**: structured data (JSON, arrays, etc.) depending on the tool
 
 Error handling
 --------------

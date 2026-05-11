@@ -15,7 +15,7 @@ Key features:
 - **Dynamic connection management**: Launch new MAPDL instances, connect to existing ones, or disconnect on demand
 - **Execute MAPDL commands**: Run single commands or batch multiple commands for efficiency
 - **Custom Python execution**: Run arbitrary Python and PyMAPDL code in a persistent session
-- **Advanced visualization**: Create custom matplotlib and PyVista plots, or capture MAPDL native plots
+- **Advanced visualization**: Create custom ``matplotlib`` and ``pyvista`` plots, or capture MAPDL native plots
 - **Workflow guidance**: Access comprehensive context and best practices for all phases of MAPDL simulations
 - **Flexible deployment**: Works with MAPDL running locally, remotely, or in Docker containers
 

@@ -35,7 +35,7 @@ is itself built on top of FastMCP. The server lifecycle has three phases:
 Application context
 -------------------
 
-The server uses a strongly-typed ``PyMAPDLAppContext`` dataclass that holds:
+The server uses a strongly typed ``PyMAPDLAppContext`` dataclass that holds:
 
 - The active MAPDL instance connection.
 - The persistent Python session for custom code execution.
@@ -268,7 +268,7 @@ To add a new MCP tool to PyMAPDL-MCP:
 Conditionally enabling or disabling a tool
 ------------------------------------------
 
-Tools can be tagged so they are selectively disabled at runtime. Apply a tag via the
+Tools can be tagged so they are selectively turned off at runtime. Apply a tag via the
 ``@app.tool()`` decorator, then call ``app.disable()`` with that tag when the condition
 applies (for example, when ``--connect-on-startup`` locks the connection):
 
@@ -361,7 +361,7 @@ When your feature is ready:
 1. Ensure all tests pass: ``pytest -m "not integration"``
 2. Ensure code quality: ``pre-commit run --all-files``
 3. Update relevant documentation
-4. Add tests for new functionality (>80% coverage)
+4. Add tests for new features (>80% coverage)
 5. Create a Pull Request with:
 
    - Clear description of changes
@@ -373,7 +373,7 @@ Pull request guidelines
 =======================
 
 - Keep PRs focused on a single feature or fix
-- Include tests for new functionality
+- Include tests for new features
 - Update documentation as needed
 - Respond to review feedback
 - Keep the PR up-to-date with main branch

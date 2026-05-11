@@ -28,7 +28,7 @@ html_short_title = html_title = "PyMAPDL MCP"
 # Favicon
 html_favicon = ansys_favicon
 
-# specify the location of your github repo
+# specify the location of your github repository
 html_theme_options = {
     "github_url": f"https://github.com/{USERNAME}/{REPOSITORY_NAME}",
     "show_prev_next": False,

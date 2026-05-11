@@ -396,7 +396,7 @@ Documentation contributors are recognized in:
 - Release notes
 - Contributors file
 
-Thank you for improving PyMAPDL-MCP documentation!
+Thank you for improving PyMAPDL-MCP documentation.
 
 See also
 ========

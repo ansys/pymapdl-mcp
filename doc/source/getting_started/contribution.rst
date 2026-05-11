@@ -62,7 +62,7 @@ When possible, use these issue templates:
 * **🐞 Bug, problem, or error**: Fill a bug report here
 * **📖 Documentation issue**: Modifications to the documentation only
 * **🆕 New tool or feature**: Proposing a new MCP tool or feature for the library
-* **💡 Enhancement**: Suggestions for improving existing functionality
+* **💡 Enhancement**: Suggestions for improving existing features
 
 
 If your issue does not fit into one of these categories, click

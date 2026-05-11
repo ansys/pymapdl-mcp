@@ -45,7 +45,7 @@ Visualization
     Take screenshots after geometry definition, meshing, and solving to verify progress.
 
 **Custom plots for analysis**
-    Use custom matplotlib plots for detailed analysis beyond MAPDL's built-in capabilities.
+    Use custom ``matplotlib`` plots for detailed analysis beyond MAPDL's built-in capabilities.
 
 **Export for documentation**
     Save high-quality plots for reports and documentation.

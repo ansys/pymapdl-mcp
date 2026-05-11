@@ -67,15 +67,15 @@ Here's a minimal tool structure:
 Key components
 ~~~~~~~~~~~~~~
 
-**Documentation string**: Describe what the tool does
+**Documentation string**: describe what the tool does
 
-**Context parameter**: Access to MAPDL and application state
+**Context parameter**: access to MAPDL and app state
 
-**Input parameters**: Specific parameters for this tool
+**Input parameters**: specific parameters for this tool
 
-**Error handling**: Graceful handling of errors
+**Error handling**: graceful handling of errors
 
-**Return value**: Status message or results
+**Return value**: status message or results
 
 Tool registration
 -----------------
@@ -239,13 +239,13 @@ Use these techniques to debug your tools:
 Advanced topics
 ---------------
 
-**Async tools**: For long-running operations, consider async implementations
+**Async tools**: for long-running operations, consider async implementations
 
-**Streaming results**: For tools producing large outputs, stream results
+**Streaming results**: for tools producing large outputs, stream results
 
-**Caching**: Cache expensive computations when appropriate
+**Caching**: cache expensive computations when appropriate
 
-**Tool composition**: Combine multiple tools into workflows
+**Tool composition**: combine multiple tools into workflows
 
 See also
 --------

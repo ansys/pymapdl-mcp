@@ -1,2 +1,35 @@
 Ansys
 ansys
+Anthropic's
+[Aa]sync
+[Cc]onfig
+dataclass
+[Dd]ev
+[Dd]ocker
+[Cc]ompose
+Claude Code
+Claude Desktop
+[Dd]ocstring
+[Dd]ocstrings
+GitHub
+HAProxy
+hostname
+isort
+(i?)HTTP
+(i?)jobname
+(i?)mapdl
+MAPDL
+MAPDL's
+(i?)MCP
+Model Context Protocol
+[Nn]ginx
+postprocessing
+PyMAPDL
+Python
+PyVista
+(i?)RST
+toctree
+[Uu]nescaped
+uv
+uvx
+VS Code

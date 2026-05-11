@@ -6,7 +6,7 @@ PyMAPDL-MCP can be integrated with multiple MCP-compatible tools. This guide cov
 Claude Code
 -----------
 
-Claude Code is Anthropic's code editor with built-in MCP support. You can add PyMAPDL-MCP using the CLI.
+Claude Code is Anthropic's code editor with built-in MCP support. You can add PyMAPDL-MCP using the command-line tool.
 
 Project-level setup (recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -45,7 +45,7 @@ Configure PyMAPDL-MCP for all your Claude Code projects:
 - No manual configuration files to manage
 - Full MCP protocol support
 
-**Documentation**: `Claude Code MCP Installation <https://code.claude.com/docs/en/mcp#installing-mcp-servers>`_
+**Documentation**: see `Claude Code MCP Installation <https://code.claude.com/docs/en/mcp#installing-mcp-servers>`_
 
 VS Code
 -------
@@ -104,9 +104,8 @@ For development or testing with local source code:
 - Ideal for development and testing
 - Requires `pip install -e .` in your `.venv`
 
-Alternative: using `uv`
-^^^^^^^^^^^^^^^^^^^^^^^
-
+Alternative: Using ``uv``
+^^^^^^^^^^^^^^^^^^^^^^^^^
 If you prefer using the `uv` package manager:
 
 .. code-block:: json
@@ -137,7 +136,7 @@ For remote access or web-based clients:
      }
    }
 
-**Important**: With HTTP transport, you must start the server separately in a terminal:
+**Important**: with HTTP transport, you must start the server separately in a terminal:
 
 .. code-block:: bash
 
@@ -169,12 +168,12 @@ Configuration locations
 - **Global**: VS Code user settings (auto-discovered)
 - **Workspace**: `.vscode/mcp.json` (workspace-specific)
 
-**Documentation**: `VS Code MCP Servers <https://code.visualstudio.com/docs/copilot/customization/mcp-servers>`_
+**Documentation**: see `VS Code MCP Servers <https://code.visualstudio.com/docs/copilot/customization/mcp-servers>`_
 
 Claude Desktop
 --------------
 
-Claude Desktop is Anthropic's macOS desktop application with full MCP support.
+Claude Desktop is Anthropic's macOS desktop app with full MCP support.
 
 Configuration
 ~~~~~~~~~~~~~
@@ -204,7 +203,7 @@ Edit the file `~/Library/Application Support/Claude/claude_desktop_config.json`:
 - STDIO transport (default)
 - Full MCP tool discovery
 
-**Documentation**: `Claude Desktop MCP Configuration <https://modelcontextprotocol.io/docs/develop/build-server#testing-your-server-with-claude-for-desktop>`_
+**Documentation**: see `Claude Desktop MCP Configuration <https://modelcontextprotocol.io/docs/develop/build-server#testing-your-server-with-claude-for-desktop>`_
 
 General MCP clients
 -------------------
@@ -240,7 +239,7 @@ For remote clients or web-based clients:
    # Configure your client to connect to
    # http://[server-ip]:8080
 
-Comparison: Claude Code vs VS Code
+Comparison: Claude Code and VS Code
 -----------------------------------
 
 .. list-table::
@@ -250,13 +249,13 @@ Comparison: Claude Code vs VS Code
      - Claude Code
      - VS Code
    * - Configuration Method
-     - CLI command (``claude mcp add``)
+     - command-line command (``claude mcp add``)
      - JSON file (``.vscode/mcp.json``)
    * - Setup Level
      - Project or global (``--scope user``)
      - Project-level only
    * - Manual Config
-     - None (auto-managed by CLI)
+     - None (auto-managed by command-line tool)
      - Manual JSON editing required
    * - Transport Support
      - STDIO (default)
@@ -266,9 +265,9 @@ Comparison: Claude Code vs VS Code
      - Requires Copilot extension
    * - Team Sharing
      - Via project config files
-     - Via ``.vscode/mcp.json`` in repo
+     - Via ``.vscode/mcp.json`` in repository
    * - Learning Curve
-     - Low (CLI-based)
+     - Low (command-line tool)
      - Medium (JSON configuration)
 
 Advanced configuration

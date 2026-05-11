@@ -19,7 +19,7 @@ PyMAPDL-MCP works with multiple MCP-compatible clients. See :doc:`ide_configurat
 
 - **Claude Code** (recommended for AI-assisted development)
 - **VS Code with Copilot** (for VS Code users)
-- **Claude Desktop** (macOS application)
+- **Claude Desktop** (macOS app)
 - Other MCP-compatible clients
 
 Transport options
@@ -106,7 +106,7 @@ These options work with both STDIO and HTTP transports.
 .. warning::
    When ``--connect-on-startup`` is used, the connection is locked. The
    ``launch_mapdl_session``, ``connect_to_mapdl``, and ``disconnect_from_mapdl``
-   tools are disabled.
+   tools are turned off.
 
 HTTP-specific options
 ~~~~~~~~~~~~~~~~~~~~~
@@ -119,7 +119,7 @@ Special environment options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - ``--on-aali``: Specifies that the server is running on an AALI environment.
-  This disables tools that are not compatible with AALI.
+  This turns off tools that are not compatible with AALI.
 
 Basic workflow
 --------------
@@ -129,7 +129,7 @@ Starting a MAPDL instance
 
 There are three ways to connect to MAPDL once the MCP server is running.
 
-**Option 1 — Launch a new MAPDL instance (recommended)**
+**Option 1: launch a new MAPDL instance (recommended)**
 
 Ask your AI assistant to use the ``launch_mapdl_session`` tool:
 
@@ -141,7 +141,7 @@ This starts a new MAPDL process and connects to it automatically. It lets you
 specify custom settings (number of processors, working directory, etc.) without
 any manual setup.
 
-**Option 2 — Connect to an existing instance**
+**Option 2: connect to an existing instance**
 
 Ask your AI assistant to use the ``connect_to_mapdl`` tool:
 
@@ -153,7 +153,7 @@ You can first ask it to run ``list_mapdl_instances`` to discover what is running
 This option is useful for connecting to different instances during a session or
 when MAPDL is already running on a remote machine.
 
-**Option 3 — Auto-connect on server startup**
+**Option 3: auto-connect on server startup**
 
 Pass ``--connect-on-startup`` when starting the MCP server:
 
@@ -164,7 +164,7 @@ Pass ``--connect-on-startup`` when starting the MCP server:
 .. warning::
    When ``--connect-on-startup`` is used, the connection is locked. The
    ``launch_mapdl_session``, ``connect_to_mapdl``, and ``disconnect_from_mapdl``
-   tools are disabled.
+   tools are turned off.
 
 Running commands and extracting results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
