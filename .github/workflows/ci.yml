@@ -285,7 +285,7 @@ jobs:
   release:
     name: "Release project to GitHub"
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags')
-    needs: [package, update-changelog]
+    needs: [package, build-docs, update-changelog]
     runs-on: ubuntu-latest
     # Specifying a GitHub environment is optional, but strongly encouraged
     environment: release
@@ -304,7 +304,7 @@ jobs:
   release-pypi:
     name: "Release project to PyPI"
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags')
-    needs: [package, update-changelog]
+    needs: [package, build-docs, update-changelog]
     runs-on: ubuntu-latest
     # Specifying a GitHub environment is optional, but strongly encouraged
     environment: release
