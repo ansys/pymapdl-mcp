@@ -23,8 +23,16 @@ use APDL code or for plotting MAPDL/PyMAPDL plots.
 
 """
 
-__version__ = "0.1.0"
+# Version
+# ------------------------------------------------------------------------------
 
+import importlib.metadata as importlib_metadata
+
+__version__ = importlib_metadata.version(__name__.replace(".", "-"))
+"""PyMAPDL MCP version."""
+
+# Ease import statements
+# ------------------------------------------------------------------------------
 
 from ansys.mapdl.mcp.server import (
     app,
