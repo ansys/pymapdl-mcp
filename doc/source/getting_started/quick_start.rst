@@ -1,4 +1,4 @@
-Quick Start
+Quick start
 ===========
 
 Launching PyMAPDL-MCP
@@ -10,10 +10,10 @@ The simplest way to start the MCP server is:
 
    ansys-mapdl-mcp
 
-This will launch the server using the default STDIO transport and wait for connections from MCP clients.
+This launches the server using the default STDIO transport and waits for connections from MCP clients.
 
-Configuring Your IDE or Client
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Configuring your IDE or client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PyMAPDL-MCP works with multiple MCP-compatible clients. See :doc:`ide_configuration` for detailed setup instructions for:
 
@@ -22,12 +22,12 @@ PyMAPDL-MCP works with multiple MCP-compatible clients. See :doc:`ide_configurat
 - **Claude Desktop** (macOS application)
 - Other MCP-compatible clients
 
-Transport Options
+Transport options
 -----------------
 
 PyMAPDL-MCP supports two transport protocols.
 
-STDIO Transport (Default)
+STDIO transport (default)
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 STDIO transport is the default and recommended for local MCP client integration.
@@ -40,7 +40,7 @@ Start with STDIO explicitly:
 
    python -m ansys.mapdl.mcp --transport stdio
 
-HTTP Transport
+HTTP transport
 ~~~~~~~~~~~~~~
 
 HTTP transport enables remote access over HTTP with Server-Sent Events (SSE), allowing
@@ -81,16 +81,16 @@ Then configure your MCP client to connect to the HTTP URL, for example in
    HTTP transport is not encrypted. Use only in trusted networks or behind a
    reverse proxy (for example, Nginx or HAProxy) that provides TLS/SSL.
 
-Command-Line Reference
+Command-line reference
 ----------------------
 
-Transport Options
+Transport options
 ~~~~~~~~~~~~~~~~~
 
 - ``--transport {stdio,http}``: Transport type. Default: ``stdio``
 
-MAPDL Connection Options
-~~~~~~~~~~~~~~~~~~~~~~~~~
+MAPDL connection options
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 These options work with both STDIO and HTTP transports.
 
@@ -108,24 +108,24 @@ These options work with both STDIO and HTTP transports.
    ``launch_mapdl_session``, ``connect_to_mapdl``, and ``disconnect_from_mapdl``
    tools are disabled.
 
-HTTP-Specific Options
+HTTP-specific options
 ~~~~~~~~~~~~~~~~~~~~~
 
 - ``--http-host``: HTTP server host address. Default: ``127.0.0.1``
 - ``--http-port``: HTTP server port. Default: ``8080`` (range: 1-65535)
 - ``--cors-origins``: Comma-separated list of allowed CORS origins (optional)
 
-Special Environment Options
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Special environment options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - ``--on-aali``: Specifies that the server is running on an AALI environment.
   This disables tools that are not compatible with AALI.
 
-Basic Workflow
+Basic workflow
 --------------
 
-Starting a MAPDL Instance
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Starting a MAPDL instance
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are three ways to connect to MAPDL once the MCP server is running.
 
@@ -166,7 +166,7 @@ Pass ``--connect-on-startup`` when starting the MCP server:
    ``launch_mapdl_session``, ``connect_to_mapdl``, and ``disconnect_from_mapdl``
    tools are disabled.
 
-Running Commands and Extracting Results
+Running commands and extracting results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once MAPDL is connected, you can use MCP tools to:
@@ -176,7 +176,7 @@ Once MAPDL is connected, you can use MCP tools to:
 3. **Visualize**: Generate plots and screenshots
 4. **Control**: Manage the MAPDL session lifecycle
 
-Example Use Cases
+Example use cases
 ~~~~~~~~~~~~~~~~~
 
 - Running parametric studies with AI guidance
@@ -184,7 +184,7 @@ Example Use Cases
 - Generating documentation from simulations
 - Debugging MAPDL scripts with AI assistance
 
-Next Steps
+Next steps
 ----------
 
 For more detailed information:

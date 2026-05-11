@@ -1,14 +1,14 @@
-Context Objects
+Context objects
 ================
 
 This document describes the internal context objects used by PyMAPDL-MCP.
 
-Application Context
+Application context
 -------------------
 
 The Application Context maintains the state of the PyMAPDL-MCP server.
 
-**Key Attributes**:
+**Key attributes**:
 
 - ``mapdl``: The current PyMAPDL instance (if connected)
 - ``config``: Configuration settings
@@ -20,7 +20,7 @@ The Application Context maintains the state of the PyMAPDL-MCP server.
 - Storing session state
 - Providing access to PyMAPDL functionality
 
-Tool Context
+Tool context
 ------------
 
 Each tool receives a Context object that provides:
@@ -29,7 +29,7 @@ Each tool receives a Context object that provides:
 - Request/response handling
 - Logging capabilities
 
-**Usage in Tools**:
+**Usage in tools**:
 
 .. code-block:: python
 
@@ -42,10 +42,10 @@ Each tool receives a Context object that provides:
 
         return f"Result: {result}"
 
-Connection Management
+Connection management
 ---------------------
 
-Connection State
+Connection state
 ~~~~~~~~~~~~~~~~
 
 The server maintains connection state through the Application Context:
@@ -54,7 +54,7 @@ The server maintains connection state through the Application Context:
 - **Disconnected**: No active connection
 - **Error**: Last connection attempt failed
 
-Connection Lifecycle
+Connection lifecycle
 ~~~~~~~~~~~~~~~~~~~~
 
 1. **Initialize**: Server starts with no connection
@@ -63,7 +63,7 @@ Connection Lifecycle
 4. **Disconnect**: ``disconnect_from_mapdl`` closes connection
 5. **Reset**: Context cleared for new connection
 
-Error Handling in Contexts
+Error handling in contexts
 --------------------------
 
 Errors during context operations:
@@ -73,7 +73,7 @@ Errors during context operations:
 - Do not crash the server
 - Allow for graceful recovery
 
-Session Isolation
+Session isolation
 -----------------
 
 Each client connection:
@@ -83,7 +83,7 @@ Each client connection:
 - Gets independent access to MAPDL
 - Maintains separate state
 
-Implementation Details
+Implementation details
 ----------------------
 
 See the source code for detailed implementation:
@@ -92,8 +92,8 @@ See the source code for detailed implementation:
 - ``ansys.mapdl.mcp.server``: Server and context management
 - ``ansys.mapdl.mcp.helpers``: Context helper functions
 
-API Compatibility
+API compatibility
 -----------------
 
 The context API is internal to PyMAPDL-MCP and may change without notice.
-Application code should use only the documented tool interfaces.
+Use only the documented tool interfaces in application code.

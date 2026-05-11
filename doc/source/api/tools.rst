@@ -1,9 +1,9 @@
-Tools Reference
+Tools reference
 ================
 
 This document provides complete reference documentation for all PyMAPDL-MCP tools.
 
-Tool Availability
+Tool availability
 -----------------
 
 PyMAPDL-MCP dynamically enables and disables tools based on the MAPDL connection state.
@@ -13,7 +13,7 @@ again when ``disconnect_from_mapdl`` is called.
 
 See :doc:`../user_guide/tools_and_capabilities` for the full breakdown.
 
-Instance Management Tools
+Instance management tools
 --------------------------
 
 launch_mapdl_session
@@ -124,7 +124,7 @@ check_mapdl_installed
 
     status = check_mapdl_installed()
 
-Command Execution Tools
+Command execution tools
 -----------------------
 
 run_mapdl_command
@@ -171,7 +171,7 @@ run_multiple_commands
         "ET,1,SOLID185"
     ])
 
-Python Code Execution Tools
+Python code execution tools
 ----------------------------
 
 run_python_code
@@ -199,7 +199,7 @@ run_python_code
     '''
     result = run_python_code(code)
 
-Visualization Tools
+Visualization tools
 -------------------
 
 screenshot
@@ -262,7 +262,7 @@ custom_plot
     '''
     result = custom_plot(plot_code, plot_type="matplotlib")
 
-Guidelines and Documentation Tools
+Guidelines and documentation tools
 ----------------------------------
 
 get_guidelines_for_workflow_overview
@@ -294,7 +294,7 @@ get_guidelines_for
 
     result = get_guidelines_for(content="mesh")
 
-This unified tool replaces the previous per-topic guideline tools (e.g. ``get_guidelines_for_preprocessing_mesh``) to reduce the number of registered tools and simplify client usage.
+This unified tool replaces the previous per-topic guideline tools (for example, ``get_guidelines_for_preprocessing_mesh``) to reduce the number of registered tools and simplify client usage.
 
 get_guidelines_for_solution_phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -310,7 +310,7 @@ get_guidelines_for_postprocessing_phase
 
 **Returns**: Guidelines for extracting and visualizing results
 
-Tool Return Values
+Tool return values
 ------------------
 
 Most tools return structured information:
@@ -325,7 +325,7 @@ Most tools return structured information:
 
 **Data**: Structured data (JSON, arrays, etc.) depending on the tool
 
-Error Handling
+Error handling
 --------------
 
 Always check tool results for errors:
@@ -339,7 +339,7 @@ Always check tool results for errors:
     else:
         print("Command succeeded:", result)
 
-See Also
+See also
 --------
 
 - :doc:`../user_guide/tools_and_capabilities` for conceptual overview

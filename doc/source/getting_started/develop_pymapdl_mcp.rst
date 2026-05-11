@@ -32,7 +32,7 @@ is itself built on top of FastMCP. The server lifecycle has three phases:
 - Gracefully disconnects from MAPDL.
 - Cleans up the persistent Python session resources.
 
-Application Context
+Application context
 -------------------
 
 The server uses a strongly-typed ``PyMAPDLAppContext`` dataclass that holds:
@@ -53,7 +53,7 @@ Before you begin, ensure you have:
 - A text editor or IDE (VS Code, PyCharm, etc.)
 - A GitHub account
 
-Cloning the Repository
+Cloning the repository
 ======================
 
 1. Fork the repository on GitHub
@@ -70,7 +70,7 @@ Cloning the Repository
 
    git remote add upstream https://github.com/ansys/pymapdl-mcp.git
 
-Setting Up Your Development Environment
+Setting up your development environment
 ========================================
 
 1. Create a virtual environment:
@@ -107,7 +107,7 @@ Setting Up Your Development Environment
 
 This ensures code quality checks run automatically before each commit.
 
-Project Structure
+Project structure
 =================
 
 .. code-block::
@@ -129,7 +129,7 @@ Project Structure
    ├── pyproject.toml               # Project metadata
    └── README.md                    # Main README
 
-Development Workflow
+Development workflow
 ====================
 
 1. **Create a feature branch:**
@@ -184,19 +184,19 @@ Development Workflow
    - Fill in the PR description
    - Submit the PR
 
-Code Conventions
+Code conventions
 ================
 
 Follow these conventions when contributing:
 
-**Branch Naming:**
+**Branch naming:**
 
 - Features: ``feature/short-description``
 - Fixes: ``fix/short-description``
 - Documentation: ``doc/short-description``
 - Tests: ``test/short-description``
 
-**Commit Messages:**
+**Commit messages:**
 
 Use conventional commits format:
 
@@ -209,7 +209,7 @@ Use conventional commits format:
    refactor: Simplify tool implementation
    chore: Update dependencies
 
-**Code Style:**
+**Code style:**
 
 - Follow PEP 8 and the `Coding style <https://dev.docs.pyansys.com/coding-style/index.html>`_
 - Use type hints for all functions
@@ -217,7 +217,7 @@ Use conventional commits format:
 - Maximum line length: 100 characters
 - Format code with Black and isort (run automatically via pre-commit)
 
-Adding a New Tool
+Adding a new tool
 =================
 
 To add a new MCP tool to PyMAPDL-MCP:
@@ -265,7 +265,7 @@ To add a new MCP tool to PyMAPDL-MCP:
 
 5. **Add usage example** if appropriate in ``doc/source/examples/``
 
-Conditionally Enabling or Disabling a Tool
+Conditionally enabling or disabling a tool
 ------------------------------------------
 
 Tools can be tagged so they are selectively disabled at runtime. Apply a tag via the
@@ -282,7 +282,7 @@ applies (for example, when ``--connect-on-startup`` locks the connection):
    # Disable all tools with this tag when the connection is locked
    app.disable(tags={"locked_connection"})
 
-Adding Documentation
+Adding documentation
 ====================
 
 To add or modify documentation:
@@ -303,7 +303,7 @@ To add or modify documentation:
 
 4. **Commit changes** to documentation files
 
-Running Tests
+Running tests
 =============
 
 PyMAPDL-MCP includes a comprehensive test suite with 40+ tests.
@@ -332,7 +332,7 @@ PyMAPDL-MCP includes a comprehensive test suite with 40+ tests.
 
    pytest -m integration
 
-Test Coverage Goal
+Test coverage goal
 ------------------
 
 Aim for >80% test coverage on new code:
@@ -343,7 +343,7 @@ Aim for >80% test coverage on new code:
    pytest --cov=ansys.mapdl.mcp --cov-report=html
    # Open htmlcov/index.html to view
 
-Getting Help
+Getting help
 ============
 
 If you need help during development:
@@ -353,7 +353,7 @@ If you need help during development:
 3. **Review the PyAnsys Developer's Guide** at `PyAnsys Dev Guide <https://dev.docs.pyansys.com/>`_
 4. **Check PyMAPDL documentation** at `PyMAPDL Docs <https://mapdl.docs.pyansys.com/>`_
 
-Submitting Your Work
+Submitting your work
 ====================
 
 When your feature is ready:
@@ -369,7 +369,7 @@ When your feature is ready:
    - List of changes made
    - Any breaking changes noted
 
-Pull Request Guidelines
+Pull request guidelines
 =======================
 
 - Keep PRs focused on a single feature or fix
@@ -390,7 +390,7 @@ Contributors are recognized in:
 
 Thank you for contributing to PyMAPDL-MCP!
 
-See Also
+See also
 ========
 
 - :ref:`ref_contributing` - General contribution guidelines

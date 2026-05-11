@@ -1,13 +1,13 @@
 .. _ref_write_documentation:
 
-====================
-Write Documentation
-====================
+===================
+Write documentation
+===================
 
 Contributing documentation is a valuable way to improve PyMAPDL-MCP for everyone.
 This guide explains how to write, build, and submit documentation changes.
 
-Why Document?
+Why document?
 =============
 
 Good documentation:
@@ -18,18 +18,18 @@ Good documentation:
 - Creates opportunities for learning
 - Builds community engagement
 
-Types of Documentation
+Types of documentation
 ======================
 
-**API Documentation**
+**API documentation**
     Detailed reference for MCP tools, parameters, return values, and examples.
     Located in ``doc/source/api/``.
 
-**User Guides**
+**User guides**
     How-to guides, tutorials, and best practices.
     Located in ``doc/source/user_guide/``.
 
-**Getting Started**
+**Getting started**
     Installation, quick start, and initial setup guides.
     Located in ``doc/source/getting_started/``.
 
@@ -37,16 +37,16 @@ Types of Documentation
     Practical usage examples and tutorials.
     Located in ``doc/source/examples/``.
 
-**API Docstrings**
+**API docstrings**
     In-code documentation of functions and classes.
     Located in ``src/ansys/mapdl/mcp/``.
 
-Documentation Format
+Documentation format
 ====================
 
 PyMAPDL-MCP documentation uses reStructuredText (RST) format with Sphinx.
 
-Basic RST Syntax
+Basic RST syntax
 ~~~~~~~~~~~~~~~~
 
 .. code-block:: rst
@@ -80,7 +80,7 @@ Basic RST Syntax
        :align: center
        :alt: Alternative text
 
-Cross-References
+Cross-references
 ~~~~~~~~~~~~~~~~
 
 Link to other documentation pages:
@@ -90,7 +90,7 @@ Link to other documentation pages:
    See :doc:`../user_guide/overview` for more information.
    Check :ref:`ref_contributing` for contribution guidelines.
 
-Setting Up Documentation Locally
+Setting up documentation locally
 ================================
 
 1. **Install documentation dependencies:**
@@ -116,7 +116,7 @@ Setting Up Documentation Locally
 
    Open ``_build/html/index.html``
 
-Editing Documentation
+Editing documentation
 =====================
 
 **Edit existing pages:**
@@ -143,10 +143,10 @@ Editing Documentation
 
 4. Build and review: ``make html``
 
-Writing Good Documentation
+Writing good documentation
 ==========================
 
-**Be Clear and Concise**
+**Be clear and concise**
 
 .. code-block:: rst
 
@@ -168,20 +168,20 @@ Include practical code examples:
       # Launch MAPDL with 4 processors
       mapdl = launch_mapdl_session(nproc=4)
 
-**Explain Why, Not Just How**
+**Explain why, not just how**
 
 .. code-block:: rst
 
    Use ``run_multiple_commands`` instead of individual commands
    for better performance, as batch execution is significantly faster.
 
-**Structure Logically**
+**Structure logically**
 
 - Start with overview
 - Progress to specific details
 - End with examples or next steps
 
-**Add Cross-References**
+**Add cross-references**
 
 .. code-block:: rst
 
@@ -231,7 +231,7 @@ Add comprehensive docstrings to functions using NumPy style:
        # Implementation here
        pass
 
-Building Documentation
+Building documentation
 ======================
 
 **Clean build (remove old build files):**
@@ -251,8 +251,8 @@ Building Documentation
    # The build output shows warnings and errors
    # Address any RST syntax errors before committing
 
-Documentation Testing
-======================
+Documentation testing
+=====================
 
 Test that your documentation builds without warnings:
 
@@ -263,8 +263,8 @@ Test that your documentation builds without warnings:
 
 The ``-W`` flag treats warnings as errors (useful for CI).
 
-Checking Documentation Quality
-===============================
+Checking documentation quality
+==============================
 
 Before submitting:
 
@@ -275,17 +275,17 @@ Before submitting:
 5. **Accurate information:** Verify all examples work
 6. **Consistent style:** Match existing documentation style
 
-Common Documentation Issues
-============================
+Common documentation issues
+===========================
 
-**Broken Cross-Reference**
+**Broken cross-reference**
 
 .. code-block:: rst
 
    ✗ :doc:`../non_existent_page`
    ✓ :doc:`../user_guide/overview`
 
-**Indentation in Code Blocks**
+**Indentation in code blocks**
 
 .. code-block:: rst
 
@@ -300,14 +300,14 @@ Common Documentation Issues
       def example():
           pass
 
-**Unescaped Special Characters**
+**Unescaped special characters**
 
 .. code-block:: rst
 
    ✗ Use \* for multiplication
    ✓ Use ``*`` for multiplication
 
-Submitting Documentation Changes
+Submitting documentation changes
 ================================
 
 1. **Make your changes** to RST files
@@ -327,7 +327,7 @@ Submitting Documentation Changes
    - Screenshots if visual changes
    - Link to any related issues
 
-Documentation Template
+Documentation template
 ======================
 
 For new pages, use this template:
@@ -398,7 +398,7 @@ Documentation contributors are recognized in:
 
 Thank you for improving PyMAPDL-MCP documentation!
 
-See Also
+See also
 ========
 
 - :ref:`ref_contributing` - General contribution guidelines

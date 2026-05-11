@@ -1,4 +1,4 @@
-IDE and Client Configuration
+IDE and client configuration
 =============================
 
 PyMAPDL-MCP can be integrated with multiple MCP-compatible tools. This guide covers configuration for the most popular clients.
@@ -8,7 +8,7 @@ Claude Code
 
 Claude Code is Anthropic's code editor with built-in MCP support. You can add PyMAPDL-MCP using the CLI.
 
-Project-Level Setup (Recommended)
+Project-level setup (recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Configure PyMAPDL-MCP for a specific project:
@@ -24,7 +24,7 @@ Configure PyMAPDL-MCP for a specific project:
 - Easy to maintain different configurations per project
 - Recommended for collaborative teams
 
-Global User Setup
+Global user setup
 ~~~~~~~~~~~~~~~~~
 
 Configure PyMAPDL-MCP for all your Claude Code projects:
@@ -39,7 +39,7 @@ Configure PyMAPDL-MCP for all your Claude Code projects:
 - Persistent across different workspaces
 - Better for personal development workflows
 
-**Key Features**:
+**Key features**:
 - STDIO transport by default (local integration)
 - Automatic fetching from GitHub using `uvx`
 - No manual configuration files to manage
@@ -52,7 +52,7 @@ VS Code
 
 VS Code integrates MCP servers through the Copilot extension using a JSON configuration file.
 
-Quick Start from GitHub
+Quick start from GitHub
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Add this to `.vscode/mcp.json` in your project directory:
@@ -78,7 +78,7 @@ This configuration:
 - Fetches the latest version from GitHub
 - Requires `uvx` to be installed on your system
 
-Local Development Setup
+Local development setup
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 For development or testing with local source code:
@@ -104,7 +104,7 @@ For development or testing with local source code:
 - Ideal for development and testing
 - Requires `pip install -e .` in your `.venv`
 
-Alternative: Using `uv`
+Alternative: using `uv`
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 If you prefer using the `uv` package manager:
@@ -121,8 +121,8 @@ If you prefer using the `uv` package manager:
      }
    }
 
-HTTP Transport Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+HTTP transport configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For remote access or web-based clients:
 
@@ -162,7 +162,7 @@ Enabling MCP in VS Code
    :alt: VS Code setting to enable MCP servers
    :align: center
 
-Configuration Locations
+Configuration locations
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 - **Project-level**: `.vscode/mcp.json` (repository root)
@@ -206,12 +206,12 @@ Edit the file `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 **Documentation**: `Claude Desktop MCP Configuration <https://modelcontextprotocol.io/docs/develop/build-server#testing-your-server-with-claude-for-desktop>`_
 
-General MCP Clients
+General MCP clients
 -------------------
 
 Any MCP-compatible client can use PyMAPDL-MCP. The basic requirement is STDIO or HTTP transport support.
 
-STDIO Transport (Recommended)
+STDIO transport (recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For local clients on the same machine:
@@ -227,7 +227,7 @@ Or using `uvx`:
 
    uvx --from git+https://github.com/ansys/pymapdl-mcp ansys-mapdl-mcp
 
-HTTP Transport
+HTTP transport
 ~~~~~~~~~~~~~~
 
 For remote clients or web-based clients:
@@ -271,10 +271,10 @@ Comparison: Claude Code vs VS Code
      - Low (CLI-based)
      - Medium (JSON configuration)
 
-Advanced Configuration
+Advanced configuration
 ----------------------
 
-Remote MAPDL Connection
+Remote MAPDL connection
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Both VS Code and Claude Code support connecting to remote MAPDL instances.
@@ -308,7 +308,7 @@ Both VS Code and Claude Code support connecting to remote MAPDL instances.
      --ip 192.168.1.100 \
      --port 50053
 
-Debug Logging
+Debug logging
 ~~~~~~~~~~~~~
 
 Enable debug output for troubleshooting:
@@ -336,7 +336,7 @@ Enable debug output for troubleshooting:
 
    FASTMCP_LOG_LEVEL=DEBUG python -m ansys.mapdl.mcp
 
-Docker Integration
+Docker integration
 ~~~~~~~~~~~~~~~~~~
 
 For containerized deployments with HTTP transport:
@@ -364,7 +364,7 @@ For containerized deployments with HTTP transport:
 
 See :doc:`../user_guide/overview` for more information about deployment options.
 
-Next Steps
+Next steps
 ----------
 
 - Review :doc:`../user_guide/tools_and_capabilities` to learn about available tools

@@ -54,7 +54,7 @@ that provides seamless integration between AI assistants and Ansys MAPDL through
         :link-type: doc
 
         Install PyMAPDL-MCP and get your first
-        MCP server running. Follow our quick
+        MCP server running. Follow the quick
         start guide to begin using it.
 
     .. grid-item-card:: :fa:`cogs` Configure my IDE
@@ -102,7 +102,7 @@ that provides seamless integration between AI assistants and Ansys MAPDL through
         :link-type: url
 
         Have questions or found a bug? Open an issue
-        on our GitHub repository or consult the
+        on the GitHub repository or consult the
         PyMAPDL documentation.
 
     .. grid-item-card:: :fa:`users` Contribute to the project

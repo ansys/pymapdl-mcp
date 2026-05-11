@@ -1,4 +1,4 @@
-User Guide
+User guide
 ==========
 
 Learn how to use PyMAPDL-MCP effectively.

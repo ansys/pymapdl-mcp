@@ -1,7 +1,7 @@
 Tools and capabilities
 ======================
 
-Tool Availability
+Tool availability
 -----------------
 
 PyMAPDL-MCP dynamically enables and disables tools based on whether an MAPDL instance is
@@ -56,10 +56,10 @@ again.
    are immediately available (except ``connect_to_mapdl``, ``launch_mapdl_session``, and
    ``disconnect_from_mapdl``, which are locked in that mode).
 
-Using the Tools
+Using the tools
 ---------------
 
-Running MAPDL Commands
+Running MAPDL commands
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Use ``run_mapdl_command`` for single commands:
@@ -71,8 +71,8 @@ method for batch execution — significantly faster than running commands one by
 
    *"Run these commands: /PREP7, ET,1,SOLID185, MP,EX,1,200E9"*
 
-Custom Python Code Execution
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Custom Python code execution
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use ``run_python_code`` to execute arbitrary Python and PyMAPDL code in a persistent session:
 
@@ -85,7 +85,7 @@ This is useful for:
 - NumPy/Pandas data manipulation
 - Complex computations not available through direct MAPDL commands
 
-Creating Custom Plots
+Creating custom plots
 ~~~~~~~~~~~~~~~~~~~~~
 
 Use ``custom_plot`` to create matplotlib or PyVista plots that are not available in MAPDL's
@@ -98,7 +98,7 @@ native plotting:
    (``APLOT``, ``LPLOT``, ``KPLOT``, ``PLNSOL``, etc.), use the MAPDL commands together with
    the ``screenshot`` tool.
 
-Capturing Plots
+Capturing plots
 ~~~~~~~~~~~~~~~
 
 After running a MAPDL plot command, use the ``screenshot`` tool to capture the graphics window:
@@ -113,18 +113,18 @@ native plot commands, including:
 - Geometry: ``APLOT``, ``LPLOT``, ``KPLOT``, ``VPLOT``
 - Mesh: ``EPLOT``, ``NPLOT``
 - Post-processing: ``PLNSOL``, ``PLESOL``, ``PLDISP``
-- **Export Results**: Export data for external visualization
+- **Export results**: Export data for external visualization
 
-Python Code Execution
-~~~~~~~~~~~~~~~~~~~~~~
+Python code execution
+~~~~~~~~~~~~~~~~~~~~~
 
-- **Run Python Code**: Execute arbitrary Python code in the persistent session *(requires MAPDL connection)*
-- **Integrate with Data Analysis**: Use NumPy, Pandas, and other Python libraries
+- **Run Python code**: Execute arbitrary Python code in the persistent session *(requires MAPDL connection)*
+- **Integrate with data analysis**: Use NumPy, Pandas, and other Python libraries
 
-Workflow Examples
+Workflow examples
 -----------------
 
-Linear Static Analysis
+Linear static analysis
 ~~~~~~~~~~~~~~~~~~~~~~
 
 1. Launch MAPDL instance
@@ -135,7 +135,7 @@ Linear Static Analysis
 6. Run solution
 7. Extract and visualize results
 
-Parametric Study
+Parametric study
 ~~~~~~~~~~~~~~~~
 
 1. Set up base MAPDL model
@@ -146,7 +146,7 @@ Parametric Study
    - Extract results
 4. Analyze and plot parameter sensitivity
 
-Result Post-Processing
+Result post-processing
 ~~~~~~~~~~~~~~~~~~~~~~
 
 1. Run or load MAPDL analysis
@@ -154,12 +154,12 @@ Result Post-Processing
 3. Create custom visualizations
 4. Generate analysis reports
 
-Feature Reference
+Feature reference
 -----------------
 
 See :doc:`../api/tools` for complete documentation of all available tools including parameters and return values.
 
-Best Practices
+Best practices
 --------------
 
 See :doc:`best_practices` for recommendations on using PyMAPDL-MCP effectively.

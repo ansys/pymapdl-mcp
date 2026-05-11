@@ -1,4 +1,4 @@
-Docker Deployment
+Docker deployment
 =================
 
 PyMAPDL-MCP can be deployed as a containerized application using Docker with HTTP
@@ -9,8 +9,8 @@ instance or a local MAPDL installation.
    HTTP transport is not encrypted. Use only in trusted networks or behind a
    reverse proxy (such as Nginx or HAProxy) that provides TLS/SSL.
 
-Quick Start with Docker Compose
----------------------------------
+Quick start with Docker Compose
+-------------------------------
 
 The easiest way to run both MAPDL and the MCP server together is using Docker Compose.
 
@@ -38,9 +38,9 @@ The easiest way to run both MAPDL and the MCP server together is using Docker Co
 
       docker compose -f docker/docker-compose.yml up -d
 
-   The MCP server will be available at ``http://localhost:8080``.
+   The MCP server is available at ``http://localhost:8080``.
 
-Docker Compose Services
+Docker Compose services
 ------------------------
 
 The ``docker-compose.yml`` defines two services:
@@ -55,8 +55,8 @@ To connect to a **local** MAPDL instance instead of the container:
 2. Set ``PYMAPDL_IP=host.docker.internal`` (Windows/Mac) or the appropriate IP address.
 3. Start MAPDL locally: ``pymapdl start --port 50052``.
 
-Building a Standalone Image
------------------------------
+Building a standalone image
+---------------------------
 
 To build the MCP server image without Docker Compose, run from the repository root.
 
@@ -77,8 +77,8 @@ On Windows (PowerShell):
    docker build --secret id=github_token,env=GITHUB_TOKEN `
      -f docker\Dockerfile -t pymapdl-mcp .
 
-Running the Standalone Container
-----------------------------------
+Running the standalone container
+--------------------------------
 
 Connect to a local MAPDL instance:
 
@@ -99,8 +99,8 @@ Connect to a remote MAPDL instance:
      -e PYMAPDL_PORT=50053 \
      pymapdl-mcp
 
-Environment Variables
-----------------------
+Environment variables
+---------------------
 
 .. list-table::
    :header-rows: 1
@@ -125,8 +125,8 @@ Environment Variables
      - *(required)*
      - License server in ``port@server`` format
 
-MCP Client Configuration
---------------------------
+MCP client configuration
+------------------------
 
 Once the container is running, configure your MCP client to connect to the HTTP server.
 
