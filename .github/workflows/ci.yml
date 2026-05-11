@@ -88,6 +88,8 @@ jobs:
   vulnerabilities:
     name: "Vulnerabilities"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Needed to checkout the code
     steps:
       - uses: ansys/actions/check-vulnerabilities@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
