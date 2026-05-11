@@ -1,29 +1,29 @@
 Context objects
 ================
 
-This document describes the internal context objects used by PyMAPDL-MCP.
+This page describes the internal context objects used by PyMAPDL-MCP.
 
 Application context
 -------------------
 
-The app context maintains the state of the PyMAPDL-MCP server.
+The application context maintains the state of the PyMAPDL-MCP server.
 
 **Key attributes**:
 
-- ``mapdl``: The current PyMAPDL instance (if connected)
-- ``config``: Configuration settings
-- ``logger``: Logger instance
+- ``mapdl``: Current PyMAPDL instance (if connected).
+- ``config``: Configuration settings.
+- ``logger``: Logger instance.
 
 **Responsibilities**:
 
-- Managing the MAPDL connection lifecycle
-- Storing session state
-- Providing access to PyMAPDL features
+- Manages the MAPDL connection lifecycle.
+- Stores session state.
+- Provides access to PyMAPDL functionality.
 
 Tool context
 ------------
 
-Each tool receives a Context object that provides:
+Each tool receives a context object that provides:
 
 - Access to the app context
 - Request/response handling
@@ -48,52 +48,52 @@ Connection management
 Connection state
 ~~~~~~~~~~~~~~~~
 
-The server maintains connection state through the Application Context:
+The server maintains connection state through the application context:
 
-- **Connected**: MAPDL instance is active and responding
-- **Disconnected**: No active connection
-- **Error**: Last connection attempt failed
+- **Connected**: MAPDL instance is active and responding.
+- **Disconnected**: No active MAPDL connection.
+- **Error**: Last connection attempt failed.
 
 Connection lifecycle
 ~~~~~~~~~~~~~~~~~~~~
 
-1. **Initialize**: Server starts with no connection
-2. **Connect**: ``launch_mapdl_session`` or ``connect_to_mapdl`` creates connection
-3. **Active**: Commands execute in the connected session
-4. **Disconnect**: ``disconnect_from_mapdl`` closes connection
-5. **Reset**: Context cleared for new connection
+1. **Initialize**: Server starts with no connection.
+2. **Connect**: ``launch_mapdl_session`` or ``connect_to_mapdl`` tool creates connection.
+3. **Active**: Commands execute in the connected session.
+4. **Disconnect**: ``disconnect_from_mapdl`` tool closes connection.
+5. **Reset**: Context cleared for new connection.
 
 Error handling in contexts
 --------------------------
 
-Errors during context operations:
+Errors during context operations follow this pattern:
 
-- Are caught and logged
-- Return error information to the client
-- Do not crash the server
-- Allow for graceful recovery
+- They are caught and logged.
+- They return error information to the client.
+- They do not crash the server.
+- They allow for graceful recovery.
 
 Session isolation
 -----------------
 
-Each client connection:
+Each client connection maintains these characteristics:
 
-- Has its own session context
-- Cannot interfere with other client sessions
-- Gets independent access to MAPDL
-- Maintains separate state
+- It has its own session context.
+- It cannot interfere with other client sessions.
+- It gets independent access to MAPDL.
+- It maintains separate state.
 
 Implementation details
 ----------------------
 
 See the source code for detailed implementation:
 
-- ``ansys.mapdl.mcp.contexts``: Context definitions
-- ``ansys.mapdl.mcp.server``: Server and context management
-- ``ansys.mapdl.mcp.helpers``: Context helper functions
+- ``ansys.mapdl.mcp.contexts``: Defines context objects.
+- ``ansys.mapdl.mcp.server``: Manages server and context.
+- ``ansys.mapdl.mcp.helpers``: Provides context helper functions.
 
 API compatibility
 -----------------
 
 The context API is internal to PyMAPDL-MCP and may change without notice.
-Use only the documented tool interfaces in app code.
+Use only the documented tool interfaces in your application code.

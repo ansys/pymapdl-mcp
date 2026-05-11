@@ -7,7 +7,7 @@ Tool availability
 PyMAPDL-MCP dynamically enables and disables tools based on whether an MAPDL instance is
 connected. This keeps the AI assistant's context small when MAPDL is not in use.
 
-**Before connecting to MAPDL**, only the following tools are available:
+**Before connecting to MAPDL**, you can access these tools:
 
 .. list-table::
    :header-rows: 1
@@ -26,9 +26,8 @@ connected. This keeps the AI assistant's context small when MAPDL is not in use.
    * - ``get_guidelines_for``
      - Workflow guidance and best-practice context tool
 
-**After connecting to MAPDL** (via ``connect_to_mapdl`` or ``launch_mapdl_session``), all tools
-become available. When ``disconnect_from_mapdl`` is called, the MAPDL-specific tools are hidden
-again.
+**After connecting to MAPDL**, you gain access to the full set of tools. When you call the
+``disconnect_from_mapdl`` tool, the MAPDL-specific tools become unavailable.
 
 .. list-table::
    :header-rows: 1
@@ -49,12 +48,12 @@ again.
    * - ``run_python_code``
      - Execute Python/PyMAPDL code in a persistent session
    * - ``custom_plot``
-     - Create custom ``matplotlib`` or ``pyvista`` plots
+     - Create custom matplotlib or PyVista plots
 
 .. note::
-   When ``--connect-on-startup`` is used, MAPDL is already connected at startup so all tools
-   are immediately available (except ``connect_to_mapdl``, ``launch_mapdl_session``, and
-   ``disconnect_from_mapdl``, which are locked in that mode).
+   When you use ``--connect-on-startup``, MAPDL connects at startup and all tools are immediately
+   available (except ``connect_to_mapdl``, ``launch_mapdl_session``, and ``disconnect_from_mapdl``,
+   which are locked).
 
 Using the tools
 ---------------
@@ -88,10 +87,10 @@ This is useful for:
 Creating custom plots
 ~~~~~~~~~~~~~~~~~~~~~
 
-Use ``custom_plot`` to create ``matplotlib`` or ``pyvista`` plots that are not available in MAPDL's
+Use ``custom_plot`` to create matplotlib or PyVista plots that are not available in MAPDL's
 native plotting:
 
-   *"Create a ``matplotlib`` plot showing nodal displacements vs node number"*
+   *"Create a matplotlib plot showing nodal displacements vs node number"*
 
 .. important::
    ``custom_plot`` is for plots that MAPDL cannot produce natively. For standard MAPDL plots
@@ -113,13 +112,13 @@ native plot commands, including:
 - Geometry: ``APLOT``, ``LPLOT``, ``KPLOT``, ``VPLOT``
 - Mesh: ``EPLOT``, ``NPLOT``
 - Post-processing: ``PLNSOL``, ``PLESOL``, ``PLDISP``
-- **Export results**: Export data for external visualization
 
 Python code execution
 ~~~~~~~~~~~~~~~~~~~~~
 
-- **Run Python code**: Execute arbitrary Python code in the persistent session *(requires MAPDL connection)*
-- **Integrate with data analysis**: Use NumPy, Pandas, and other Python libraries
+- **Run Python code**: Execute arbitrary Python code in the persistent session *(requires MAPDL connection)*.
+- **Integrate with data analysis**: Use NumPy, Pandas, and other Python libraries.
+
 
 Workflow examples
 -----------------
@@ -127,39 +126,36 @@ Workflow examples
 Linear static analysis
 ~~~~~~~~~~~~~~~~~~~~~~
 
-1. Launch MAPDL instance
-2. Define geometry (blocks, cylinders, etc.)
-3. Define materials and element types
-4. Mesh the geometry
-5. Apply boundary conditions and loads
-6. Run solution
-7. Extract and visualize results
+#. Launch MAPDL instance.
+#. Define geometry (blocks, cylinders, and so on).
+#. Define materials and element types.
+#. Mesh the geometry.
+#. Apply boundary conditions and loads.
+#. Run solution.
+#. Extract and visualize results.
 
 Parametric study
 ~~~~~~~~~~~~~~~~
 
-1. Set up base MAPDL model
-2. Define parameter ranges
-3. For each parameter combination:
-   - Update parameters
-   - Run analysis
-   - Extract results
-4. Analyze and plot parameter sensitivity
+#. Set up the base MAPDL model.
+#. Define parameter ranges.
+#. Update parameters, run analysis, and extract results for each parameter combination.
+#. Analyze and plot parameter sensitivity.
 
-Result post-processing
-~~~~~~~~~~~~~~~~~~~~~~
+Result postprocessing
+~~~~~~~~~~~~~~~~~~~~~
 
-1. Run or load MAPDL analysis
-2. Extract result data
-3. Create custom visualizations
-4. Generate analysis reports
+#. Run or load MAPDL analysis.
+#. Extract result data.
+#. Create custom visualizations.
+#. Generate analysis reports.
 
 Feature reference
 -----------------
 
-See :doc:`../api/tools` for complete documentation of all available tools including parameters and return values.
+For the documentation of all available tools, including parameters and return values, see :doc:`../api/tools`.
 
 Best practices
 --------------
 
-See :doc:`best_practices` for recommendations on using PyMAPDL-MCP effectively.
+For recommendations on using PyMAPDL-MCP effectively, see :doc:`best_practices`.

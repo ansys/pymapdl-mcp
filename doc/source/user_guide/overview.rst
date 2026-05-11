@@ -4,61 +4,62 @@ Overview
 What is PyMAPDL-MCP?
 --------------------
 
-PyMAPDL-MCP is a bridge between AI assistants and Ansys MAPDL. It uses the Model Context Protocol (MCP)
-to expose PyMAPDL capabilities as standardized tools that AI systems can call.
+Use PyMAPDL-MCP as a bridge between AI assistants and Ansys MAPDL. It uses the Model Context Protocol (MCP)
+(MCP) to expose PyMAPDL capabilities as standardized tools that AI systems can call.
 
-The Model Context Protocol
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The Model Context Protocol (MCP) is a standardized interface for connecting AI systems to external tools and data sources.
-It allows AI assistants to:
-
-- Discover available tools and their capabilities
-- Call tools with structured parameters
-- Receive results and error information
-- Maintain state across multiple interactions
-
-How it works
+What is MCP?
 ~~~~~~~~~~~~
 
-1. **Client connection**: An MCP-compatible client (for example, Claude) connects to the PyMAPDL-MCP server
-2. **Tool discovery**: The client discovers available tools for controlling MAPDL
-3. **Tool execution**: The client calls tools with appropriate parameters
-4. **Result return**: The server returns results or errors to the client
-5. **Interaction loop**: The cycle continues for the duration of the session
+MCP is a standardized interface for connecting AI systems to external tools and data sources.
+It allows AI assistants to perform the following tasks:
 
-Architecture
-------------
+- Discover available tools and their capabilities.
+- Call tools with structured parameters.
+- Receive results and error information.
+- Maintain state across multiple interactions.
 
-PyMAPDL-MCP consists of several key components:
+How MCP works
+~~~~~~~~~~~~~
 
-- **MCP server**: Implements the MCP protocol and handles client connections
-- **Tool registry**: Maintains the list of available tools
-- **PyMAPDL integration**: Wraps PyMAPDL features as MCP tools
-- **Session management**: Manages MAPDL instance lifecycle
-- **Context management**: Maintains app state across interactions
+- **Client connection**: An MCP-compatible client (such as Claude) connects to the PyMAPDL-MCP server.
+- **Tool discovery**: The client discovers available tools for controlling MAPDL.
+- **Tool execution**: The client calls tools with appropriate parameters.
+- **Result return**: The server returns results or errors to the client.
+- **Interaction loop**: The cycle continues for the duration of the session.
 
-Use cases
----------
+Understand the architecture
+----------------------------
+
+PyMAPDL-MCP includes several key components:
+
+- **MCP server**: Implements the MCP protocol and handles client connections.
+- **Tool registry**: Maintains the list of available tools.
+- **PyMAPDL integration**: Wraps PyMAPDL functionality as MCP tools.
+- **Session management**: Manages MAPDL instance lifecycle.
+- **Context management**: Maintains application state across interactions.
+
+Explore use cases
+-----------------
 
 **Automated simulations**
-    Use AI to design and run parametric FEA studies automatically
+    Use AI to design and run parametric FEA studies automatically.
 
 **Interactive analysis**
-    Ask an AI assistant to analyze simulation results and suggest improvements
+    Ask an AI assistant to analyze simulation results and suggest improvements.
 
 **Documentation generation**
-    Automatically create reports and documentation from simulations
+    Automatically create reports and documentation from simulations.
 
 **Script debugging**
-    Get AI assistance in debugging complex MAPDL scripts
+    Get AI assistance in debugging complex MAPDL scripts.
 
 **Learning tool**
-    Use an AI assistant as a tutor for learning MAPDL and FEA concepts
+    Use an AI assistant as a tutor for learning MAPDL and FEA concepts.
+
 
 Next steps
 ----------
 
-- Learn about available :doc:`tools_and_capabilities`
-- Review :doc:`best_practices` for effective use
-- Explore :doc:`../api/tools` for technical details
+- Learn about available :doc:`tools_and_capabilities`.
+- Review :doc:`best_practices` for effective use.
+- Explore the :doc:`../api/tools` for technical details.

@@ -3,7 +3,7 @@
 Release notes
 #############
 
-This document contains the release notes for the PyMAPDL MCP project.
+This document contains the release notes for the PyMAPDL-MCP project.
 
 .. vale off
 

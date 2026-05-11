@@ -8,8 +8,8 @@ You can contribute to PyMAPDL-MCP in several ways.
 
 * `Answer discussions`_
 * `Post issues`_
-* :ref:`write_documentation` (described on its own page)
-* :ref:`develop_pymapdl_mcp` (described on its own page)
+* :ref:`ref_write_documentation` (described on its own page)
+* :ref:`ref_develop_pymapdl_mcp` (described on its own page)
 
 Before contributing to PyMAPDL-MCP, read
 `Contributing <https://dev.docs.pyansys.com/how-to/contributing.html>`_
@@ -52,4 +52,4 @@ Next steps
 ==========
 
 - To improve the documentation, see :ref:`write_documentation`.
-- To contribute code, see :ref:`develop_pymapdl_mcp`.
+- To contribute code, see :ref:`ref_develop_pymapdl_mcp`.

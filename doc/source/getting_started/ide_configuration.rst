@@ -175,7 +175,7 @@ View configuration locations
 - **Global**: Visual Studio Code user settings (auto-discovered).
 - **Workspace**: ``.vscode/mcp.json`` file for workspace-specific configuration.
 
-**Documentation**: `Visual Studio Code MCP Servers <https://code.visualstudio.com/docs/copilot/customization/mcp-servers>`_ documentation.
+See `Visual Studio Code MCP Servers <https://code.visualstudio.com/docs/copilot/customization/mcp-servers>`_ documentation.
 
 Claude Desktop
 --------------
@@ -273,7 +273,7 @@ Claude Code versus Visual Studio Code
    * - Integration
      - Built-in MCP support
      - Requires Copilot extension
-   * - Team Sharing
+   * - Team sharing
      - With project configuration files
      - With ``.vscode/mcp.json`` file in repository
    * - Learning curve
@@ -317,8 +317,8 @@ Both Visual Studio Code and Claude Code support connecting to remote MAPDL insta
      --ip 192.168.1.100 \
      --port 50053
 
-Debug logging
-~~~~~~~~~~~~~
+Enable debug logging
+~~~~~~~~~~~~~~~~~~~~
 
 Enable debug output for troubleshooting:
 
@@ -345,8 +345,8 @@ Enable debug output for troubleshooting:
 
    FASTMCP_LOG_LEVEL=DEBUG python -m ansys.mapdl.mcp
 
-Docker integration
-~~~~~~~~~~~~~~~~~~
+Integrate with Docker
+~~~~~~~~~~~~~~~~~~~~~
 
 For containerized deployments with HTTP transport:
 

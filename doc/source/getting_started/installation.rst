@@ -1,8 +1,8 @@
 Installation
 =============
 
-Prerequisites
--------------
+Check prerequisites
+-------------------
 
 - Python 3.10 or later
 - Ansys MAPDL installation (for running simulations)

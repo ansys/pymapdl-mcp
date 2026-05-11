@@ -6,7 +6,7 @@ Session management
 
 **Reuse MAPDL instances**
     Keep the same MAPDL instance open for multiple operations to improve performance.
-    Only restart when necessary (for example, to clear the database).
+    Only restart when necessary, such as when clearing the database.
 
 **Clean shutdown**
     Always disconnect properly from MAPDL instances to free resources.
@@ -23,7 +23,7 @@ Command execution
 **Verify state**
     Use ``check_mapdl_status`` periodically to verify the session state.
 
-**Use Comments**
+**Use comments**
     Add comments in the MAPDL session to document your workflow for clarity.
 
 Data handling
@@ -36,7 +36,7 @@ Data handling
     Store extracted data in Python variables to avoid repeated extraction.
 
 **Validate data**
-    Check that extracted data makes physical sense (for example, positive stresses, reasonable displacements).
+    Check that extracted data (such as positive stresses and reasonable displacements) make sense.
 
 Visualization
 -------------
@@ -45,7 +45,7 @@ Visualization
     Take screenshots after geometry definition, meshing, and solving to verify progress.
 
 **Custom plots for analysis**
-    Use custom ``matplotlib`` plots for detailed analysis beyond MAPDL's built-in capabilities.
+    Use custom Matplotlib plots for detailed analysis beyond MAPDL's built-in capabilities.
 
 **Export for documentation**
     Save high-quality plots for reports and documentation.
@@ -83,24 +83,27 @@ Performance
 Common patterns
 ---------------
 
-**Parameter sweep**
-    1. Define parameter ranges
-    2. Clear results between runs
-    3. Update parameters
-    4. Run analysis
-    5. Extract results
-    6. Aggregate results across runs
+Parameter sweep
+~~~~~~~~~~~~~~~
+#. Define parameter ranges.
+#. Clear results between runs.
+#. Update parameters.
+#. Run analysis.
+#. Extract results.
+#. Aggregate results across runs.
 
-**Convergence study**
-    1. Run analysis with coarse mesh
-    2. Refine mesh selectively
-    3. Re-run analysis
-    4. Compare results
-    5. Repeat until converged
+Convergence study
+~~~~~~~~~~~~~~~~~
+#. Run analysis with coarse mesh.
+#. Refine mesh selectively.
+#. Re-run analysis.
+#. Compare results.
+#. Repeat until converged.
 
-**Sensitivity analysis**
-    1. Identify key parameters
-    2. Vary parameters one at a time
-    3. Record output for each variation
-    4. Analyze parameter importance
-    5. Focus detailed studies on important parameters
+Sensitivity analysis
+~~~~~~~~~~~~~~~~~~~~
+#. Identify key parameters.
+#. Vary parameters one at a time.
+#. Record output for each variation.
+#. Analyze parameter importance.
+#. Focus detailed studies on important parameters.

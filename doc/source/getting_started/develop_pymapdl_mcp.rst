@@ -1,4 +1,4 @@
-.. _ref_developing_pymapdl_mcp:
+.. _ref_develop_pymapdl_mcp:
 
 ===================
 Develop PyMAPDL-MCP
@@ -140,7 +140,7 @@ Follow the development workflow
 
 #. Make your changes:
 
-   - Edit the relevant files.
+   - Add or modify relevant files.
    - Add or modify tests as needed.
    - Update documentation if applicable.
 
@@ -187,14 +187,16 @@ Follow the development workflow
 Follow code conventions
 =======================
 
-**Branch naming:**
+Branch naming
+~~~~~~~~~~~~~
 
 - Features: ``feature/short-description``
 - Fixes: ``fix/short-description``
 - Documentation: ``doc/short-description``
 - Tests: ``test/short-description``
 
-**Commit messages:**
+Commit messages
+~~~~~~~~~~~~~~~
 
 Use conventional commits format:
 
@@ -207,7 +209,8 @@ Use conventional commits format:
    refactor: Simplify tool implementation.
    chore: Update dependencies.
 
-**Code style:**
+Code style
+~~~~~~~~~~
 
 - Follow PEP 8 and the `Coding style <https://dev.docs.pyansys.com/coding-style/index.html>`_.
 - Use type hints for all functions.
@@ -385,4 +388,3 @@ See also
 
 - :ref:`ref_contributing`: General contribution guidelines
 - :ref:`write_documentation`: Documentation contribution guide
-- `PyAnsys developer's guide <https://dev.docs.pyansys.com/>`_

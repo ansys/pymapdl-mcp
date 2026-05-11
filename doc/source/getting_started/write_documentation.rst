@@ -43,7 +43,7 @@ Understand documentation types
 Use RST format
 ==============
 
-PyMAPDL-MCP documentation uses reStructuredText (RST) format and Sphinx.
+PyMAPDL-MCP documentation uses reStructuredText (RST) format and Sphinx as its documentation generator.
 
 Basic RST syntax
 ~~~~~~~~~~~~~~~~
@@ -113,11 +113,8 @@ Set up documentation locally
 
 #. View in your browser by opening the ``_build/html/index.html`` file.
 
-Edit documentation
-==================
-
 Edit an existing page
-^^^^^^^^^^^^^^^^^^^^^
+=====================
 
 #. Navigate to the RST file in the ``doc/source/`` directory.
 #. Make your changes.
@@ -126,7 +123,7 @@ Edit an existing page
 #. View your changes in your browser.
 
 Create a page
-^^^^^^^^^^^^^
+=============
 
 #. Create a RST file in the appropriate directory.
 #. Write your content.
@@ -314,7 +311,7 @@ Submit documentation changes
 ============================
 
 #. Build locally using the ``make html`` command.
-#. Open :file:`_build/html/index.html` in your browser and verify your changes for clarity, accuracy, formatting, and working cross-references.
+#. Open the :file:`_build/html/index.html` file in your browser and verify your changes for clarity, accuracy, formatting, and working cross-references.
 #. Commit changes:
 
    .. code-block:: bash
@@ -324,9 +321,9 @@ Submit documentation changes
 
 #. Create a pull request with these criteria:
 
-   - A clear description of changes.
-   - Screenshots if visual changes.
-   - Links to any related issues.
+   - A clear description of changes
+   - Screenshots if there are visual changes
+   - Links to any related issues
 
 Use the documentation template
 ==============================
@@ -402,4 +399,4 @@ See also
 ========
 
 - :ref:`ref_contributing`: General contribution guidelines.
-- :ref:`ref_developing_pymapdl_mcp`: Code development guidelines.
+- :ref:`ref_develop_pymapdl_mcp`: Code development guidelines.
