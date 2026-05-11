@@ -1,25 +1,25 @@
 Quick start
 ===========
 
-Launching PyMAPDL-MCP
----------------------
+Launch PyMAPDL-MCP
+------------------
 
-The simplest way to start the MCP server is:
+This command is the simplest way to start the MCP server:
 
 .. code-block:: bash
 
    ansys-mapdl-mcp
 
-This launches the server using the default STDIO transport and waits for connections from MCP clients.
+It launches the server and waits for connections from MCP clients.
 
-Configuring your IDE or client
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Connect to your IDE or client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PyMAPDL-MCP works with multiple MCP-compatible clients. See :doc:`ide_configuration` for detailed setup instructions for:
+PyMAPDL-MCP works with multiple MCP-compatible clients. For setup information, see :doc:`ide_configuration`.
 
-- **Claude Code** (recommended for AI-assisted development)
-- **VS Code with Copilot** (for VS Code users)
-- **Claude Desktop** (macOS app)
+- Claude Code (recommended for AI-assisted development)
+- Visual Studio Code with Copilot (for Visual Studio Code users)
+- Claude Desktop (macOS application)
 - Other MCP-compatible clients
 
 Transport options
@@ -171,25 +171,25 @@ Running commands and extracting results
 
 Once MAPDL is connected, you can use MCP tools to:
 
-1. **Run commands**: Execute MAPDL commands through PyMAPDL
-2. **Extract data**: Retrieve results and analysis data
-3. **Visualize**: Generate plots and screenshots
-4. **Control**: Manage the MAPDL session lifecycle
+1. Launch MAPDL instances.
+2. Execute MAPDL commands through PyMAPDL.
+3. Retrieve and analyze results.
+4. Generate plots and screenshots.
+5. Manage the MAPDL session lifecycle.
+
 
 Example use cases
 ~~~~~~~~~~~~~~~~~
 
-- Running parametric studies with AI guidance
-- Analyzing FEA results automatically
-- Generating documentation from simulations
-- Debugging MAPDL scripts with AI assistance
+- Run parametric studies with AI guidance.
+- Analyze FEA results automatically.
+- Generate documentation from simulation results.
+- Debug MAPDL scripts with AI assistance.
 
 Next steps
 ----------
 
-For more detailed information:
-
-- See :doc:`../user_guide/overview` for an overview of available tools
+- For an overview of available tools, see :doc:`../user_guide/overview` 
 - Check :doc:`../api/tools` for the complete API reference
 - Browse :doc:`../examples/index` for practical examples
 - See :doc:`../user_guide/docker` for containerized deployment

@@ -18,13 +18,13 @@
 .. image:: ../source/_static/pymapdl_dark_logo_large.png
     :class: only-dark
     :width: 800
-    :alt: PyMAPDL-MCP Logo
+    :alt: PyMAPDL-MCP logo
     :align: center
 
 .. image:: ../source/_static/pymapdl_light_logo_large.png
     :class: only-light
     :width: 800
-    :alt: PyMAPDL-MCP Logo
+    :alt: PyMAPDL-MCP logo
     :align: center
 
 
@@ -33,7 +33,7 @@
 **Welcome to the PyMAPDL-MCP documentation!** PyMAPDL-MCP is a Model Context Protocol (MCP) server
 that provides seamless integration between AI assistants and Ansys MAPDL through PyMAPDL.
 
-**What do you want to do? I want to...**
+**What do you want to do?**
 
 .. vale on
 
@@ -41,12 +41,12 @@ that provides seamless integration between AI assistants and Ansys MAPDL through
     :gutter: 1 2 3 3
     :padding: 1 2 3 3
 
-    .. grid-item-card:: :fa:`info-circle` Learn what is PyMAPDL-MCP
+    .. grid-item-card:: :fa:`info-circle` Learn what PyMAPDL-MCP is
         :link: user_guide/overview
         :link-type: doc
 
-        Understand what PyMAPDL-MCP is, how it works,
-        and why you might want to use it. Learn about
+        Discover what PyMAPDL-MCP is, how it works,
+        and why you should use it. Learn about
         the Model Context Protocol and its benefits.
 
     .. grid-item-card:: :fa:`rocket` Get started quickly
@@ -57,13 +57,13 @@ that provides seamless integration between AI assistants and Ansys MAPDL through
         MCP server running. Follow the quick
         start guide to begin using it.
 
-    .. grid-item-card:: :fa:`cogs` Configure my IDE
+    .. grid-item-card:: :fa:`cogs` Configure your IDE
         :link: getting_started/ide_configuration
         :link-type: doc
 
         Set up PyMAPDL-MCP with Claude Code,
-        VS Code, or other MCP-compatible clients.
-        Step-by-step configuration guides included.
+        Visual Studio Code, or other MCP-compatible clients.
+        Step-by-step configuration guides are included.
 
     .. grid-item-card:: :fa:`tools` Explore available tools
         :link: user_guide/tools_and_capabilities
@@ -77,8 +77,8 @@ that provides seamless integration between AI assistants and Ansys MAPDL through
         :link: user_guide/best_practices
         :link-type: doc
 
-        Learn recommendations for effective PyMAPDL-MCP
-        usage, including session management, command
+        Discover best practices for using PyMAPDL-MCP
+        effectively, including session management, command
         execution, and workflow design patterns.
 
     .. grid-item-card:: :fa:`code` Browse code examples
@@ -87,13 +87,13 @@ that provides seamless integration between AI assistants and Ansys MAPDL through
 
         Explore practical examples including how to
         implement custom tools, run analyses, and
-        automate complex FEA workflows.
+        automate complext finite element analysis (FEA) workflows.
 
     .. grid-item-card:: :fa:`book-open-reader` Use the API reference
         :link: api/tools
         :link-type: doc
 
-        Complete reference documentation for all
+        Access complete reference documentation for all
         MCP tools, parameters, return values, and
         usage examples.
 
@@ -102,8 +102,7 @@ that provides seamless integration between AI assistants and Ansys MAPDL through
         :link-type: url
 
         Have questions or found a bug? Open an issue
-        on the GitHub repository or consult the
-        PyMAPDL documentation.
+        on the GitHub repository or consult the PyMAPDL documentation.
 
     .. grid-item-card:: :fa:`users` Contribute to the project
         :link: getting_started/contribution

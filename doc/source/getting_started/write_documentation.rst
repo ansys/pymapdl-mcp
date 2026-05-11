@@ -5,59 +5,58 @@ Write documentation
 ===================
 
 Contributing documentation is a valuable way to improve PyMAPDL-MCP for everyone.
-This guide explains how to write, build, and submit documentation changes.
 
-Why document?
-=============
+Understand the benefits of documentation
+=========================================
 
-Good documentation:
+Good documentation achieves these goals:
 
-- Helps new users get started quickly
-- Reduces support questions
-- Makes the project more professional
-- Creates opportunities for learning
-- Builds community engagement
+- Helps new users get started quickly.
+- Reduces support questions.
+- Makes the project more professional.
+- Creates opportunities for learning.
+- Builds community engagement.
 
-Types of documentation
-======================
+Understand documentation types
+==============================
 
 **API documentation**
     Detailed reference for MCP tools, parameters, return values, and examples.
-    Located in ``doc/source/api/``.
+    Located in the ``doc/source/api/`` directory.
 
 **User guides**
     How-to guides, tutorials, and best practices.
-    Located in ``doc/source/user_guide/``.
+    Located in the ``doc/source/user_guide/`` directory.
 
 **Getting started**
     Installation, quick start, and initial setup guides.
-    Located in ``doc/source/getting_started/``.
+    Located in the ``doc/source/getting_started/`` directory.
 
 **Examples**
     Practical usage examples and tutorials.
-    Located in ``doc/source/examples/``.
+    Located in the ``doc/source/examples/`` directory.
 
 **API docstrings**
     In-code documentation of functions and classes.
-    Located in ``src/ansys/mapdl/mcp/``.
+    Located in the ``src/ansys/mapdl/mcp/`` directory.
 
-Documentation format
-====================
+Use RST format
+==============
 
-PyMAPDL-MCP documentation uses reStructuredText (RST) format with Sphinx.
+PyMAPDL-MCP documentation uses reStructuredText (RST) format and Sphinx.
 
 Basic RST syntax
 ~~~~~~~~~~~~~~~~
 
 .. code-block:: rst
 
-   Heading Level 1
+   Heading level 1
    ===============
 
-   Heading Level 2
+   Heading level 2
    ---------------
 
-   Heading Level 3
+   Heading level 3
    ~~~~~~~~~~~~~~~
 
    **Bold text** and *italic text*
@@ -87,66 +86,70 @@ Link to other documentation pages:
 
 .. code-block:: rst
 
-   See :doc:`../user_guide/overview` for more information.
-   Check :ref:`ref_contributing` for contribution guidelines.
+   For more information, see :doc:`../user_guide/overview`.
+   For contribution guidelines, see :ref:`ref_contributing`.
 
-Setting up documentation locally
-================================
+Set up documentation locally
+============================
 
-1. **Install documentation dependencies:**
+#. Install documentation dependencies:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   pip install -e ".[doc]"
+      pip install -e ".[doc]"
 
-2. **Navigate to doc directory:**
+#. Navigate to the ``doc`` directory:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   cd doc
+      cd doc
 
-3. **Build HTML documentation:**
+#. Build HTML documentation:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   make.bat html    # On Windows
-   make html        # On Linux/macOS
+      make.bat html    # On Windows
+      make html        # On Linux/macOS
 
-4. **View in browser:**
+#. View in your browser by opening the ``_build/html/index.html`` file.
 
-   Open ``_build/html/index.html``
+Edit documentation
+==================
 
-Editing documentation
-=====================
+Edit an existing page
+^^^^^^^^^^^^^^^^^^^^^
 
-**Edit existing pages:**
+#. Navigate to the RST file in the ``doc/source/`` directory.
+#. Make your changes.
+#. Save the file.
+#. Rebuild the documentation using the ``make html`` command.
+#. View your changes in your browser.
 
-1. Navigate to the RST file in ``doc/source/``
-2. Make your changes
-3. Save the file
-4. Rebuild: ``make html``
-5. Review in browser
+Create a page
+^^^^^^^^^^^^^
 
-**Create a new page:**
+#. Create a RST file in the appropriate directory.
+#. Write your content.
+#. Add the file to the toctree in the parent ``index.rst`` file.
 
-1. Create a new ``.rst`` file in appropriate directory
-2. Write your content
-3. Add the file to the parent ``index.rst`` toctree:
+   For example, to add a new page to the **User guide**, open the
+   ``doc/source/user_guide/index.rst`` file and edit it like this:
 
-.. code-block:: rst
+   .. code-block:: rst
 
-   .. toctree::
-      :maxdepth: 2
+      .. toctree::
+         :maxdepth: 2
 
-      existing_page
-      your_new_page    # Add this line
+         existing_page
+         your_new_page    # Add this line
 
-4. Build and review: ``make html``
+#. Rebuild the documentation using the ``make html`` command.
+#. View the new page in your browser.
 
-Writing good documentation
-==========================
+Write good documentation
+========================
 
-**Be clear and concise**
+**Be clear and concise.**
 
 .. code-block:: rst
 
@@ -154,7 +157,7 @@ Writing good documentation
 
    ✗ Bad: This tool can be used for launching an instance of MAPDL and making a connection.
 
-**Use Examples**
+**Use examples.**
 
 Include practical code examples:
 
@@ -168,28 +171,28 @@ Include practical code examples:
       # Launch MAPDL with 4 processors
       mapdl = launch_mapdl_session(nproc=4)
 
-**Explain why, not just how**
+**Explain why, not just how.**
 
 .. code-block:: rst
 
    Use ``run_multiple_commands`` instead of individual commands
    for better performance, as batch execution is significantly faster.
 
-**Structure logically**
+**Structure logically.**
 
-- Start with overview
-- Progress to specific details
-- End with examples or next steps
+- Start with an overview.
+- Progress to specific details.
+- End with examples or next steps.
 
-**Add cross-references**
+**Add cross-references.**
 
 .. code-block:: rst
 
-   See :doc:`../api/tools` for complete tool reference.
-   Learn more in :doc:`../user_guide/best_practices`.
+   For complete tool reference, see :doc:`../api/tools`.
+   To learn more, see :doc:`../user_guide/best_practices`.
 
-Documenting code
-================
+Document code
+=============
 
 Add comprehensive docstrings to functions using NumPy style:
 
@@ -205,14 +208,14 @@ Add comprehensive docstrings to functions using NumPy style:
        Parameters
        ----------
        ctx : Context
-           The tool execution context
-       nproc : int, optional
-           Number of processors to use. Default is 4.
+           Tool execution context.
+       nproc : int, default: 4
+           Number of processors to use.
 
        Returns
        -------
        str
-           Status message with MAPDL version and connection info
+           Status message with MAPDL version and connection information.
 
        Examples
        --------
@@ -225,14 +228,14 @@ Add comprehensive docstrings to functions using NumPy style:
 
        See Also
        --------
-       connect_to_mapdl : Connect to existing instance
-       disconnect_from_mapdl : Close connection
+       connect_to_mapdl : Connect to existing instance.
+       disconnect_from_mapdl : Close connection.
        """
        # Implementation here
        pass
 
-Building documentation
-======================
+Build documentation
+===================
 
 **Clean build (remove old build files):**
 
@@ -251,8 +254,8 @@ Building documentation
    # The build output shows warnings and errors
    # Address any RST syntax errors before committing
 
-Documentation testing
-=====================
+Test documentation
+==================
 
 Test that your documentation builds without warnings:
 
@@ -261,19 +264,19 @@ Test that your documentation builds without warnings:
    cd doc
    make.bat html SPHINXOPTS="-W --keep-going"
 
-The ``-W`` flag treats warnings as errors (useful for CI).
+The ``-W`` flag treats warnings as errors, which is useful for CI.
 
-Checking documentation quality
-==============================
+Check documentation quality
+===========================
 
-Before submitting:
+Before submitting a pull request, check that your documentation meets these criteria:
 
-1. **No broken links:** Verify all cross-references work
-2. **No syntax errors:** Check build output for RST errors
-3. **Clear structure:** Use consistent heading levels
-4. **Proper formatting:** Check code blocks render correctly
-5. **Accurate information:** Verify all examples work
-6. **Consistent style:** Match existing documentation style
+- **No broken links:** Verify all cross-references work.
+- **No syntax errors:** Check the build output for RST errors.
+- **Clear structure:** Use consistent heading levels.
+- **Proper formatting:** Check code blocks render correctly.
+- **Accurate information:** Verify all examples work.
+- **Consistent style:** Match the existing documentation style.
 
 Common documentation issues
 ===========================
@@ -285,7 +288,7 @@ Common documentation issues
    ✗ :doc:`../non_existent_page`
    ✓ :doc:`../user_guide/overview`
 
-**Indentation in code blocks**
+**Indentation error in code blocks**
 
 .. code-block:: rst
 
@@ -300,35 +303,33 @@ Common documentation issues
       def example():
           pass
 
-**Unescaped special characters**
+**Unescaped special character**
 
 .. code-block:: rst
 
    ✗ Use \* for multiplication
    ✓ Use ``*`` for multiplication
 
-Submitting documentation changes
-================================
+Submit documentation changes
+============================
 
-1. **Make your changes** to RST files
-2. **Build locally:** ``make html``
-3. **Review in browser:** Open ``_build/html/index.html``
-4. **Test links:** Verify all cross-references work
-5. **Commit changes:**
+#. Build locally using the ``make html`` command.
+#. Open :file:`_build/html/index.html` in your browser and verify your changes for clarity, accuracy, formatting, and working cross-references.
+#. Commit changes:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   git add doc/source/
-   git commit -m "docs: Update installation instructions"
+      git add doc/source/
+      git commit -m "docs: Update installation instructions"
 
-6. **Create Pull Request** with:
+#. Create a pull request with these criteria:
 
-   - Clear description of changes
-   - Screenshots if visual changes
-   - Link to any related issues
+   - A clear description of changes.
+   - Screenshots if visual changes.
+   - Links to any related issues.
 
-Documentation template
-======================
+Use the documentation template
+==============================
 
 For new pages, use this template:
 
@@ -337,7 +338,7 @@ For new pages, use this template:
    .. _ref_my_page:
 
    ========
-   My Title
+   My title
    ========
 
    Brief introduction paragraph explaining what this page covers
@@ -346,61 +347,59 @@ For new pages, use this template:
    Overview
    ========
 
-   High-level explanation of the topic.
+   Provides a high-level explanation of the topic.
 
    Concepts
    ========
 
    Explain key concepts and terminology.
 
-   How-To Guide
-   ============
+   How-to guides
+   =============
 
-   Step-by-step instructions for common tasks.
+   Give step-by-step instructions for common tasks.
 
    Examples
    ~~~~~~~~
 
-   Code examples demonstrating usage.
+   Supply code examples demonstrating usage.
 
-   Advanced Topics
+   Advanced topics
    ===============
 
-   More complex information or edge cases.
+   Provide complex information or edge cases.
 
    Troubleshooting
    ===============
 
-   Common issues and solutions.
+   Describe common issues and provide solutions.
 
-   See Also
+   See also
    ========
 
    - :doc:`related_page1`
    - :doc:`related_page2`
 
-Resources
-=========
+View resources
+==============
 
-- `Sphinx Documentation <https://www.sphinx-doc.org/>`_
-- `reStructuredText Primer <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
-- `NumPy Docstring Guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_
-- `PyAnsys Developer's Guide <https://dev.docs.pyansys.com/>`_
+- `Sphinx documentation <https://www.sphinx-doc.org/>`_: Documentation generator.
+- `reStructuredText Primer <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_: RST syntax reference for Sphinx documentation.
+- NumPy `Style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_: Docstring format used with the numpydoc extension for Sphinx.
+- `PyAnsys developer's guide <https://dev.docs.pyansys.com/>`_: How the PyAnsys project exposes Ansys technologies in client libraries within the Python ecosystem.
 
-Recognition
-===========
+Earn recognition
+================
 
 Documentation contributors are recognized in:
 
-- Pull Request comments
+- Pull request comments
 - Release notes
 - Contributors file
 
-Thank you for improving PyMAPDL-MCP documentation.
 
 See also
 ========
 
-- :ref:`ref_contributing` - General contribution guidelines
-- :ref:`ref_developing_pymapdl_mcp` - Code development guide
-- `Sphinx <https://www.sphinx-doc.org/>`_ - Documentation generator
+- :ref:`ref_contributing`: General contribution guidelines.
+- :ref:`ref_developing_pymapdl_mcp`: Code development guidelines.
