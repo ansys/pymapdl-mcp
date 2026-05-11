@@ -189,7 +189,7 @@ Example use cases
 Next steps
 ----------
 
-- For an overview of available tools, see :doc:`../user_guide/overview` 
+- For an overview of available tools, see :doc:`../user_guide/overview`
 - Check :doc:`../api/tools` for the complete API reference
 - Browse :doc:`../examples/index` for practical examples
 - See :doc:`../user_guide/docker` for containerized deployment

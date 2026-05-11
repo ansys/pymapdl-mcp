@@ -87,7 +87,7 @@ that provides seamless integration between AI assistants and Ansys MAPDL through
 
         Explore practical examples including how to
         implement custom tools, run analyses, and
-        automate complext finite element analysis (FEA) workflows.
+        automate complex finite element analysis (FEA) workflows.
 
     .. grid-item-card:: :fa:`book-open-reader` Use the API reference
         :link: api/tools

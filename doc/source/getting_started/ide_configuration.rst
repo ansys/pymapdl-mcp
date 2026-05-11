@@ -158,7 +158,7 @@ For remote access or web-based clients:
 
 Enable MCP in Visual Studio Code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
+
 1. Open Visual Studio Code settings (``Ctrl+,`` or ``Cmd+,``).
 2. Search for ``MCP`` or ``Copilot MCP``.
 3. Enable the setting to allow Copilot to use MCP servers.
@@ -376,6 +376,6 @@ For information about deployment options, see :doc:`../user_guide/overview`.
 Next steps
 ----------
 
-- To learn about available tools, see :doc:`../user_guide/tools_and_capabilities`. 
+- To learn about available tools, see :doc:`../user_guide/tools_and_capabilities`.
 - For a complete API reference, see :doc:`../api/tools`.
 - For practical usage examples, see :doc:`../examples/index`.
