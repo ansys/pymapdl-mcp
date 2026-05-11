@@ -176,7 +176,7 @@ Python code execution tools
 ----------------------------
 
 ``run_python_code``
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 .. note::
    This tool is only available when connected to MAPDL.
@@ -305,7 +305,7 @@ This unified tool replaces the previous per-topic guideline tools (for example, 
 **Returns**: guidelines for configuring and running the solution
 
 ``get_guidelines_for_postprocessing_phase``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Description**: get guidelines for postprocessing results
 
