@@ -1,89 +1,89 @@
-Best Practices
+Best practices
 ==============
 
-Session Management
+Session management
 ------------------
 
-**Reuse MAPDL Instances**
+**Reuse MAPDL instances**
     Keep the same MAPDL instance open for multiple operations to improve performance.
-    Only restart when necessary (e.g., to clear the database).
+    Only restart when necessary (for example, to clear the database).
 
-**Clean Shutdown**
+**Clean shutdown**
     Always disconnect properly from MAPDL instances to free resources.
 
-**Error Handling**
+**Error handling**
     Check tool results for errors and handle them gracefully in your workflow.
 
-Command Execution
+Command execution
 -----------------
 
-**Batch Commands**
+**Batch commands**
     Use ``run_multiple_commands`` instead of individual commands for better performance.
 
-**Verify State**
+**Verify state**
     Use ``check_mapdl_status`` periodically to verify the session state.
 
 **Use Comments**
     Add comments in the MAPDL session to document your workflow for clarity.
 
-Data Handling
+Data handling
 -------------
 
-**Extract Efficiently**
+**Extract efficiently**
     Extract only the data you need rather than loading entire result sets.
 
-**Cache Results**
+**Cache results**
     Store extracted data in Python variables to avoid repeated extraction.
 
-**Validate Data**
-    Check that extracted data makes physical sense (e.g., positive stresses, reasonable displacements).
+**Validate data**
+    Check that extracted data makes physical sense (for example, positive stresses, reasonable displacements).
 
 Visualization
 -------------
 
-**Screenshots After Key Steps**
+**Screenshots after key steps**
     Take screenshots after geometry definition, meshing, and solving to verify progress.
 
-**Custom Plots for Analysis**
-    Use custom matplotlib plots for detailed analysis beyond MAPDL's built-in capabilities.
+**Custom plots for analysis**
+    Use custom ``matplotlib`` plots for detailed analysis beyond MAPDL's built-in capabilities.
 
-**Export for Documentation**
+**Export for documentation**
     Save high-quality plots for reports and documentation.
 
-Workflow Design
+Workflow design
 ---------------
 
-**Modular Workflows**
+**Modular workflows**
     Break complex analyses into smaller, independent steps.
 
-**Error Recovery**
+**Error recovery**
     Design workflows that can recover from errors without complete restart.
 
-**Progress Feedback**
+**Progress feedback**
     Include status updates and progress indicators in long-running workflows.
 
-**Parameter Validation**
+**Parameter validation**
     Validate all input parameters before sending to MAPDL.
 
 Performance
 -----------
 
-**Minimize Restarts**
+**Minimize restarts**
     Avoid restarting MAPDL unless absolutely necessary.
 
-**Efficient Meshing**
+**Efficient meshing**
     Use adaptive meshing and mesh refinement selectively.
 
-**Result Processing**
+**Result processing**
     Process results in Python rather than repeatedly querying MAPDL.
 
-**Parallel Operations**
+**Parallel operations**
     Consider launching multiple MAPDL instances for independent analyses.
 
-Common Patterns
+Common patterns
 ---------------
 
-**Parameter Sweep**
+**Parameter sweep**
     1. Define parameter ranges
     2. Clear results between runs
     3. Update parameters
@@ -91,14 +91,14 @@ Common Patterns
     5. Extract results
     6. Aggregate results across runs
 
-**Convergence Study**
+**Convergence study**
     1. Run analysis with coarse mesh
     2. Refine mesh selectively
     3. Re-run analysis
     4. Compare results
     5. Repeat until converged
 
-**Sensitivity Analysis**
+**Sensitivity analysis**
     1. Identify key parameters
     2. Vary parameters one at a time
     3. Record output for each variation

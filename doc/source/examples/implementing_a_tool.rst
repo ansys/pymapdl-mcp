@@ -1,11 +1,11 @@
 .. _ref_implementing_a_tool:
 
-Implementing a Custom Tool
+Implementing a custom tool
 ==========================
 
 This guide walks through implementing a custom MCP tool for PyMAPDL-MCP.
 
-What is a Tool?
+What is a tool?
 ---------------
 
 A tool is a function that:
@@ -16,7 +16,7 @@ A tool is a function that:
 
 Tools are discovered by MCP clients and can be called with appropriate parameters.
 
-Anatomy of a Tool
+Anatomy of a tool
 -----------------
 
 Here's a minimal tool structure:
@@ -64,20 +64,20 @@ Here's a minimal tool structure:
         except Exception as e:
             return f"Error during analysis: {str(e)}"
 
-Key Components
+Key components
 ~~~~~~~~~~~~~~
 
-**Documentation String**: Describe what the tool does
+**Documentation string**: describe what the tool does
 
-**Context Parameter**: Access to MAPDL and application state
+**Context parameter**: access to MAPDL and app state
 
-**Input Parameters**: Specific parameters for this tool
+**Input parameters**: specific parameters for this tool
 
-**Error Handling**: Graceful handling of errors
+**Error handling**: graceful handling of errors
 
-**Return Value**: Status message or results
+**Return value**: status message or results
 
-Tool Registration
+Tool registration
 -----------------
 
 Tools are registered in the MCP server's tool registry. The registration includes:
@@ -85,33 +85,33 @@ Tools are registered in the MCP server's tool registry. The registration include
 1. **Function**: The Python function to call
 2. **Name**: Human-readable name
 3. **Description**: What the tool does
-4. **Input Schema**: Parameter definitions and types
+4. **Input schema**: Parameter definitions and types
 
-Best Practices
+Best practices
 --------------
 
-**1. Clear Documentation**
+**1. Clear documentation**
     Write comprehensive docstrings explaining parameters and return values.
 
-**2. Type Hints**
+**2. Type hints**
     Use Python type hints for all parameters and return values.
 
-**3. Error Handling**
+**3. Error handling**
     Handle errors gracefully and return informative error messages.
 
-**4. Input Validation**
+**4. Input validation**
     Validate input parameters before using them.
 
-**5. Status Feedback**
+**5. Status feedback**
     Provide feedback on progress for long-running operations.
 
-**6. Context Management**
+**6. Context management**
     Always check if MAPDL is connected before using it.
 
 **7. Documentation**
     Document parameters, return values, and exceptions.
 
-Example: Complete Analysis Tool
+Example: Complete analysis tool
 --------------------------------
 
 Here's a more complete example of a tool:
@@ -216,38 +216,38 @@ Here's a more complete example of a tool:
         except Exception as e:
             return f"Analysis failed: {str(e)}"
 
-Testing Your Tool
+Testing your tool
 -----------------
 
 When developing a tool, test it:
 
-1. **Unit Testing**: Test with mock contexts
-2. **Integration Testing**: Test with actual MAPDL
-3. **Error Cases**: Test error conditions and invalid inputs
+1. **Unit testing**: Test with mock contexts
+2. **Integration testing**: Test with actual MAPDL
+3. **Error cases**: Test error conditions and invalid inputs
 4. **Performance**: Verify execution time is acceptable
 
-Debugging Tools
+Debugging tools
 ---------------
 
 Use these techniques to debug your tools:
 
 1. **Logging**: Use ``ctx`` logger to log debug information
-2. **Status Messages**: Return detailed status messages
+2. **Status messages**: Return detailed status messages
 3. **Comments**: Add MAPDL comments to track execution
 4. **Screenshots**: Take screenshots at key points
 
-Advanced Topics
+Advanced topics
 ---------------
 
-**Async Tools**: For long-running operations, consider async implementations
+**Async tools**: for long-running operations, consider async implementations
 
-**Streaming Results**: For tools producing large outputs, stream results
+**Streaming results**: for tools producing large outputs, stream results
 
-**Caching**: Cache expensive computations when appropriate
+**Caching**: cache expensive computations when appropriate
 
-**Tool Composition**: Combine multiple tools into workflows
+**Tool composition**: combine multiple tools into workflows
 
-See Also
+See also
 --------
 
 - Source code in ``src/ansys/mapdl/mcp/tools.py``

@@ -17,7 +17,7 @@ The easiest way to install PyMAPDL-MCP is through pip:
 
    pip install ansys-mapdl-mcp
 
-Install from Source
+Install from source
 -------------------
 
 To install from the source repository:
@@ -28,8 +28,8 @@ To install from the source repository:
    cd pymapdl-mcp
    pip install -e .
 
-Install Development Dependencies
----------------------------------
+Install development dependencies
+--------------------------------
 
 If you plan to contribute to development:
 
@@ -43,7 +43,7 @@ For documentation building:
 
    pip install -e ".[doc]"
 
-Verify Installation
+Verify installation
 -------------------
 
 To verify that PyMAPDL-MCP is installed correctly:
@@ -52,9 +52,9 @@ To verify that PyMAPDL-MCP is installed correctly:
 
    ansys-mapdl-mcp --help
 
-This should display the command-line help for the MCP server.
+This displays the command-line help for the MCP server.
 
-Next Steps
+Next steps
 ----------
 
 - Explore the :doc:`quick_start` guide to launch your first MAPDL instance

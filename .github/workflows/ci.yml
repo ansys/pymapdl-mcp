@@ -14,6 +14,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions: {}
+
 env:
   ON_CI: "true"
   MAIN_PYTHON_VERSION: "3.13"
@@ -22,7 +24,6 @@ env:
   PYMAPDL_GRPC_TRANSPORT: "insecure"
 
 jobs:
-
   update-changelog:
     name: "Update CHANGELOG (on release)"
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags')
@@ -31,44 +32,100 @@ jobs:
       contents: write # Needed to read and write repository contents
       pull-requests: write # Needed to create pull requests
     steps:
-      - uses: ansys/actions/doc-deploy-changelog@90a4cd10a7253a205f71ee8619aefb8142c16f47 # v10.2.10
+      - uses: ansys/actions/doc-deploy-changelog@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
           token: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
           bot-user: ${{ secrets.PYANSYS_CI_BOT_USERNAME }}
           bot-email: ${{ secrets.PYANSYS_CI_BOT_EMAIL }}
 
-  lint:
+  code-style:
     name: "Code style checks"
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read # Needed to checkout the code
     steps:
-      - name: "Checkout code"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
-
-      - name: "Configure pip for private PyPI"
-        run: |
-          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
-
-      - name: "Cache pre-commit hooks"
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 #v5.0.4
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
-          restore-keys: |
-            pre-commit-${{ runner.os }}-
-
       - name: "Run PyAnsys code style checks"
-        uses: ansys/actions/code-style@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
+        uses: ansys/actions/code-style@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
-          checkout: false
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
-          use-python-cache: true
 
+  docs-style:
+    name: "Documentation style checks"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Needed to checkout the code
+    steps:
+      - name: "Run Ansys documentation style checks"
+        uses: ansys/actions/doc-style@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  pr-name:
+    if: github.event_name == 'pull_request'
+    name: "Check the name of the PR"
+    permissions:
+      contents: read
+      pull-requests: read # Needed to read pull request title for checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check commit name
+        uses: ansys/actions/check-pr-title@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  actions-security:
+    name: "Actions security"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Needed to checkout and scan workflows
+    steps:
+      - uses: ansys/actions/check-actions-security@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
+        with:
+          generate-summary: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          auditing-level: 'high'
+
+  vulnerabilities:
+    name: "Vulnerabilities"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Needed to checkout the code
+    steps:
+      - uses: ansys/actions/check-vulnerabilities@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
+        with:
+          python-version: ${{ env.MAIN_PYTHON_VERSION }}
+          python-package-name: ${{ env.PACKAGE_NAME }}
+          token: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
+          dev-mode: ${{ github.ref != 'refs/heads/main' }}
+
+  smoke-tests:
+    name: "Build and smoke tests"
+    runs-on: ${{ matrix.os }}
+    needs: [code-style]
+    permissions:
+      contents: read # Needed to checkout the code
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+        should-release:
+          - ${{ github.event_name == 'push' && contains(github.ref, 'refs/tags') }}
+        exclude:
+          - should-release: false
+            os: macos-latest
+    steps:
+      - name: "Build wheelhouse and perform smoke test"
+        uses: ansys/actions/build-wheelhouse@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
+        with:
+          library-name: ${{ env.PACKAGE_NAME }}
+          operating-system: ${{ matrix.os }}
+          python-version: ${{ matrix.python-version }}
 
   test:
     name: "Test Python ${{ matrix.python-version }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
-    needs: [lint]
+    needs: [smoke-tests]
     permissions:
       contents: read
     strategy:
@@ -76,30 +133,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.10", "3.11", "3.12", "3.13"]
-
     steps:
-      - name: "Checkout code"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
-
-      - name: "Set up Python ${{ matrix.python-version }}"
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v6.2.0
+      - name: "Run unit tests"
+        uses: ansys/actions/tests-pytest@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-
-      - name: "Configure pip for private PyPI"
-        run: |
-          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
-
-      - name: "Install dependencies"
-        run: |
-          pip install --upgrade pip
-          pip install -e .[tests]
-          pip list
-
-      - name: "Run unit tests"
-        run: |
-          pytest -m "not integration" --cov=ansys.mapdl.mcp --cov-report=xml --cov-report=term
+          pytest-markers: '-m "not integration"'
 
     #   - name: Upload coverage to Codecov
     #     uses: codecov/codecov-action@v4
@@ -113,67 +152,49 @@ jobs:
   integration-local:
     name: "Integration Tests (local MAPDL)"
     runs-on: ubuntu-22.04
-    needs: [lint]
+    needs: [smoke-tests]
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read # Needed to checkout the code
+      packages: read # Needed to pull the MAPDL container image
     container:
-      image: ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd
+      image: ghcr.io/ansys/mapdl:v25.1-ubuntu-cicd # zizmor: ignore[unpinned-images]
       options: -u=0:0 --oom-kill-disable --memory=6656MB --memory-swap=16896MB --shm-size=1gb --entrypoint /bin/bash
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-
     env:
       OMPI_ALLOW_RUN_AS_ROOT: 1
       OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
       ON_LOCAL: "true"
       PYMAPDL_NPROC: 1
-
     steps:
-      - name: "Checkout code"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
-
       - name: "Install gcc"
         shell: bash
         run: |
           apt-get update && apt-get -y install gcc mono-mcs g++ libgl1 libglx-mesa0 xvfb libgomp1 graphviz curl git && apt-get clean
 
-      - name: "Set up Python"
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v6.2.0
+      - name: "Run integration tests"
+        uses: ansys/actions/tests-pytest@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
-
-      - name: "Install and configure pip for private PyPI"
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
-
-      - name: "Install dependencies"
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .[tests]
-
-      - name: "Run integration tests"
+          pytest-markers: '-m "integration"'
         env:
           PYMAPDL_ADDITIONAL_SWITCHES: "-mpi openmpi"
-          LICENSE_SERVER: ${{ secrets.LICENSE_SERVER }}
-        run: |
-          export ANSYSLMD_LICENSE_FILE=1055@${LICENSE_SERVER}
-          python -m pytest -m integration -v --tb=short
+          ANSYSLMD_LICENSE_FILE: "1055@${{ secrets.LICENSE_SERVER }}"
 
   integration-remote:
-    name: Integration Tests (remote MAPDL)
-    needs: [lint]
+    name: "Integration Tests (remote MAPDL)"
+    needs: [smoke-tests]
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-
+    permissions:
+      contents: read # Needed to checkout the code
+      packages: read # Needed to pull the MAPDL container image
     env:
       PYMAPDL_PORT: 21000
       ON_LOCAL: "false"
-
     steps:
-      - name: "Checkout code"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
-
       - name: "Login to GitHub Container Registry"
         uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 #v4.0.0
         with:
@@ -188,99 +209,44 @@ jobs:
           license-server: ${{ secrets.LICENSE_SERVER }}
           pymapdl-port: ${{ env.PYMAPDL_PORT }}
 
-      - name: "Set up Python"
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v6.2.0
+      - name: "Run integration tests"
+        uses: ansys/actions/tests-pytest@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: "Configure pip for private PyPI"
-        run: |
-          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
-
-      - name: "Install dependencies"
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e .[tests]
-
-      - name: "Run integration tests"
+          pytest-markers: '-m "integration"'
         env:
           PYMAPDL_START_INSTANCE: "false"
           PYMAPDL_PORT: ${{ env.PYMAPDL_PORT }}
-        run: |
-          pytest -m integration -v --tb=short
-
 
   build-docs:
     name: "Build documentation"
     runs-on: ubuntu-latest
-    needs: [lint]
-
+    needs: [docs-style]
+    permissions:
+      contents: read # Needed to checkout the code
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: "Install OS packages"
-        shell: bash
-        run: |
-          sudo apt update && sudo apt install -y zip libgl1 libglx-mesa0 xvfb
-
-      - name: Set up Python ${{ env.MAIN_PYTHON_VERSION }}
-        uses: actions/setup-python@v5
+      - name: "Run Ansys documentation building action"
+        uses: ansys/actions/doc-build@73fa84c704bb6691f254cfe4d4b928c338b0d4da # v10.3.0
         with:
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
-          cache: "pip"
-          cache-dependency-path: |
-            pyproject.toml
-
-      - name: "Configure pip for private PyPI"
-        run: |
-          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
-
-      - name: "Install dependencies"
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e .[doc]
-          pip list
-
-      - name: "Build documentation"
-        run: |
-          cd doc
-          make clean
-          xvfb-run make html | tee doc_build.log
-        env:
-          SPHINXOPTS: "-W --keep-going"
-
-      - name: "Upload documentation artifact"
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f #v7.0.0
-        with:
-          name: documentation-html
-          path: doc/_build/html/
-          retention-days: 30
+          dependencies: 'zip libgl1 libglx-mesa0 xvfb'
+          sphinxopts: '-W --keep-going'
 
   package:
     name: "Package library"
     needs: [test, integration-local, integration-remote]
     runs-on: ubuntu-latest
     permissions:
+      attestations: write # Required to upload provenance attestations
       contents: read
+      id-token: write # Required for OIDC authentication to upload provenance attestations
     steps:
-      - name: "Checkout code"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
-
-      - name: "Configure pip for private PyPI"
-        run: |
-          pip config set global.extra-index-url https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/
-
       - name: "Build library source and wheel artifacts"
-        uses: ansys/actions/build-library@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
-        env:
-          UV_EXTRA_INDEX_URL: 'https://${{ secrets.PYANSYS_PYPI_PRIVATE_PAT }}@pkgs.dev.azure.com/pyansys/_packaging/pyansys/pypi/simple/'
+        uses: ansys/actions/build-library@73fa84c704bb6691f254cfe4d4b928c338b0d4da # v10.3.0
         with:
           library-name: ${{ env.PACKAGE_NAME }}
           python-version: ${{ env.MAIN_PYTHON_VERSION }}
-          checkout: false
+          attest-provenance: true
 
   doc-deploy-dev:
     name: "Deploy development documentation"
@@ -292,7 +258,7 @@ jobs:
     needs: [build-docs, package]
     steps:
       - name: "Deploy the latest documentation"
-        uses: ansys/actions/doc-deploy-dev@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
+        uses: ansys/actions/doc-deploy-dev@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
           cname: ${{ env.DOCUMENTATION_CNAME }}
           token: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
@@ -305,10 +271,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-docs]
     permissions:
-      contents: write
+      contents: write # Needed to push documentation to gh-pages branch
     steps:
       - name: "Deploy the PR documentation"
-        uses: ansys/actions/doc-deploy-pr@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
+        uses: ansys/actions/doc-deploy-pr@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
           cname: ${{ env.DOCUMENTATION_CNAME }}
           token: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}
@@ -316,82 +282,52 @@ jobs:
           bot-email: ${{ secrets.PYANSYS_CI_BOT_EMAIL }}
           maximum-pr-doc-deployments: 10
 
-  # docker-build-and-push:
-  #   name: "Build and push Docker image"
-  #   if: ${{ github.event_name == 'push' && contains(github.ref, 'refs/tags') }}
-  #   needs: [package]
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #     packages: write
-  #   steps:
-  #     - name: "Checkout code"
-  #       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
-
-  #     - name: "Set up Docker Buildx"
-  #       uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f #v3.12.0
-
-  #     - name: "Login to GitHub Container Registry"
-  #       uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef #v3.6.0
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-
-  #     - name: "Extract version from tag"
-  #       id: version
-  #       run: |
-  #         VERSION=${GITHUB_REF#refs/tags/v}
-  #         echo "version=$VERSION" >> $GITHUB_OUTPUT
-  #         echo "Version: $VERSION"
-
-  #     - name: "Build and push multi-arch Docker image"
-  #       uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 #v6.18.0
-  #       with:
-  #         context: .
-  #         file: ./docker/Dockerfile
-  #         platforms: linux/amd64,linux/arm64
-  #         push: true
-  #         tags: |
-  #           ghcr.io/${{ github.repository }}:latest
-  #           ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
-  #         secrets: |
-  #           github_token=${{ secrets.PYANSYS_CI_BOT_TOKEN }}
-  #         cache-from: type=gha
-  #         cache-to: type=gha,mode=max
-
   release:
-    name: "Release project"
-    if: ${{ github.event_name == 'push' && contains(github.ref, 'refs/tags') }}
-    needs: [package, update-changelog]
+    name: "Release project to GitHub"
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags')
+    needs: [package, build-docs, update-changelog]
     runs-on: ubuntu-latest
     # Specifying a GitHub environment is optional, but strongly encouraged
     environment: release
     permissions:
-      id-token: write
-      contents: write
+      id-token: write # Required for GitHub release
+      contents: write # Required for GitHub release
     steps:
-      - name: "Download the library artifacts from build-library step"
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c #v8.0.1
-        with:
-          name: ${{ env.PACKAGE_NAME }}-artifacts
-          path: ${{ env.PACKAGE_NAME }}-artifacts
-          pattern: ${{ env.PACKAGE_NAME }}-artifacts
-
-      - name: "Display structure of downloaded files"
-        run: ls -Rla
-
       - name: "Release to GitHub"
-        uses: ansys/actions/release-github@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
+        uses: ansys/actions/release-github@73fa84c704bb6691f254cfe4d4b928c338b0d4da # v10.3.0
         with:
-          library-name: ${{ env.PACKAGE_NAME }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          only-code: true
+          library-name: ${{ env.PACKAGE_NAME }}
           add-artifact-attestation-notes: true
           changelog-release-notes: true
 
+  release-pypi:
+    name: "Release project to PyPI"
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags')
+    needs: [package, build-docs, update-changelog]
+    runs-on: ubuntu-latest
+    # Specifying a GitHub environment is optional, but strongly encouraged
+    environment: release
+    permissions:
+      id-token: write # Required for OIDC authentication with PyPI
+      contents: write # Required for OIDC authentication with PyPI
+    steps:
+      - name: "Download the library artifacts from build-library step"
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ env.PACKAGE_NAME }}-artifacts
+          path: ${{ env.PACKAGE_NAME }}-artifacts
+
+      # - name: "Upload artifacts to PyPI using trusted publisher"
+      #   uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+      #   with:
+      #     repository-url: "https://upload.pypi.org/legacy/"
+      #     print-hash: true
+      #     packages-dir: ${{ env.PACKAGE_NAME }}-artifacts
+      #     skip-existing: false
+
       - name: "Release to private PyPI"
-        uses: ansys/actions/release-pypi-private@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
+        uses: ansys/actions/release-pypi-private@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
           library-name: ${{ env.PACKAGE_NAME }}
           twine-username: "__token__"
@@ -403,10 +339,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Needed to push documentation to gh-pages branch
-    needs: [release]
+    needs: [release, release-pypi]
     steps:
       - name: "Deploy the stable documentation"
-        uses: ansys/actions/doc-deploy-stable@de753211965a233968fb2cda376da99376b1b9e5 #v10.2.11
+        uses: ansys/actions/doc-deploy-stable@73fa84c704bb6691f254cfe4d4b928c338b0d4da #v10.3.0
         with:
           cname: ${{ env.DOCUMENTATION_CNAME }}
           token: ${{ secrets.PYANSYS_CI_BOT_TOKEN }}

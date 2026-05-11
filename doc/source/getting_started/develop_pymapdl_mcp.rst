@@ -6,6 +6,43 @@ Developing PyMAPDL-MCP
 
 This guide helps you set up your development environment and start contributing code to PyMAPDL-MCP.
 
+Architecture
+============
+
+PyMAPDL-MCP is built on the ``PyAnsysBaseMCP`` framework (from ``ansys-common-mcp``), which
+is itself built on top of FastMCP. The server lifecycle has three phases:
+
+**Startup**
+
+- Initializes a persistent Python session for custom code execution.
+- If ``--connect-on-startup`` is used, connects to an existing MAPDL instance.
+- Otherwise, waits for a dynamic connection through the ``connect_to_mapdl`` or
+  ``launch_mapdl_session`` tools.
+
+**Runtime**
+
+- Exposes MCP tools for MAPDL interaction.
+- Manages dynamic MAPDL connections through the tools.
+- Executes commands in both the MAPDL session and the persistent Python session.
+- Provides workflow guidance through the ``get_guidelines_for`` context tool.
+- Dynamically enables and disables tools based on the MAPDL connection state.
+
+**Shutdown**
+
+- Gracefully disconnects from MAPDL.
+- Cleans up the persistent Python session resources.
+
+Application context
+-------------------
+
+The server uses a strongly typed ``PyMAPDLAppContext`` dataclass that holds:
+
+- The active MAPDL instance connection.
+- The persistent Python session for custom code execution.
+- Transport configuration (STDIO or HTTP).
+- Connection settings (IP, port, auto-connect flags).
+- Command history tracking.
+
 Prerequisites
 =============
 
@@ -16,7 +53,7 @@ Before you begin, ensure you have:
 - A text editor or IDE (VS Code, PyCharm, etc.)
 - A GitHub account
 
-Cloning the Repository
+Cloning the repository
 ======================
 
 1. Fork the repository on GitHub
@@ -33,7 +70,7 @@ Cloning the Repository
 
    git remote add upstream https://github.com/ansys/pymapdl-mcp.git
 
-Setting Up Your Development Environment
+Setting up your development environment
 ========================================
 
 1. Create a virtual environment:
@@ -70,7 +107,7 @@ Setting Up Your Development Environment
 
 This ensures code quality checks run automatically before each commit.
 
-Project Structure
+Project structure
 =================
 
 .. code-block::
@@ -92,7 +129,7 @@ Project Structure
    ├── pyproject.toml               # Project metadata
    └── README.md                    # Main README
 
-Development Workflow
+Development workflow
 ====================
 
 1. **Create a feature branch:**
@@ -147,19 +184,19 @@ Development Workflow
    - Fill in the PR description
    - Submit the PR
 
-Code Conventions
+Code conventions
 ================
 
 Follow these conventions when contributing:
 
-**Branch Naming:**
+**Branch naming:**
 
 - Features: ``feature/short-description``
 - Fixes: ``fix/short-description``
 - Documentation: ``doc/short-description``
 - Tests: ``test/short-description``
 
-**Commit Messages:**
+**Commit messages:**
 
 Use conventional commits format:
 
@@ -172,7 +209,7 @@ Use conventional commits format:
    refactor: Simplify tool implementation
    chore: Update dependencies
 
-**Code Style:**
+**Code style:**
 
 - Follow PEP 8 and the `Coding style <https://dev.docs.pyansys.com/coding-style/index.html>`_
 - Use type hints for all functions
@@ -180,7 +217,7 @@ Use conventional commits format:
 - Maximum line length: 100 characters
 - Format code with Black and isort (run automatically via pre-commit)
 
-Adding a New Tool
+Adding a new tool
 =================
 
 To add a new MCP tool to PyMAPDL-MCP:
@@ -228,7 +265,24 @@ To add a new MCP tool to PyMAPDL-MCP:
 
 5. **Add usage example** if appropriate in ``doc/source/examples/``
 
-Adding Documentation
+Conditionally enabling or disabling a tool
+------------------------------------------
+
+Tools can be tagged so they are selectively turned off at runtime. Apply a tag via the
+``@app.tool()`` decorator, then call ``app.disable()`` with that tag when the condition
+applies (for example, when ``--connect-on-startup`` locks the connection):
+
+.. code-block:: python
+
+   # Tag the tool so it can be disabled as a group
+   @app.tool(tags={"locked_connection"})
+   def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> str:
+       ...
+
+   # Disable all tools with this tag when the connection is locked
+   app.disable(tags={"locked_connection"})
+
+Adding documentation
 ====================
 
 To add or modify documentation:
@@ -249,7 +303,7 @@ To add or modify documentation:
 
 4. **Commit changes** to documentation files
 
-Running Tests
+Running tests
 =============
 
 PyMAPDL-MCP includes a comprehensive test suite with 40+ tests.
@@ -278,8 +332,8 @@ PyMAPDL-MCP includes a comprehensive test suite with 40+ tests.
 
    pytest -m integration
 
-Test Coverage Goal
-~~~~~~~~~~~~~~~~~~
+Test coverage goal
+------------------
 
 Aim for >80% test coverage on new code:
 
@@ -289,7 +343,7 @@ Aim for >80% test coverage on new code:
    pytest --cov=ansys.mapdl.mcp --cov-report=html
    # Open htmlcov/index.html to view
 
-Getting Help
+Getting help
 ============
 
 If you need help during development:
@@ -299,7 +353,7 @@ If you need help during development:
 3. **Review the PyAnsys Developer's Guide** at `PyAnsys Dev Guide <https://dev.docs.pyansys.com/>`_
 4. **Check PyMAPDL documentation** at `PyMAPDL Docs <https://mapdl.docs.pyansys.com/>`_
 
-Submitting Your Work
+Submitting your work
 ====================
 
 When your feature is ready:
@@ -307,7 +361,7 @@ When your feature is ready:
 1. Ensure all tests pass: ``pytest -m "not integration"``
 2. Ensure code quality: ``pre-commit run --all-files``
 3. Update relevant documentation
-4. Add tests for new functionality (>80% coverage)
+4. Add tests for new features (>80% coverage)
 5. Create a Pull Request with:
 
    - Clear description of changes
@@ -315,11 +369,11 @@ When your feature is ready:
    - List of changes made
    - Any breaking changes noted
 
-Pull Request Guidelines
+Pull request guidelines
 =======================
 
 - Keep PRs focused on a single feature or fix
-- Include tests for new functionality
+- Include tests for new features
 - Update documentation as needed
 - Respond to review feedback
 - Keep the PR up-to-date with main branch
@@ -336,7 +390,7 @@ Contributors are recognized in:
 
 Thank you for contributing to PyMAPDL-MCP!
 
-See Also
+See also
 ========
 
 - :ref:`ref_contributing` - General contribution guidelines

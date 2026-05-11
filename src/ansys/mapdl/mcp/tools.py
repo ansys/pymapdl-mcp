@@ -1,25 +1,18 @@
 # Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
-# SPDX-License-Identifier: ANSYS MCP SERVER TECHNOLOGY PREVIEW LICENSE AGREEMENT
-
+# SPDX-License-Identifier: Apache-2.0
 #
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 """List of tools in PyMAPDL-MCP."""
 
@@ -28,7 +21,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
-from typing import Any
+from typing import Any, cast
 
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
 from fastmcp.server import Context
@@ -88,6 +81,8 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
 
         Returns an error message if MAPDL is not available or has exited.
     """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
@@ -138,7 +133,7 @@ def check_mapdl_installed(ctx: Context) -> ToolResult:
     logger.info("Checking if MAPDL is installed...")
 
     try:
-        from ansys.tools.common.path import (  # type: ignore
+        from ansys.tools.common.path import (
             get_available_ansys_installations,
         )
 
@@ -193,6 +188,8 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
     ToolResult
         Command execution result.
     """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
@@ -236,6 +233,8 @@ def run_multiple_commands(
     ToolResult
         Execution result with summary of commands executed.
     """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
@@ -246,7 +245,7 @@ def run_multiple_commands(
     if not commands:
         return _text_result("No commands provided. Please provide a list of commands to execute.")
 
-    if not isinstance(commands, list):  # type: ignore
+    if not isinstance(commands, list):
         return _text_result("Commands must be provided as a list of strings.")
 
     # Filter out empty commands
@@ -340,6 +339,8 @@ async def launch_mapdl_session(
     """
     logger.info("Launching new MAPDL instance...")
 
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     try:
         # Check if there's already a connection
         if ctx.request_context.lifespan_context.mapdl is not None:
@@ -373,7 +374,7 @@ async def launch_mapdl_session(
             kwargs["additional_switches"] = additional_switches
 
         # Launch MAPDL - import already done at module level
-        mapdl = pymapdl.launch_mapdl(**kwargs)
+        mapdl = cast(pymapdl.Mapdl, pymapdl.launch_mapdl(**kwargs))
 
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
@@ -418,6 +419,8 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
     """
     logger.info(f"Connecting to MAPDL instance at {ip}:{port}...")
 
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     try:
         # Check if there's already a connection
         if ctx.request_context.lifespan_context.mapdl is not None:
@@ -435,13 +438,14 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
                 )
 
         # Connect to existing MAPDL instance
-        mapdl = pymapdl.Mapdl(
-            start_instance=False,
-            ip=ip,
-            port=port,
-            cleanup_on_exit=False,  # Don't clean up since we didn't launch it
-            loglevel="INFO",
-        )
+        _connect_kwargs: dict[str, Any] = {
+            "start_instance": False,
+            "ip": ip,
+            "port": port,
+            "cleanup_on_exit": False,  # Don't clean up since we didn't launch it
+            "loglevel": "INFO",
+        }
+        mapdl = pymapdl.Mapdl(**_connect_kwargs)
 
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
@@ -475,6 +479,8 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
     ToolResult
         Disconnection status message.
     """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
@@ -532,6 +538,8 @@ def list_mapdl_instances(ctx: Context) -> ToolResult:
     local_table = list_instances(long=True, instances=True)
 
     # Also include any remotely connected instance from the current session context
+    if ctx.request_context is None:
+        return _text_result(local_table)
     mapdl = ctx.request_context.lifespan_context.mapdl
     if mapdl is not None and not mapdl.is_local:
         remote_headers = ["IP", "Port", "Status", "Version", "Working directory"]
@@ -583,6 +591,8 @@ def screenshot(
         - TextContent with the screenshot file path
         - ImageContent with the base64-encoded image data
     """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
@@ -639,7 +649,7 @@ def screenshot(
         )
 
     except Exception as e:
-        if "temp_path" in locals() and Path(temp_path).exists():  # type: ignore
+        if "temp_path" in locals() and Path(temp_path).exists():
             Path(temp_path).unlink()  # pyright: ignore[reportPossiblyUnboundVariable]
 
         error_msg = f"Failed to capture screenshot: {str(e)}"
@@ -699,6 +709,12 @@ async def run_python_code(
     ... '''
     >>> run_python_code(ctx, code)
     """
+    if ctx.request_context is None:
+        return _text_result(
+            json.dumps(
+                {"success": False, "error": "No request context available."}, ensure_ascii=False
+            )
+        )
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:
@@ -807,6 +823,8 @@ def custom_plot(
     ... '''
     >>> custom_plot(ctx, plot_code, plot_type="matplotlib")
     """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:

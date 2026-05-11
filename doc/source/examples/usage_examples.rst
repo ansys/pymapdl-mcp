@@ -1,6 +1,6 @@
 .. _ref_usage_examples:
 
-Usage examples - Video demos
+Usage examples - video demos
 ============================
 
 This page embeds short video demos showing PyMAPDL-MCP features.

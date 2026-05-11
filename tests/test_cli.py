@@ -1,25 +1,18 @@
 # Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
-# SPDX-License-Identifier: ANSYS MCP SERVER TECHNOLOGY PREVIEW LICENSE AGREEMENT
-
+# SPDX-License-Identifier: Apache-2.0
 #
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 """Unit tests for MCP CLI parsing and startup connection behavior."""
 
@@ -77,12 +70,12 @@ def test_main_invalid_port_raises():
 
 def test_product_startup_attempts_connect_on_startup():
     """When connect_on_startup is True, MCP should attempt to connect to MAPDL."""
-    # Prepare a fake Mapdl instance to be returned by launch_mapdl
+    # Prepare a fake Mapdl instance to be returned by Mapdl constructor
     fake_mapdl = MagicMock()
     fake_mapdl.exit = MagicMock()
 
-    # Mock launch_mapdl to return our fake instance
-    with patch("ansys.mapdl.core.launch_mapdl", return_value=fake_mapdl) as mock_launch:
+    # Mock Mapdl to return our fake instance
+    with patch("ansys.mapdl.core.Mapdl", return_value=fake_mapdl) as mock_mapdl:
         # Create MCP instance and attach CLI config directly
         mcp = PyMAPDLMCP()
         setattr(
@@ -103,11 +96,12 @@ def test_product_startup_attempts_connect_on_startup():
 
         assert mcp.context.connect_on_startup is True
 
-        # Verify launch_mapdl was called with correct parameters
-        mock_launch.assert_called_once_with(
+        # Verify Mapdl was instantiated with correct parameters
+        mock_mapdl.assert_called_once_with(
             start_instance=False,
             ip="127.0.0.1",
             port=50052,
+            cleanup_on_exit=False,
         )
 
         # Verify MAPDL instance was stored in context

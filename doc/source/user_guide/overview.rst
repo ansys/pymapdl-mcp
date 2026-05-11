@@ -8,7 +8,7 @@ PyMAPDL-MCP is a bridge between AI assistants and Ansys MAPDL. It uses the Model
 to expose PyMAPDL capabilities as standardized tools that AI systems can call.
 
 The Model Context Protocol
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Model Context Protocol (MCP) is a standardized interface for connecting AI systems to external tools and data sources.
 It allows AI assistants to:
@@ -18,45 +18,45 @@ It allows AI assistants to:
 - Receive results and error information
 - Maintain state across multiple interactions
 
-How It Works
+How it works
 ~~~~~~~~~~~~
 
-1. **Client Connection**: An MCP-compatible client (e.g., Claude) connects to the PyMAPDL-MCP server
-2. **Tool Discovery**: The client discovers available tools for controlling MAPDL
-3. **Tool Execution**: The client calls tools with appropriate parameters
-4. **Result Return**: The server returns results or errors to the client
-5. **Interaction Loop**: The cycle continues for the duration of the session
+1. **Client connection**: An MCP-compatible client (for example, Claude) connects to the PyMAPDL-MCP server
+2. **Tool discovery**: The client discovers available tools for controlling MAPDL
+3. **Tool execution**: The client calls tools with appropriate parameters
+4. **Result return**: The server returns results or errors to the client
+5. **Interaction loop**: The cycle continues for the duration of the session
 
 Architecture
 ------------
 
 PyMAPDL-MCP consists of several key components:
 
-- **MCP Server**: Implements the MCP protocol and handles client connections
-- **Tool Registry**: Maintains the list of available tools
-- **PyMAPDL Integration**: Wraps PyMAPDL functionality as MCP tools
-- **Session Management**: Manages MAPDL instance lifecycle
-- **Context Management**: Maintains application state across interactions
+- **MCP server**: Implements the MCP protocol and handles client connections
+- **Tool registry**: Maintains the list of available tools
+- **PyMAPDL integration**: Wraps PyMAPDL features as MCP tools
+- **Session management**: Manages MAPDL instance lifecycle
+- **Context management**: Maintains app state across interactions
 
-Use Cases
+Use cases
 ---------
 
-**Automated Simulations**
+**Automated simulations**
     Use AI to design and run parametric FEA studies automatically
 
-**Interactive Analysis**
+**Interactive analysis**
     Ask an AI assistant to analyze simulation results and suggest improvements
 
-**Documentation Generation**
+**Documentation generation**
     Automatically create reports and documentation from simulations
 
-**Script Debugging**
+**Script debugging**
     Get AI assistance in debugging complex MAPDL scripts
 
-**Learning Tool**
+**Learning tool**
     Use an AI assistant as a tutor for learning MAPDL and FEA concepts
 
-Next Steps
+Next steps
 ----------
 
 - Learn about available :doc:`tools_and_capabilities`

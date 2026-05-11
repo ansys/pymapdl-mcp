@@ -16,8 +16,8 @@ in the *PyAnsys Developer's Guide*. Ensure that you are thoroughly familiar
 with it and the `Coding style <https://dev.docs.pyansys.com/coding-style/index.html>`_
 before attempting to contribute to PyMAPDL-MCP.
 
-In order to have a nice release notes section, it is important to follow
-the branch and commit names conventions as described in the *PyAnsys Developer's Guide*
+To have a well-formatted release notes section, follow
+the branch and commit name conventions as described in the *PyAnsys Developer's Guide*
 `branch <https://dev.docs.pyansys.com/how-to/contributing.html#branch-naming-conventions>`_
 and `commit <https://dev.docs.pyansys.com/how-to/contributing.html#commit-naming-conventions>`_
 naming sections.
@@ -27,7 +27,7 @@ Answer discussions
 ==================
 
 Answering discussions is an excellent way to contribute to PyMAPDL-MCP, and
-it does not require any setup, just a GitHub account.
+it requires only a GitHub account.
 It is probably the first step towards becoming a full PyMAPDL-MCP developer, since it
 helps you deepen your understanding of the project. Engaging in
 discussions often requires a thorough grasp of the project's goals and
@@ -62,7 +62,7 @@ When possible, use these issue templates:
 * **🐞 Bug, problem, or error**: Fill a bug report here
 * **📖 Documentation issue**: Modifications to the documentation only
 * **🆕 New tool or feature**: Proposing a new MCP tool or feature for the library
-* **💡 Enhancement**: Suggestions for improving existing functionality
+* **💡 Enhancement**: Suggestions for improving existing features
 
 
 If your issue does not fit into one of these categories, click
@@ -71,9 +71,9 @@ If your issue does not fit into one of these categories, click
 
 .. _ref_contributing_next_steps:
 
-Next Steps
+Next steps
 ==========
 
 Ready to contribute code? Check out these sections:
 
-- :ref:`write_documentation` - Help improve our documentation
+- :ref:`write_documentation` - Help improve the documentation

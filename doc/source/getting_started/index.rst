@@ -1,4 +1,4 @@
-Getting Started
+Getting started
 ===============
 
 This section covers everything you need to get up and running with PyMAPDL-MCP,
