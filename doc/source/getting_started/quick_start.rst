@@ -13,7 +13,7 @@ This command is the simplest way to start the MCP server:
 It launches the server and waits for connections from MCP clients.
 
 Connect to your IDE or client
-----------------------------
+-----------------------------
 
 PyMAPDL-MCP works with multiple MCP-compatible clients. For setup information, see :doc:`ide_configuration`.
 
@@ -23,7 +23,7 @@ PyMAPDL-MCP works with multiple MCP-compatible clients. For setup information, s
 - Other MCP-compatible clients
 
 Follow the basic workflow
-------------------------
+-------------------------
 
 Starting a MAPDL instance
 ~~~~~~~~~~~~~~~~~~~~~~~~~
