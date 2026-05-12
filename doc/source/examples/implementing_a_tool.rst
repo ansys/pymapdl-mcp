@@ -1,23 +1,24 @@
 .. _ref_implementing_a_tool:
 
-Implementing a custom tool
-==========================
+Implement a custom tool
+=======================
 
-This guide walks through implementing a custom MCP tool for PyMAPDL-MCP.
+Learn how to implement a custom MCP tool for PyMAPDL-MCP.
 
-What is a tool?
----------------
+Tool overview
+-------------
 
-A tool is a function that:
+A tool is a function that performs a specific task using MAPDL.
+Tools typically perform as follows:
 
-1. Takes structured input parameters
-2. Performs some operation (usually involving MAPDL)
-3. Returns structured output
+- Take structured input parameters.
+- Perform some operation (usually involving MAPDL).
+- Return structured output.
 
 Tools are discovered by MCP clients and can be called with appropriate parameters.
 
-Anatomy of a tool
------------------
+Tool anatomy
+------------
 
 Here's a minimal tool structure:
 
@@ -32,22 +33,22 @@ Here's a minimal tool structure:
         Parameters
         ----------
         ctx : Context
-            The tool context with access to MAPDL instance
+            Tool context with access to an MAPDL instance.
         model_name : str
-            Name/description of the model
+            Name/description of the model.
         load_magnitude : float
-            Load magnitude in Newtons
+            Load magnitude in Newtons.
 
         Returns
         -------
         str
-            Analysis result summary
+            Analysis result summary.
         """
         # Get the MAPDL instance from context
         mapdl = ctx.application_context.mapdl
 
         if mapdl is None:
-            return "Error: No MAPDL instance connected"
+            return "Error: No MAPDL instance connected."
 
         try:
             # Perform the analysis
@@ -67,52 +68,45 @@ Here's a minimal tool structure:
 Key components
 ~~~~~~~~~~~~~~
 
-**Documentation string**: describe what the tool does
-
-**Context parameter**: access to MAPDL and app state
-
-**Input parameters**: specific parameters for this tool
-
-**Error handling**: graceful handling of errors
-
-**Return value**: status message or results
+- Documentation string: Description of what the tool does.
+- Context parameter: Access to MAPDL and the application state.
+- Input parameters: Specific parameters for this tool.
+- Error handling: Graceful handling of errors.
+- Return value: Status message or results.
 
 Tool registration
 -----------------
 
-Tools are registered in the MCP server's tool registry. The registration includes:
+Register tools in the MCP server's tool registry. Each registration includes:
 
-1. **Function**: The Python function to call
-2. **Name**: Human-readable name
-3. **Description**: What the tool does
-4. **Input schema**: Parameter definitions and types
+- Function: The Python function to call.
+- Name: Human-readable name.
+- Description: What the tool does.
+- Input schema: Parameter definitions and types.
 
 Best practices
 --------------
 
-**1. Clear documentation**
-    Write comprehensive docstrings explaining parameters and return values.
+- **Clear documentation**
+  Write comprehensive docstrings explaining parameters, return values, and exceptions.
 
-**2. Type hints**
-    Use Python type hints for all parameters and return values.
+- **Type hints**
+  Use Python type hints for all parameters and return values.
 
-**3. Error handling**
-    Handle errors gracefully and return informative error messages.
+- **Error handling**
+  Handle errors gracefully and return informative error messages.
 
-**4. Input validation**
-    Validate input parameters before using them.
+- **Input validation**
+  Validate input parameters before using them.
 
-**5. Status feedback**
-    Provide feedback on progress for long-running operations.
+- **Status feedback**
+  Provide feedback on progress for long-running operations.
 
-**6. Context management**
-    Always check if MAPDL is connected before using it.
+- **Context management**
+  Always check whether MAPDL is connected before using it.
 
-**7. Documentation**
-    Document parameters, return values, and exceptions.
-
-Example: Complete analysis tool
---------------------------------
+Complete analysis tool example
+------------------------------
 
 Here's a more complete example of a tool:
 
@@ -136,36 +130,36 @@ Here's a more complete example of a tool:
         Parameters
         ----------
         ctx : Context
-            Tool execution context
+            Tool execution context.
         length : float
-            Beam length in meters
+            Beam length in meters.
         width : float
-            Beam width in meters
+            Beam width in meters.
         height : float
-            Beam height in meters
-        material_e : float, optional
-            Young's modulus in Pa. Default: 2.1e11 (steel)
-        material_nu : float, optional
-            Poisson's ratio. Default: 0.3
-        tip_load : float, optional
-            Tip load in Newtons. Default: 1000.0
+            Beam height in meters.
+        material_e : float, default: 2.1e11
+            Young's modulus in Pa. The default, ``2.1e11``, corresponds to steel.
+        material_nu : float, default: 0.3
+            Poisson's ratio.
+        tip_load : float, default: 1000.0
+            Tip load in Newtons.
 
         Returns
         -------
         str
-            Analysis results including max deflection and stress
+            Analysis results including maximum deflection and stress.
         """
         mapdl = ctx.application_context.mapdl
 
         if mapdl is None:
-            return "Error: MAPDL not connected"
+            return "Error: MAPDL is not connected."
 
         # Validate inputs
         if length <= 0 or width <= 0 or height <= 0:
-            return "Error: Dimensions must be positive"
+            return "Error: Dimensions must be positive."
 
         if material_e <= 0 or material_nu < 0 or material_nu > 0.5:
-            return "Error: Invalid material properties"
+            return "Error: Material properties are invalid."
 
         try:
             # Clear previous model
@@ -216,40 +210,37 @@ Here's a more complete example of a tool:
         except Exception as e:
             return f"Analysis failed: {str(e)}"
 
-Testing your tool
------------------
+Tool testing
+------------
 
-When developing a tool, test it:
+When developing a tool, test it in these ways:
 
-1. **Unit testing**: Test with mock contexts
-2. **Integration testing**: Test with actual MAPDL
-3. **Error cases**: Test error conditions and invalid inputs
-4. **Performance**: Verify execution time is acceptable
+- Unit testing: Test with mock contexts.
+- Integration testing: Test with actual MAPDL.
+- Error cases: Test error conditions and invalid inputs.
+- Performance: Verify that execution time is acceptable.
 
-Debugging tools
----------------
+Tool debugging
+--------------
 
 Use these techniques to debug your tools:
 
-1. **Logging**: Use ``ctx`` logger to log debug information
-2. **Status messages**: Return detailed status messages
-3. **Comments**: Add MAPDL comments to track execution
-4. **Screenshots**: Take screenshots at key points
+- Logging: Use the ``ctx`` logger to log debug information.
+- Status messages: Return detailed status messages.
+- Comments: Add MAPDL comments to track execution.
+- Screenshots: Take screenshots at key points.
 
 Advanced topics
 ---------------
 
-**Async tools**: for long-running operations, consider async implementations
-
-**Streaming results**: for tools producing large outputs, stream results
-
-**Caching**: cache expensive computations when appropriate
-
-**Tool composition**: combine multiple tools into workflows
+- Async tools: For long-running operations, consider async implementations.
+- Streaming results: For tools producing large outputs, stream results.
+- Caching: Cache expensive computations when appropriate.
+- Tool composition: Combine multiple tools into workflows.
 
 See also
 --------
 
-- Source code in ``src/ansys/mapdl/mcp/tools.py``
-- Context documentation in :doc:`../api/context_objects`
-- :doc:`../user_guide/best_practices` for general recommendations
+- Source code in the ``src/ansys/mapdl/mcp/tools.py`` file.
+- Context documentation in the :doc:`../api/context_objects` file.
+- :doc:`../user_guide/best_practices` for general recommendations.

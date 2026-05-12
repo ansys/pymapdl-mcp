@@ -1,22 +1,21 @@
 Examples
 ========
 
-Practical examples demonstrating PyMAPDL-MCP capabilities.
+Explore practical examples demonstrating PyMAPDL-MCP capabilities.
 
 .. grid:: 2
 
-    .. grid-item-card:: Usage examples
+    .. grid-item-card:: Usage examples: videos
        :link: ref_usage_examples
        :link-type: ref
 
-       A collection of usage examples demonstrating how to use PyMAPDL-MCP in
-       real-world scenarios.
+       Watch short videos showing how to use PyMAPDL-MCP in real-world scenarios.
 
-    .. grid-item-card:: Implementing a tool
+    .. grid-item-card:: Implement a custom tool
        :link: ref_implementing_a_tool
        :link-type: ref
 
-       A step-by-step guide to implementing a custom tool for PyMAPDL-MCP.
+       Learn how to implement a custom tool for PyMAPDL-MCP.
 
 .. toctree::
    :hidden:

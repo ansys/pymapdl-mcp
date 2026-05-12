@@ -1,14 +1,14 @@
 .. _ref_usage_examples:
 
-Usage examples - video demos
-============================
+Usage examples: videos
+======================
 
-This page embeds short video demos showing PyMAPDL-MCP features.
+Watch videos demonstrating PyMAPDL-MCP usage in real-world scenarios.
 
 Main features
 -------------
 
-This `video <demo_main_video_>`_ shows a general demonstration of the PyMAPDL-MCP features.
+Watch this `video <demo_main_video_>`_ to see PyMAPDL-MCP's main features in action.
 
 .. video:: ../_static/videos/PyMAPDL-MCP-demo-main.mp4
    :width: 80%
@@ -16,16 +16,15 @@ This `video <demo_main_video_>`_ shows a general demonstration of the PyMAPDL-MC
    :muted:
    :loop:
    :autoplay:
-   :alt: PyMAPDL-MCP demo video
-   :caption: PyMAPDL-MCP demo video
+   :alt: Video of PyMAPDL-MCP's main features
+   :caption: Video of PyMAPDL-MCP's main features
 
 
 Answering questions
 -------------------
 
-This `video <demo_csv_video_>`_ shows a short demo  where the LLM answers a question about MAPDL,
-and uses PyMAPDL-MCP to verify the answer.
-In this case, the question is about reading a CSV file in MAPDL.
+Watch this `video <demo_csv_video_>`_ to see how an LLM answers MAPDL questions and uses PyMAPDL-MCP tools to verify answers.
+It demonstrates the reading of a CSV file in MAPDL.
 
 .. video:: ../_static/videos/PyMAPDL-MCP-demo-csv.mp4
    :width: 80%
@@ -38,10 +37,7 @@ In this case, the question is about reading a CSV file in MAPDL.
 Fixing bugs
 -----------
 
-This `video <demo_bugs_video_>`_ shows a short demo where PyMAPDL-MCP is used to fix a
-bug in a MAPDL input file.
-This demonstrates how PyMAPDL-MCP can be used to automate debugging and error
-correction in MAPDL workflows.
+Watch this `video <demo_bugs_video_>`_ to see how PyMAPDL-MCP automates debugging and error correction in MAPDL workflows.
 
 .. video:: ../_static/videos/PyMAPDL-MCP-demo-bugs.mp4
    :width: 80%
