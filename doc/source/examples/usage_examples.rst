@@ -49,6 +49,6 @@ Watch this `video <demo_bugs_video_>`_ to see how PyMAPDL-MCP automates debuggin
 
 
 .. Links to the videos used in this page:
-.. _demo_main_video: https://github.com/ansys/pymapdl-mcp/blob/docs/adding-video-gifs/doc/source/_static/videos/PyMAPDL-MCP-demo-main.mp4
-.. _demo_csv_video: https://github.com/ansys/pymapdl-mcp/blob/docs/adding-video-gifs/doc/source/_static/videos/PyMAPDL-MCP-demo-csv.mp4
-.. _demo_bugs_video: https://github.com/ansys/pymapdl-mcp/blob/docs/adding-video-gifs/doc/source/_static/videos/PyMAPDL-MCP-demo-bugs.mp4
+.. _demo_main_video: https://github.com/ansys/pymapdl-mcp/blob/main/doc/source/_static/videos/PyMAPDL-MCP-demo-main.mp4
+.. _demo_csv_video: https://github.com/ansys/pymapdl-mcp/blob/main/doc/source/_static/videos/PyMAPDL-MCP-demo-csv.mp4
+.. _demo_bugs_video: https://github.com/ansys/pymapdl-mcp/blob/main/doc/source/_static/videos/PyMAPDL-MCP-demo-bugs.mp4
