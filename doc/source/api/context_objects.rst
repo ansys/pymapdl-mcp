@@ -51,17 +51,17 @@ Connection state
 The server maintains connection state through the app context:
 
 - **Connected**: MAPDL instance is active and responding.
-- **Disconnected**: No active MAPDL connection.
+- **Disconnected**: No MAPDL connection is active.
 - **Error**: Last connection attempt failed.
 
 Connection lifecycle
 ~~~~~~~~~~~~~~~~~~~~
 
-1. **Initialize**: Server starts with no connection.
-2. **Connect**: ``launch_mapdl_session`` or ``connect_to_mapdl`` tool creates connection.
-3. **Active**: Commands execute in the connected session.
-4. **Disconnect**: ``disconnect_from_mapdl`` tool closes connection.
-5. **Reset**: Context cleared for new connection.
+#. **Initialize**: Server starts with no connection.
+#. **Connect**: ``launch_mapdl_session`` or ``connect_to_mapdl`` tool creates connection.
+#. **Active**: Commands execute in the connected session.
+#. **Disconnect**: ``disconnect_from_mapdl`` tool closes connection.
+#. **Reset**: Context is cleared for new connection.
 
 Error handling in contexts
 --------------------------

@@ -82,7 +82,7 @@ automatically establishes a connection to it for immediate use.
 
 **Description**: Get comprehensive MAPDL status information.
 
-**Returns**: a JSON string containing:
+**Returns**: JSON string containing:
 
 - Connection information (version, port, IP, directory, ``is_alive``)
 - Session information (title, jobname, routine, units, and more)
@@ -105,7 +105,7 @@ automatically establishes a connection to it for immediate use.
 
 **Description**: Disconnect from the currently connected MAPDL instance.
 
-**Returns**: disconnection status message
+**Returns**: Disconnection status message.
 
 **Example**:
 
@@ -118,7 +118,7 @@ automatically establishes a connection to it for immediate use.
 
 **Description**: Check if MAPDL is installed on the system.
 
-**Returns**: status message indicating installation status
+**Returns**: Status message indicating installation status.
 
 **Example**:
 
@@ -230,7 +230,7 @@ Visualization tools
 .. note::
    This tool is only available when connected to MAPDL and is turned off on AALI environments.
 
-**Description**: Create a custom matplotlib or PyVista visualization.
+**Description**: Create a custom Matplotlib or PyVista visualization.
 
 **Parameters**:
 
@@ -238,7 +238,7 @@ Visualization tools
 - ``plot_type`` (str, default: "matplotlib"): Type of plot to create. Options are ``"matplotlib"`` and ``"pyvista"``.
 - ``timeout`` (int, default: 60): Maximum execution time in seconds.
 
-**Returns**: list containing:
+**Returns**: List containing:
 
 - TextContent with status message
 - ImageContent with base64-encoded image data
@@ -271,9 +271,9 @@ Guidelines and documentation tools
 ``get_guidelines_for_workflow_overview``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Description**: get general MAPDL simulation workflow guidelines
+**Description**: Get general MAPDL simulation workflow guidelines.
 
-**Returns**: overview of the general simulation process
+**Returns**: Overview of the general simulation process.
 
 ``get_guidelines_for_general_rules``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -291,7 +291,7 @@ Guidelines and documentation tools
 
 - ``content`` (str): Type of topic. Options are ``"workflow"``, ``"geometry"``, ``"elements"``, ``"materials"``, ``"mesh"``, ``"boundary_conditions"``, ``"solution"``, ``"postprocessing"``, and ``"general"``.
 
-**Returns**: guideline text for the requested topic.
+**Returns**: Guideline text for the requested topic.
 
 **Example**::
 
@@ -321,7 +321,7 @@ Most tools return structured information:
 
 **Success**: Text describing the result or status.
 
-**Error**: detailed error message including:
+**Error**: Detailed error message including:
 
 - Error type
 - Description of what went wrong

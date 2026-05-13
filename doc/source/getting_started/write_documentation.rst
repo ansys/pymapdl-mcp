@@ -82,7 +82,7 @@ Basic RST syntax
 Cross-references
 ~~~~~~~~~~~~~~~~
 
-Link to other documentation pages:
+The following examples show how to link to other documentation pages:
 
 .. code-block:: rst
 
@@ -129,7 +129,7 @@ Create a page
 #. Write your content.
 #. Add the file to the toctree in the parent ``index.rst`` file.
 
-   For example, to add a new page to the **User guide**, open the
+   For example, to add a new page to the **User guide** section, open the
    ``doc/source/user_guide/index.rst`` file and edit it like this:
 
    .. code-block:: rst
@@ -380,10 +380,10 @@ For new pages, use this template:
 View resources
 ==============
 
-- `Sphinx documentation <https://www.sphinx-doc.org/>`_: Documentation generator.
-- `reStructuredText Primer <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_: RST syntax reference for Sphinx documentation.
-- NumPy `Style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_: Docstring format used with the numpydoc extension for Sphinx.
-- `PyAnsys developer's guide <https://dev.docs.pyansys.com/>`_: How the PyAnsys project exposes Ansys technologies in client libraries within the Python ecosystem.
+- `Sphinx documentation <https://www.sphinx-doc.org/>`_: Documentation generator
+- `reStructuredText Primer <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_: RST syntax reference for Sphinx documentation
+- `NumPy Style guide <https://numpydoc.readthedocs.io/en/latest/format.html>`_: Docstring format used with the numpydoc extension for Sphinx
+- `PyAnsys developer's guide <https://dev.docs.pyansys.com/>`_: How the PyAnsys project exposes Ansys technologies in client libraries within the Python ecosystem
 
 Earn recognition
 ================
@@ -398,5 +398,5 @@ Documentation contributors are recognized in:
 See also
 ========
 
-- :ref:`ref_contributing`: General contribution guidelines.
-- :ref:`ref_develop_pymapdl_mcp`: Code development guidelines.
+- :ref:`ref_contributing`: General contribution guidelines
+- :ref:`ref_develop_pymapdl_mcp`: Code development guidelines

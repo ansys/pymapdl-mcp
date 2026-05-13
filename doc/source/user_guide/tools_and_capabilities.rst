@@ -63,19 +63,19 @@ Running MAPDL commands
 
 Use ``run_mapdl_command`` for single commands:
 
-   *"Run VPLOT on the MAPDL instance"*
+*"Run VPLOT on the MAPDL instance."*
 
 For multiple commands, use ``run_multiple_commands``, which uses MAPDL's ``input_strings``
 method for batch execution. This is significantly faster than running commands one by one:
 
-   *"Run these commands: /PREP7, ET,1,SOLID185, MP,EX,1,200E9"*
+*"Run these commands: /PREP7, ET,1,SOLID185, MP,EX,1,200E9."*
 
 Custom Python code execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use ``run_python_code`` to execute arbitrary Python and PyMAPDL code in a persistent session:
 
-   *"Execute this Python code: displacements = mapdl.get_array('NODE', item1='U', it1num='Y'); print(f'Max displacement: {displacements.max()}')"*
+*"Execute this Python code: displacements = mapdl.get_array('NODE', item1='U', it1num='Y'); print(f'Max displacement: {displacements.max()}')."*
 
 This is useful for:
 
@@ -87,10 +87,10 @@ This is useful for:
 Creating custom plots
 ~~~~~~~~~~~~~~~~~~~~~
 
-Use ``custom_plot`` to create matplotlib or PyVista plots that are not available in MAPDL's
+Use ``custom_plot`` to create Matplotlib or PyVista plots that are not available in MAPDL's
 native plotting:
 
-   *"Create a matplotlib plot showing nodal displacements vs node number"*
+*"Create a Matplotlib plot showing nodal displacements versus node number."*
 
 .. important::
    ``custom_plot`` is for plots that MAPDL cannot produce natively. For standard MAPDL plots
@@ -102,9 +102,9 @@ Capturing plots
 
 After running a MAPDL plot command, use the ``screenshot`` tool to capture the graphics window:
 
-   *"Show a plot of the geometry"*
+*"Show a plot of the geometry."*
 
-   *"Capture the current MAPDL plot"*
+*"Capture the current MAPDL plot."*
 
 It returns the image directly so the AI assistant can display it inline. Works with all MAPDL
 native plot commands, including:
@@ -116,8 +116,8 @@ native plot commands, including:
 Python code execution
 ~~~~~~~~~~~~~~~~~~~~~
 
-- **Run Python code**: Execute arbitrary Python code in the persistent session *(requires MAPDL connection)*.
-- **Integrate with data analysis**: Use NumPy, Pandas, and other Python libraries.
+- Run Python code: Execute arbitrary Python code in the persistent session *(requires MAPDL connection)*.
+- Integrate with data analysis: Use NumPy, Pandas, and other Python libraries.
 
 
 Workflow examples

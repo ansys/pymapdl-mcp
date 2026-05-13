@@ -164,8 +164,7 @@ Enable MCP in Visual Studio Code
 3. Enable the setting to allow Copilot to use MCP servers.
 4. Restart Visual Studio Code for changes to take effect.
 
-View configuration locations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This image shows Visual Studio Code settings for enabling MCP servers:
 
 .. image:: ../_static/enable_mcp.png
    :alt: VS Code setting to enable MCP servers
@@ -180,12 +179,8 @@ See `Visual Studio Code MCP Servers <https://code.visualstudio.com/docs/copilot/
 Claude Desktop
 --------------
 
-Claude Desktop is Anthropic's macOS desktop app with full MCP support.
-
-Configure Claude Desktop
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Edit the ``~/Library/Application Support/Claude/claude_desktop_config.json`` file:
+Claude Desktop is Anthropic's macOS desktop app with full MCP support. To configure
+Claude Desktop, edit the ``~/Library/Application Support/Claude/claude_desktop_config.json`` file:
 
 .. code-block:: json
 

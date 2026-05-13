@@ -25,36 +25,36 @@ PyMAPDL-MCP works with multiple MCP-compatible clients. For setup information, s
 Follow the basic workflow
 -------------------------
 
-Starting a MAPDL instance
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Start a MAPDL instance
+~~~~~~~~~~~~~~~~~~~~~~
 
 There are three ways to connect to MAPDL once the MCP server is running.
 
-**Option 1: launch a new MAPDL instance (recommended)**
+**Option 1: Launch a new MAPDL instance (recommended).**
 
 Ask your AI assistant to use the ``launch_mapdl_session`` tool:
 
-   *"Launch a new MAPDL instance"*
+*"Launch a new MAPDL instance."*
 
-   *"Launch MAPDL with 4 processors in /tmp/mapdl_work"*
+*"Launch MAPDL with 4 processors in /tmp/mapdl_work."*
 
 This starts a new MAPDL process and connects to it automatically. It lets you
 specify custom settings (number of processors, working directory, etc.) without
 any manual setup.
 
-**Option 2: connect to an existing instance**
+**Option 2: Connect to an existing instance.**
 
 Ask your AI assistant to use the ``connect_to_mapdl`` tool:
 
-   *"Connect to MAPDL on localhost port 50052"*
+*"Connect to MAPDL on localhost port 50052."*
 
-   *"Connect to MAPDL on 192.168.1.100 port 50053"*
+*"Connect to MAPDL on 192.168.1.100 port 50053."*
 
 You can first ask it to run ``list_mapdl_instances`` to discover what is running.
 This option is useful for connecting to different instances during a session or
 when MAPDL is already running on a remote machine.
 
-**Option 3: auto-connect on server startup**
+**Option 3: Auto-connect on server startup.**
 
 Pass ``--connect-on-startup`` when starting the MCP server:
 
@@ -70,7 +70,7 @@ Pass ``--connect-on-startup`` when starting the MCP server:
 Running commands and extracting results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Once MAPDL is connected, you can use MCP tools to:
+Once MAPDL is connected, you can use MCP tools to perform these tasks:
 
 1. Launch MAPDL instances.
 2. Execute MAPDL commands through PyMAPDL.
@@ -90,7 +90,7 @@ Consider example use cases
 Next steps
 ----------
 
-- For an overview of available tools, see :doc:`../user_guide/overview`
-- Check :doc:`../api/tools` for the complete API reference
-- Browse :doc:`../examples/index` for practical examples
-- See :doc:`../user_guide/docker` for containerized deployment
+- For an overview of available tools, see :doc:`../user_guide/overview`.
+- For the complete API reference, see :doc:`../api/tools`.
+- For practical examples, browse :doc:`../examples/index`.
+- For containerized deployment, see :doc:`../user_guide/docker`.

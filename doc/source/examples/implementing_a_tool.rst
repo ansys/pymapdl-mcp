@@ -87,23 +87,17 @@ Register tools in the MCP server's tool registry. Each registration includes:
 Best practices
 --------------
 
-- **Clear documentation**
-  Write comprehensive docstrings explaining parameters, return values, and exceptions.
+- Clear documentation: Write comprehensive docstrings explaining parameters, return values, and exceptions.
 
-- **Type hints**
-  Use Python type hints for all parameters and return values.
+- Type hints: Use Python type hints for all parameters and return values.
 
-- **Error handling**
-  Handle errors gracefully and return informative error messages.
+- Error handling: Handle errors gracefully and return informative error messages.
 
-- **Input validation**
-  Validate input parameters before using them.
+- Input validation: Validate input parameters before using them.
 
-- **Status feedback**
-  Provide feedback on progress for long-running operations.
+- Status feedback: Provide feedback on progress for long-running operations.
 
-- **Context management**
-  Always check whether MAPDL is connected before using it.
+- Context management: Always check whether MAPDL is connected before using it.
 
 Complete analysis tool example
 ------------------------------

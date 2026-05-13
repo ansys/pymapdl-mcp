@@ -20,8 +20,8 @@ Watch this `video <demo_main_video_>`_ to see PyMAPDL-MCP's main features in act
    :caption: Video of PyMAPDL-MCP's main features
 
 
-Answering questions
--------------------
+Answer questions
+----------------
 
 Watch this `video <demo_csv_video_>`_ to see how an LLM answers MAPDL questions and uses PyMAPDL-MCP tools to verify answers.
 It demonstrates the reading of a CSV file in MAPDL.
@@ -31,11 +31,11 @@ It demonstrates the reading of a CSV file in MAPDL.
    :align: center
    :muted:
    :loop:
-   :alt: PyMAPDL-MCP CSV demo video
-   :caption: PyMAPDL-MCP CSV demo video
+   :alt: PyMAPDL-MCP video showing how to read a CSV file in MAPDL
+   :caption: PyMAPDL-MCP video showing how to read a CSV file in MAPDL
 
-Fixing bugs
------------
+Fix bugs
+--------
 
 Watch this `video <demo_bugs_video_>`_ to see how PyMAPDL-MCP automates debugging and error correction in MAPDL workflows.
 
@@ -44,8 +44,8 @@ Watch this `video <demo_bugs_video_>`_ to see how PyMAPDL-MCP automates debuggin
    :align: center
    :muted:
    :loop:
-   :alt: PyMAPDL-MCP bug fixing demo video
-   :caption: PyMAPDL-MCP bug fixing demo video
+   :alt: PyMAPDL-MCP video showing bug fixing
+   :caption: PyMAPDL-MCP video showing bug fixing
 
 
 .. Links to the videos used in this page:

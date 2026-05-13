@@ -4,7 +4,7 @@ Overview
 What is PyMAPDL-MCP?
 --------------------
 
-Use PyMAPDL-MCP as a bridge between AI assistants and Ansys MAPDL. It uses the Model Context Protocol (MCP)
+Use PyMAPDL-MCP as a bridge between AI assistants and Ansys MAPDL. It uses the Model Context Protocol
 (MCP) to expose PyMAPDL capabilities as standardized tools that AI systems can call.
 
 What is MCP?
@@ -18,8 +18,8 @@ It allows AI assistants to perform the following tasks:
 - Receive results and error information.
 - Maintain state across multiple interactions.
 
-How MCP works
-~~~~~~~~~~~~~
+How does MCP work?
+~~~~~~~~~~~~~~~~~~
 
 - **Client connection**: An MCP-compatible client (such as Claude) connects to the PyMAPDL-MCP server.
 - **Tool discovery**: The client discovers available tools for controlling MAPDL.

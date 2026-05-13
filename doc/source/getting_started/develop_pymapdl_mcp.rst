@@ -32,16 +32,16 @@ is itself built on top of FastMCP. The server lifecycle has three phases:
 - Gracefully disconnects from MAPDL.
 - Cleans up the persistent Python session resources.
 
-Application context
--------------------
+App context
+-----------
 
 The server uses a strongly typed ``PyMAPDLAppContext`` dataclass that holds:
 
-- The active MAPDL instance connection.
-- The persistent Python session for custom code execution.
-- Transport configuration (STDIO or HTTP).
-- Connection settings (IP, port, auto-connect flags).
-- Command history tracking.
+- The active MAPDL instance connection
+- The persistent Python session for custom code execution
+- Transport configuration (STDIO or HTTP)
+- Connection settings (IP, port, auto-connect flags)
+- Command history tracking
 
 Check prerequisites
 ===================
@@ -116,7 +116,7 @@ Explore the project structure
    ├── src/ansys/mapdl/mcp/          # Main package source
    │   ├── __init__.py
    │   ├── __main__.py               # Entry point
-   │   ├── contexts.py               # Application context and guidelines
+   │   ├── contexts.py               # App context and guidelines
    │   ├── helpers.py                # Utility functions
    │   ├── mcp.py                    # MCP server setup
    │   ├── prompts.py                # Prompt definitions
@@ -264,21 +264,17 @@ Add a new tool
 Add or modify documentation
 ===========================
 
-Conditionally enabling or disabling a tool
-------------------------------------------
-
-Tools can be tagged so they are selectively turned off at runtime. Apply a tag via the
-``@app.tool()`` decorator, then call ``app.disable()`` with that tag when the condition
+You can tag tools with the ``@app.tool()`` decorator to selectively turn them off at runtime. After applying a tag, call ``app.disable()`` with that tag when the condition
 applies (for example, when ``--connect-on-startup`` locks the connection):
 
 .. code-block:: python
 
-   # Tag the tool so it can be disabled as a group
+   # Tag the tool so it can be turned off as a group
    @app.tool(tags={"locked_connection"})
    def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> str:
        ...
 
-   # Disable all tools with this tag when the connection is locked
+   # Turn off all tools with this tag when the connection is locked
    app.disable(tags={"locked_connection"})
 
 #. Edit RST files in the ``doc/source/`` directory.
@@ -341,7 +337,7 @@ If you need help:
 
 - Check issues on the `PyMAPDL-MCP Issues <https://github.com/ansys/pymapdl-mcp/issues>`_ page.
 - Ask a question on the `PyMAPDL-MCP Discussions <https://github.com/ansys/pymapdl-mcp/discussions>`_ page.
-- Review the `PyAnsys developer guide <https://dev.docs.pyansys.com/>`_.
+- Review the `PyAnsys developer's guide <https://dev.docs.pyansys.com/>`_.
 - Check `PyMAPDL documentation <https://mapdl.docs.pyansys.com/>`_.
 
 Submit your work
@@ -357,8 +353,8 @@ When your feature is ready:
 
    - A clear description of changes
    - References to related issues (such as ``Fixes #123``)
-   - List of changes made
-   - Any breaking changes noted
+   - A list of changes made
+   - A note of any breaking changes
 
 Follow PR guidelines
 ====================
