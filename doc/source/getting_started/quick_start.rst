@@ -19,7 +19,7 @@ PyMAPDL-MCP works with multiple MCP-compatible clients. For setup information, s
 
 - Claude Code (recommended for AI-assisted development)
 - Visual Studio Code with Copilot (for Visual Studio Code users)
-- Claude Desktop (macOS application)
+- Claude Desktop (macOS app)
 - Other MCP-compatible clients
 
 Follow the basic workflow
