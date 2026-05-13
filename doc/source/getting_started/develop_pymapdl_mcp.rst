@@ -188,7 +188,7 @@ Follow code conventions
 =======================
 
 Branch naming
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 - Features: ``feature/short-description``
 - Fixes: ``fix/short-description``
@@ -196,7 +196,7 @@ Branch naming
 - Tests: ``test/short-description``
 
 Commit messages
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 
 Use conventional commits format:
 
@@ -210,7 +210,7 @@ Use conventional commits format:
    chore: Update dependencies.
 
 Code style
-~~~~~~~~~~
+^^^^^^^^^^
 
 - Follow PEP 8 and the `Coding style <https://dev.docs.pyansys.com/coding-style/index.html>`_.
 - Use type hints for all functions.
