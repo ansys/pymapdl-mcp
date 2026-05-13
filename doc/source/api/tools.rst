@@ -84,7 +84,7 @@ automatically establishes a connection to it for immediate use.
 
 **Returns**: a JSON string containing:
 
-- Connection information (version, port, IP, directory, is_alive)
+- Connection information (version, port, IP, directory, ``is_alive``)
 - Session information (title, jobname, routine, units, and more)
 - Geometry statistics
 - Postprocessing data
