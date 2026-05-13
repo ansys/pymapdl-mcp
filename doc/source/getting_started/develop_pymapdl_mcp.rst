@@ -202,7 +202,7 @@ Use conventional commits format:
 
 .. code-block:: bash
 
-   feat: Add new tool for XYZ functionality.
+   feat: Add new tool for XYZ feature.
    fix: Correct handling of edge case.
    docs: Update installation instructions.
    test: Add tests for feature ABC.
@@ -355,7 +355,7 @@ When your feature is ready:
 #. Use the ``pytest -m "not integration"`` command to ensure all tests pass.
 #. Use the ``pre-commit run --all-files`` command to ensure code quality.
 #. Update relevant documentation.
-#. Add tests for new functionality to ensure greater than 80% coverage.
+#. Add tests for new features to ensure greater than 80% coverage.
 #. Create a PR with:
 
    - A clear description of changes
@@ -367,7 +367,7 @@ Follow PR guidelines
 ====================
 
 - Keep PRs focused on a single feature or fix.
-- Include tests for new functionality.
+- Include tests for new features.
 - Update documentation as needed.
 - Respond to review feedback.
 - Keep the PR up to date with the main branch.

@@ -69,7 +69,7 @@ Key components
 ~~~~~~~~~~~~~~
 
 - Documentation string: Description of what the tool does.
-- Context parameter: Access to MAPDL and the application state.
+- Context parameter: Access to MAPDL and the app state.
 - Input parameters: Specific parameters for this tool.
 - Error handling: Graceful handling of errors.
 - Return value: Status message or results.

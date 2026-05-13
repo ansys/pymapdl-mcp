@@ -34,4 +34,5 @@ PyVista
 toctree
 uv
 uvx
-VS Code
+Visual Studio Code
+PR

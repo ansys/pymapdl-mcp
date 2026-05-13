@@ -34,9 +34,9 @@ PyMAPDL-MCP includes several key components:
 
 - **MCP server**: Implements the MCP protocol and handles client connections.
 - **Tool registry**: Maintains the list of available tools.
-- **PyMAPDL integration**: Wraps PyMAPDL functionality as MCP tools.
+- **PyMAPDL integration**: Wraps PyMAPDL capabilities as MCP tools.
 - **Session management**: Manages MAPDL instance lifecycle.
-- **Context management**: Maintains application state across interactions.
+- **Context management**: Maintains app state across interactions.
 
 Explore use cases
 -----------------

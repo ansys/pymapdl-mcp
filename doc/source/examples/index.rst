@@ -5,7 +5,7 @@ Explore practical examples demonstrating PyMAPDL-MCP capabilities.
 
 .. grid:: 2
 
-    .. grid-item-card:: Usage examples: videos
+    .. grid-item-card:: Usage examples: Videos
        :link: ref_usage_examples
        :link-type: ref
 

@@ -251,6 +251,7 @@ For remote clients or web-based clients:
 
 Claude Code versus Visual Studio Code
 -------------------------------------
+.. vale off
 
 .. list-table::
    :header-rows: 1
@@ -279,6 +280,8 @@ Claude Code versus Visual Studio Code
    * - Learning curve
      - Low (CLI-based)
      - Medium (JSON configuration)
+
+.. vale on
 
 Advanced configuration
 ----------------------
