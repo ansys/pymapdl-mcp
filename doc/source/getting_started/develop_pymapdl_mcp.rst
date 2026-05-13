@@ -187,16 +187,14 @@ Follow the development workflow
 Follow code conventions
 =======================
 
-Branch naming
-^^^^^^^^^^^^^
+**Branch naming**
 
 - Features: ``feature/short-description``
 - Fixes: ``fix/short-description``
 - Documentation: ``doc/short-description``
 - Tests: ``test/short-description``
 
-Commit messages
-^^^^^^^^^^^^^^^
+**Commit messages**
 
 Use conventional commits format:
 
@@ -209,8 +207,7 @@ Use conventional commits format:
    refactor: Simplify tool implementation.
    chore: Update dependencies.
 
-Code style
-^^^^^^^^^^
+**Code style**
 
 - Follow PEP 8 and the `Coding style <https://dev.docs.pyansys.com/coding-style/index.html>`_.
 - Use type hints for all functions.
