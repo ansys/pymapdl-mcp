@@ -15,13 +15,13 @@
    changelog
 
 
-.. image:: ../source/_static/pymapdl_dark_logo_large.png
+.. image:: ../source/_static/logo-dark.svg
     :class: only-dark
     :width: 800
     :alt: PyMAPDL-MCP logo
     :align: center
 
-.. image:: ../source/_static/pymapdl_light_logo_large.png
+.. image:: ../source/_static/logo-light.svg
     :class: only-light
     :width: 800
     :alt: PyMAPDL-MCP logo
