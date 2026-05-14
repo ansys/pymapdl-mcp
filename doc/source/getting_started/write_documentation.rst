@@ -143,6 +143,9 @@ Create a page
 #. Rebuild the documentation using the ``make html`` command.
 #. View the new page in your browser.
 
+.. note::
+   For a page template to start from, see `Use the documentation template`_.
+
 Write good documentation
 ========================
 

@@ -40,8 +40,8 @@ When possible, use these issue templates:
 
 * **🐞 Bug, problem, or error**: File a bug report.
 * **📖 Documentation issue**: Suggest modifications needed to the documentation.
-* **🆕 New tool or feature**: Propose a new MCP tool or feature for the library.
-* **💡 Enhancement**: Suggest improvements to existing features.
+* **🎓 Adding an example**: Propose a new example for the library.
+* **💡 New feature**: Propose a new feature for the library.
 
 If your issue does not fit into any existing category, click
 `Blank issue <https://github.com/ansys/pymapdl-mcp/issues/new>`_.
