@@ -23,7 +23,7 @@ BRANCH = "main"
 # Select desired logo, theme, and declare the html title
 html_logo = pyansys_logo_black
 html_theme = "ansys_sphinx_theme"
-html_short_title = html_title = "PyMAPDL MCP"
+html_short_title = html_title = "PyMAPDL-MCP"
 
 # Favicon
 html_favicon = ansys_favicon

@@ -1,7 +1,7 @@
 API reference
 =============
 
-Complete API documentation for PyMAPDL-MCP.
+This section provides the API documentation for PyMAPDL-MCP.
 
 .. toctree::
    :maxdepth: 2

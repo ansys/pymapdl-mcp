@@ -14,19 +14,19 @@ Quick start with Docker Compose
 
 The easiest way to run both MAPDL and the MCP server together is using Docker Compose.
 
-1. **Configure the environment:**
+1. Configure the environment:
 
    .. code-block:: bash
 
       cp docker/env.example docker/.env
 
-   Edit ``docker/.env`` with your settings:
+   Edit the ``docker/.env`` file with your settings:
 
    - ``PYMAPDL_IP``: Set to ``mapdl`` (container), ``host.docker.internal``
      (local Windows/Mac), or the IP address of a remote MAPDL instance.
    - ``ANSYSLMD_LICENSE_FILE``: Your ANSYS license server (format: ``port@server``).
 
-2. **Start services:**
+2. Start services:
 
    .. code-block:: bash
 
@@ -43,20 +43,20 @@ The easiest way to run both MAPDL and the MCP server together is using Docker Co
 Docker Compose services
 ------------------------
 
-The ``docker-compose.yml`` defines two services:
+The ``docker-compose.yml`` file defines two services:
 
-- **pymapdl-mcp**: The MCP server with HTTP transport enabled.
-- **mapdl**: An ANSYS MAPDL container (optional—you can connect to a local instance
-  instead).
+- **pymapdl-mcp**: The MCP server with HTTP transport enabled
+- **mapdl**: An ANSYS MAPDL container (optional as you can connect to a local instance
+  instead)
 
-To connect to a **local** MAPDL instance instead of the container:
+To connect to a *local* MAPDL instance instead of the container:
 
-1. Remove or comment out the ``mapdl`` service and ``depends_on`` in ``docker-compose.yml``.
-2. Set ``PYMAPDL_IP=host.docker.internal`` (Windows/Mac) or the appropriate IP address.
-3. Start MAPDL locally: ``pymapdl start --port 50052``.
+#. Remove or comment out the ``mapdl`` service and ``depends_on`` in the ``docker-compose.yml`` file.
+#. Set ``PYMAPDL_IP=host.docker.internal`` (Windows/Mac) or the appropriate IP address.
+#. Start MAPDL locally: ``pymapdl start --port 50052``.
 
-Building a standalone image
----------------------------
+Build a standalone image
+------------------------
 
 To build the MCP server image without Docker Compose, run from the repository root.
 
@@ -77,8 +77,8 @@ On Windows (PowerShell):
    docker build --secret id=github_token,env=GITHUB_TOKEN `
      -f docker\Dockerfile -t pymapdl-mcp .
 
-Running the standalone container
---------------------------------
+Run the standalone container
+----------------------------
 
 Connect to a local MAPDL instance:
 
@@ -130,7 +130,7 @@ MCP client configuration
 
 Once the container is running, configure your MCP client to connect to the HTTP server.
 
-VS Code (``.vscode/mcp.json``):
+Visual Studio Code (``.vscode/mcp.json``):
 
 .. code-block:: json
 

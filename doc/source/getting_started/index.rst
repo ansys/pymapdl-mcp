@@ -1,8 +1,7 @@
 Getting started
 ===============
 
-This section covers everything you need to get up and running with PyMAPDL-MCP,
-as well as how to contribute back to the project.
+Learn how to install and configure PyMAPDL-MCP, and how to contribute to the project.
 
 .. toctree::
    :maxdepth: 2

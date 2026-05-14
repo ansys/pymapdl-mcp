@@ -1,10 +1,10 @@
-.. _ref_developing_pymapdl_mcp:
+.. _ref_develop_pymapdl_mcp:
 
-======================
-Developing PyMAPDL-MCP
-======================
+===================
+Develop PyMAPDL-MCP
+===================
 
-This guide helps you set up your development environment and start contributing code to PyMAPDL-MCP.
+Set up your development environment and start contributing code to PyMAPDL-MCP.
 
 Architecture
 ============
@@ -32,83 +32,83 @@ is itself built on top of FastMCP. The server lifecycle has three phases:
 - Gracefully disconnects from MAPDL.
 - Cleans up the persistent Python session resources.
 
-Application context
--------------------
+App context
+-----------
 
 The server uses a strongly typed ``PyMAPDLAppContext`` dataclass that holds:
 
-- The active MAPDL instance connection.
-- The persistent Python session for custom code execution.
-- Transport configuration (STDIO or HTTP).
-- Connection settings (IP, port, auto-connect flags).
-- Command history tracking.
+- The active MAPDL instance connection
+- The persistent Python session for custom code execution
+- Transport configuration (STDIO or HTTP)
+- Connection settings (IP, port, auto-connect flags)
+- Command history tracking
 
-Prerequisites
-=============
+Check prerequisites
+===================
 
 Before you begin, ensure you have:
 
 - Python 3.10 or higher
 - Git installed
-- A text editor or IDE (VS Code, PyCharm, etc.)
+- A text editor or IDE (such as Visual Studio Code or PyCharm)
 - A GitHub account
 
-Cloning the repository
-======================
+Clone the repository
+====================
 
-1. Fork the repository on GitHub
-2. Clone your fork locally:
+#. Fork the GitHub repository.
+#. Clone your fork locally:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   git clone https://github.com/YOUR_USERNAME/pymapdl-mcp.git
-   cd pymapdl-mcp
+      git clone https://github.com/YOUR_USERNAME/pymapdl-mcp.git
+      cd pymapdl-mcp
 
-3. Add the upstream repository as a remote:
+#. Add the upstream repository as a remote:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   git remote add upstream https://github.com/ansys/pymapdl-mcp.git
+      git remote add upstream https://github.com/ansys/pymapdl-mcp.git
 
-Setting up your development environment
-========================================
+Set up your development environment
+===================================
 
-1. Create a virtual environment:
+#. Create a virtual environment:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   python -m venv .venv
+      python -m venv .venv
 
-2. Activate the virtual environment:
+#. Activate the virtual environment:
 
-**On Windows:**
+   **On Windows:**
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   .venv\Scripts\activate
+      .venv\Scripts\activate
 
-**On macOS/Linux:**
+   **On macOS/Linux:**
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   source .venv/bin/activate
+      source .venv/bin/activate
 
-3. Install the package in editable mode with development dependencies:
+#. Install the package in editable mode with development dependencies:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   pip install -e .[tests]
+      pip install -e .[tests]
 
-4. Install pre-commit hooks:
+#. Install pre-commit hooks:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   pre-commit install
+      pre-commit install
 
-This ensures code quality checks run automatically before each commit.
+   This ensures code quality checks run automatically before each commit.
 
-Project structure
-=================
+Explore the project structure
+=============================
 
 .. code-block::
 
@@ -116,7 +116,7 @@ Project structure
    ├── src/ansys/mapdl/mcp/          # Main package source
    │   ├── __init__.py
    │   ├── __main__.py               # Entry point
-   │   ├── contexts.py               # Application context and guidelines
+   │   ├── contexts.py               # App context and guidelines
    │   ├── helpers.py                # Utility functions
    │   ├── mcp.py                    # MCP server setup
    │   ├── prompts.py                # Prompt definitions
@@ -129,184 +129,172 @@ Project structure
    ├── pyproject.toml               # Project metadata
    └── README.md                    # Main README
 
-Development workflow
-====================
+Follow the development workflow
+===============================
 
-1. **Create a feature branch:**
+#. Create a feature branch:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   git checkout -b feature/your-feature-name
+      git checkout -b feature/your-feature-name
 
-2. **Make your changes:**
+#. Make your changes:
 
-   - Edit the relevant files
-   - Add or modify tests as needed
-   - Update documentation if applicable
+   - Add or modify relevant files.
+   - Add or modify tests as needed.
+   - Update documentation if applicable.
 
-3. **Run tests:**
+#. Run tests:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   # Run unit tests (no MAPDL required)
-   pytest -m "not integration"
+      # Run unit tests (no MAPDL required)
+      pytest -m "not integration"
 
-   # Run all tests with coverage
-   pytest --cov=ansys.mapdl.mcp --cov-report=html
+      # Run all tests with coverage
+      pytest --cov=ansys.mapdl.mcp --cov-report=html
 
-4. **Check code quality:**
+#. Check code quality:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   # Run pre-commit checks manually
-   pre-commit run --all-files
+      # Run pre-commit checks manually
+      pre-commit run --all-files
 
-5. **Commit your changes:**
+#. Commit your changes:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   git add .
-   git commit -m "feat: Add your feature description"
+      git add .
+      git commit -m "feat: Add your feature description"
 
-   # Pre-commit hooks will run automatically
+      # Pre-commit hooks will run automatically
 
-6. **Push to your fork:**
+#. Push to your fork:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   git push origin feature/your-feature-name
+      git push origin feature/your-feature-name
 
-7. **Create a Pull Request:**
+#. Create a pull request (PR) on GitHub:
 
-   - Go to the main repository on GitHub
-   - Click "New Pull Request"
-   - Select your feature branch
-   - Fill in the PR description
-   - Submit the PR
+   - Go to the main repository on GitHub.
+   - Click **New Pull Request**.
+   - Select your feature branch.
+   - Fill in the PR description.
+   - Submit the PR.
 
-Code conventions
-================
+Follow code conventions
+=======================
 
-Follow these conventions when contributing:
-
-**Branch naming:**
+**Branch naming**
 
 - Features: ``feature/short-description``
 - Fixes: ``fix/short-description``
 - Documentation: ``doc/short-description``
 - Tests: ``test/short-description``
 
-**Commit messages:**
+**Commit messages**
 
 Use conventional commits format:
 
 .. code-block:: bash
 
-   feat: Add new tool for XYZ functionality
-   fix: Correct handling of edge case
-   docs: Update installation instructions
-   test: Add tests for feature ABC
-   refactor: Simplify tool implementation
-   chore: Update dependencies
+   feat: Add new tool for XYZ feature.
+   fix: Correct handling of edge case.
+   docs: Update installation instructions.
+   test: Add tests for feature ABC.
+   refactor: Simplify tool implementation.
+   chore: Update dependencies.
 
-**Code style:**
+**Code style**
 
-- Follow PEP 8 and the `Coding style <https://dev.docs.pyansys.com/coding-style/index.html>`_
-- Use type hints for all functions
-- Write docstrings following NumPy style
-- Maximum line length: 100 characters
-- Format code with Black and isort (run automatically via pre-commit)
+- Follow PEP 8 and the `Coding style <https://dev.docs.pyansys.com/coding-style/index.html>`_.
+- Use type hints for all functions.
+- Write docstrings following NumPy style.
+- Keep line lengths to 100 characters or less.
+- Format code with Black and isort (run automatically via pre-commit).
 
-Adding a new tool
-=================
+Add a new tool
+==============
 
-To add a new MCP tool to PyMAPDL-MCP:
+#. Edit the ``src/ansys/mapdl/mcp/tools.py`` file.
 
-1. **Edit** ``src/ansys/mapdl/mcp/tools.py``
+#. Add your tool using the ``@app.tool()`` decorator:
 
-2. **Add your tool** using the ``@app.tool()`` decorator:
+   .. code-block:: python
 
-.. code-block:: python
+      @app.tool()
+      def your_new_tool(ctx: Context, param1: str, param2: int = 10) -> str:
+          """
+          Brief description of what this tool does.
 
-   @app.tool()
-   def your_new_tool(ctx: Context, param1: str, param2: int = 10) -> str:
-       """
-       Brief description of what this tool does.
+          Parameters
+          ----------
+          ctx : Context
+              Tool execution context with access to MAPDL.
+          param1 : str
+              Description of param1.
+          param2 : int, default: 10
+              Description of param2.
 
-       Parameters
-       ----------
-       ctx : Context
-           The tool execution context with access to MAPDL
-       param1 : str
-           Description of param1
-       param2 : int, optional
-           Description of param2. Default is 10.
+          Returns
+          -------
+          str
+              Description of what this tool returns
+          """
+          mapdl = ctx.application_context.mapdl
 
-       Returns
-       -------
-       str
-           Description of what this tool returns
-       """
-       mapdl = ctx.application_context.mapdl
+          if mapdl is None:
+              return "Error: No MAPDL connection available"
 
-       if mapdl is None:
-           return "Error: No MAPDL connection available"
+          try:
+              # Your implementation here
+              result = mapdl.your_operation()
+              return f"Success: {result}"
+          except Exception as e:
+              return f"Error: {str(e)}"
 
-       try:
-           # Your implementation here
-           result = mapdl.your_operation()
-           return f"Success: {result}"
-       except Exception as e:
-           return f"Error: {str(e)}"
+#. Write tests in the ``tests/test_tools.py`` file.
 
-3. **Write tests** in ``tests/test_tools.py``
+#. Document the tool in the ``doc/source/api/tools.rst`` file.
 
-4. **Document the tool** in ``doc/source/api/tools.rst``
+#. Add a usage example if appropriate in the ``doc/source/examples/`` directory.
 
-5. **Add usage example** if appropriate in ``doc/source/examples/``
+Add or modify documentation
+===========================
 
-Conditionally enabling or disabling a tool
-------------------------------------------
-
-Tools can be tagged so they are selectively turned off at runtime. Apply a tag via the
-``@app.tool()`` decorator, then call ``app.disable()`` with that tag when the condition
+You can tag tools with the ``@app.tool()`` decorator to selectively turn them off at runtime. After applying a tag, call ``app.disable()`` with that tag when the condition
 applies (for example, when ``--connect-on-startup`` locks the connection):
 
 .. code-block:: python
 
-   # Tag the tool so it can be disabled as a group
+   # Tag the tool so it can be turned off as a group
    @app.tool(tags={"locked_connection"})
    def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> str:
        ...
 
-   # Disable all tools with this tag when the connection is locked
+   # Turn off all tools with this tag when the connection is locked
    app.disable(tags={"locked_connection"})
 
-Adding documentation
-====================
+#. Edit RST files in the ``doc/source/`` directory.
 
-To add or modify documentation:
+#. Build documentation locally:
 
-1. **Edit RST files** in ``doc/source/``
+   .. code-block:: bash
 
-2. **Build documentation locally:**
+      cd doc
+      make.bat html    # On Windows
+      make html        # On Linux/macOS
 
-.. code-block:: bash
+#. View the documentation by opening the ``_build/html/index.html`` file in your browser.
 
-   cd doc
-   make.bat html    # On Windows
-   make html        # On Linux/macOS
+#. Commit changes to your documentation files.
 
-3. **View the documentation:**
+Run tests
+=========
 
-   Open ``doc/_build/html/index.html`` in your browser
-
-4. **Commit changes** to documentation files
-
-Running tests
-=============
-
-PyMAPDL-MCP includes a comprehensive test suite with 40+ tests.
+PyMAPDL-MCP includes a comprehensive test suite with more than 40 tests.
 
 **Run unit tests (recommended for development):**
 
@@ -320,7 +308,7 @@ PyMAPDL-MCP includes a comprehensive test suite with 40+ tests.
 
    pytest --cov=ansys.mapdl.mcp --cov-report=html
 
-**Run specific test file:**
+**Run a specific test file:**
 
 .. code-block:: bash
 
@@ -335,64 +323,61 @@ PyMAPDL-MCP includes a comprehensive test suite with 40+ tests.
 Test coverage goal
 ------------------
 
-Aim for >80% test coverage on new code:
+Aim for greater than 80% test coverage on new code. Open the ``htmlcov/index.html`` file
+after report generation to view the report:
 
 .. code-block:: bash
 
-   # Generate coverage report
    pytest --cov=ansys.mapdl.mcp --cov-report=html
-   # Open htmlcov/index.html to view
 
-Getting help
-============
+Get help
+========
 
-If you need help during development:
+If you need help:
 
-1. **Check existing issues** at `PyMAPDL-MCP Issues <https://github.com/ansys/pymapdl-mcp/issues>`_
-2. **Ask in discussions** at `PyMAPDL-MCP Discussions <https://github.com/ansys/pymapdl-mcp/discussions>`_
-3. **Review the PyAnsys Developer's Guide** at `PyAnsys Dev Guide <https://dev.docs.pyansys.com/>`_
-4. **Check PyMAPDL documentation** at `PyMAPDL Docs <https://mapdl.docs.pyansys.com/>`_
+- Check issues on the `PyMAPDL-MCP Issues <https://github.com/ansys/pymapdl-mcp/issues>`_ page.
+- Ask a question on the `PyMAPDL-MCP Discussions <https://github.com/ansys/pymapdl-mcp/discussions>`_ page.
+- Review the `PyAnsys developer's guide <https://dev.docs.pyansys.com/>`_.
+- Check `PyMAPDL documentation <https://mapdl.docs.pyansys.com/>`_.
 
-Submitting your work
-====================
+Submit your work
+================
 
 When your feature is ready:
 
-1. Ensure all tests pass: ``pytest -m "not integration"``
-2. Ensure code quality: ``pre-commit run --all-files``
-3. Update relevant documentation
-4. Add tests for new features (>80% coverage)
-5. Create a Pull Request with:
+#. Use the ``pytest -m "not integration"`` command to ensure all tests pass.
+#. Use the ``pre-commit run --all-files`` command to ensure code quality.
+#. Update relevant documentation.
+#. Add tests for new features to ensure greater than 80% coverage.
+#. Create a PR with:
 
-   - Clear description of changes
-   - Reference to related issues (use ``Fixes #123``)
-   - List of changes made
-   - Any breaking changes noted
+   - A clear description of changes
+   - References to related issues (such as ``Fixes #123``)
+   - A list of changes made
+   - A note of any breaking changes
 
-Pull request guidelines
-=======================
+Follow PR guidelines
+====================
 
-- Keep PRs focused on a single feature or fix
-- Include tests for new features
-- Update documentation as needed
-- Respond to review feedback
-- Keep the PR up-to-date with main branch
-- Use "Squash and merge" when possible to keep history clean
+- Keep PRs focused on a single feature or fix.
+- Include tests for new features.
+- Update documentation as needed.
+- Respond to review feedback.
+- Keep the PR up to date with the main branch.
+- Use GitHub's **Squash and merge** option when possible to keep the history clean.
 
-Recognition
-===========
+Earn recognition
+================
 
 Contributors are recognized in:
 
-- Pull Request comments
+- PR comments
 - Release notes
 - Contributors file (as applicable)
 
-Thank you for contributing to PyMAPDL-MCP!
 
 See also
 ========
 
-- :ref:`ref_contributing` - General contribution guidelines
-- :ref:`write_documentation` - Documentation contribution guide
-- `PyAnsys Developer's Guide <https://dev.docs.pyansys.com/>`_
+- :ref:`ref_contributing`: General contribution guidelines
+- :ref:`write_documentation`: Documentation contribution guide

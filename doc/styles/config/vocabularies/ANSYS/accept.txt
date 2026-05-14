@@ -1,35 +1,38 @@
-Ansys
-ansys
-Anthropic's
+(i?)HTTP
+(i?)jobname
+(i?)mapdl
+(i?)MCP
+(i?)RST
 [Aa]sync
+[Cc]ompose
 [Cc]onfig
-dataclass
 [Dd]ev
 [Dd]ocker
-[Cc]ompose
-Claude Code
-Claude Desktop
 [Dd]ocstring
 [Dd]ocstrings
+[Mm]atplotlib
+[Nn]ginx
+[Uu]nescaped
+ansys
+Ansys
+Anthropic's
+Claude Code
+Claude Desktop
+dataclass
 GitHub
 HAProxy
 hostname
 isort
-(i?)HTTP
-(i?)jobname
-(i?)mapdl
 MAPDL
 MAPDL's
-(i?)MCP
 Model Context Protocol
-[Nn]ginx
+numpydoc
 postprocessing
 PyMAPDL
 Python
 PyVista
-(i?)RST
 toctree
-[Uu]nescaped
 uv
 uvx
-VS Code
+Visual Studio Code
+PR
