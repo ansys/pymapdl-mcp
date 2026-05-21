@@ -80,13 +80,15 @@ class TestMapdlIntegration:
         Skip these tests if MAPDL is not available.
         """
         try:
-            mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
+            mapdl = launch_mapdl(cleanup_on_exit=True, loglevel="ERROR")
 
             yield mapdl
 
-            # Cleanup after tests
-            # Don't exit since MAPDL is running externally
-            mapdl.exit()
+            # Cleanup after tests - use force=True to ensure the process is
+            # terminated even when pymapdl's internal _launched flag is False
+            # (a known issue with pymapdl >= 0.73.0 where create_grpc_client
+            # does not set launched=True, making exit() a no-op otherwise).
+            mapdl.exit(force=True)
 
         except Exception as e:
             # Not allow to skip if running on CICD
@@ -461,13 +463,15 @@ class TestPythonPersistentSessionIntegration:
         Skip these tests if MAPDL is not available.
         """
         try:
-            mapdl = launch_mapdl(cleanup_on_exit=False, loglevel="ERROR")
+            mapdl = launch_mapdl(cleanup_on_exit=True, loglevel="ERROR")
 
             yield mapdl
 
-            # Cleanup after tests
-            # Don't exit since MAPDL is running externally
-            mapdl.exit()
+            # Cleanup after tests - use force=True to ensure the process is
+            # terminated even when pymapdl's internal _launched flag is False
+            # (a known issue with pymapdl >= 0.73.0 where create_grpc_client
+            # does not set launched=True, making exit() a no-op otherwise).
+            mapdl.exit(force=True)
 
         except Exception as e:
             # Not allow to skip if running on CICD

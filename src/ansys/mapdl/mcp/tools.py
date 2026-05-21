@@ -491,9 +491,12 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
         port = mapdl._port
         logger.info(f"Disconnecting from MAPDL at {ip}:{port}...")
 
-        # Exit the MAPDL connection
-        # Just disconnect the client
-        mapdl.exit()
+        # Exit the MAPDL connection.
+        # Use force=True to ensure the process is terminated even when
+        # pymapdl's internal _launched flag is False (a known issue with
+        # pymapdl >= 0.73.0 where create_grpc_client does not set
+        # launched=True, making exit() a no-op without force=True).
+        mapdl.exit(force=True)
         del mapdl
 
         # Clear from context
