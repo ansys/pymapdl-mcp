@@ -46,8 +46,14 @@ goto end
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 
 :pdf
-echo No PDF documentation build available...
-type nul > %BUILDDIR%\ansys-mapdl-mcp.pdf
+%SPHINXBUILD% -M latex %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
+cd "%BUILDDIR%\latex"
+for %%f in (*.tex) do (
+pdflatex "%%f" --interaction=nonstopmode)
+if NOT EXIST ansys-common-mcp.pdf (
+	Echo "no pdf generated!"
+	exit /b 1)
+Echo "pdf generated!"
 goto end
 
 :linkcheck
