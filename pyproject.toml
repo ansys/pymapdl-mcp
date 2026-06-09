@@ -48,7 +48,7 @@ dependencies = [
 [project.optional-dependencies]
 tests = [
     "ansys-common-mcp==0.3.0",
-    "ansys-mapdl-core @ git+https://github.com/ansys/pymapdl.git@fix/pymapdl_mcp_cicd",
+    "ansys-mapdl-core==0.73.1",
     "pytest-asyncio==1.4.0",
     "pytest-cov==7.1.0",
     "pytest-mock==3.15.1",
