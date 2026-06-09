@@ -72,6 +72,9 @@ extensions = [
     "sphinxcontrib.video",
 ]
 
+# Allow sphinx-design FontAwesome icons to render in LaTeX/PDF output.
+sd_fontawesome_latex = True
+
 # Intersphinx mapping
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
