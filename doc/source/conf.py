@@ -71,9 +71,6 @@ extensions = [
     "sphinx.ext.intersphinx",
 ]
 
-# Keep LaTeX build independent of optional TeX fontawesome package.
-sd_fontawesome_latex = False
-
 # Intersphinx mapping
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
