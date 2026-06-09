@@ -4,6 +4,7 @@
 SPHINXOPTS    ?= -W --keep-going
 SPHINXBUILD   ?= sphinx-build
 PAPER         ?=
+SOURCEDIR     ?= source
 BUILDDIR      ?= _build
 
 # The `sed` command below replaces underscores with spaces.
