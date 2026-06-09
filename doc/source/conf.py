@@ -71,8 +71,8 @@ extensions = [
     "sphinx.ext.intersphinx",
 ]
 
-# Allow sphinx-design FontAwesome icons to render in LaTeX/PDF output.
-sd_fontawesome_latex = True
+# Keep LaTeX build independent of optional TeX fontawesome package.
+sd_fontawesome_latex = False
 
 # Intersphinx mapping
 intersphinx_mapping = {
@@ -145,6 +145,7 @@ exclude_patterns = [
 suppress_warnings = [
     "toc.not_included",  # Caused by the autoapi extension
     "toc.not_readable",  # Caused by incorrect autoapi-generated toctree references
+    "design.fa-build",  # FontAwesome icons are HTML-first and ignored for LaTeX
 ]
 
 # make rst_epilog a variable, so you can add other epilog parts to it
