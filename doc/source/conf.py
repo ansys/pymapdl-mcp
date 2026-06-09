@@ -69,7 +69,6 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
-    "sphinxcontrib.video",
 ]
 
 # Allow sphinx-design FontAwesome icons to render in LaTeX/PDF output.
