@@ -69,7 +69,6 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
-    "sphinxcontrib.video",
 ]
 
 # Intersphinx mapping
@@ -143,6 +142,7 @@ exclude_patterns = [
 suppress_warnings = [
     "toc.not_included",  # Caused by the autoapi extension
     "toc.not_readable",  # Caused by incorrect autoapi-generated toctree references
+    "design.fa-build",  # FontAwesome icons are HTML-first and ignored for LaTeX
 ]
 
 # make rst_epilog a variable, so you can add other epilog parts to it
