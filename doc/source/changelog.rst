@@ -9,6 +9,35 @@ This section contains the release notes for PyMAPDL-MCP.
 
 .. towncrier release notes start
 
+`0.2.1 <https://github.com/ansys/pymapdl-mcp/releases/tag/v0.2.1>`_ - June 10, 2026
+===================================================================================
+
+.. tab-set::
+
+
+  .. tab-item:: Documentation
+
+    .. list-table::
+        :header-rows: 0
+        :widths: auto
+
+        * - Adding pdf build
+          - `#141 <https://github.com/ansys/pymapdl-mcp/pull/141>`_
+
+
+  .. tab-item:: Maintenance
+
+    .. list-table::
+        :header-rows: 0
+        :widths: auto
+
+        * - Update CHANGELOG for v0.2.0
+          - `#140 <https://github.com/ansys/pymapdl-mcp/pull/140>`_
+
+        * - Add order for GH and PyPI releases
+          - `#142 <https://github.com/ansys/pymapdl-mcp/pull/142>`_
+
+
 `0.2.0 <https://github.com/ansys/pymapdl-mcp/releases/tag/v0.2.0>`_ - June 09, 2026
 ===================================================================================
 
