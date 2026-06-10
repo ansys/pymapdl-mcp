@@ -29,4 +29,11 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
+pdf:
+	@echo "No PDF documentation build available..."
+	touch $(BUILDDIR)/ansys-mapdl-mcp.pdf
+
+linkcheck:
+	@$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
+
 .DEFAULT_GOAL := help

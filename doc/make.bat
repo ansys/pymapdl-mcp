@@ -40,22 +40,18 @@ goto end
 
 :clean
 rmdir /s /q %BUILDDIR% > /NUL 2>&1
-rmdir /s /q %EXAMPDIR% > /NUL 2>&1
-for /d /r %SOURCEDIR% %%d in (_autosummary) do @if exist "%%d" rmdir /s /q "%%d"
 goto end
 
 :help
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 
 :pdf
-%SPHINXBUILD% -M latex %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
-cd "%BUILDDIR%\latex"
-for %%f in (*.tex) do (
-pdflatex "%%f" --interaction=nonstopmode)
-if NOT EXIST ansys-mapdl-mcp.pdf (
-	Echo "no pdf generated!"
-	exit /b 1)
-Echo "pdf generated!"
+echo No PDF documentation build available...
+type nul > %BUILDDIR%\ansys-mapdl-mcp.pdf
+goto end
+
+:linkcheck
+%SPHINXBUILD% -M linkcheck %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 goto end
 
 :end

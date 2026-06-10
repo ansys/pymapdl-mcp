@@ -1,110 +1,161 @@
 Tools and capabilities
 ======================
 
-Tool Availability
+Tool availability
 -----------------
 
 PyMAPDL-MCP dynamically enables and disables tools based on whether an MAPDL instance is
 connected. This keeps the AI assistant's context small when MAPDL is not in use.
 
-**Before connecting to MAPDL**, only the following tools are available:
+**Before connecting to MAPDL**, you can access these tools:
 
-- ``check_mapdl_installed``
-- ``list_mapdl_instances``
-- ``connect_to_mapdl``
-- ``launch_mapdl_session``
-- All ``get_guidelines_for_*`` workflow guidance tools
+.. list-table::
+   :header-rows: 1
+   :widths: 35 65
 
-**After connecting to MAPDL** (via ``connect_to_mapdl`` or ``launch_mapdl_session``), the full
-set of tools becomes available. When ``disconnect_from_mapdl`` is called, the MAPDL-specific
-tools are hidden again.
+   * - Tool
+     - Description
+   * - ``check_mapdl_installed``
+     - Check if MAPDL is installed on the system
+   * - ``list_mapdl_instances``
+     - Discover running MAPDL instances
+   * - ``connect_to_mapdl``
+     - Connect to an existing MAPDL instance
+   * - ``launch_mapdl_session``
+     - Launch and connect to a new MAPDL instance
+   * - ``get_guidelines_for``
+     - Workflow guidance and best-practice context tool
+
+**After connecting to MAPDL**, you gain access to the full set of tools. When you call the
+``disconnect_from_mapdl`` tool, the MAPDL-specific tools become unavailable.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 35 65
+
+   * - Tool
+     - Description
+   * - ``check_mapdl_status``
+     - Get comprehensive MAPDL status
+   * - ``run_mapdl_command``
+     - Execute a single MAPDL command
+   * - ``run_multiple_commands``
+     - Execute multiple MAPDL commands in batch
+   * - ``disconnect_from_mapdl``
+     - Disconnect from the MAPDL instance
+   * - ``screenshot``
+     - Capture the MAPDL graphics window
+   * - ``run_python_code``
+     - Execute Python/PyMAPDL code in a persistent session
+   * - ``custom_plot``
+     - Create custom matplotlib or PyVista plots
 
 .. note::
-   When ``--connect-on-startup`` is used, MAPDL is already connected at startup so all tools
-   are immediately available (except ``connect_to_mapdl``, ``launch_mapdl_session``, and
-   ``disconnect_from_mapdl``, which are locked in that mode).
+   When you use ``--connect-on-startup``, MAPDL connects at startup and all tools are immediately
+   available (except ``connect_to_mapdl``, ``launch_mapdl_session``, and ``disconnect_from_mapdl``,
+   which are locked).
 
-Available Tools
+Using the tools
 ---------------
 
-PyMAPDL-MCP exposes the following categories of tools:
+Running MAPDL commands
+~~~~~~~~~~~~~~~~~~~~~~
 
-MAPDL Instance Management
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Use ``run_mapdl_command`` for single commands:
 
-- **Launch MAPDL**: Start a new MAPDL instance with custom settings
-- **Connect to MAPDL**: Connect to an existing running MAPDL instance
-- **List Instances**: Discover MAPDL instances running on the system
-- **Check Status**: Get detailed information about MAPDL status *(requires MAPDL connection)*
-- **Disconnect**: Cleanly close the MAPDL connection *(requires MAPDL connection)*
+*"Run VPLOT on the MAPDL instance."*
 
-Command Execution
-~~~~~~~~~~~~~~~~~~
+For multiple commands, use ``run_multiple_commands``, which uses MAPDL's ``input_strings``
+method for batch execution. This is significantly faster than running commands one by one:
 
-- **Run MAPDL Command**: Execute individual MAPDL commands *(requires MAPDL connection)*
-- **Run Multiple Commands**: Execute sequences of commands efficiently *(requires MAPDL connection)*
-- **Write Comments**: Add comments to the MAPDL session
+*"Run these commands: /PREP7, ET,1,SOLID185, MP,EX,1,200E9."*
 
-Data Extraction
+Custom Python code execution
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use ``run_python_code`` to execute arbitrary Python and PyMAPDL code in a persistent session:
+
+*"Execute this Python code: displacements = mapdl.get_array('NODE', item1='U', it1num='Y'); print(f'Max displacement: {displacements.max()}')."*
+
+This is useful for:
+
+- Custom data processing and analysis
+- Advanced PyVista visualizations
+- NumPy/Pandas data manipulation
+- Complex computations not available through direct MAPDL commands
+
+Creating custom plots
+~~~~~~~~~~~~~~~~~~~~~
+
+Use ``custom_plot`` to create Matplotlib or PyVista plots that are not available in MAPDL's
+native plotting:
+
+*"Create a Matplotlib plot showing nodal displacements versus node number."*
+
+.. important::
+   ``custom_plot`` is for plots that MAPDL cannot produce natively. For standard MAPDL plots
+   (``APLOT``, ``LPLOT``, ``KPLOT``, ``PLNSOL``, etc.), use the MAPDL commands together with
+   the ``screenshot`` tool.
+
+Capturing plots
 ~~~~~~~~~~~~~~~
 
-- **Get Status**: Extract comprehensive status information
-- **Get Arrays**: Extract numerical data from MAPDL results
-- **Get Mesh Information**: Query mesh statistics and properties
-- **Get Geometry**: Extract geometry information
+After running a MAPDL plot command, use the ``screenshot`` tool to capture the graphics window:
 
-Visualization
-~~~~~~~~~~~~~~
+*"Show a plot of the geometry."*
 
-- **Take Screenshots**: Capture MAPDL graphics window *(requires MAPDL connection)*
-- **Create Custom Plots**: Generate matplotlib or PyVista visualizations *(requires MAPDL connection)*
-- **Export Results**: Export data for external visualization
+*"Capture the current MAPDL plot."*
 
-Python Code Execution
-~~~~~~~~~~~~~~~~~~~~~~
+It returns the image directly so the AI assistant can display it inline. Works with all MAPDL
+native plot commands, including:
 
-- **Run Python Code**: Execute arbitrary Python code in the persistent session *(requires MAPDL connection)*
-- **Integrate with Data Analysis**: Use NumPy, Pandas, and other Python libraries
+- Geometry: ``APLOT``, ``LPLOT``, ``KPLOT``, ``VPLOT``
+- Mesh: ``EPLOT``, ``NPLOT``
+- Post-processing: ``PLNSOL``, ``PLESOL``, ``PLDISP``
 
-Workflow Examples
+Python code execution
+~~~~~~~~~~~~~~~~~~~~~
+
+- Run Python code: Execute arbitrary Python code in the persistent session *(requires MAPDL connection)*.
+- Integrate with data analysis: Use NumPy, Pandas, and other Python libraries.
+
+
+Workflow examples
 -----------------
 
-Linear Static Analysis
+Linear static analysis
 ~~~~~~~~~~~~~~~~~~~~~~
 
-1. Launch MAPDL instance
-2. Define geometry (blocks, cylinders, etc.)
-3. Define materials and element types
-4. Mesh the geometry
-5. Apply boundary conditions and loads
-6. Run solution
-7. Extract and visualize results
+#. Launch MAPDL instance.
+#. Define geometry (blocks, cylinders, and so on).
+#. Define materials and element types.
+#. Mesh the geometry.
+#. Apply boundary conditions and loads.
+#. Run solution.
+#. Extract and visualize results.
 
-Parametric Study
+Parametric study
 ~~~~~~~~~~~~~~~~
 
-1. Set up base MAPDL model
-2. Define parameter ranges
-3. For each parameter combination:
-   - Update parameters
-   - Run analysis
-   - Extract results
-4. Analyze and plot parameter sensitivity
+#. Set up the base MAPDL model.
+#. Define parameter ranges.
+#. Update parameters, run analysis, and extract results for each parameter combination.
+#. Analyze and plot parameter sensitivity.
 
-Result Post-Processing
-~~~~~~~~~~~~~~~~~~~~~~
+Result postprocessing
+~~~~~~~~~~~~~~~~~~~~~
 
-1. Run or load MAPDL analysis
-2. Extract result data
-3. Create custom visualizations
-4. Generate analysis reports
+#. Run or load MAPDL analysis.
+#. Extract result data.
+#. Create custom visualizations.
+#. Generate analysis reports.
 
-Feature Reference
+Feature reference
 -----------------
 
-See :doc:`../api/tools` for complete documentation of all available tools including parameters and return values.
+For the documentation of all available tools, including parameters and return values, see :doc:`../api/tools`.
 
-Best Practices
+Best practices
 --------------
 
-See :doc:`best_practices` for recommendations on using PyMAPDL-MCP effectively.
+For recommendations on using PyMAPDL-MCP effectively, see :doc:`best_practices`.
