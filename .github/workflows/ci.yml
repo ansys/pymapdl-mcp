@@ -304,7 +304,7 @@ jobs:
   release-pypi:
     name: "Release project to PyPI"
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags')
-    needs: [package, build-docs, update-changelog]
+    needs: [release]
     runs-on: ubuntu-latest
     # Specifying a GitHub environment is optional, but strongly encouraged
     environment: release
@@ -332,7 +332,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Needed to push documentation to gh-pages branch
-    needs: [release, release-pypi]
+    needs: [release-pypi]
     steps:
       - name: "Deploy the stable documentation"
         uses: ansys/actions/doc-deploy-stable@d946b24b9a765f4169bcc94afdb27bd1a0533741 #v10.3.2
