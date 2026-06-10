@@ -539,12 +539,18 @@ When the solution is complete, enter postprocessing mode:
 
 Use the normal MAPDL session for:
 
-1. **All MAPDL native plot methods** - These provide interactive plots:
+1. **All MAPDL native plot methods** - These provide MAPDL-backend plots:
    - Geometry plots: `APLOT`, `LPLOT`, `KPLOT`, `VPLOT`
    - Mesh plots: `EPLOT`, `NPLOT`
    - Post-processing plots: `PLNSOL`, `PLESOL`, `PLDISP`
 
-2. **Capturing Screenshots**: Use the `screenshot` tool after any MAPDL plot command
+2. **Capturing Screenshots**: Use the `screenshot` tool with MAPDL plot commands.
+   The `screenshot` tool accepts:
+   - `commands`: MAPDL APDL commands to run before capturing (e.g. `EPLOT`)
+   - `show_plot_on_popup`: set to `True` to also open the image in an external window
+   - `interactive`: set to `True` to use the PyVista/VTK rendering pipeline instead
+     of the MAPDL backend (in that case `commands` must be PyMAPDL Python code
+     that calls Xplot methods, e.g. ``save_plot(mapdl.eplot(return_plotter=True))``)
 
 #### When to Use Persistent Python Session
 

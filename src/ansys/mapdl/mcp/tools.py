@@ -20,6 +20,8 @@ import base64
 import json
 import os
 from pathlib import Path
+import platform
+import subprocess  # nosec B404
 import tempfile
 from typing import Any, cast
 
@@ -38,6 +40,26 @@ from mcp.types import ImageContent, TextContent
 def _text_result(text: str) -> ToolResult:
     """Wrap a plain text string in a single-content ToolResult."""
     return ToolResult([TextContent(type="text", text=text)])
+
+
+def _open_image_in_viewer(image_path: str | Path) -> None:
+    """Open an image file in the system's default image viewer.
+
+    Parameters
+    ----------
+    image_path : str or Path
+        Path to the image file to open.
+    """
+    try:
+        system = platform.system()
+        if system == "Darwin":
+            subprocess.Popen(["open", str(image_path)])  # noqa: S603, S607  # nosec B603, B607
+        elif system == "Windows":
+            os.startfile(str(image_path))  # type: ignore[attr-defined]  # noqa: PTH123  # nosec B606
+        else:
+            subprocess.Popen(["xdg-open", str(image_path)])  # noqa: S603, S607  # nosec B603, B607
+    except Exception as e:
+        logger.warning(f"Failed to open image in viewer: {e}")
 
 
 def _is_mapdl_crashed(mapdl: Any) -> bool:
@@ -560,35 +582,57 @@ def list_mapdl_instances(ctx: Context) -> ToolResult:
 def screenshot(
     ctx: Context,
     commands: str = "",
+    show_plot_on_popup: bool = False,
+    interactive: bool = False,
 ) -> ToolResult:
     """Capture a screenshot of the current MAPDL graphics window.
 
-    This tool captures the current state of the MAPDL graphics window after using
-    MAPDL native plotting commands. Use this tool for all standard MAPDL plots.
+    By default, all plots use the MAPDL backend (``interactive=False``).
+    This is the preferred and recommended way to obtain plot images.
 
-    MAPDL Native Plot Commands (use with screenshot):
+    MAPDL Native Plot Commands (use with default ``interactive=False``):
     - Geometry: APLOT, LPLOT, KPLOT, VPLOT
     - Mesh: EPLOT, NPLOT
     - Post-processing: PLNSOL, PLESOL, PLDISP
 
-    For custom matplotlib or PyVista plots, use the custom_plot tool instead.
+    When ``interactive=True``, the PyVista/VTK rendering pipeline is used instead.
+    In that mode, the ``commands`` parameter must contain PyMAPDL Python code that
+    calls Xplot methods (e.g. ``mapdl.eplot()``) and captures the result with the
+    ``save_plot()`` helper available in the persistent Python session.
+
+    For fully custom matplotlib or PyVista plots, use the ``custom_plot`` tool.
 
     Parameters
     ----------
     ctx : Context
         The MCP context containing server session and application context.
     commands : str, optional
-        Optional MAPDL commands to execute before taking the screenshot.
-        Avoid running commands that are not related to plotting or visualization.
-        This can be used to set up the plot or visualization before capturing.
-        Avoid running long or complex commands that may delay the screenshot.
+        When ``interactive=False`` (default): MAPDL APDL commands to execute
+        before capturing the screenshot (e.g. ``EPLOT``, ``PLNSOL,U,SUM``).
+        Avoid commands unrelated to plotting or visualization.
+        When ``interactive=True``: Python code using PyMAPDL/PyVista API.
+        The code must call a PyMAPDL Xplot method and capture the result with
+        ``save_plot()``, for example::
+
+            result = save_plot(mapdl.eplot(return_plotter=True))
+            print(result)
+
         Default is empty string.
+    show_plot_on_popup : bool, optional
+        If ``True``, open the captured image in the system's default image
+        viewer as an external popup window in addition to returning it to the
+        LLM. Default is ``False``.
+    interactive : bool, optional
+        If ``False`` (default), use the MAPDL backend for rendering (no
+        change from previous behaviour).  If ``True``, use the PyVista/VTK
+        rendering pipeline via PyMAPDL Python Xplot methods.  When ``True``,
+        ``commands`` must be PyMAPDL Python code, not APDL commands.
 
     Returns
     -------
     ToolResult
         A result containing:
-        - TextContent with the screenshot file path
+        - TextContent with the screenshot file path or status message
         - ImageContent with the base64-encoded image data
     """
     if ctx.request_context is None:
@@ -600,6 +644,54 @@ def screenshot(
             "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
         )
 
+    if interactive:
+        # PyVista/VTK rendering path: execute commands as Python code in the
+        # persistent Python session using PyMAPDL Xplot methods.
+        session = ctx.request_context.lifespan_context.python_session
+
+        if session is None:
+            return _text_result(
+                "No Python session available. The persistent Python session was not initialized."
+            )
+
+        # Ensure MAPDL is connected in the persistent session
+        mapdl_instance = session.metadata.get("mapdl", None)
+        if mapdl_instance is None or isinstance(mapdl_instance, str):
+            mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
+
+        if mapdl_instance is None or isinstance(mapdl_instance, str):
+            error_msg = (
+                mapdl_instance
+                if isinstance(mapdl_instance, str)
+                else "An error occurred while connecting to MAPDL in the persistent Python session."
+            )
+            return _text_result(
+                f"Failed to connect to MAPDL in persistent Python session: {error_msg}"
+            )
+
+        result: list[TextContent | ImageContent] | str = create_custom_plot(
+            ctx=ctx,
+            plot_code=commands,
+            plot_type="pyvista",
+            timeout=60,
+        )
+
+        if isinstance(result, str):
+            return _text_result(result)
+
+        if show_plot_on_popup:
+            for item in result:
+                if isinstance(item, ImageContent):
+                    temp_fd, temp_img_path = tempfile.mkstemp(suffix=".png")
+                    os.close(temp_fd)
+                    with open(temp_img_path, "wb") as f:  # noqa: PTH123
+                        f.write(base64.b64decode(item.data))
+                    _open_image_in_viewer(temp_img_path)
+                    break
+
+        return ToolResult(result)
+
+    # MAPDL backend path (default)
     try:
         logger.info("Capturing MAPDL screenshot...")
 
@@ -638,6 +730,9 @@ def screenshot(
             mime_type = "image/bmp"
         elif image_path.suffix.lower() == ".gif":
             mime_type = "image/gif"
+
+        if show_plot_on_popup:
+            _open_image_in_viewer(screenshot_path)
 
         logger.info(f"Screenshot captured successfully: {screenshot_path}")
 
