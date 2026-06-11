@@ -25,7 +25,7 @@ Tools are grouped into the following tool sets via the ``toolsets://definition``
 
 - **session_management**: Tools for managing MAPDL connections and instance discovery
 - **command_execution**: Tools for executing MAPDL commands and scripts
-- **analysis_visualization**: Tools for visualization and post-processing results
+- **visualization**: Tools for visualization and post-processing results
 - **python_execution**: Tools for executing arbitrary Python and PyMAPDL code
 
 The `list_tool_sets()` function exposes these tool set definitions as a resource.
@@ -571,7 +571,7 @@ def list_mapdl_instances(ctx: Context) -> ToolResult:
     return _text_result(local_table)
 
 
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "analysis_visualization"})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization"})
 def screenshot(
     ctx: Context,
     commands: str = "",
@@ -770,7 +770,7 @@ async def run_python_code(
     return _text_result(result)
 
 
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "analysis_visualization"})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization"})
 def custom_plot(
     ctx: Context,
     plot_code: str,
@@ -926,7 +926,7 @@ def list_tool_sets() -> list[dict]:
             ],
         },
         {
-            "name": "analysis_visualization",
+            "name": "visualization",
             "description": "Tools for visualization, custom analysis, and post-processing",
             "skill": (
                 "Use these tools for visualization and post-processing of MAPDL results. "
