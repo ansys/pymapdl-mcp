@@ -39,7 +39,7 @@ metadata about each set including its name, description, and the tools it contai
      - Execute MAPDL commands and scripts
      - ``run_mapdl_command``, ``run_multiple_commands``, ``run_python_code``
 
-   * - ``analysis_visualization``
+   * - ``visualization``
      - Visualization and post-processing of results
      - ``screenshot``, ``custom_plot``
 
