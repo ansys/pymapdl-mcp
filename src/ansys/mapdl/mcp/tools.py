@@ -17,7 +17,7 @@
 """List of tools in PyMAPDL-MCP.
 
 This module defines all MCP tools available in the PyMAPDL MCP server, organized into logical
-tool sets for better discoverability and organization.
+tool sets for better organization and accessibility.
 
 Tool sets
 ---------
@@ -895,9 +895,9 @@ def list_tool_sets() -> list[dict]:
                 "Use these tools to manage MAPDL connections and sessions. "
                 "Start by checking available installations with check_mapdl_installed, "
                 "then launch a new session with launch_mapdl_session or connect to an existing "
-                "instance with connect_to_mapdl. Use check_mapdl_status to verify the connection status. "
-                "List active instances with list_mapdl_instances and disconnect when done using "
-                "disconnect_from_mapdl."
+                "instance with connect_to_mapdl. Use check_mapdl_status to verify the connection"
+                "status. List active instances with list_mapdl_instances and disconnect when done"
+                " using disconnect_from_mapdl."
             ),
             "tools": [
                 "check_mapdl_installed",

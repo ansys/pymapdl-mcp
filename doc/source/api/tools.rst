@@ -16,7 +16,7 @@ For more information, see :doc:`../user_guide/tools_and_capabilities`.
 Tool sets
 ---------
 
-Tools are organized into logical tool sets for better discoverability and organization. The
+Tools are organized into logical tool sets for better organization and accessibility. The
 available tool sets are exposed through the ``toolsets://definition`` resource, which provides
 metadata about each set including its name, description, and the tools it contains.
 
