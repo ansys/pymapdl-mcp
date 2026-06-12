@@ -13,6 +13,43 @@ tools are hidden again when ``disconnect_from_mapdl`` is called.
 
 For more information, see :doc:`../user_guide/tools_and_capabilities`.
 
+Tool sets
+---------
+
+Tools are organized into logical tool sets for better organization and accessibility. The
+available tool sets are exposed through the ``toolsets://definition`` resource, which provides
+metadata about each set including its name, description, and the tools it contains.
+
+**Available tool sets**:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 50 30
+
+   * - Tool set
+     - Purpose
+     - Tools included
+
+   * - ``session_management``
+     - Manage MAPDL connections and discover instances
+     - ``check_mapdl_installed``, ``check_mapdl_status``, ``launch_mapdl_session``,
+       ``connect_to_mapdl``, ``disconnect_from_mapdl``, ``list_mapdl_instances``
+
+   * - ``command_execution``
+     - Execute MAPDL commands and scripts
+     - ``run_mapdl_command``, ``run_multiple_commands``, ``run_python_code``
+
+   * - ``visualization``
+     - Visualization and post-processing of results
+     - ``screenshot``, ``custom_plot``
+
+   * - ``python_execution``
+     - Execute arbitrary Python and PyMAPDL code
+     - ``run_python_code``
+
+The ``list_tool_sets()`` resource function returns the complete tool set definitions,
+allowing client applications to discover and organize available capabilities.
+
 Instance management tools
 -------------------------
 
