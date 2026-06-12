@@ -43,6 +43,27 @@ The server uses a strongly typed ``PyMAPDLAppContext`` dataclass that holds:
 - Connection settings (IP, port, auto-connect flags)
 - Command history tracking
 
+Tool context and lifecycle
+--------------------------
+
+Each tool receives a FastMCP context object (``Context``) that provides:
+
+- Access to the application context (``ctx.application_context``)
+- Request and response metadata
+- Logging utilities
+
+The MAPDL lifecycle follows these phases:
+
+#. Initialize without an active MAPDL connection.
+#. Connect using ``launch_mapdl_session`` or ``connect_to_mapdl``.
+#. Execute MAPDL and Python tools in the active session.
+#. Disconnect using ``disconnect_from_mapdl``.
+#. Reset state and allow a new connection.
+
+Errors in context operations are logged and returned as tool errors to allow graceful recovery.
+Context internals are intended for contributors and can change between releases. For stable
+client behavior, rely on the documented MCP tools rather than internal context attributes.
+
 Check prerequisites
 ===================
 
@@ -257,7 +278,8 @@ Add a new tool
 
 #. Write tests in the ``tests/test_tools.py`` file.
 
-#. Document the tool in the ``doc/source/api/tools.rst`` file.
+#. Ensure the tool docstring is complete so AutoAPI generates accurate documentation under
+   :doc:`../api/ansys/mapdl/mcp/tools/index`.
 
 #. Add a usage example if appropriate in the ``doc/source/examples/`` directory.
 

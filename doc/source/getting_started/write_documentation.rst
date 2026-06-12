@@ -188,7 +188,7 @@ Include practical code examples:
 
 .. code-block:: rst
 
-   For complete tool reference, see :doc:`../api/tools`.
+   For complete tool reference, see :doc:`../api/ansys/mapdl/mcp/tools/index`.
    To learn more, see :doc:`../user_guide/best_practices`.
 
 Document code

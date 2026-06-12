@@ -150,10 +150,24 @@ Result postprocessing
 #. Create custom visualizations.
 #. Generate analysis reports.
 
+Interpreting tool results
+-------------------------
+
+Most tools return structured results with one of these outcomes:
+
+- Success: A status or result message.
+- Error: A detailed message describing what failed and how to correct it.
+- Data: Structured payloads (for example, JSON text or image content).
+
+When building workflows, always validate results before continuing to the next step.
+If a tool returns an error message, adjust the request and retry instead of assuming
+that downstream steps are still valid.
+
 Feature reference
 -----------------
 
-For the documentation of all available tools, including parameters and return values, see :doc:`../api/tools`.
+For the documentation of all available tools, including parameters and return values, see
+:doc:`../api/ansys/mapdl/mcp/tools/index`.
 
 Best practices
 --------------

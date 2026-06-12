@@ -236,5 +236,6 @@ See also
 --------
 
 - Source code in the ``src/ansys/mapdl/mcp/tools.py`` file.
-- Context documentation in the :doc:`../api/context_objects` file.
+- Context class documentation in :doc:`../api/ansys/mapdl/mcp/server/PyMAPDLAppContext` and
+    :doc:`../api/ansys/mapdl/mcp/server/SessionContext`.
 - :doc:`../user_guide/best_practices` for general recommendations.
