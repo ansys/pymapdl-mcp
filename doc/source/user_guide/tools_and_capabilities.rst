@@ -55,6 +55,36 @@ connected. This keeps the AI assistant's context small when MAPDL is not in use.
    available (except ``connect_to_mapdl``, ``launch_mapdl_session``, and ``disconnect_from_mapdl``,
    which are locked).
 
+Tool sets
+---------
+
+PyMAPDL-MCP groups tools into logical tool sets so MCP clients can discover capabilities by role.
+These sets are exposed through the ``toolsets://definition`` resource.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Tool set
+     - Purpose
+     - Tools included
+   * - ``session_management``
+     - Manage MAPDL lifecycle and connection state
+     - ``check_mapdl_installed``, ``check_mapdl_status``, ``launch_mapdl_session``,
+       ``connect_to_mapdl``, ``disconnect_from_mapdl``, ``list_mapdl_instances``
+   * - ``command_execution``
+     - Execute MAPDL commands and command batches
+     - ``run_mapdl_command``, ``run_multiple_commands``, ``run_python_code``
+   * - ``visualization``
+     - Capture or generate result visualizations
+     - ``screenshot``, ``custom_plot``
+   * - ``python_execution``
+     - Execute arbitrary Python or PyMAPDL code in the persistent session
+     - ``run_python_code``
+
+The ``list_tool_sets()`` resource function returns the complete tool set definitions,
+allowing client applications to discover and organize available capabilities.
+
 Using the tools
 ---------------
 

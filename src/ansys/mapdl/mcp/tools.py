@@ -14,7 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""List of tools in PyMAPDL-MCP."""
+"""List of tools in PyMAPDL-MCP.
+
+This module defines all MCP tools available in the PyMAPDL MCP server, organized into logical
+tool sets for better organization and accessibility.
+
+Tool sets
+---------
+Tools are grouped into the following tool sets via the ``toolsets://definition`` resource:
+
+- **session_management**: Tools for managing MAPDL connections and instance discovery
+- **command_execution**: Tools for executing MAPDL commands and scripts
+- **visualization**: Tools for visualization and post-processing results
+- **python_execution**: Tools for executing arbitrary Python and PyMAPDL code
+
+The `list_tool_sets()` function exposes these tool set definitions as a resource.
+"""
 
 import base64
 import json
@@ -56,7 +71,7 @@ REQUIRES_MAPDL_TAG = "requires_mapdl"
 
 
 # Access type-safe lifespan context in tools
-@app.tool(tags={REQUIRES_MAPDL_TAG})
+@app.tool(tags={REQUIRES_MAPDL_TAG, "session_management"})
 def check_mapdl_status(ctx: Context) -> ToolResult:
     """Check the status of MAPDL initialization.
 
@@ -114,7 +129,7 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
         return _text_result(error_msg)
 
 
-@app.tool(tags={"aali"})
+@app.tool(tags={"aali", "session_management"})
 def check_mapdl_installed(ctx: Context) -> ToolResult:
     """Check if MAPDL is installed on the system.
 
@@ -168,7 +183,7 @@ def check_mapdl_installed(ctx: Context) -> ToolResult:
         return _text_result(error_msg)
 
 
-@app.tool(tags={REQUIRES_MAPDL_TAG})
+@app.tool(tags={REQUIRES_MAPDL_TAG, "command_execution"})
 def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "") -> ToolResult:
     """Execute an arbitrary MAPDL command.
 
@@ -207,7 +222,7 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
     return _text_result(f"MAPDL command executed successfully: {result}")
 
 
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "command_execution"})
 def run_multiple_commands(
     ctx: Context, commands: list[str], comment: str = "", header: str = ""
 ) -> ToolResult:
@@ -297,7 +312,7 @@ def run_multiple_commands(
         return ToolResult([TextContent(type="text", text=error_msg)])
 
 
-@app.tool(tags={"aali", "locked_connection"})
+@app.tool(tags={"aali", "locked_connection", "session_management"})
 async def launch_mapdl_session(
     ctx: Context,
     exec_file: str | None = None,
@@ -393,7 +408,7 @@ async def launch_mapdl_session(
         return _text_result(error_msg)
 
 
-@app.tool(tags={"aali", "locked_connection"})
+@app.tool(tags={"aali", "locked_connection", "session_management"})
 async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> ToolResult:
     """Connect to an existing MAPDL instance.
 
@@ -462,7 +477,7 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
         return _text_result(error_msg)
 
 
-@app.tool(tags={"aali", "locked_connection", REQUIRES_MAPDL_TAG})
+@app.tool(tags={"aali", "locked_connection", REQUIRES_MAPDL_TAG, "session_management"})
 async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
     """Disconnect from the dynamically connected MAPDL instance.
 
@@ -511,7 +526,7 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
         return _text_result(error_msg)
 
 
-@app.tool()
+@app.tool(tags={"session_management"})
 def list_mapdl_instances(ctx: Context) -> ToolResult:
     """List all MAPDL instances running on the local machine and any remotely connected instance.
 
@@ -556,7 +571,7 @@ def list_mapdl_instances(ctx: Context) -> ToolResult:
     return _text_result(local_table)
 
 
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization"})
 def screenshot(
     ctx: Context,
     commands: str = "",
@@ -661,7 +676,7 @@ def screenshot(
 # Tools that uses the PythonPersistentSession
 
 
-@app.tool(tags={REQUIRES_MAPDL_TAG})
+@app.tool(tags={REQUIRES_MAPDL_TAG, "python_execution", "command_execution"})
 async def run_python_code(
     ctx: Context,
     code: str,
@@ -755,7 +770,7 @@ async def run_python_code(
     return _text_result(result)
 
 
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization"})
 def custom_plot(
     ctx: Context,
     plot_code: str,
@@ -853,3 +868,88 @@ def custom_plot(
     if isinstance(result, str):
         return _text_result(result)
     return ToolResult(result)
+
+
+####################################################################################################
+# Tool set definitions
+
+
+@app.resource("toolsets://definition")
+def list_tool_sets() -> list[dict]:
+    """Tool set definition resource that lists available tool sets for PyMAPDL MCP.
+
+    Returns
+    -------
+    list[dict]
+        List of tool set definitions, each containing:
+        - name: Unique identifier for the tool set
+        - description: Human-readable description of the tool set
+        - skill: Instructions for the AI agent on when and how to use these tool sets
+        - tools: List of tool function names in this set
+    """
+    return [
+        {
+            "name": "session_management",
+            "description": "Tools for managing MAPDL session connections and instances",
+            "skill": (
+                "Use these tools to manage MAPDL connections and sessions. "
+                "Start by checking available installations with check_mapdl_installed, "
+                "then launch a new session with launch_mapdl_session or connect to an existing "
+                "instance with connect_to_mapdl. Use check_mapdl_status to verify the connection"
+                "status. List active instances with list_mapdl_instances and disconnect when done"
+                " using disconnect_from_mapdl."
+            ),
+            "tools": [
+                "check_mapdl_installed",
+                "check_mapdl_status",
+                "launch_mapdl_session",
+                "connect_to_mapdl",
+                "disconnect_from_mapdl",
+                "list_mapdl_instances",
+            ],
+        },
+        {
+            "name": "command_execution",
+            "description": "Tools for executing MAPDL commands and scripts",
+            "skill": (
+                "Use these tools to execute MAPDL commands and scripts. "
+                "Use run_mapdl_command for single commands with optional comments and headers. "
+                "Use run_multiple_commands for batch execution of multiple commands, which is "
+                "optimized for performance. Alternatively, use run_python_code to execute MAPDL "
+                "commands via PyMAPDL for more complex scripting scenarios. Always ensure a MAPDL "
+                "connection is active before executing commands."
+            ),
+            "tools": [
+                "run_mapdl_command",
+                "run_multiple_commands",
+                "run_python_code",
+            ],
+        },
+        {
+            "name": "visualization",
+            "description": "Tools for visualization, custom analysis, and post-processing",
+            "skill": (
+                "Use these tools for visualization and post-processing of MAPDL results. "
+                "Use screenshot to capture MAPDL native plots (APLOT, EPLOT, PLNSOL, etc.). "
+                "Use custom_plot to create custom matplotlib or PyVista visualizations for "
+                "custom analysis. For visualization workflows, use custom_plot rather than "
+                "run_python_code."
+            ),
+            "tools": [
+                "screenshot",
+                "custom_plot",
+            ],
+        },
+        {
+            "name": "python_execution",
+            "description": "Tools for executing arbitrary Python and PyMAPDL commands",
+            "skill": (
+                "Use run_python_code to execute general-purpose Python and PyMAPDL commands "
+                "for scripting, data processing, and automation. For visualization output, "
+                "use custom_plot so images are returned correctly through the plotting pipeline."
+            ),
+            "tools": [
+                "run_python_code",
+            ],
+        },
+    ]
