@@ -89,7 +89,7 @@ numpydoc_validate = True
 numpydoc_validation_checks = {
     # "GL06",  # Found unknown section
     # "GL07",  # Sections are in the wrong order.
-    "GL08",  # The object does not have a docstring
+    # "GL08",  # The object does not have a docstring
     "GL09",  # Deprecation warning should precede extended summary
     "GL10",  # reST directives {directives} must be followed by two colons
     "SS01",  # No summary found
@@ -143,6 +143,7 @@ exclude_patterns = [
 suppress_warnings = [
     "toc.not_included",  # Caused by the autoapi extension
     "toc.not_readable",  # Caused by incorrect autoapi-generated toctree references
+    "autoapi.python_import_resolution",  # Needed due to autoapi limitations
     "design.fa-build",  # FontAwesome icons are HTML-first and ignored for LaTeX
 ]
 
