@@ -1,25 +1,18 @@
 # Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
-# SPDX-License-Identifier: ANSYS MCP SERVER TECHNOLOGY PREVIEW LICENSE AGREEMENT
-
+# SPDX-License-Identifier: Apache-2.0
 #
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 """Tests for MCP tools functionality."""
 
@@ -241,24 +234,64 @@ class TestCheckMapdlStatus:
 class TestCheckMapdlInstalled:
     """Tests for check_mapdl_installed tool."""
 
-    def test_check_installed_true(self):
-        """Test checking MAPDL installation when MAPDL is installed."""
-        with (
-            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
-            patch(
-                "ansys.mapdl.core.launcher.get_default_ansys_path",
-                return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
-            ),
+    def test_check_installed_single(self):
+        """Test checking MAPDL installation when one installation is found."""
+        installations = {242: "/usr/ansys_inc/v242"}
+        with patch(
+            "ansys.tools.common.path.get_available_ansys_installations",
+            return_value=installations,
         ):
             result = check_mapdl_installed(MagicMock())
 
             assert isinstance(result, ToolResult)
             assert "MAPDL is installed" in result.content[0].text
-            assert "/usr/ansys_inc/v242/ansys/bin/ansys242" in result.content[0].text
+            assert "1 installation" in result.content[0].text
+            assert "242" in result.content[0].text
+            assert "ansys242" in result.content[0].text
+
+    def test_check_installed_multiple(self):
+        """Test that all installations are listed when multiple are found."""
+        installations = {
+            251: "/usr/ansys_inc/v251",
+            242: "/usr/ansys_inc/v242",
+        }
+        with patch(
+            "ansys.tools.common.path.get_available_ansys_installations",
+            return_value=installations,
+        ):
+            result = check_mapdl_installed(MagicMock())
+
+            assert isinstance(result, ToolResult)
+            assert "MAPDL is installed" in result.content[0].text
+            assert "2 installation" in result.content[0].text
+            assert "251" in result.content[0].text
+            assert "242" in result.content[0].text
+            assert "ansys251" in result.content[0].text
+            assert "ansys242" in result.content[0].text
+
+    def test_check_installed_student(self):
+        """Test that student installations are labelled correctly."""
+        installations = {
+            251: "/usr/ansys_inc/v251",
+            -242: "/usr/ansys_inc/ANSYS Student/v242",
+        }
+        with patch(
+            "ansys.tools.common.path.get_available_ansys_installations",
+            return_value=installations,
+        ):
+            result = check_mapdl_installed(MagicMock())
+
+            assert isinstance(result, ToolResult)
+            assert "Student" in result.content[0].text
+            assert "ansys251" in result.content[0].text
+            assert "ansys242" in result.content[0].text
 
     def test_check_installed_false(self):
-        """Test checking MAPDL installation when MAPDL is not installed."""
-        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=False):
+        """Test checking MAPDL installation when no installation is found."""
+        with patch(
+            "ansys.tools.common.path.get_available_ansys_installations",
+            return_value={},
+        ):
             result = check_mapdl_installed(MagicMock())
 
             assert isinstance(result, ToolResult)
@@ -269,7 +302,7 @@ class TestCheckMapdlInstalled:
     def test_check_installed_exception(self):
         """Test error handling when checking MAPDL installation fails."""
         with patch(
-            "ansys.mapdl.core.launcher.check_valid_ansys",
+            "ansys.tools.common.path.get_available_ansys_installations",
             side_effect=Exception("System error"),
         ):
             result = check_mapdl_installed(MagicMock())
@@ -281,7 +314,7 @@ class TestCheckMapdlInstalled:
     def test_check_installed_no_ansys_env(self):
         """Test checking installation when ANSYS environment variables not set."""
         with patch(
-            "ansys.mapdl.core.launcher.check_valid_ansys",
+            "ansys.tools.common.path.get_available_ansys_installations",
             side_effect=EnvironmentError("ANSYS environment not configured"),
         ):
             result = check_mapdl_installed(MagicMock())
@@ -293,7 +326,7 @@ class TestCheckMapdlInstalled:
     def test_check_installed_import_error(self):
         """Test handling import errors gracefully."""
         with patch(
-            "ansys.mapdl.core.launcher.check_valid_ansys",
+            "ansys.tools.common.path.get_available_ansys_installations",
             side_effect=ImportError("Failed to import MAPDL module"),
         ):
             result = check_mapdl_installed(MagicMock())
@@ -302,41 +335,12 @@ class TestCheckMapdlInstalled:
             assert "Error checking MAPDL installation" in result.content[0].text
             assert "Failed to import MAPDL module" in result.content[0].text
 
-    def test_check_installed_with_custom_path(self):
-        """Test checking installation with custom ANSYS path."""
-        custom_path = "/opt/ansys/v251/ansys/bin/ansys251"
-        with (
-            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
-            patch(
-                "ansys.mapdl.core.launcher.get_default_ansys_path",
-                return_value=custom_path,
-            ),
-        ):
-            result = check_mapdl_installed(MagicMock())
-
-            assert "MAPDL is installed" in result.content[0].text
-            assert custom_path in result.content[0].text
-
-    def test_check_installed_logging(self):
-        """Test that check_mapdl_installed logs messages."""
-        with (
-            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
-            patch(
-                "ansys.mapdl.core.launcher.get_default_ansys_path",
-                return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
-            ),
-        ):
-            output = check_mapdl_installed(MagicMock())
-
-            # Verify logging messages
-            assert (
-                "MAPDL is installed on this system in: /usr/ansys_inc/v242/ansys/bin/ansys242"
-                in output.content[0].text
-            )
-
     def test_check_not_installed_logging(self):
         """Test that check_mapdl_installed logs when not installed."""
-        with patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=False):
+        with patch(
+            "ansys.tools.common.path.get_available_ansys_installations",
+            return_value={},
+        ):
             output = check_mapdl_installed(MagicMock())
 
             assert (
@@ -1078,6 +1082,40 @@ class TestConnectToMapdl:
         assert "disconnect first" in result.content[0].text
 
     @pytest.mark.asyncio
+    async def test_connect_with_crashed_mapdl(self, mock_context):
+        """Test connecting when cached MAPDL instance has crashed (_exited=True)."""
+        mock_context.request_context.lifespan_context.mapdl._exited = True
+
+        mock_new_mapdl = MagicMock()
+        mock_new_mapdl.version = "2024 R2"
+        mock_new_mapdl._ip = "127.0.0.1"
+        mock_new_mapdl._port = 50052
+
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_new_mapdl):
+            result = await connect_to_mapdl(mock_context)
+
+        # Should succeed, not return "Already connected" error
+        assert "Successfully connected" in result.content[0].text
+        assert mock_context.request_context.lifespan_context.mapdl is mock_new_mapdl
+
+    @pytest.mark.asyncio
+    async def test_connect_with_exiting_mapdl(self, mock_context):
+        """Test connecting when cached MAPDL instance is exiting (_exiting=True)."""
+        mock_context.request_context.lifespan_context.mapdl._exiting = True
+
+        mock_new_mapdl = MagicMock()
+        mock_new_mapdl.version = "2024 R2"
+        mock_new_mapdl._ip = "127.0.0.1"
+        mock_new_mapdl._port = 50052
+
+        with patch("ansys.mapdl.core.Mapdl", return_value=mock_new_mapdl):
+            result = await connect_to_mapdl(mock_context)
+
+        # Should succeed, not return "Already connected" error
+        assert "Successfully connected" in result.content[0].text
+        assert mock_context.request_context.lifespan_context.mapdl is mock_new_mapdl
+
+    @pytest.mark.asyncio
     async def test_connect_connection_error(self, mock_context_no_mapdl):
         """Test handling connection errors."""
         with patch("ansys.mapdl.core.Mapdl", side_effect=Exception("Connection refused")):
@@ -1434,6 +1472,42 @@ class TestLaunchMapdl:
         # Verify appropriate error message
         assert "Already connected to MAPDL" in result.content[0].text
         assert "disconnect first" in result.content[0].text
+
+    @pytest.mark.asyncio
+    async def test_launch_with_crashed_mapdl(self, mock_context):
+        """Test launching when cached MAPDL instance has crashed (_exited=True)."""
+        mock_context.request_context.lifespan_context.mapdl._exited = True
+
+        mock_new_mapdl = MagicMock()
+        mock_new_mapdl.version = "2024 R2"
+        mock_new_mapdl.ip = "127.0.0.1"
+        mock_new_mapdl.port = 50052
+        mock_new_mapdl.directory = "/tmp"
+
+        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_new_mapdl):
+            result = await launch_mapdl_session(ctx=mock_context)
+
+        # Should succeed, not return "Already connected" error
+        assert "Successfully launched MAPDL" in result.content[0].text
+        assert mock_context.request_context.lifespan_context.mapdl is mock_new_mapdl
+
+    @pytest.mark.asyncio
+    async def test_launch_with_exiting_mapdl(self, mock_context):
+        """Test launching when cached MAPDL instance is exiting (_exiting=True)."""
+        mock_context.request_context.lifespan_context.mapdl._exiting = True
+
+        mock_new_mapdl = MagicMock()
+        mock_new_mapdl.version = "2024 R2"
+        mock_new_mapdl.ip = "127.0.0.1"
+        mock_new_mapdl.port = 50052
+        mock_new_mapdl.directory = "/tmp"
+
+        with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_new_mapdl):
+            result = await launch_mapdl_session(ctx=mock_context)
+
+        # Should succeed, not return "Already connected" error
+        assert "Successfully launched MAPDL" in result.content[0].text
+        assert mock_context.request_context.lifespan_context.mapdl is mock_new_mapdl
 
     @pytest.mark.asyncio
     async def test_launch_error(self, mock_context_no_mapdl):
@@ -2124,7 +2198,7 @@ class TestScreenshot:
         assert "Test error" in result.content[0].text
 
     def test_screenshot_with_commands(self, mock_context, tmp_path):
-        """Test that commands are executed via input_string before taking screenshot."""
+        """Test that commands are executed via input_strings before taking screenshot."""
         screenshot_path = tmp_path / "screenshot.png"
         screenshot_path.write_bytes(b"fake image data")
 
@@ -2134,14 +2208,14 @@ class TestScreenshot:
 
         result = screenshot(mock_context, commands="EPLOT")
 
-        mock_context.request_context.lifespan_context.mapdl.input_string.assert_called_once_with(
+        mock_context.request_context.lifespan_context.mapdl.input_strings.assert_called_once_with(
             "EPLOT"
         )
         assert isinstance(result, ToolResult)
         assert len(result.content) == 2
 
     def test_screenshot_with_multiple_commands(self, mock_context, tmp_path):
-        """Test that multiple commands passed as a single string are forwarded to input_string."""
+        """Test that multiple commands passed as a single string are forwarded to input_strings."""
         screenshot_path = tmp_path / "screenshot.png"
         screenshot_path.write_bytes(b"fake image data")
 
@@ -2152,14 +2226,14 @@ class TestScreenshot:
         commands = "EPLOT\nPLNSOL,U,SUM"
         result = screenshot(mock_context, commands=commands)
 
-        mock_context.request_context.lifespan_context.mapdl.input_string.assert_called_once_with(
+        mock_context.request_context.lifespan_context.mapdl.input_strings.assert_called_once_with(
             commands
         )
         assert isinstance(result, ToolResult)
         assert len(result.content) == 2
 
     def test_screenshot_without_commands_does_not_call_input_string(self, mock_context, tmp_path):
-        """Test that input_string is NOT called when commands is empty."""
+        """Test that input_strings is NOT called when commands is empty."""
         screenshot_path = tmp_path / "screenshot.png"
         screenshot_path.write_bytes(b"fake image data")
 
@@ -2169,11 +2243,11 @@ class TestScreenshot:
 
         screenshot(mock_context)
 
-        mock_context.request_context.lifespan_context.mapdl.input_string.assert_not_called()
+        mock_context.request_context.lifespan_context.mapdl.input_strings.assert_not_called()
 
     def test_screenshot_commands_error_is_caught(self, mock_context):
-        """Test that an error raised by input_string is caught and returned as an error message."""
-        mock_context.request_context.lifespan_context.mapdl.input_string.side_effect = Exception(
+        """Test that an error raised by input_strings is caught and returned as an error message."""
+        mock_context.request_context.lifespan_context.mapdl.input_strings.side_effect = Exception(
             "command failed"
         )
 

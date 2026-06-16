@@ -1,15 +1,15 @@
-IDE and Client Configuration
+IDE and client configuration
 =============================
 
-PyMAPDL-MCP can be integrated with multiple MCP-compatible tools. This guide covers configuration for the most popular clients.
+PyMAPDL-MCP can be integrated with multiple MCP-compatible tools. This page explains configuration for the most popular clients.
 
 Claude Code
 -----------
 
-Claude Code is Anthropic's code editor with built-in MCP support. You can add PyMAPDL-MCP using the CLI.
+Claude Code is Anthropic's code editor with built-in MCP support. You can add PyMAPDL-MCP using the command-line tool.
 
-Project-Level Setup (Recommended)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Set up PyMAPDL-MCP for a specific project (recommended)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Configure PyMAPDL-MCP for a specific project:
 
@@ -18,14 +18,15 @@ Configure PyMAPDL-MCP for a specific project:
    cd my-project
    claude mcp add --transport stdio pymapdl -- uvx --from git+https://github.com/ansys/pymapdl-mcp ansys-mapdl-mcp
 
-**Advantages**:
-- Configuration is project-specific
-- Shareable with team members via version control
-- Easy to maintain different configurations per project
-- Recommended for collaborative teams
+**Advantages**
 
-Global User Setup
-~~~~~~~~~~~~~~~~~
+- Provides project-specific configuration.
+- Enables sharing with team members via version control.
+- Simplifies maintenance of multiple configurations per project.
+- Supports collaborative teams.
+
+Set up PyMAPDL-MCP globally
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Configure PyMAPDL-MCP for all your Claude Code projects:
 
@@ -33,29 +34,32 @@ Configure PyMAPDL-MCP for all your Claude Code projects:
 
    claude mcp add --transport stdio --scope user pymapdl -- uvx --from git+https://github.com/ansys/pymapdl-mcp ansys-mapdl-mcp
 
-**Advantages**:
-- Available across all your Claude projects
-- No per-project configuration needed
-- Persistent across different workspaces
-- Better for personal development workflows
+**Advantages**
 
-**Key Features**:
-- STDIO transport by default (local integration)
-- Automatic fetching from GitHub using `uvx`
-- No manual configuration files to manage
-- Full MCP protocol support
+- Makes PyMAPDL-MCP available across all your Claude Code projects.
+- Requires no per-project configuration.
+- Works well for personal development workflows.
 
-**Documentation**: `Claude Code MCP Installation <https://code.claude.com/docs/en/mcp#installing-mcp-servers>`_
+**Key features**
 
-VS Code
--------
+- Uses STDIO transport by default (local integration).
+- Uses uvx for automatic fetching from GitHub.
+- Requires no manual management of configuration files.
+- Provides full MCP protocol support.
 
-VS Code integrates MCP servers through the Copilot extension using a JSON configuration file.
+**Documentation**
 
-Quick Start from GitHub
-~~~~~~~~~~~~~~~~~~~~~~~
+See `Claude Code MCP installation <https://code.claude.com/docs/en/mcp#installing-mcp-servers>`_ documentation.
 
-Add this to `.vscode/mcp.json` in your project directory:
+Visual Studio Code
+------------------
+
+Visual Studio Code integrates MCP servers through the Copilot extension using a JSON configuration file.
+
+Start quickly from GitHub
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Add this code to the ``.vscode/mcp.json`` file in your project directory:
 
 .. code-block:: json
 
@@ -73,15 +77,16 @@ Add this to `.vscode/mcp.json` in your project directory:
      }
    }
 
-This configuration:
-- Uses STDIO transport (recommended for local development)
-- Fetches the latest version from GitHub
-- Requires `uvx` to be installed on your system
+**Features**
 
-Local Development Setup
-~~~~~~~~~~~~~~~~~~~~~~~
+- Uses STDIO transport (recommended for local development).
+- Fetches the latest version from GitHub.
+- Requires uvx to be installed on your system.
 
-For development or testing with local source code:
+Set up for local development
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use this code for development or testing with local source code:
 
 .. code-block:: json
 
@@ -98,16 +103,17 @@ For development or testing with local source code:
      }
    }
 
-**Features**:
-- Uses local Python virtual environment
-- Debug logging enabled for troubleshooting
-- Ideal for development and testing
-- Requires `pip install -e .` in your `.venv`
+**Features**
 
-Alternative: Using `uv`
-^^^^^^^^^^^^^^^^^^^^^^^
+- Uses a local Python virtual environment.
+- Enables debug logging for troubleshooting.
+- Works well for development and testing.
+- Requires ``pip install -e .`` in your virtual environment.
 
-If you prefer using the `uv` package manager:
+Use uv as an alternative
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you prefer, you can use uv as your Python package and project manager:
 
 .. code-block:: json
 
@@ -121,8 +127,8 @@ If you prefer using the `uv` package manager:
      }
    }
 
-HTTP Transport Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Configure HTTP transport
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 For remote access or web-based clients:
 
@@ -137,7 +143,7 @@ For remote access or web-based clients:
      }
    }
 
-**Important**: With HTTP transport, you must start the server separately in a terminal:
+**Important**: with HTTP transport, you must start the server separately in a terminal:
 
 .. code-block:: bash
 
@@ -150,32 +156,31 @@ For remote access or web-based clients:
    # With CORS for web clients
    python -m ansys.mapdl.mcp --transport http --cors-origins "http://localhost:3000"
 
-Enabling MCP in VS Code
-~~~~~~~~~~~~~~~~~~~~~~~
+Enable MCP in Visual Studio Code
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. Open VS Code settings (``Ctrl+,`` or ``Cmd+,``)
-2. Search for "MCP" or "Copilot MCP"
-3. Enable the setting to allow Copilot to use MCP servers
-4. Restart VS Code for changes to take effect
+1. Open Visual Studio Code settings (``Ctrl+,`` or ``Cmd+,``).
+2. Search for ``MCP`` or ``Copilot MCP``.
+3. Enable the setting to allow Copilot to use MCP servers.
+4. Restart Visual Studio Code for changes to take effect.
 
-Configuration Locations
-^^^^^^^^^^^^^^^^^^^^^^^
+This image shows Visual Studio Code settings for enabling MCP servers:
 
-- **Project-level**: `.vscode/mcp.json` (repository root)
-- **Global**: VS Code user settings (auto-discovered)
-- **Workspace**: `.vscode/mcp.json` (workspace-specific)
+.. image:: ../_static/enable_mcp.png
+   :alt: VS Code setting to enable MCP servers
+   :align: center
 
-**Documentation**: `VS Code MCP Servers <https://code.visualstudio.com/docs/copilot/customization/mcp-servers>`_
+- **Project-level**: ``.vscode/mcp.json`` file in the repository root.
+- **Global**: Visual Studio Code user settings (auto-discovered).
+- **Workspace**: ``.vscode/mcp.json`` file for workspace-specific configuration.
+
+See `Visual Studio Code MCP Servers <https://code.visualstudio.com/docs/copilot/customization/mcp-servers>`_ documentation.
 
 Claude Desktop
 --------------
 
-Claude Desktop is Anthropic's macOS desktop application with full MCP support.
-
-Configuration
-~~~~~~~~~~~~~
-
-Edit the file `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Claude Desktop is Anthropic's macOS desktop app with full MCP support. To configure
+Claude Desktop, edit the ``~/Library/Application Support/Claude/claude_desktop_config.json`` file:
 
 .. code-block:: json
 
@@ -195,19 +200,22 @@ Edit the file `~/Library/Application Support/Claude/claude_desktop_config.json`:
      }
    }
 
-**Features**:
-- Automatic server detection and initialization
-- STDIO transport (default)
-- Full MCP tool discovery
+**Features**
 
-**Documentation**: `Claude Desktop MCP Configuration <https://modelcontextprotocol.io/docs/develop/build-server#testing-your-server-with-claude-for-desktop>`_
+- Provides automatic server detection and initialization.
+- Uses STDIO transport by default.
+- Supports full MCP tool discovery.
 
-General MCP Clients
+**Documentation**
+
+See `Claude Desktop MCP Configuration <https://modelcontextprotocol.io/docs/develop/build-server#testing-your-server-with-claude-for-desktop>`_ documentation.
+
+General MCP clients
 -------------------
 
 Any MCP-compatible client can use PyMAPDL-MCP. The basic requirement is STDIO or HTTP transport support.
 
-STDIO Transport (Recommended)
+STDIO transport (recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For local clients on the same machine:
@@ -217,13 +225,13 @@ For local clients on the same machine:
    # Start the server
    python -m ansys.mapdl.mcp --transport stdio
 
-Or using `uvx`:
+Or to use uvx:
 
 .. code-block:: bash
 
    uvx --from git+https://github.com/ansys/pymapdl-mcp ansys-mapdl-mcp
 
-HTTP Transport
+HTTP transport
 ~~~~~~~~~~~~~~
 
 For remote clients or web-based clients:
@@ -236,46 +244,49 @@ For remote clients or web-based clients:
    # Configure your client to connect to
    # http://[server-ip]:8080
 
-Comparison: Claude Code vs VS Code
------------------------------------
+Claude Code versus Visual Studio Code
+-------------------------------------
+.. vale off
 
 .. list-table::
    :header-rows: 1
 
-   * - Feature
-     - Claude Code
-     - VS Code
-   * - Configuration Method
+   * - **Feature**
+     - **Claude Code**
+     - **Visual Studio Code**
+   * - Configuration method
      - CLI command (``claude mcp add``)
      - JSON file (``.vscode/mcp.json``)
-   * - Setup Level
+   * - Setup level
      - Project or global (``--scope user``)
      - Project-level only
-   * - Manual Config
+   * - Manual configuration
      - None (auto-managed by CLI)
      - Manual JSON editing required
-   * - Transport Support
+   * - Transport support
      - STDIO (default)
      - STDIO or HTTP
    * - Integration
      - Built-in MCP support
      - Requires Copilot extension
-   * - Team Sharing
-     - Via project config files
-     - Via ``.vscode/mcp.json`` in repo
-   * - Learning Curve
+   * - Team sharing
+     - With project configuration files
+     - With ``.vscode/mcp.json`` file in repository
+   * - Learning curve
      - Low (CLI-based)
      - Medium (JSON configuration)
 
-Advanced Configuration
+.. vale on
+
+Advanced configuration
 ----------------------
 
-Remote MAPDL Connection
-~~~~~~~~~~~~~~~~~~~~~~~
+Connect to remote MAPDL instances
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Both VS Code and Claude Code support connecting to remote MAPDL instances.
+Both Visual Studio Code and Claude Code support connecting to remote MAPDL instances.
 
-**VS Code (STDIO)**:
+**Visual Studio Code (STDIO)**:
 
 .. code-block:: json
 
@@ -304,12 +315,12 @@ Both VS Code and Claude Code support connecting to remote MAPDL instances.
      --ip 192.168.1.100 \
      --port 50053
 
-Debug Logging
-~~~~~~~~~~~~~
+Enable debug logging
+~~~~~~~~~~~~~~~~~~~~
 
 Enable debug output for troubleshooting:
 
-**VS Code**:
+**Visual Studio Code**:
 
 .. code-block:: json
 
@@ -332,12 +343,12 @@ Enable debug output for troubleshooting:
 
    FASTMCP_LOG_LEVEL=DEBUG python -m ansys.mapdl.mcp
 
-Docker Integration
-~~~~~~~~~~~~~~~~~~
+Integrate with Docker
+~~~~~~~~~~~~~~~~~~~~~
 
 For containerized deployments with HTTP transport:
 
-**VS Code**:
+**Visual Studio Code**:
 
 .. code-block:: json
 
@@ -358,11 +369,11 @@ For containerized deployments with HTTP transport:
      -e PYMAPDL_IP=host.docker.internal \
      pymapdl-mcp
 
-See :doc:`../user_guide/overview` for more information about deployment options.
+For information about deployment options, see :doc:`../user_guide/overview`.
 
-Next Steps
+Next steps
 ----------
 
-- Review :doc:`../user_guide/tools_and_capabilities` to learn about available tools
-- Check :doc:`../api/tools` for complete API reference
-- Explore :doc:`../examples/index` for practical usage examples
+- To learn about available tools, see :doc:`../user_guide/tools_and_capabilities`.
+- For a complete API reference, see :doc:`../api/tools`.
+- For practical usage examples, see :doc:`../examples/index`.

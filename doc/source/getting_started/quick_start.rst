@@ -1,51 +1,96 @@
-Quick Start
+Quick start
 ===========
 
-Launching PyMAPDL-MCP
----------------------
+Launch PyMAPDL-MCP
+------------------
 
-The simplest way to start the MCP server is:
+This command is the simplest way to start the MCP server:
 
 .. code-block:: bash
 
    ansys-mapdl-mcp
 
-This will launch the server and wait for connections from MCP clients.
+It launches the server and waits for connections from MCP clients.
 
-Configuring Your IDE or Client
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Connect to your IDE or client
+-----------------------------
 
-PyMAPDL-MCP works with multiple MCP-compatible clients. See :doc:`ide_configuration` for detailed setup instructions for:
+PyMAPDL-MCP works with multiple MCP-compatible clients. For setup information, see :doc:`ide_configuration`.
 
-- **Claude Code** (recommended for AI-assisted development)
-- **VS Code with Copilot** (for VS Code users)
-- **Claude Desktop** (macOS application)
+- Claude Code (recommended for AI-assisted development)
+- Visual Studio Code with Copilot (for Visual Studio Code users)
+- Claude Desktop (macOS app)
 - Other MCP-compatible clients
 
-Basic Workflow
---------------
+Follow the basic workflow
+-------------------------
 
-Once connected, you can use MCP tools to:
+Start a MAPDL instance
+~~~~~~~~~~~~~~~~~~~~~~
 
-1. **Launch MAPDL**: Start a new MAPDL instance
-2. **Run Commands**: Execute MAPDL commands through PyMAPDL
-3. **Extract Data**: Retrieve results and analysis data
-4. **Visualize**: Generate plots and screenshots
-5. **Control**: Manage the MAPDL session lifecycle
+There are three ways to connect to MAPDL once the MCP server is running.
 
-Example Use Cases
-~~~~~~~~~~~~~~~~~
+**Option 1: Launch a new MAPDL instance (recommended).**
 
-- Running parametric studies with AI guidance
-- Analyzing FEA results automatically
-- Generating documentation from simulations
-- Debugging MAPDL scripts with AI assistance
+Ask your AI assistant to use the ``launch_mapdl_session`` tool:
 
-Next Steps
+*"Launch a new MAPDL instance."*
+
+*"Launch MAPDL with 4 processors in /tmp/mapdl_work."*
+
+This starts a new MAPDL process and connects to it automatically. It lets you
+specify custom settings (number of processors, working directory, etc.) without
+any manual setup.
+
+**Option 2: Connect to an existing instance.**
+
+Ask your AI assistant to use the ``connect_to_mapdl`` tool:
+
+*"Connect to MAPDL on localhost port 50052."*
+
+*"Connect to MAPDL on 192.168.1.100 port 50053."*
+
+You can first ask it to run ``list_mapdl_instances`` to discover what is running.
+This option is useful for connecting to different instances during a session or
+when MAPDL is already running on a remote machine.
+
+**Option 3: Auto-connect on server startup.**
+
+Pass ``--connect-on-startup`` when starting the MCP server:
+
+.. code-block:: bash
+
+   python -m ansys.mapdl.mcp --connect-on-startup --ip 127.0.0.1 --port 50052
+
+.. warning::
+   When ``--connect-on-startup`` is used, the connection is locked. The
+   ``launch_mapdl_session``, ``connect_to_mapdl``, and ``disconnect_from_mapdl``
+   tools are turned off.
+
+Running commands and extracting results
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once MAPDL is connected, you can use MCP tools to perform these tasks:
+
+1. Launch MAPDL instances.
+2. Execute MAPDL commands through PyMAPDL.
+3. Retrieve and analyze results.
+4. Generate plots and screenshots.
+5. Manage the MAPDL session lifecycle.
+
+
+Consider example use cases
+--------------------------
+
+- Run parametric studies with AI guidance.
+- Analyze FEA results automatically.
+- Generate documentation from simulation results.
+- Debug MAPDL scripts with AI assistance.
+
+Next steps
 ----------
 
-For more detailed information:
-
-- See :doc:`../user_guide/overview` for an overview of available tools
-- Check :doc:`../api/tools` for the complete API reference
-- Browse :doc:`../examples/index` for practical examples
+- For an overview of available tools, see :doc:`../user_guide/overview`.
+- For the complete API reference, see :doc:`../api/tools`.
+- For practical examples, browse :doc:`../examples/index`.
+- For containerized deployment, see :doc:`../user_guide/docker`.

@@ -1,385 +1,202 @@
-**ANSYS MCP SERVER TECHNOLOGY PREVIEW LICENSE AGREEMENT**
 
-READ THIS ANSYS MCP SERVER TECHNOLOGY PREVIEW LICENSE AGREEMENT
-("AGREEMENT") CAREFULLY BEFORE PROCEEDING. THIS IS A LEGALLY BINDING
-CONTRACT BETWEEN EVALUATOR AND ANSYS FOR EVALUATOR TO USE THE
-TECHNOLOGY, AND IT INCLUDES DISCLAIMERS OF WARRANTY AND LIMITATIONS OF
-LIABILITY. UPON ACCESSING THE TECHNOLOGY, EVALUATOR'S AUTHORIZED
-REPRESENTATIVE ACCEPTS THIS AGREEMENT AND LEGALLY BINDS EVALUATOR TO THE
-TERMS AND CONDITIONS CONTAINED IN THIS AGREEMENT.
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
 
-**WHEREAS**, Ansys owns or licenses certain proprietary technology and
-accompanying documentation provided under this license agreement
-(hereinafter referred to as the \"Technology\").
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
-**WHEREAS,** the person or entity entering into this Agreement by its
-authorized representative ("Evaluator") wishes to Evaluate the
-Technology.
+   1. Definitions.
 
-**NOW THEREFORE,** for good and valuable consideration, the receipt and
-sufficiency of which is hereby acknowledged, the parties hereby agree to
-the following terms and conditions:
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
 
-1.  **PURPOSE OF THE AGREEMENT**
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
 
-\(a\) Ansys provides the Technology to Evaluator solely for Evaluator's
-internal Evaluation of the Technology ("Purpose"). As used herein,
-"Evaluate" and its derivatives shall mean internal evaluation and
-exploration of the features of the Technology such as usability, speed,
-functionality, engineering applicability, data extraction, and data
-reporting, etc.
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
 
-\(b\) Evaluator shall not duplicate, distribute, or otherwise make the
-Technology available in any way to any third party, nor permit the
-Technology to be used by its employees for any purpose other than the
-Purpose(s).
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
 
-2.  **LICENSE GRANT**
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
 
-<!-- -->
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
 
-(a) Ansys hereby grants to the Evaluator a limited term, royalty-free,
-    personal, non-transferable, non-exclusive, non-assignable, internal
-    license to Evaluate the Technology and all documentation provided by
-    Ansys in connection with the Technology solely in support of the
-    Purpose ("Evaluation License"). The Evaluator will not (and will not
-    attempt to nor allow any third party to or attempt to) adapt, alter,
-    amend, modify, reverse engineer, decompile, disassemble, or decode
-    the whole or any part of the Technology.
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
 
-(b) To facilitate Evaluator's Evaluation of the Technology, Evaluator
-    may need to use existing licenses of Ansys software ("Existing
-    Licenses"). Use of such Existing Licenses shall be subject to the
-    current written software license agreement by and between Ansys and
-    Evaluator governing the use of the Existing Licenses ("License
-    Agreement").
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
 
-(c) During the term of this Agreement, Ansys may provide to the
-    Evaluator such updates, fixes and other materials that are deemed
-    appropriate by Ansys to assist the Evaluator in performing the
-    Evaluation specified hereunder.
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
 
-(d) Except as permitted by the Purpose, Evaluator shall not use the
-    Technology to directly or indirectly create, train, test, or
-    otherwise improve any machine learning algorithms or artificial
-    intelligence systems.
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
 
-(e) Evaluator shall not use the Technology for the creation, generation,
-    or augmentation of any synthetic dataset(s).
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
 
-(f) Evaluator may only use the Technology for within an environment
-    controlled by the Evaluator which prohibits any third party,
-    including any provider of any third party large language model or
-    similar artificial intelligence system, from using the Technology
-    for any purpose other than providing a product and/or service to
-    Evaluator, including, for the avoidance of doubt, a prohibition on
-    using the Technology for the training, developing, or improving of
-    any third-party tools, technologies, or models.
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
 
-(g) Evaluator shall not use software or third-party tools, including
-    large language models, that (i) share, reuse, or pool the Technology
-    externally, or (ii) could cause the Technology to be exposed,
-    directly or indirectly, to external parties except as permitted by
-    this Agreement.
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
 
-(h) Evaluator shall implement and maintain security measures to prevent
-    unauthorized access, copying, or distribution of the Technology,
-    including physical, technical, organizational and administrative
-    safeguards.
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
 
-(i) All rights not expressly granted to Evaluator hereunder are reserved
-    by Ansys.
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
 
-<!-- -->
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
 
-3.  **TERM AND TERMINATION**
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
 
-<!-- -->
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
 
-(a) The term of the Evaluation License to the Technology shall be
-    ninety (90) days from the date that Evaluator first accesses the
-    Technology ("License Term").
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
 
-(b) Either party may terminate this Agreement at any time for any reason
-    or no reason upon ten (10) days' written notice to the other party.
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
 
-(c) Ansys may terminate this Agreement immediately for Evaluator's
-    material breach of Section 2, 4(d), or 7.
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
 
-(d) Termination of this Agreement shall be in addition to and not in
-    lieu of any other legal or equitable remedies available to the
-    parties. The provisions of Sections 4, 5, 6, 7, and 8 shall survive
-    any expiration or termination of this Agreement.
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
 
-(e) Upon expiration or termination of this Agreement and any Evaluation
-    License(s), Evaluator shall uninstall the Technology from the
-    computer(s) on which it is installed, and all copies thereof shall
-    be either destroyed or returned to Ansys. Evaluator shall confirm in
-    writing its compliance with this Section 3(e).
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
 
-<!-- -->
+   END OF TERMS AND CONDITIONS
 
-4.  **EVALUATOR OBLIGATIONS AND FEEDBACK**
+   APPENDIX: How to apply the Apache License to your work.
 
-<!-- -->
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
 
-(a) Evaluator shall report to Ansys any malfunctioning, bugs, and errors
-    of functional deficiencies in the Technology (\"Technology
-    Deficiency(ies)\") detected while evaluating the Technology,
-    (e.g*.,* if the Technology is not performing in accordance with
-    Ansys' specifications).
+   Copyright 2025 - 2026 ANSYS, Inc. and/or its affiliates.
 
-(b) Evaluator may provide suggestions, observations, feedback,
-    commentary, recommended use cases or other statements (collectively,
-    the \"Feedback\") to Ansys concerning the Technology or other
-    information provided by Ansys. Evaluator agrees that any Feedback
-    shall be given on an entirely voluntary basis and will not create
-    any confidentiality obligation for Ansys. Notwithstanding anything
-    herein to the contrary, in no event shall Feedback be considered
-    Evaluator's Confidential Information. The results of the Evaluation
-    and any Feedback or Technical Deficiencies reported to Ansys by
-    Evaluator shall be considered Other Confidential Information (as
-    defined below) of Ansys.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-(c) Ansys shall be free to disclose and use the Feedback and the
-    contents of Evaluator's reports of Technology Deficiencies as it
-    sees fit, without any obligation of any kind to the Evaluator.
+       http://www.apache.org/licenses/LICENSE-2.0
 
-(d) Evaluator is prohibited from providing or making available to Ansys,
-    as part of the Evaluation, any (i) any Personal Data (as defined
-    below) revealing racial or ethnic origin or genetic data, biometric
-    data, or other Personal Data subject to specialized security
-    regimes, including without limitation the standards promulgated by
-    the PCI Security Standards Council, (ii) any information, or
-    documents or technical data that are U.S. Government Classified,
-    Controlled Unclassified Information, International Traffic in Arms
-    Regulators (ITAR) or Export Administration Regulators (EAR)
-    controlled or otherwise have been determined by the United States
-    Government or by a foreign government to require protection against
-    unauthorized disclosure for reasons of national security, or (iii)
-    any individually identifiable health information including
-    demographic data, medical history, test results, or other
-    information used to identify an individual or provide healthcare
-    services, healthcare coverage, and related payment services ("Health
-    Data"), or any other medical, demographic, visual, or descriptive
-    Personal Data that is subject to the Health Insurance Portability &
-    Accountability Act of 2025 - 2026 ("HIPAA") or other laws that regulate the
-    processing of Health Data. Evaluator acknowledges and agrees that
-    Ansys is not a Covered Entity or Business Associate (each as defined
-    by the HIPAA).
-
-<!-- -->
-
-5.  **WARRANTY DISCLAIMERS, LIMITATION OF LIABILITY**
-
-<!-- -->
-
-(a) Evaluator understands and agrees that it is accepting the Evaluation
-    License to the Technology for exploration and Evaluation purposes
-    only. Evaluator further understands and agrees that it is
-    anticipated that there may be Technology Deficiencies, and that the
-    occurrence of such Technology Deficiencies is inherent in the
-    technology exploration relationship established hereunder.
-
-(b) Evaluator accepts the Technology \"AS IS\" with all faults and
-    defects and without warranty of any kind. ANSYS DISCLAIMS ALL
-    WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-    WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
-    NON-INFRINGEMENT.
-
-(c) SUBJECT TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT WILL
-    ANSYS BE LIABLE TO EVALUATOR OR ANY OTHER PARTY FOR ANY INDIRECT,
-    SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE
-    OF OR INABILITY TO USE THE TECHNOLOGY, INCLUDING, WITHOUT
-    LIMITATION, DAMAGES FOR LOSS OF GOODWILL, WORK STOPPAGE, COMPUTER
-    FAILURE OR MALFUNCTION, OR ANY AND ALL OTHER COMMERCIAL DAMAGES OR
-    LOSSES, EVEN IF ADVISED OF THE POSSIBILITY THEREOF, AND REGARDLESS
-    OF THE LEGAL OR EQUITABLE THEORY (CONTRACT, TORT, OR OTHERWISE) UPON
-    WHICH THE CLAIM IS BASED. IN NO EVENT WILL ANSYS' AGGREGATE LIABILITY
-    TO EVALUATOR EXCEED THE GREATER OF (i) THE FEES PAID BY EVALUATOR
-    UNDER THIS AGREEMENT FOR THE TECHNOLOGY OR (ii) 5,000.00 U.S.
-    DOLLARS. ANY DATA INCLUDED IN THE TECHNOLOGY IS FOR TESTING USE ONLY
-    AND ANSYS HEREBY DISCLAIMS ANY AND ALL LIABILITY ARISING THEREFROM.
-    EVALUATOR ACKNOWLEDGES THAT THE TECHNOLOGY LICENSED HEREUNDER IS IN
-    AN EXPERIMENTAL STATE ONLY AND THAT THE TECHNOLOGY WILL PROBABLY
-    UNDERGO SIGNIFICANT CHANGES PRIOR TO THE FINAL RELEASE VERSION.
-
-<!-- -->
-
-6.  **PROPRIETARY RIGHTS**
-
-Evaluator acknowledges and agrees that the Technology is the proprietary
-property of Ansys and that Ansys is the owner or authorized licensee of
-all copyrights, trademarks, patents, trade secrets and other proprietary
-information in and related to the Technology. Accordingly, all right,
-title, interest, ownership rights, and intellectual property rights in
-the Technology and any and all improvements, modifications, fixes, or
-enhancements that arise through the exploration relationship, regardless
-of whether such items are created or suggested by Evaluator, shall
-belong to and/or remain with Ansys. Evaluator acknowledges such
-ownership and intellectual property rights and will not take any action
-to jeopardize, limit or interfere in any manner with Ansys' ownership of
-or rights with respect to the Technology. The Technology is protected by
-copyright and other intellectual property laws.
-
-7.  **CONFIDENTIALITY**
-
-<!-- -->
-
-(a) Evaluator hereby acknowledges that the Technology and associated
-    documentation embodies confidential and proprietary information,
-    including trade secrets, owned by Ansys or its affiliates or
-    suppliers (the "Technology Confidential Information"). Excluding the
-    Technology Confidential Information, each party acknowledges and
-    agrees that, except as specifically provided below, any and all
-    information concerning the other\'s business and technology which it
-    (the "Recipient") receives from the other (the "Disclosing Party"),
-    including without limitation, documents, data, plans, prices, and
-    other material and information and knowledge ("Other Confidential
-    Information") and, together with the Technology Confidential
-    Information, ("Confidential Information") is the confidential, and
-    proprietary information of the Disclosing Party. Information
-    disclosed in tangible form will only be considered "Other
-    Confidential Information" if it bears an appropriate legend
-    indicating its confidential or proprietary nature. Information not
-    disclosed in tangible form, such as that disclosed orally or
-    visually, will only be considered "Other Confidential Information"
-    if it is identified as confidential at the time of disclosure and a
-    written summary thereof, marked with an appropriate legend
-    indicating its confidential or proprietary nature, is provided to
-    the Recipient within fifteen (15) days of the initial disclosure.
-
-(b) The parties shall use all reasonable efforts to identify Other
-    Confidential Information as provided above; however, Other
-    Confidential Information shall also include information which, given
-    the circumstances surrounding the disclosure or the nature of the
-    information itself, can be reasonably understood to be confidential
-    or proprietary even if such information is not so marked. The
-    Recipient agrees (i) to hold the Confidential Information in strict
-    confidence; (ii) not to use it in any way (except as is necessary in
-    support of the Purpose), commercially or otherwise; and (iii) not to
-    disclose it to any unauthorized person, either before or after
-    expiration or termination of this Agreement, without the Disclosing
-    Party\'s prior written consent. The Recipient further agrees to
-    protect the Confidential Information, using either the same degree
-    of care used to protect its own confidential or proprietary
-    information of like importance or a reasonable degree of care,
-    whichever degree of care is higher. Notwithstanding the foregoing,
-    Recipient may disclose Confidential Information to its and its
-    Affiliate's employees who have a need to know in connection with the
-    exercise of Recipient's rights and obligations under this Agreement.
-    "Affiliate" means any person or entity directly or indirectly
-    controlling, controlled by, or under common control with such party.
-    "Personal Data" means any information relating to an identified or
-    identifiable natural person.
-
-(c) The Recipient\'s obligation of confidence and non-disclosure shall
-    not apply to information that (i) was in the Recipient\'s possession
-    before receipt from the Disclosing Party, (ii) is or becomes a
-    matter of public knowledge through no fault of the Recipient, (iii)
-    is rightfully received by the Recipient from a third party without a
-    duty of confidentiality, (iv) is independently developed by the
-    Recipient without the use of the Disclosing Party's Confidential
-    Information, (v) is rightfully obtained by the Recipient from third
-    parties authorized to make such disclosure without restriction.
-    Recipient may disclose Confidential Information if required by law,
-    regulation or court order to be disclosed, so long as Recipient
-    notifies Disclosing Party in writing prior to disclosing the
-    Confidential Information so that Disclosing Party has an opportunity
-    to seek a protective order or other appropriate remedy from the
-    proper authority.  Recipient agrees to cooperate with Disclosing
-    Party in seeking such order or other remedy.  Recipient further
-    agrees that if Disclosing Party is not successful in precluding the
-    requesting legal body from requiring the disclosure of the
-    Confidential Information, it will furnish only that portion of the
-    Confidential Information which is legally required and will exercise
-    all reasonable efforts to obtain reliable assurances that
-    confidential treatment will be accorded the Confidential
-    Information.
-
-(d) The obligations of the parties with regard to Other Confidential
-    Information will survive for a period of five (5) years from the
-    date of the first disclosure of such Other Confidential Information.
-    Notwithstanding the foregoing, the obligations respecting the
-    Technology Confidential Information will survive any termination or
-    expiration of this Agreement and will remain in effect until one of
-    the exceptions listed in Section 7(c) applies.
-
-(e) Evaluator hereby gives assurance that unless notice is given to
-    Ansys, and prior authorization is obtained as required by applicable
-    export laws, Evaluator will not knowingly re-export, directly or
-    indirectly, the Technology or any technical data transferred by
-    Ansys to Evaluator to any destination or person or entity in
-    violation of U.S. export laws.
-
-(f) Upon the earlier of Disclosing Party\'s written request or
-    termination of this Agreement, the Recipient agrees to promptly a)
-    return to the Disclosing Party all materials furnished by the
-    Disclosing Party which contain Confidential Information together
-    with all copies, reproductions and summaries thereof made by the
-    Recipient; or b) destroy such items and deliver to Disclosing Party
-    written certification that they have been destroyed. Notwithstanding
-    the above, the Recipient may retain copies of Other Confidential
-    Information stored on backup disks or in backup storage facilities
-    automatically produced in the ordinary course of business which are
-    not, in the ordinary course of business, accessible from employee
-    workstations. Any Other Confidential Information so retained will be
-    held subject to the confidentiality and use limitations of this
-    Agreement and will not be accessed by any person except information
-    technology systems administrators or used for any purpose except
-    necessary data storage systems maintenance.
-
-<!-- -->
-
-8.  **MISCELLANEOUS**
-
-<!-- -->
-
-(a) Evaluator acknowledges that the Technology may depend on third-party
-    software and/or open-source software (collectively, \"Third-Party
-    Software\"). Such Third-Party Software may be subject to separate
-    terms and conditions and not the terms of this Agreement. Ansys does
-    not warrant or support such Third-Party Software. Such Third-Party
-    Software may contain vulnerabilities.
-
-(b) Ansys does not guarantee that the technology embodied in the
-    Technology or the Feedback provided by the Evaluator will be offered
-    at any time as a commercial software product. Evaluator agrees that
-    there is no offer for sale of the Technology or any of Ansys'
-    commercial software products under this Agreement.
-
-(c) This Agreement shall be governed by the laws of the Commonwealth of
-    Pennsylvania, excluding its conflict of law provisions. Because the
-    Technology Confidential Information is unique and valuable and
-    breach of this Agreement may result in irreparable injury to Ansys
-    for which monetary damages alone may not be an adequate remedy,
-    Ansys will be entitled to seek specific performance and injunctive
-    or other equitable relief as a remedy for any breach or anticipated
-    breach of this Agreement without the necessity of posting a bond.
-    Any such relief will be in addition to all other legal and equitable
-    remedies.
-
-(d) If any provision should be held illegal or unenforceable by a court
-    having jurisdiction, such provision shall be modified to the extent
-    necessary to render it enforceable without losing its intent, or
-    severed from this Agreement if no such modification is possible, and
-    other provisions of this Agreement shall remain in full force and
-    effect.
-
-(e) A waiver by either party of any term or condition of this Agreement
-    or any breach thereof, in any one instance, shall not waive such
-    term or condition or any subsequent breach thereof.
-
-(f) Evaluator shall not assign or otherwise transfer by operation of law
-    or otherwise this Agreement or any rights or obligations herein
-    without the prior express written consent of Ansys.
-
-(g) This Agreement shall be binding upon and shall inure to the benefit
-    of the parties, their successors and permitted assigns.
-
-(h) The relationship between Ansys and Evaluator is that of independent
-    contractors and neither Evaluator nor its agents shall have any
-    authority to bind Ansys in any way.
-
-(i) The headings of the sections of this Agreement are used for
-    convenience only and shall have no substantive meaning.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.

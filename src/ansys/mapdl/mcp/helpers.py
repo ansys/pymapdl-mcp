@@ -1,25 +1,18 @@
 # Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
-# SPDX-License-Identifier: ANSYS MCP SERVER TECHNOLOGY PREVIEW LICENSE AGREEMENT
-
+# SPDX-License-Identifier: Apache-2.0
 #
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 """Helper functions for PyMAPDL MCP."""
 
@@ -204,20 +197,14 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
     # Information class attributes
     info_class: dict[str, str] = {}
     try:
-        info_class["title"] = mapdl.information.title if hasattr(mapdl.information, "title") else ""
-        info_class["jobname"] = (
-            mapdl.information.jobname if hasattr(mapdl.information, "jobname") else ""
-        )
-        info_class["routine"] = (
-            mapdl.information.routine if hasattr(mapdl.information, "routine") else ""
-        )
-        info_class["units"] = mapdl.information.units if hasattr(mapdl.information, "units") else ""
-        info_class["revision"] = (
-            mapdl.information.revision if hasattr(mapdl.information, "revision") else ""
-        )
-        info_class["product"] = (
-            mapdl.information.product if hasattr(mapdl.information, "product") else ""
-        )
+        information = getattr(mapdl, "information", None)
+        if information is not None:
+            info_class["title"] = getattr(information, "title", "")
+            info_class["jobname"] = getattr(information, "jobname", "")
+            info_class["routine"] = getattr(information, "routine", "")
+            info_class["units"] = getattr(information, "units", "")
+            info_class["revision"] = getattr(information, "revision", "")
+            info_class["product"] = getattr(information, "product", "")
     except Exception as e:
         logger.warning(f"Error extracting information class data: {e}")
         info_class["error"] = str(e)
@@ -286,6 +273,8 @@ def connect_to_mapdl_in_persistent_python(
     str
         Connection status message.
     """
+    if ctx.request_context is None:
+        return "No request context available."
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:

@@ -4,76 +4,52 @@
 Contributing
 ============
 
-There are several ways to contribute to PyMAPDL-MCP.
+You can contribute to PyMAPDL-MCP in several ways.
 
 * `Answer discussions`_
 * `Post issues`_
-* :ref:`write_documentation`
+* :ref:`ref_write_documentation` (described on its own page)
+* :ref:`ref_develop_pymapdl_mcp` (described on its own page)
 
-Overall guidance on contributing to a PyAnsys library appears in the
-`Contributing <https://dev.docs.pyansys.com/how-to/contributing.html>`_ topic
-in the *PyAnsys Developer's Guide*. Ensure that you are thoroughly familiar
-with it and the `Coding style <https://dev.docs.pyansys.com/coding-style/index.html>`_
-before attempting to contribute to PyMAPDL-MCP.
-
-In order to have a nice release notes section, it is important to follow
-the branch and commit names conventions as described in the *PyAnsys Developer's Guide*
-`branch <https://dev.docs.pyansys.com/how-to/contributing.html#branch-naming-conventions>`_
-and `commit <https://dev.docs.pyansys.com/how-to/contributing.html#commit-naming-conventions>`_
-naming sections.
+Before contributing to PyMAPDL-MCP, read
+`Contributing <https://dev.docs.pyansys.com/how-to/contributing.html>`_
+and `Coding style <https://dev.docs.pyansys.com/coding-style/index.html>`_ in the
+*PyAnsys developer's guide*. To generate useful release notes, follow the
+guidelines in `Branch-naming conventions <https://dev.docs.pyansys.com/how-to/contributing.html#branch-naming-conventions>`_
+and `Commit-naming conventions <https://dev.docs.pyansys.com/how-to/contributing.html#commit-naming-conventions>`_.
 
 
 Answer discussions
 ==================
 
-Answering discussions is an excellent way to contribute to PyMAPDL-MCP, and
-it does not require any setup, just a GitHub account.
-It is probably the first step towards becoming a full PyMAPDL-MCP developer, since it
-helps you deepen your understanding of the project. Engaging in
-discussions often requires a thorough grasp of the project's goals and
-challenges.
-Your contributions can help other users or contributors who
-may be facing similar issues, making the repository more welcoming and
-inclusive. By providing answers or solutions, you can directly contribute to the project's
-success, maintain its health, and encourage a positive, open source ecosystem.
+Answering discussions is an excellent way to contribute to PyMAPDL-MCP without
+any setup. Only a GitHub account is required. Engaging with discussions deepens
+your understanding of the project and helps other users facing similar issues,
+making the repository more welcoming and inclusive.
 
-To discover how you can help, see the `PyMAPDL-MCP Discussions <https://github.com/ansys/pymapdl-mcp/discussions>`_ page.
+To see where you can help, visit the `PyMAPDL-MCP Discussions <https://github.com/ansys/pymapdl-mcp/discussions>`_ page.
 
 
 Post issues
 ===========
 
-Posting issues in a repository is a valuable contribution that benefits you, the
-repository, and PyMAPDL-MCP as a whole. It allows you to voice concerns, suggest
-improvements, or report bugs, which can lead to a more robust and user-friendly
-project. It also offers an opportunity for you to engage with the project's
-community, learn from others, and gain experience in issue tracking and
-collaboration.
-For the repository, issues serve as a structured way to track and
-prioritize work, helping maintainers understand the needs of users and guide the
-project's development. It's an excellent way to contribute because it enhances
-the project's quality, fosters transparency, and encourages the collective
-effort of the community to continuously improve and innovate.
+Use the `PyMAPDL-MCP Issues <https://github.com/ansys/pymapdl-mcp/issues>`_ page to report bugs,
+suggest improvements, and request features.
 
-Use the `PyMAPDL-MCP Issues <https://github.com/ansys/pymapdl-mcp/issues>`_ page to submit questions, report bugs,
-and request new features.
 When possible, use these issue templates:
 
-* **🐞 Bug, problem, or error**: Fill a bug report here
-* **📖 Documentation issue**: Modifications to the documentation only
-* **🆕 New tool or feature**: Proposing a new MCP tool or feature for the library
-* **💡 Enhancement**: Suggestions for improving existing functionality
+* **🐞 Bug, problem, or error**: File a bug report.
+* **📖 Documentation issue**: Suggest modifications needed to the documentation.
+* **🎓 Adding an example**: Propose a new example for the library.
+* **💡 New feature**: Propose a new feature for the library.
 
-
-If your issue does not fit into one of these categories, click
-`Open a blank issue <https://github.com/ansys/pymapdl-mcp/issues/new>`_.
-
+If your issue does not fit into any existing category, click
+`Blank issue <https://github.com/ansys/pymapdl-mcp/issues/new>`_.
 
 .. _ref_contributing_next_steps:
 
-Next Steps
+Next steps
 ==========
 
-Ready to contribute code? Check out these sections:
-
-- :ref:`write_documentation` - Help improve our documentation
+- To improve the documentation, see :ref:`write_documentation`.
+- To contribute code, see :ref:`ref_develop_pymapdl_mcp`.

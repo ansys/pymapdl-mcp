@@ -1,27 +1,35 @@
 # Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
-# SPDX-License-Identifier: ANSYS MCP SERVER TECHNOLOGY PREVIEW LICENSE AGREEMENT
+# SPDX-License-Identifier: Apache-2.0
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-#
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+"""List of tools in PyMAPDL-MCP.
 
-"""List of tools in PyMAPDL-MCP."""
+This module defines all MCP tools available in the PyMAPDL MCP server, organized into logical
+tool sets for better organization and accessibility.
+
+Tool sets
+---------
+Tools are grouped into the following tool sets via the ``toolsets://definition`` resource:
+
+- **session_management**: Tools for managing MAPDL connections and instance discovery
+- **command_execution**: Tools for executing MAPDL commands and scripts
+- **visualization**: Tools for visualization and post-processing results
+- **python_execution**: Tools for executing arbitrary Python and PyMAPDL code
+
+The `list_tool_sets()` function exposes these tool set definitions as a resource.
+"""
 
 import base64
 import json
@@ -30,7 +38,7 @@ from pathlib import Path
 import platform
 import subprocess  # nosec B404
 import tempfile
-from typing import Any
+from typing import Any, cast
 
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
 from fastmcp.server import Context
@@ -69,6 +77,15 @@ def _open_image_in_viewer(image_path: str | Path) -> None:
         logger.warning(f"Failed to open image in viewer: {e}")
 
 
+def _is_mapdl_crashed(mapdl: Any) -> bool:
+    """Return True if the cached MAPDL instance has crashed or exited."""
+    if hasattr(mapdl, "_exited") and mapdl._exited is True:
+        return True
+    if hasattr(mapdl, "_exiting") and mapdl._exiting is True:
+        return True
+    return False
+
+
 # Tag applied to all tools that require an active MAPDL connection.
 # These tools are disabled at startup (before MAPDL is connected) and enabled
 # once a connection is established via connect_to_mapdl or launch_mapdl_session.
@@ -76,7 +93,7 @@ REQUIRES_MAPDL_TAG = "requires_mapdl"
 
 
 # Access type-safe lifespan context in tools
-@app.tool(tags={REQUIRES_MAPDL_TAG})
+@app.tool(tags={REQUIRES_MAPDL_TAG, "session_management"})
 def check_mapdl_status(ctx: Context) -> ToolResult:
     """Check the status of MAPDL initialization.
 
@@ -101,6 +118,8 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
 
         Returns an error message if MAPDL is not available or has exited.
     """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
@@ -132,32 +151,32 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
         return _text_result(error_msg)
 
 
-@app.tool(tags={"aali"})
+@app.tool(tags={"aali", "session_management"})
 def check_mapdl_installed(ctx: Context) -> ToolResult:
     """Check if MAPDL is installed on the system.
 
-    This tool uses PyMAPDL's check_valid_ansys function to verify if a valid
-    ANSYS/MAPDL installation is available on the system.
+    This tool lists all ANSYS/MAPDL installations found on the system,
+    including their version numbers and executable paths.
 
     Returns
     -------
     ToolResult
-        Status message indicating whether MAPDL is installed or not.
+        Status message listing all found MAPDL installations, or a message
+        indicating that no installation was found.
     """
+    import os
+    from pathlib import Path
+
     logger.info("Checking if MAPDL is installed...")
 
     try:
-        from ansys.mapdl.core.launcher import (  # type: ignore
-            check_valid_ansys,
-            get_default_ansys_path,
+        from ansys.tools.common.path import (
+            get_available_ansys_installations,
         )
 
-        is_installed = check_valid_ansys()
+        installations = get_available_ansys_installations()
 
-        if is_installed:
-            logger.info("MAPDL installation found")
-            return _text_result(f"MAPDL is installed on this system in: {get_default_ansys_path()}")
-        else:
+        if not installations:
             logger.info("MAPDL installation not found")
             return _text_result(
                 "MAPDL is not installed on this system or cannot be found in the "
@@ -165,13 +184,28 @@ def check_mapdl_installed(ctx: Context) -> ToolResult:
                 "and the installation path is correct."
             )
 
+        lines = [f"MAPDL is installed on this system. Found {len(installations)} installation(s):"]
+        for version_int, base_path in installations.items():
+            is_student = version_int < 0
+            abs_version = abs(version_int)
+            ansys_bin_path = Path(base_path) / "ansys" / "bin"
+            if os.name == "nt":
+                ansys_bin = ansys_bin_path / "winx64" / f"ansys{abs_version}.exe"
+            else:
+                ansys_bin = ansys_bin_path / f"ansys{abs_version}"
+            student_label = " (Student)" if is_student else ""
+            lines.append(f"  - Version {abs_version}{student_label}: {ansys_bin}")
+
+        logger.info(f"Found {len(installations)} MAPDL installation(s)")
+        return _text_result("\n".join(lines))
+
     except Exception as e:
         error_msg = f"Error checking MAPDL installation: {str(e)}"
         logger.error(error_msg)
         return _text_result(error_msg)
 
 
-@app.tool(tags={REQUIRES_MAPDL_TAG})
+@app.tool(tags={REQUIRES_MAPDL_TAG, "command_execution"})
 def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "") -> ToolResult:
     """Execute an arbitrary MAPDL command.
 
@@ -191,6 +225,8 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
     ToolResult
         Command execution result.
     """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
@@ -208,7 +244,7 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
     return _text_result(f"MAPDL command executed successfully: {result}")
 
 
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "command_execution"})
 def run_multiple_commands(
     ctx: Context, commands: list[str], comment: str = "", header: str = ""
 ) -> ToolResult:
@@ -234,6 +270,8 @@ def run_multiple_commands(
     ToolResult
         Execution result with summary of commands executed.
     """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
@@ -244,7 +282,7 @@ def run_multiple_commands(
     if not commands:
         return _text_result("No commands provided. Please provide a list of commands to execute.")
 
-    if not isinstance(commands, list):  # type: ignore
+    if not isinstance(commands, list):
         return _text_result("Commands must be provided as a list of strings.")
 
     # Filter out empty commands
@@ -296,7 +334,7 @@ def run_multiple_commands(
         return ToolResult([TextContent(type="text", text=error_msg)])
 
 
-@app.tool(tags={"aali", "locked_connection"})
+@app.tool(tags={"aali", "locked_connection", "session_management"})
 async def launch_mapdl_session(
     ctx: Context,
     exec_file: str | None = None,
@@ -338,15 +376,23 @@ async def launch_mapdl_session(
     """
     logger.info("Launching new MAPDL instance...")
 
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     try:
         # Check if there's already a connection
         if ctx.request_context.lifespan_context.mapdl is not None:
-            return _text_result(
-                f"Already connected to MAPDL at "
-                f"{ctx.request_context.lifespan_context.mapdl._ip}:"
-                f"{ctx.request_context.lifespan_context.mapdl._port}. "
-                f"Please disconnect first using disconnect_from_mapdl tool."
-            )
+            if _is_mapdl_crashed(ctx.request_context.lifespan_context.mapdl):
+                logger.warning(
+                    "Cached MAPDL instance has crashed or exited. Clearing the cached instance."
+                )
+                ctx.request_context.lifespan_context.mapdl = None
+            else:
+                return _text_result(
+                    f"Already connected to MAPDL at "
+                    f"{ctx.request_context.lifespan_context.mapdl._ip}:"
+                    f"{ctx.request_context.lifespan_context.mapdl._port}. "
+                    f"Please disconnect first using disconnect_from_mapdl tool."
+                )
 
         # Launch new MAPDL instance
         kwargs: dict[str, Any] = {
@@ -365,7 +411,7 @@ async def launch_mapdl_session(
             kwargs["additional_switches"] = additional_switches
 
         # Launch MAPDL - import already done at module level
-        mapdl = pymapdl.launch_mapdl(**kwargs)
+        mapdl = cast(pymapdl.Mapdl, pymapdl.launch_mapdl(**kwargs))
 
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
@@ -384,7 +430,7 @@ async def launch_mapdl_session(
         return _text_result(error_msg)
 
 
-@app.tool(tags={"aali", "locked_connection"})
+@app.tool(tags={"aali", "locked_connection", "session_management"})
 async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost") -> ToolResult:
     """Connect to an existing MAPDL instance.
 
@@ -410,24 +456,33 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
     """
     logger.info(f"Connecting to MAPDL instance at {ip}:{port}...")
 
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     try:
         # Check if there's already a connection
         if ctx.request_context.lifespan_context.mapdl is not None:
-            return _text_result(
-                f"Already connected to MAPDL at "
-                f"{ctx.request_context.lifespan_context.mapdl._ip}:"
-                f"{ctx.request_context.lifespan_context.mapdl._port}. "
-                f"Please disconnect first using disconnect_from_mapdl tool."
-            )
+            if _is_mapdl_crashed(ctx.request_context.lifespan_context.mapdl):
+                logger.warning(
+                    "Cached MAPDL instance has crashed or exited. Clearing the cached instance."
+                )
+                ctx.request_context.lifespan_context.mapdl = None
+            else:
+                return _text_result(
+                    f"Already connected to MAPDL at "
+                    f"{ctx.request_context.lifespan_context.mapdl._ip}:"
+                    f"{ctx.request_context.lifespan_context.mapdl._port}. "
+                    f"Please disconnect first using disconnect_from_mapdl tool."
+                )
 
         # Connect to existing MAPDL instance
-        mapdl = pymapdl.Mapdl(
-            start_instance=False,
-            ip=ip,
-            port=port,
-            cleanup_on_exit=False,  # Don't clean up since we didn't launch it
-            loglevel="INFO",
-        )
+        _connect_kwargs: dict[str, Any] = {
+            "start_instance": False,
+            "ip": ip,
+            "port": port,
+            "cleanup_on_exit": False,  # Don't clean up since we didn't launch it
+            "loglevel": "INFO",
+        }
+        mapdl = pymapdl.Mapdl(**_connect_kwargs)
 
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
@@ -444,7 +499,7 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
         return _text_result(error_msg)
 
 
-@app.tool(tags={"aali", "locked_connection", REQUIRES_MAPDL_TAG})
+@app.tool(tags={"aali", "locked_connection", REQUIRES_MAPDL_TAG, "session_management"})
 async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
     """Disconnect from the dynamically connected MAPDL instance.
 
@@ -461,6 +516,8 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
     ToolResult
         Disconnection status message.
     """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
@@ -491,7 +548,7 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
         return _text_result(error_msg)
 
 
-@app.tool()
+@app.tool(tags={"session_management"})
 def list_mapdl_instances(ctx: Context) -> ToolResult:
     """List all MAPDL instances running on the local machine and any remotely connected instance.
 
@@ -518,6 +575,8 @@ def list_mapdl_instances(ctx: Context) -> ToolResult:
     local_table = list_instances(long=True, instances=True)
 
     # Also include any remotely connected instance from the current session context
+    if ctx.request_context is None:
+        return _text_result(local_table)
     mapdl = ctx.request_context.lifespan_context.mapdl
     if mapdl is not None and not mapdl.is_local:
         remote_headers = ["IP", "Port", "Status", "Version", "Working directory"]
@@ -534,7 +593,7 @@ def list_mapdl_instances(ctx: Context) -> ToolResult:
     return _text_result(local_table)
 
 
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization"})
 def screenshot(
     ctx: Context,
     commands: str = "",
@@ -591,6 +650,8 @@ def screenshot(
         - TextContent with the screenshot file path or status message
         - ImageContent with the base64-encoded image data
     """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     mapdl = ctx.request_context.lifespan_context.mapdl
 
     if mapdl is None:
@@ -698,7 +759,7 @@ def screenshot(
         )
 
     except Exception as e:
-        if "temp_path" in locals() and Path(temp_path).exists():  # type: ignore
+        if "temp_path" in locals() and Path(temp_path).exists():
             Path(temp_path).unlink()  # pyright: ignore[reportPossiblyUnboundVariable]
 
         error_msg = f"Failed to capture screenshot: {str(e)}"
@@ -710,7 +771,7 @@ def screenshot(
 # Tools that uses the PythonPersistentSession
 
 
-@app.tool(tags={REQUIRES_MAPDL_TAG})
+@app.tool(tags={REQUIRES_MAPDL_TAG, "python_execution", "command_execution"})
 async def run_python_code(
     ctx: Context,
     code: str,
@@ -758,6 +819,12 @@ async def run_python_code(
     ... '''
     >>> run_python_code(ctx, code)
     """
+    if ctx.request_context is None:
+        return _text_result(
+            json.dumps(
+                {"success": False, "error": "No request context available."}, ensure_ascii=False
+            )
+        )
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:
@@ -798,7 +865,7 @@ async def run_python_code(
     return _text_result(result)
 
 
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization"})
 def custom_plot(
     ctx: Context,
     plot_code: str,
@@ -866,6 +933,8 @@ def custom_plot(
     ... '''
     >>> custom_plot(ctx, plot_code, plot_type="matplotlib")
     """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:
@@ -894,3 +963,88 @@ def custom_plot(
     if isinstance(result, str):
         return _text_result(result)
     return ToolResult(result)
+
+
+####################################################################################################
+# Tool set definitions
+
+
+@app.resource("toolsets://definition")
+def list_tool_sets() -> list[dict]:
+    """Tool set definition resource that lists available tool sets for PyMAPDL MCP.
+
+    Returns
+    -------
+    list[dict]
+        List of tool set definitions, each containing:
+        - name: Unique identifier for the tool set
+        - description: Human-readable description of the tool set
+        - skill: Instructions for the AI agent on when and how to use these tool sets
+        - tools: List of tool function names in this set
+    """
+    return [
+        {
+            "name": "session_management",
+            "description": "Tools for managing MAPDL session connections and instances",
+            "skill": (
+                "Use these tools to manage MAPDL connections and sessions. "
+                "Start by checking available installations with check_mapdl_installed, "
+                "then launch a new session with launch_mapdl_session or connect to an existing "
+                "instance with connect_to_mapdl. Use check_mapdl_status to verify the connection"
+                "status. List active instances with list_mapdl_instances and disconnect when done"
+                " using disconnect_from_mapdl."
+            ),
+            "tools": [
+                "check_mapdl_installed",
+                "check_mapdl_status",
+                "launch_mapdl_session",
+                "connect_to_mapdl",
+                "disconnect_from_mapdl",
+                "list_mapdl_instances",
+            ],
+        },
+        {
+            "name": "command_execution",
+            "description": "Tools for executing MAPDL commands and scripts",
+            "skill": (
+                "Use these tools to execute MAPDL commands and scripts. "
+                "Use run_mapdl_command for single commands with optional comments and headers. "
+                "Use run_multiple_commands for batch execution of multiple commands, which is "
+                "optimized for performance. Alternatively, use run_python_code to execute MAPDL "
+                "commands via PyMAPDL for more complex scripting scenarios. Always ensure a MAPDL "
+                "connection is active before executing commands."
+            ),
+            "tools": [
+                "run_mapdl_command",
+                "run_multiple_commands",
+                "run_python_code",
+            ],
+        },
+        {
+            "name": "visualization",
+            "description": "Tools for visualization, custom analysis, and post-processing",
+            "skill": (
+                "Use these tools for visualization and post-processing of MAPDL results. "
+                "Use screenshot to capture MAPDL native plots (APLOT, EPLOT, PLNSOL, etc.). "
+                "Use custom_plot to create custom matplotlib or PyVista visualizations for "
+                "custom analysis. For visualization workflows, use custom_plot rather than "
+                "run_python_code."
+            ),
+            "tools": [
+                "screenshot",
+                "custom_plot",
+            ],
+        },
+        {
+            "name": "python_execution",
+            "description": "Tools for executing arbitrary Python and PyMAPDL commands",
+            "skill": (
+                "Use run_python_code to execute general-purpose Python and PyMAPDL commands "
+                "for scripting, data processing, and automation. For visualization output, "
+                "use custom_plot so images are returned correctly through the plotting pipeline."
+            ),
+            "tools": [
+                "run_python_code",
+            ],
+        },
+    ]
