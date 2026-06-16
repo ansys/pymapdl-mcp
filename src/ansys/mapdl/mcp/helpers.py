@@ -177,7 +177,67 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
     Returns
     -------
     dict[str, str | dict[str, Any]]
-        Dictionary containing MAPDL information
+        Dictionary containing MAPDL information with the following hierarchy:
+
+        .. code-block:: text
+
+            {
+              "connection": {
+                  "name": str,        # Instance name
+                  "ip": str,          # IP address
+                  "port": int,        # gRPC port
+                  "version": str,     # MAPDL version string
+                  "directory": str,   # Working directory
+                  "status": str,      # Connection status
+                  "is_local": bool,   # Whether the instance is local
+                  "jobname": str,     # MAPDL jobname
+                  "platform": str,    # OS platform
+              },
+              "information": {
+                  "title": str,       # Analysis title (/TITLE)
+                  "jobname": str,     # Jobname from Information class
+                  "routine": str,     # Current MAPDL routine (e.g. PREP7, SOLU)
+                  "units": str,       # Unit system
+                  "revision": str,    # MAPDL revision string
+                  "product": str,     # MAPDL product name
+              },
+              "geometry": {
+                  "n_keypoint": int,  # Number of keypoints
+                  "n_line": int,      # Number of lines
+                  "n_area": int,      # Number of areas
+                  "n_volu": int,      # Number of volumes
+              },
+              "mesh": {
+                  "n_node": int,      # Number of nodes
+                  "n_elem": int,      # Number of elements
+              },
+              "components": {
+                  "count": int,               # Total number of named components
+                  "items": {                  # Mapping of component name to entity type
+                      "<name>": "<type>",     # e.g. "MY_NODES": "NODES"
+                      ...                     # Types: NODES, ELEMS, KP, LINE, AREA, VOLU
+                  },
+              },
+              "materials": {
+                  "count": int,       # Number of material reference numbers defined
+                  "ids": [int, ...],  # List of defined material reference numbers
+              },
+              "sections": {
+                  "count": int,       # Number of sections defined
+                  "ids": [int, ...],  # List of defined section IDs
+                  "types": {          # Mapping of section ID to section type string
+                      "<id>": "<type>",   # e.g. "1": "SHELL"
+                      ...
+                  },
+              },
+              "post_processing": {
+                  "available": bool,  # Whether post-processing is accessible
+                  "nsets": int,       # Number of result sets in the result file
+              },
+            }
+
+        Any sub-dict may also contain an ``"error"`` key (string) when that
+        section failed to retrieve, so callers should always check for it.
     """
     info: dict[str, str | dict[str, Any]] = {}
 
@@ -225,6 +285,72 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
         geometry_info["error"] = str(e)
     info["geometry"] = geometry_info
 
+    # Mesh information
+    mesh_info: dict[str, int | str] = {}
+    try:
+        mesh_info["n_node"] = mapdl.mesh.n_node if hasattr(mapdl.mesh, "n_node") else 0
+        mesh_info["n_elem"] = mapdl.mesh.n_elem if hasattr(mapdl.mesh, "n_elem") else 0
+    except Exception as e:
+        logger.warning(f"Error extracting mesh data: {e}")
+        mesh_info["error"] = str(e)
+    info["mesh"] = mesh_info
+
+    # Named components (mapdl.components is a ComponentManager)
+    components_info: dict[str, Any] = {}
+    try:
+        comp_manager = getattr(mapdl, "components", None)
+        if comp_manager is not None:
+            components_info["count"] = len(comp_manager)
+            components_info["items"] = dict(comp_manager.items())
+        else:
+            components_info["count"] = 0
+            components_info["items"] = {}
+    except Exception as e:
+        logger.warning(f"Error extracting components data: {e}")
+        components_info["error"] = str(e)
+    info["components"] = components_info
+
+    # Material reference numbers
+    materials_info: dict[str, Any] = {}
+    try:
+        # get_value("MAT", 0, "NUM", "MAX") returns the highest defined material number.
+        # We then probe each ID to keep only those that have properties defined.
+        n_mat_max = int(mapdl.get_value("MAT", 0, "NUM", "MAX"))
+        mat_ids: list[int] = []
+        for mat_id in range(1, n_mat_max + 1):
+            try:
+                # VALCOUNT > 0 means at least one MP entry is defined for this material
+                if mapdl.get_value("MAT", mat_id, "VALCOUNT") > 0:
+                    mat_ids.append(mat_id)
+            except Exception:
+                # If the probe itself fails, include the ID conservatively
+                mat_ids.append(mat_id)
+        materials_info["count"] = len(mat_ids)
+        materials_info["ids"] = mat_ids
+    except Exception as e:
+        logger.warning(f"Error extracting materials data: {e}")
+        materials_info["error"] = str(e)
+    info["materials"] = materials_info
+
+    # Section definitions
+    sections_info: dict[str, Any] = {}
+    try:
+        n_sec_max = int(mapdl.get_value("SECP", 0, "NUM", "MAX"))
+        sec_ids = list(range(1, n_sec_max + 1))
+        sec_types: dict[str, str] = {}
+        for sid in sec_ids:
+            try:
+                sec_types[str(sid)] = str(mapdl.get_value("SECP", sid, "TYPE"))
+            except Exception:
+                sec_types[str(sid)] = "UNKNOWN"
+        sections_info["count"] = len(sec_ids)
+        sections_info["ids"] = sec_ids
+        sections_info["types"] = sec_types
+    except Exception as e:
+        logger.warning(f"Error extracting sections data: {e}")
+        sections_info["error"] = str(e)
+    info["sections"] = sections_info
+
     # Post_processing class attributes
     post_info: dict[str, str | int | bool] = {}
     try:
@@ -240,16 +366,6 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
         logger.warning(f"Error extracting post_processing data: {e}")
         post_info["error"] = str(e)
     info["post_processing"] = post_info
-
-    # Mesh information
-    mesh_info: dict[str, int | str] = {}
-    try:
-        mesh_info["n_node"] = mapdl.mesh.n_node if hasattr(mapdl.mesh, "n_node") else 0
-        mesh_info["n_elem"] = mapdl.mesh.n_elem if hasattr(mapdl.mesh, "n_elem") else 0
-    except Exception as e:
-        logger.warning(f"Error extracting mesh data: {e}")
-        mesh_info["error"] = str(e)
-    info["mesh"] = mesh_info
 
     return info
 

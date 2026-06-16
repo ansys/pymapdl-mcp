@@ -75,9 +75,9 @@ REQUIRES_MAPDL_TAG = "requires_mapdl"
 def check_mapdl_status(ctx: Context) -> ToolResult:
     """Check the status of MAPDL initialization.
 
-    This tool executes the /STATUS command in MAPDL and extracts comprehensive
-    information from PyMAPDL's Information, Geometry, and Post_processing classes.
-    It also checks whether the MAPDL instance has exited or is exiting.
+    This tool extracts comprehensive information from PyMAPDL's API and returns it
+    as a structured JSON object. It also checks whether the MAPDL instance has
+    exited or is exiting.
 
     Parameters
     ----------
@@ -87,14 +87,33 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
     Returns
     -------
     ToolResult
-        JSON string containing comprehensive MAPDL status information including:
-        - connection: Basic connection info (version, port, ip, directory, is_alive)
-        - information: Data from Information class (title, jobname, routine, units, etc.)
-        - geometry: Geometry statistics (number of keypoints, lines, areas, volumes)
-        - post_processing: Post-processing availability and result sets
-        - mesh: Mesh statistics (number of nodes and elements)
+        JSON string with the following top-level keys:
 
-        Returns an error message if MAPDL is not available or has exited.
+        - **connection**: Basic connection info (name, ip, port, version, directory,
+          status, is_local, jobname, platform).
+        - **information**: Data from the Information class (title, jobname, routine,
+          units, revision, product).
+        - **geometry**: Solid-model statistics (n_keypoint, n_line, n_area, n_volu).
+        - **mesh**: Mesh statistics (n_node, n_elem).
+        - **components**: Named components defined in the model. Contains:
+          - ``count`` (int) — total number of components.
+          - ``items`` (dict) — mapping of component name to entity type
+            (``NODES``, ``ELEMS``, ``KP``, ``LINE``, ``AREA``, or ``VOLU``).
+        - **materials**: Material definitions. Contains:
+          - ``count`` (int) — number of material reference numbers with properties.
+          - ``ids`` (list[int]) — list of defined material reference numbers.
+        - **sections**: Cross-section definitions. Contains:
+          - ``count`` (int) — number of sections defined.
+          - ``ids`` (list[int]) — list of section IDs.
+          - ``types`` (dict) — mapping of section ID (as string) to section type
+            (e.g. ``"SHELL"``, ``"BEAM"``, ``"PIPE"``).
+        - **post_processing**: Post-processing availability and result sets
+          (available, nsets).
+
+        Any sub-dict may also contain an ``"error"`` key (string) when that
+        section failed to retrieve.
+
+        Returns a plain error message string if MAPDL is not available or has exited.
     """
     if ctx.request_context is None:
         return _text_result("No request context available.")
@@ -670,6 +689,126 @@ def screenshot(
         error_msg = f"Failed to capture screenshot: {str(e)}"
         logger.error(error_msg)
         return _text_result(error_msg)
+
+
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization"})
+def four_view_screenshot(
+    ctx: Context,
+    plot_command: str = "EPLOT",
+) -> ToolResult:
+    """Capture a four-view screenshot of the current MAPDL model in a single image.
+
+    This tool splits the graphics window into four quadrants, each showing the
+    current selection from a different angle, and returns the composite image.
+    The four views are:
+
+    - **Upper-left** — Top view (looking down the +Z axis)
+    - **Upper-right** — Right-side view (looking along the +X axis)
+    - **Lower-left** — Front view (looking along the +Y axis)
+    - **Lower-right** — Isometric view (equal-angle perspective)
+
+    After the screenshot is captured the graphics window is restored to its
+    default single-window layout so subsequent calls to ``screenshot`` or other
+    visualisation tools are unaffected.
+
+    Parameters
+    ----------
+    ctx : Context
+        The MCP context containing server session and application context.
+    plot_command : str, optional
+        MAPDL plot command to execute in all four windows.  Use the commands that
+        are appropriate for the current model state, for example:
+
+        - Solid model   : ``APLOT``, ``LPLOT``, ``KPLOT``, ``VPLOT``
+        - Mesh          : ``EPLOT``, ``NPLOT``
+        - Post-process  : ``PLNSOL,U,SUM``, ``PLDISP,1``
+
+        Default is ``EPLOT``.
+
+    Returns
+    -------
+    ToolResult
+        A result containing:
+        - TextContent with the screenshot file path
+        - ImageContent with the base64-encoded PNG image data
+    """
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
+    mapdl = ctx.request_context.lifespan_context.mapdl
+
+    if mapdl is None:
+        return _text_result(
+            "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
+        )
+
+    if _is_mapdl_crashed(mapdl):
+        return _text_result(
+            "MAPDL instance has exited or is exiting. Please reconnect or launch a new instance."
+        )
+
+    try:
+        logger.info("Setting up four-view layout for screenshot...")
+
+        # Build multi-window setup commands:
+        # Windows are arranged as a 2×2 grid.
+        # /VIEW, WN, XV, YV, ZV  — defines the viewing direction vector for window WN.
+        setup_commands = (
+            "/WINDOW,1,LTOP\n"  # upper-left
+            "/WINDOW,2,RTOP\n"  # upper-right
+            "/WINDOW,3,LBOT\n"  # lower-left
+            "/WINDOW,4,RBOT\n"  # lower-right
+            "/VIEW,1,0,0,1\n"  # top view (from +Z)
+            "/VIEW,2,1,0,0\n"  # right-side view (from +X)
+            "/VIEW,3,0,1,0\n"  # front view (from +Y)
+            "/VIEW,4,1,1,1\n"  # isometric
+            "/TRIAD,OFF\n"  # hide axis triad to reduce clutter
+            f"{plot_command}\n"
+        )
+        mapdl.input_strings(setup_commands)  # type: ignore[union-attr]
+
+        # Capture the composite screenshot
+        temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix="mapdl_4view_")
+        os.close(temp_fd)
+
+        screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
+
+        image_path = Path(screenshot_path)
+        if not image_path.exists():
+            error_msg = f"Four-view screenshot file not found: {screenshot_path}"
+            logger.error(error_msg)
+            return _text_result(error_msg)
+
+        with open(screenshot_path, "rb") as f:  # noqa: PTH123
+            image_data = f.read()
+
+        base64_data = base64.b64encode(image_data).decode("utf-8")
+
+        logger.info(f"Four-view screenshot captured successfully: {screenshot_path}")
+
+        return ToolResult(
+            [
+                TextContent(type="text", text=f"Four-view screenshot saved to: {screenshot_path}"),
+                ImageContent(type="image", data=base64_data, mimeType="image/png"),
+            ]
+        )
+
+    except Exception as e:
+        if "temp_path" in locals() and Path(temp_path).exists():
+            Path(temp_path).unlink()  # pyright: ignore[reportPossiblyUnboundVariable]
+
+        error_msg = f"Failed to capture four-view screenshot: {str(e)}"
+        logger.error(error_msg)
+        return _text_result(error_msg)
+
+    finally:
+        # Always restore single-window layout so subsequent tools are unaffected
+        try:
+            restore_commands = (
+                "/WINDOW,1,FULL\n/WINDOW,2,OFF\n/WINDOW,3,OFF\n/WINDOW,4,OFF\n/TRIAD,ORIG\n"
+            )
+            mapdl.input_strings(restore_commands)  # type: ignore[union-attr]
+        except Exception as restore_err:
+            logger.warning(f"Could not restore single-window layout: {restore_err}")
 
 
 ####################################################################################################

@@ -73,6 +73,34 @@ def mock_mapdl():
     mapdl.mesh.n_node = 0
     mapdl.mesh.n_elem = 0
 
+    # Mock ComponentManager
+    mock_components = MagicMock()
+    mock_components.__len__ = MagicMock(return_value=2)
+    mock_components.names = ("COMP_NODES", "COMP_ELEMS")
+    mock_components.types = ("NODES", "ELEMS")
+    mock_components.items = MagicMock(
+        return_value={"COMP_NODES": "NODES", "COMP_ELEMS": "ELEMS"}.items()
+    )
+    mapdl.components = mock_components
+
+    # Mock get_value for material and section queries
+    def _get_value_side_effect(entity, entnum, item1, *args, **kwargs):
+        entity_upper = str(entity).upper()
+        item1_upper = str(item1).upper()
+        if entity_upper == "MAT":
+            if item1_upper == "NUM":
+                return 2  # max material number
+            if item1_upper == "VALCOUNT":
+                return 1  # all material IDs have at least one property
+        if entity_upper == "SECP":
+            if item1_upper == "NUM":
+                return 2  # max section number
+            if item1_upper == "TYPE":
+                return "SHELL"
+        return 0
+
+    mapdl.get_value = MagicMock(side_effect=_get_value_side_effect)
+
     return mapdl
 
 
