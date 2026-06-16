@@ -152,7 +152,7 @@ filesystem. Glob patterns such as ``"file*"`` are supported:
 **Resuming a saved model**
 
 Use ``resume_model`` to restore a previously saved MAPDL model from a ``.db`` binary database
-file or a ``.cdb`` coded ASCII archive file.  If the file is not yet in the MAPDL working
+file or a ``.cdb`` coded ASCII archive file. If the file is not yet in the MAPDL working
 directory, upload it first with ``upload_file``:
 
 *"Resume the model from beam.db."*
@@ -162,7 +162,7 @@ directory, upload it first with ``upload_file``:
 **Opening result files for post-processing**
 
 Use ``open_results`` to switch MAPDL into the POST1 post-processor and optionally point it at
-a specific RST result file.  After calling this tool, you can query displacements, stresses, and
+a specific RST result file. After calling this tool, you can query displacements, stresses, and
 other result quantities:
 
 *"Open the result file for post-processing."*
