@@ -175,7 +175,7 @@ Include practical code examples:
 
 .. code-block:: rst
 
-   Use ``run_multiple_commands`` instead of individual commands
+   Use ``run_multiple_mapdl_commands`` instead of individual commands
    for better performance, as batch execution is significantly faster.
 
 **Structure logically.**

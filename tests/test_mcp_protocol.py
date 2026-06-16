@@ -50,14 +50,14 @@ class TestMCPProtocol:
             check_mapdl_status,
             launch_mapdl_session,
             run_mapdl_command,
-            run_multiple_commands,
+            run_multiple_mapdl_commands,
         )
 
         tools = [
             check_mapdl_status,
             launch_mapdl_session,
             run_mapdl_command,
-            run_multiple_commands,
+            run_multiple_mapdl_commands,
         ]
 
         for tool in tools:
