@@ -2198,7 +2198,7 @@ class TestScreenshot:
         assert "Test error" in result.content[0].text
 
     def test_screenshot_with_commands(self, mock_context, tmp_path):
-        """Test that commands are executed via input_string before taking screenshot."""
+        """Test that commands are executed via input_strings before taking screenshot."""
         screenshot_path = tmp_path / "screenshot.png"
         screenshot_path.write_bytes(b"fake image data")
 
@@ -2208,14 +2208,14 @@ class TestScreenshot:
 
         result = screenshot(mock_context, commands="EPLOT")
 
-        mock_context.request_context.lifespan_context.mapdl.input_string.assert_called_once_with(
+        mock_context.request_context.lifespan_context.mapdl.input_strings.assert_called_once_with(
             "EPLOT"
         )
         assert isinstance(result, ToolResult)
         assert len(result.content) == 2
 
     def test_screenshot_with_multiple_commands(self, mock_context, tmp_path):
-        """Test that multiple commands passed as a single string are forwarded to input_string."""
+        """Test that multiple commands passed as a single string are forwarded to input_strings."""
         screenshot_path = tmp_path / "screenshot.png"
         screenshot_path.write_bytes(b"fake image data")
 
@@ -2226,14 +2226,14 @@ class TestScreenshot:
         commands = "EPLOT\nPLNSOL,U,SUM"
         result = screenshot(mock_context, commands=commands)
 
-        mock_context.request_context.lifespan_context.mapdl.input_string.assert_called_once_with(
+        mock_context.request_context.lifespan_context.mapdl.input_strings.assert_called_once_with(
             commands
         )
         assert isinstance(result, ToolResult)
         assert len(result.content) == 2
 
     def test_screenshot_without_commands_does_not_call_input_string(self, mock_context, tmp_path):
-        """Test that input_string is NOT called when commands is empty."""
+        """Test that input_strings is NOT called when commands is empty."""
         screenshot_path = tmp_path / "screenshot.png"
         screenshot_path.write_bytes(b"fake image data")
 
@@ -2243,11 +2243,11 @@ class TestScreenshot:
 
         screenshot(mock_context)
 
-        mock_context.request_context.lifespan_context.mapdl.input_string.assert_not_called()
+        mock_context.request_context.lifespan_context.mapdl.input_strings.assert_not_called()
 
     def test_screenshot_commands_error_is_caught(self, mock_context):
-        """Test that an error raised by input_string is caught and returned as an error message."""
-        mock_context.request_context.lifespan_context.mapdl.input_string.side_effect = Exception(
+        """Test that an error raised by input_strings is caught and returned as an error message."""
+        mock_context.request_context.lifespan_context.mapdl.input_strings.side_effect = Exception(
             "command failed"
         )
 
