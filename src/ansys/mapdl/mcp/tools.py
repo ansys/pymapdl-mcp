@@ -630,9 +630,6 @@ def screenshot(
             timeout=60,
         )
 
-        if isinstance(result, str):
-            return _text_result(result)
-
         if show_plot_on_popup:
             for item in result:
                 if isinstance(item, ImageContent):
@@ -642,6 +639,9 @@ def screenshot(
                         f.write(base64.b64decode(item.data))
                     _open_image_in_viewer(temp_img_path)
                     break
+
+        if isinstance(result, str):
+            return _text_result(result)
 
         return ToolResult(result)
 
@@ -656,7 +656,7 @@ def screenshot(
         os.close(temp_fd)
 
         if commands:
-            mapdl.input_string(commands)  # type: ignore[union-attr]
+            mapdl.input_strings(commands)  # type: ignore[union-attr]
 
         # Capture screenshot directly to the temporary location
         screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
