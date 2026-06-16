@@ -600,7 +600,7 @@ def screenshot(
         os.close(temp_fd)
 
         if commands:
-            mapdl.input_string(commands)  # type: ignore[union-attr]
+            mapdl.input_strings(commands)  # type: ignore[union-attr]
 
         # Capture screenshot directly to the temporary location
         screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
