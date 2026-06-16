@@ -40,7 +40,7 @@ from ansys.mapdl.mcp.tools import (
     launch_mapdl_session,
     list_mapdl_instances,
     run_mapdl_command,
-    run_multiple_commands,
+    run_multiple_mapdl_commands,
     run_python_code,
 )
 
@@ -146,7 +146,7 @@ class TestMapdlIntegration:
         result = run_mapdl_command(real_context, "MP,EX,1,200E9")
         assert "executed successfully" in result.content[0].text
 
-    def test_real_run_multiple_commands(self, real_context):
+    def test_real_run_multiple_mapdl_commands(self, real_context):
         """Test running multiple commands with real MAPDL."""
         # Clear any existing model
         run_mapdl_command(real_context, "/CLEAR")
@@ -159,13 +159,13 @@ class TestMapdlIntegration:
             "MP,PRXY,1,0.3",
         ]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_mapdl_commands(real_context, commands)
 
         assert isinstance(result, ToolResult)
         assert "Successfully executed 4 MAPDL commands" in result.content[1].text
         assert all(cmd in result.content[1].text for cmd in commands)
 
-    def test_real_run_multiple_commands_with_geometry(self, real_context):
+    def test_real_run_multiple_mapdl_commands_with_geometry(self, real_context):
         """Test running multiple commands to create simple geometry."""
         # Clear any existing model
         run_mapdl_command(real_context, "/CLEAR")
@@ -179,19 +179,19 @@ class TestMapdlIntegration:
             "BLC4,0,0,1,1,1",  # Create a block
         ]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_mapdl_commands(real_context, commands)
 
         assert "Successfully executed 5 MAPDL commands" in result.content[1].text
         assert "BLC4,0,0,1,1,1" in result.content[1].text
 
-    def test_real_run_multiple_commands_empty_list(self, real_context):
+    def test_real_run_multiple_mapdl_commands_empty_list(self, real_context):
         """Test error handling with empty command list."""
-        result = run_multiple_commands(real_context, [])
+        result = run_multiple_mapdl_commands(real_context, [])
 
         assert "No commands provided" in result.content[0].text
 
-    def test_real_run_multiple_commands_vs_single(self, real_context):
-        """Compare run_multiple_commands with sequential single commands."""
+    def test_real_run_multiple_mapdl_commands_vs_single(self, real_context):
+        """Compare run_multiple_mapdl_commands with sequential single commands."""
         # Clear any existing model
         run_mapdl_command(real_context, "/CLEAR")
 
@@ -202,7 +202,7 @@ class TestMapdlIntegration:
         ]
 
         # Test multiple commands
-        result_multi = run_multiple_commands(real_context, commands)
+        result_multi = run_multiple_mapdl_commands(real_context, commands)
         assert "Successfully executed 3 MAPDL commands" in result_multi.content[1].text
 
         # Clear and test single commands
@@ -226,7 +226,7 @@ class TestMapdlIntegration:
         # Create many keypoints
         commands = [f"K,{i},{i * 0.1},{i * 0.1},{i * 0.1}" for i in range(1, 51)]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_mapdl_commands(real_context, commands)
 
         assert "Successfully executed 50 MAPDL commands" in result.content[1].text
 
@@ -246,7 +246,7 @@ class TestMapdlIntegration:
             "MP,PRXY,1,0.3",
         ]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_mapdl_commands(real_context, commands)
 
         assert "Successfully executed 7 MAPDL commands" in result.content[1].text
 
@@ -266,7 +266,7 @@ class TestMapdlIntegration:
             "INVALID_MAPDL_COMMAND_XYZ",  # This should cause an error
         ]
 
-        result = run_multiple_commands(real_context, commands)
+        result = run_multiple_mapdl_commands(real_context, commands)
 
         # Should get error message
         assert isinstance(result, ToolResult)
@@ -287,7 +287,7 @@ class TestMapdlIntegration:
 
         # Time multiple commands approach
         start_multi = time.time()
-        result_multi = run_multiple_commands(real_context, commands)
+        result_multi = run_multiple_mapdl_commands(real_context, commands)
         time_multi = time.time() - start_multi
 
         assert "Successfully executed 4 MAPDL commands" in result_multi.content[1].text

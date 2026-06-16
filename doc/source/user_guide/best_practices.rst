@@ -18,7 +18,7 @@ Command execution
 -----------------
 
 **Batch commands**
-    Use ``run_multiple_commands`` instead of individual commands for better performance.
+    Use ``run_multiple_mapdl_commands`` instead of individual commands for better performance.
 
 **Verify state**
     Use ``check_mapdl_status`` periodically to verify the session state.
