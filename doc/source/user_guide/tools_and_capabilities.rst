@@ -187,7 +187,8 @@ Most tools return structured results with one of these outcomes:
 
 - Success: A status or result message.
 - Error: A detailed message describing what failed and how to correct it.
-- Data: Structured payloads (for example, JSON text or image content).
+
+Additionally, some tools might return data as structured payloads (for example, JSON text or image content).
 
 When building workflows, always validate results before continuing to the next step.
 If a tool returns an error message, adjust the request and retry instead of assuming
