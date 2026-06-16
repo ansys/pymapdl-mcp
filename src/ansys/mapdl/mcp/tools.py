@@ -223,7 +223,7 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
 
 
 @app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "command_execution"})
-def run_multiple_commands(
+def run_multiple_mapdl_commands(
     ctx: Context, commands: list[str], comment: str = "", header: str = ""
 ) -> ToolResult:
     """Execute multiple MAPDL commands in sequence using input_strings.
@@ -914,14 +914,14 @@ def list_tool_sets() -> list[dict]:
             "skill": (
                 "Use these tools to execute MAPDL commands and scripts. "
                 "Use run_mapdl_command for single commands with optional comments and headers. "
-                "Use run_multiple_commands for batch execution of multiple commands, which is "
-                "optimized for performance. Alternatively, use run_python_code to execute MAPDL "
-                "commands via PyMAPDL for more complex scripting scenarios. Always ensure a MAPDL "
-                "connection is active before executing commands."
+                "Use run_multiple_mapdl_commands for batch execution of multiple commands, which "
+                "is optimized for performance. Alternatively, use run_python_code to execute "
+                "MAPDL commands via PyMAPDL for more complex scripting scenarios. Always ensure "
+                "a MAPDL connection is active before executing commands."
             ),
             "tools": [
                 "run_mapdl_command",
-                "run_multiple_commands",
+                "run_multiple_mapdl_commands",
                 "run_python_code",
             ],
         },

@@ -39,7 +39,7 @@ connected. This keeps the AI assistant's context small when MAPDL is not in use.
      - Get comprehensive MAPDL status
    * - ``run_mapdl_command``
      - Execute a single MAPDL command
-   * - ``run_multiple_commands``
+   * - ``run_multiple_mapdl_commands``
      - Execute multiple MAPDL commands in batch
    * - ``disconnect_from_mapdl``
      - Disconnect from the MAPDL instance
@@ -65,7 +65,7 @@ Use ``run_mapdl_command`` for single commands:
 
 *"Run VPLOT on the MAPDL instance."*
 
-For multiple commands, use ``run_multiple_commands``, which uses MAPDL's ``input_strings``
+For multiple commands, use ``run_multiple_mapdl_commands``, which uses MAPDL's ``input_strings``
 method for batch execution. This is significantly faster than running commands one by one:
 
 *"Run these commands: /PREP7, ET,1,SOLID185, MP,EX,1,200E9."*
