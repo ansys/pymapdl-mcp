@@ -23,12 +23,12 @@ BRANCH = "main"
 # Select desired logo, theme, and declare the html title
 html_logo = pyansys_logo_black
 html_theme = "ansys_sphinx_theme"
-html_short_title = html_title = "PyMAPDL MCP"
+html_short_title = html_title = "PyMAPDL-MCP"
 
 # Favicon
 html_favicon = ansys_favicon
 
-# specify the location of your github repo
+# specify the location of your github repository
 html_theme_options = {
     "github_url": f"https://github.com/{USERNAME}/{REPOSITORY_NAME}",
     "show_prev_next": False,
@@ -45,10 +45,10 @@ html_theme_options = {
             "icon": "fa fa-comment fa-fw",
         },
     ],
-    # "switcher": {
-    #     "json_url": f"https://{cname}/versions.json",
-    #     "version_match": switcher_version,
-    # },
+    "switcher": {
+        "json_url": f"https://{cname}/versions.json",
+        "version_match": switcher_version,
+    },
     "ansys_sphinx_theme_autoapi": {
         "project": project,
     },
@@ -69,7 +69,6 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
-    "sphinxcontrib.video",
 ]
 
 # Intersphinx mapping
@@ -143,6 +142,7 @@ exclude_patterns = [
 suppress_warnings = [
     "toc.not_included",  # Caused by the autoapi extension
     "toc.not_readable",  # Caused by incorrect autoapi-generated toctree references
+    "design.fa-build",  # FontAwesome icons are HTML-first and ignored for LaTeX
 ]
 
 # make rst_epilog a variable, so you can add other epilog parts to it
@@ -151,15 +151,12 @@ rst_epilog = ""
 with Path("links.rst").open() as f:
     rst_epilog += f.read()
 
+linkcheck_exclude_documents = ["404", "changelog"]
 linkcheck_ignore = [
-    r"index.html",
-    r"api/index.html",
-    r"examples/index.html",
-    r"getting_started/index.html",
-    r"contributing/index.html",
-    r"user_guide/index.html",
     "https://github.com/ansys/pyansys-common-mcp/*",
     "https://github.com/ansys/pymapdl-mcp/*",
+    "https://modelcontextprotocol.io/*",
+    "https://www.sphinx-doc.org/*",
 ]
 
 linkcheck_allowed_redirect = [

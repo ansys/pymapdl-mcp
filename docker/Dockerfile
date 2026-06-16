@@ -4,7 +4,7 @@ FROM python:3.12
 LABEL org.opencontainers.image.title="PyMAPDL MCP Server"
 LABEL org.opencontainers.image.description="Model Context Protocol server for Ansys MAPDL through PyMAPDL"
 LABEL org.opencontainers.image.source="https://github.com/ansys/pymapdl-mcp"
-LABEL org.opencontainers.image.licenses="ANSYS MCP SERVER TECHNOLOGY PREVIEW LICENSE AGREEMENT"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.authors="German Martinez-Ayuso,Camille Latapie,pyansys.core@ansys.com"
 LABEL org.opencontainers.image.vendor="ANSYS, Inc."
 

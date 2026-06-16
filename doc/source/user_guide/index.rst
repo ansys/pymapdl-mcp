@@ -1,4 +1,4 @@
-User Guide
+User guide
 ==========
 
 Learn how to use PyMAPDL-MCP effectively.
@@ -9,3 +9,4 @@ Learn how to use PyMAPDL-MCP effectively.
    overview
    tools_and_capabilities
    best_practices
+   docker
