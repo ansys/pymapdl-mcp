@@ -87,8 +87,8 @@ class TestCheckMapdlStatus:
     def test_check_status_missing_information_attributes(self, mock_context):
         """Test status extraction when information class attributes are missing."""
         # Remove some information attributes
-        delattr(mock_context.request_context.lifespan_context.mapdl.information, "title")
-        delattr(mock_context.request_context.lifespan_context.mapdl.information, "product")
+        delattr(mock_context.request_context.lifespan_context.mapdl.info, "title")
+        delattr(mock_context.request_context.lifespan_context.mapdl.info, "product")
 
         result = check_mapdl_status(mock_context)
 
@@ -139,7 +139,7 @@ class TestCheckMapdlStatus:
     def test_check_status_information_class_exception(self, mock_context):
         """Test status extraction when information class raises exception."""
         # Make information.title raise an exception
-        type(mock_context.request_context.lifespan_context.mapdl.information).title = property(
+        type(mock_context.request_context.lifespan_context.mapdl.info).title = property(
             lambda self: (_ for _ in ()).throw(RuntimeError("Information error"))
         )
 
@@ -1652,13 +1652,13 @@ class TestConnectionLifecycle:
         mock_mapdl.com = MagicMock(return_value="Comment written")
         mock_mapdl.run = MagicMock(return_value="Command executed")
         # Add required class mocks
-        mock_mapdl.information = MagicMock()
-        mock_mapdl.information.title = ""
-        mock_mapdl.information.jobname = ""
-        mock_mapdl.information.routine = ""
-        mock_mapdl.information.units = ""
-        mock_mapdl.information.revision = ""
-        mock_mapdl.information.product = ""
+        mock_mapdl.info = MagicMock()
+        mock_mapdl.info.title = ""
+        mock_mapdl.info.jobname = ""
+        mock_mapdl.info.routine = ""
+        mock_mapdl.info.units = ""
+        mock_mapdl.info.revision = ""
+        mock_mapdl.info.product = ""
         mock_mapdl.geometry = MagicMock()
         mock_mapdl.geometry.n_keypoint = 0
         mock_mapdl.geometry.n_line = 0
@@ -1757,13 +1757,13 @@ class TestLaunchWorkflow:
         mock_mapdl.com = MagicMock(return_value="Comment written")
         mock_mapdl.run = MagicMock(return_value="Command executed")
         # Add required class mocks
-        mock_mapdl.information = MagicMock()
-        mock_mapdl.information.title = ""
-        mock_mapdl.information.jobname = ""
-        mock_mapdl.information.routine = ""
-        mock_mapdl.information.units = ""
-        mock_mapdl.information.revision = ""
-        mock_mapdl.information.product = ""
+        mock_mapdl.info = MagicMock()
+        mock_mapdl.info.title = ""
+        mock_mapdl.info.jobname = ""
+        mock_mapdl.info.routine = ""
+        mock_mapdl.info.units = ""
+        mock_mapdl.info.revision = ""
+        mock_mapdl.info.product = ""
         mock_mapdl.geometry = MagicMock()
         mock_mapdl.geometry.n_keypoint = 0
         mock_mapdl.geometry.n_line = 0
