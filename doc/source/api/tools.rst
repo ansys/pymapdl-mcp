@@ -37,7 +37,7 @@ metadata about each set including its name, description, and the tools it contai
 
    * - ``command_execution``
      - Execute MAPDL commands and scripts
-     - ``run_mapdl_command``, ``run_multiple_commands``, ``run_python_code``
+     - ``run_mapdl_command``, ``run_multiple_mapdl_commands``, ``run_python_code``
 
    * - ``visualization``
      - Visualization and post-processing of results
@@ -187,8 +187,8 @@ Command execution tools
 
     result = run_mapdl_command("FINISH")
 
-``run_multiple_commands``
-~~~~~~~~~~~~~~~~~~~~~~~~~
+``run_multiple_mapdl_commands``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
    This tool is only available when connected to MAPDL and is turned off on AALI environments.
@@ -205,7 +205,7 @@ Command execution tools
 
 .. code-block:: python
 
-    result = run_multiple_commands([
+    result = run_multiple_mapdl_commands([
         "FINISH",
         "/PREP7",
         "ET,1,SOLID185"
