@@ -24,6 +24,7 @@ Tool sets
 Tools are grouped into the following tool sets via the ``toolsets://definition`` resource:
 
 - **session_management**: Tools for managing MAPDL connections and instance discovery
+- **file_management**: Tools for transferring files to/from MAPDL and managing saved models
 - **command_execution**: Tools for executing MAPDL commands and scripts
 - **visualization**: Tools for visualization and post-processing results
 - **python_execution**: Tools for executing arbitrary Python and PyMAPDL code

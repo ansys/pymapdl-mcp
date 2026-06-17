@@ -197,7 +197,7 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
     # Information class attributes
     info_class: dict[str, str] = {}
     try:
-        information = getattr(mapdl, "information", None)
+        information = getattr(mapdl, "info", None)
         if information is not None:
             info_class["title"] = getattr(information, "title", "")
             info_class["jobname"] = getattr(information, "jobname", "")

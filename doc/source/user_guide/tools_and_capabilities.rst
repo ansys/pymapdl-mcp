@@ -63,6 +63,39 @@ connected. This keeps the AI assistant's context small when MAPDL is not in use.
    available (except ``connect_to_mapdl``, ``launch_mapdl_session``, and ``disconnect_from_mapdl``,
    which are locked).
 
+Tool sets
+---------
+
+PyMAPDL-MCP groups tools into logical tool sets so MCP clients can discover capabilities by role.
+These sets are exposed through the ``toolsets://definition`` resource.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Tool set
+     - Purpose
+     - Tools included
+   * - ``session_management``
+     - Manage MAPDL lifecycle and connection state
+     - ``check_mapdl_installed``, ``check_mapdl_status``, ``launch_mapdl_session``,
+       ``connect_to_mapdl``, ``disconnect_from_mapdl``, ``list_mapdl_instances``
+   * - ``file_management``
+     - Transfer files to/from MAPDL and manage saved models
+     - ``upload_file``, ``download_file``, ``resume_model``, ``open_results``
+   * - ``command_execution``
+     - Execute MAPDL commands and command batches
+     - ``run_mapdl_command``, ``run_multiple_mapdl_commands``, ``run_python_code``
+   * - ``visualization``
+     - Capture or generate result visualizations
+     - ``screenshot``, ``custom_plot``
+   * - ``python_execution``
+     - Execute arbitrary Python or PyMAPDL code in the persistent session
+     - ``run_python_code``
+
+The ``list_tool_sets()`` resource function returns the complete tool set definitions,
+allowing client applications to discover and organize available capabilities.
+
 Using the tools
 ---------------
 
@@ -234,10 +267,25 @@ Restoring a saved model
 #. Inspect geometry, mesh, and boundary conditions.
 #. Continue with further pre-processing, solution, or post-processing steps.
 
+Interpreting tool results
+-------------------------
+
+Most tools return structured results with one of these outcomes:
+
+- Success: A status or result message.
+- Error: A detailed message describing what failed and how to correct it.
+
+Additionally, some tools might return data as structured payloads (for example, JSON text or image content).
+
+When building workflows, always validate results before continuing to the next step.
+If a tool returns an error message, adjust the request and retry instead of assuming
+that downstream steps are still valid.
+
 Feature reference
 -----------------
 
-For the documentation of all available tools, including parameters and return values, see :doc:`../api/tools`.
+For the documentation of all available tools, including parameters and return values, see
+:doc:`../api/ansys/mapdl/mcp/tools/index`.
 
 Best practices
 --------------
