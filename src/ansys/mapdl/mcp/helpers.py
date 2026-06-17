@@ -295,6 +295,15 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
         mesh_info["error"] = str(e)
     info["mesh"] = mesh_info
 
+    # Parts
+    parts_info: dict[str, Any] = {}
+    try:
+        parts_info["count"] = int(mapdl.get_value("PART", 0, "NUMP"))
+    except Exception as e:
+        logger.warning(f"Error extracting parts data: {e}")
+        parts_info["error"] = str(e)
+    info["parts"] = parts_info
+
     # Named components (mapdl.components is a ComponentManager)
     components_info: dict[str, Any] = {}
     try:
@@ -313,20 +322,8 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
     # Material reference numbers
     materials_info: dict[str, Any] = {}
     try:
-        # get_value("MAT", 0, "NUM", "MAX") returns the highest defined material number.
-        # We then probe each ID to keep only those that have properties defined.
-        n_mat_max = int(mapdl.get_value("MAT", 0, "NUM", "MAX"))
-        mat_ids: list[int] = []
-        for mat_id in range(1, n_mat_max + 1):
-            try:
-                # VALCOUNT > 0 means at least one MP entry is defined for this material
-                if mapdl.get_value("MAT", mat_id, "VALCOUNT") > 0:
-                    mat_ids.append(mat_id)
-            except Exception:
-                # If the probe itself fails, include the ID conservatively
-                mat_ids.append(mat_id)
-        materials_info["count"] = len(mat_ids)
-        materials_info["ids"] = mat_ids
+        materials_info["count"] = int(mapdl.get_value("MAT", 0, "COUNT"))
+        materials_info["max_id"] = int(mapdl.get_value("MAT", 0, "NUM", "MAX"))
     except Exception as e:
         logger.warning(f"Error extracting materials data: {e}")
         materials_info["error"] = str(e)
@@ -335,17 +332,8 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
     # Section definitions
     sections_info: dict[str, Any] = {}
     try:
-        n_sec_max = int(mapdl.get_value("SECP", 0, "NUM", "MAX"))
-        sec_ids = list(range(1, n_sec_max + 1))
-        sec_types: dict[str, str] = {}
-        for sid in sec_ids:
-            try:
-                sec_types[str(sid)] = str(mapdl.get_value("SECP", sid, "TYPE"))
-            except Exception:
-                sec_types[str(sid)] = "UNKNOWN"
-        sections_info["count"] = len(sec_ids)
-        sections_info["ids"] = sec_ids
-        sections_info["types"] = sec_types
+        sections_info["count"] = int(mapdl.get_value("SECP", 0, "COUNT"))
+        sections_info["max_id"] = int(mapdl.get_value("SECP", 0, "NUM", "MAX"))
     except Exception as e:
         logger.warning(f"Error extracting sections data: {e}")
         sections_info["error"] = str(e)
