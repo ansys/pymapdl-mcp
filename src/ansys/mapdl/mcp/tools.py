@@ -64,7 +64,7 @@ def _is_mapdl_crashed(mapdl: Any) -> bool:
     return False
 
 
-def _four_view_commands(plot_command: str = "EPLOT") -> str:
+def _four_view_commands(plot_command: str | list[str] = "EPLOT") -> str:
     """Return MAPDL commands string that sets up a 2×2 window composite view.
 
     Windows
@@ -77,6 +77,9 @@ def _four_view_commands(plot_command: str = "EPLOT") -> str:
     The *plot_command* is appended so that MAPDL distributes the plot across
     all active windows in a single call.
     """
+    if isinstance(plot_command, list):
+        plot_command = "\n".join(plot_command)
+
     return (
         "/WINDOW,1,LTOP\n"
         "/WINDOW,2,RTOP\n"
