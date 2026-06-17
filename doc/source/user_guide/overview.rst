@@ -62,4 +62,4 @@ Next steps
 
 - Learn about available :doc:`tools_and_capabilities`.
 - Review :doc:`best_practices` for effective use.
-- Explore the :doc:`../api/tools` for technical details.
+- Explore the :doc:`../api/ansys/mapdl/mcp/tools/index` page for technical details.

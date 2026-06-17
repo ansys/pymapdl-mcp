@@ -90,7 +90,7 @@ that provides seamless integration between AI assistants and Ansys MAPDL through
         automate complex finite element analysis (FEA) workflows.
 
     .. grid-item-card:: :fa:`book-open-reader` Use the API reference
-        :link: api/tools
+        :link: api/ansys/mapdl/mcp/tools/index
         :link-type: doc
 
         Access complete reference documentation for all
