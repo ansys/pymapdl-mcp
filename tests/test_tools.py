@@ -337,31 +337,28 @@ class TestCheckMapdlInstalled:
     def test_check_installed_with_custom_path(self):
         """Test checking installation with custom ANSYS path."""
         custom_path = "/opt/ansys/v251/ansys/bin/ansys251"
-        with (
-            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
-            patch("ansys.mapdl.core.launcher.get_default_ansys_path", return_value=custom_path),
+        installations = {251: "/opt/ansys/v251"}
+        with patch(
+            "ansys.tools.common.path.get_available_ansys_installations",
+            return_value=installations,
         ):
             result = check_mapdl_installed(MagicMock())
 
-            assert "MAPDL is installed" in result
-            assert custom_path in result
+            assert "MAPDL is installed" in result.content[0].text
+            assert custom_path in result.content[0].text
 
     def test_check_installed_logging(self):
         """Test that check_mapdl_installed logs messages."""
-        with (
-            patch("ansys.mapdl.core.launcher.check_valid_ansys", return_value=True),
-            patch(
-                "ansys.mapdl.core.launcher.get_default_ansys_path",
-                return_value="/usr/ansys_inc/v242/ansys/bin/ansys242",
-            ),
+        installations = {242: "/usr/ansys_inc/v242"}
+        with patch(
+            "ansys.tools.common.path.get_available_ansys_installations",
+            return_value=installations,
         ):
             output = check_mapdl_installed(MagicMock())
 
             # Verify logging messages
-            assert (
-                "MAPDL is installed on this system in: /usr/ansys_inc/v242/ansys/bin/ansys242"
-                in output
-            )
+            assert "MAPDL is installed on this system" in output.content[0].text
+            assert "/usr/ansys_inc/v242/ansys/bin/ansys242" in output.content[0].text
 
     def test_check_not_installed_logging(self):
         """Test that check_mapdl_installed logs when not installed."""
