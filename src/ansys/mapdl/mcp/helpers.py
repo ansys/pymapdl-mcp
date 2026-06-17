@@ -239,121 +239,120 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
         Any sub-dict may also contain an ``"error"`` key (string) when that
         section failed to retrieve, so callers should always check for it.
     """
-    info: dict[str, str | dict[str, Any]] = {}
+    with mapdl.run_as_routine("PREP7"):
+        info: dict[str, str | dict[str, Any]] = {}
 
-    # Basic connection information
-    info["connection"] = {
-        "name": mapdl.name,
-        "ip": mapdl.ip,
-        "port": mapdl.port,
-        "version": mapdl.version,
-        "directory": str(mapdl.directory),
-        "status": mapdl.check_status.title(),
-        "is_local": mapdl.is_local,
-        "jobname": mapdl.jobname,
-        "platform": mapdl.platform,
-    }
+        # Basic connection information
+        info["connection"] = {
+            "name": mapdl.name,
+            "ip": mapdl.ip,
+            "port": mapdl.port,
+            "version": mapdl.version,
+            "directory": str(mapdl.directory),
+            "status": mapdl.check_status.title(),
+            "is_local": mapdl.is_local,
+            "jobname": mapdl.jobname,
+            "platform": mapdl.platform,
+        }
 
-    # Information class attributes
-    info_class: dict[str, str] = {}
-    try:
-        information = getattr(mapdl, "info", None)
-        if information is not None:
-            info_class["title"] = getattr(information, "title", "")
-            info_class["jobname"] = getattr(information, "jobname", "")
-            info_class["routine"] = getattr(information, "routine", "")
-            info_class["units"] = getattr(information, "units", "")
-            info_class["revision"] = getattr(information, "revision", "")
-            info_class["product"] = getattr(information, "product", "")
-    except Exception as e:
-        logger.warning(f"Error extracting information class data: {e}")
-        info_class["error"] = str(e)
-    info["information"] = info_class
+        # Information class attributes
+        info_class: dict[str, str] = {}
+        try:
+            information = getattr(mapdl, "info", None)
+            if information is not None:
+                info_class["title"] = getattr(information, "title", "")
+                info_class["jobname"] = getattr(information, "jobname", "")
+                info_class["routine"] = getattr(information, "routine", "")
+                info_class["units"] = getattr(information, "units", "")
+                info_class["revision"] = getattr(information, "revision", "")
+                info_class["product"] = getattr(information, "product", "")
+        except Exception as e:
+            logger.warning(f"Error extracting information class data: {e}")
+            info_class["error"] = str(e)
+        info["information"] = info_class
 
-    # Geometry class attributes
-    geometry_info: dict[str, int | str] = {}
-    try:
-        # Try to get number of keypoints, lines, areas, volumes
-        geometry_info["n_keypoint"] = (
-            mapdl.geometry.n_keypoint if hasattr(mapdl.geometry, "n_keypoint") else 0
-        )
-        geometry_info["n_line"] = mapdl.geometry.n_line if hasattr(mapdl.geometry, "n_line") else 0
-        geometry_info["n_area"] = mapdl.geometry.n_area if hasattr(mapdl.geometry, "n_area") else 0
-        geometry_info["n_volu"] = mapdl.geometry.n_volu if hasattr(mapdl.geometry, "n_volu") else 0
-    except Exception as e:
-        logger.warning(f"Error extracting geometry data: {e}")
-        geometry_info["error"] = str(e)
-    info["geometry"] = geometry_info
+        # Geometry class attributes
+        geometry_info: dict[str, int | str] = {}
+        try:
+            # Try to get number of keypoints, lines, areas, volumes
+            geometry_info["n_keypoint"] = mapdl.geometry.n_keypoint
+            geometry_info["n_line"] = mapdl.geometry.n_line
+            geometry_info["n_area"] = mapdl.geometry.n_area
+            geometry_info["n_volu"] = mapdl.geometry.n_volu
+        except Exception as e:
+            logger.warning(f"Error extracting geometry data: {e}")
+            geometry_info["error"] = str(e)
+        info["geometry"] = geometry_info
 
-    # Mesh information
-    mesh_info: dict[str, int | str] = {}
-    try:
-        mesh_info["n_node"] = mapdl.mesh.n_node if hasattr(mapdl.mesh, "n_node") else 0
-        mesh_info["n_elem"] = mapdl.mesh.n_elem if hasattr(mapdl.mesh, "n_elem") else 0
-    except Exception as e:
-        logger.warning(f"Error extracting mesh data: {e}")
-        mesh_info["error"] = str(e)
-    info["mesh"] = mesh_info
+        # Mesh information
+        mesh_info: dict[str, int | str] = {}
+        try:
+            mesh_info["n_node"] = mapdl.mesh.n_node
+            mesh_info["n_elem"] = mapdl.mesh.n_elem
+        except Exception as e:
+            logger.warning(f"Error extracting mesh data: {e}")
+            mesh_info["error"] = str(e)
+        info["mesh"] = mesh_info
 
-    # Parts
-    parts_info: dict[str, Any] = {}
-    try:
-        parts_info["count"] = int(mapdl.get_value("PART", 0, "NUMP"))
-    except Exception as e:
-        logger.warning(f"Error extracting parts data: {e}")
-        parts_info["error"] = str(e)
-    info["parts"] = parts_info
+        # Parts
+        parts_info: dict[str, Any] = {}
+        try:
+            parts_info["count"] = int(mapdl.get_value("PART", 0, "NUMP"))
+        except Exception as e:
+            logger.warning(f"Error extracting parts data: {e}")
+            parts_info["error"] = str(e)
+        info["parts"] = parts_info
 
-    # Named components (mapdl.components is a ComponentManager)
-    components_info: dict[str, Any] = {}
-    try:
-        comp_manager = getattr(mapdl, "components", None)
-        if comp_manager is not None:
-            components_info["count"] = len(comp_manager)
-            components_info["items"] = dict(comp_manager.items())
-        else:
-            components_info["count"] = 0
-            components_info["items"] = {}
-    except Exception as e:
-        logger.warning(f"Error extracting components data: {e}")
-        components_info["error"] = str(e)
-    info["components"] = components_info
+        # Named components (mapdl.components is a ComponentManager)
+        components_info: dict[str, Any] = {}
+        try:
+            comp_manager = getattr(mapdl, "components", None)
+            if comp_manager is not None:
+                components_info["count"] = len(comp_manager)
+                components_info["items"] = dict(comp_manager.items())
+            else:
+                components_info["count"] = 0
+                components_info["items"] = {}
+        except Exception as e:
+            logger.warning(f"Error extracting components data: {e}")
+            components_info["error"] = str(e)
+        info["components"] = components_info
 
-    # Material reference numbers
-    materials_info: dict[str, Any] = {}
-    try:
-        materials_info["count"] = int(mapdl.get_value("MAT", 0, "COUNT"))
-        materials_info["max_id"] = int(mapdl.get_value("MAT", 0, "NUM", "MAX"))
-    except Exception as e:
-        logger.warning(f"Error extracting materials data: {e}")
-        materials_info["error"] = str(e)
-    info["materials"] = materials_info
+        # Material reference numbers
+        materials_info: dict[str, Any] = {}
+        try:
+            materials_info["count"] = int(mapdl.get_value("MAT", 0, "COUNT"))
+            materials_info["max_id"] = int(mapdl.get_value("MAT", 0, "NUM", "MAX"))
+        except Exception as e:
+            logger.warning(f"Error extracting materials data: {e}")
+            materials_info["error"] = str(e)
+        info["materials"] = materials_info
 
-    # Section definitions
-    sections_info: dict[str, Any] = {}
-    try:
-        sections_info["count"] = int(mapdl.get_value("SECP", 0, "COUNT"))
-        sections_info["max_id"] = int(mapdl.get_value("SECP", 0, "NUM", "MAX"))
-    except Exception as e:
-        logger.warning(f"Error extracting sections data: {e}")
-        sections_info["error"] = str(e)
-    info["sections"] = sections_info
+        # Section definitions
+        sections_info: dict[str, Any] = {}
+        try:
+            sections_info["count"] = int(mapdl.get_value("SECP", 0, "COUNT"))
+            sections_info["max_id"] = int(mapdl.get_value("SECP", 0, "NUM", "MAX"))
+        except Exception as e:
+            logger.warning(f"Error extracting sections data: {e}")
+            sections_info["error"] = str(e)
+        info["sections"] = sections_info
 
-    # Post_processing class attributes
-    post_info: dict[str, str | int | bool] = {}
-    try:
-        # Try to get common post-processing information
-        if hasattr(mapdl, "post_processing"):
-            post_info["available"] = True
-            # Check for number of result sets
-            if hasattr(mapdl.post_processing, "nsets"):
-                post_info["nsets"] = mapdl.post_processing.nsets
-        else:
-            post_info["available"] = False
-    except Exception as e:
-        logger.warning(f"Error extracting post_processing data: {e}")
-        post_info["error"] = str(e)
-    info["post_processing"] = post_info
+        # Post_processing class attributes
+        post_info: dict[str, str | int | bool] = {}
+        try:
+            # Try to get common post-processing information
+            if hasattr(mapdl, "post_processing"):
+                post_info["available"] = True
+                # Check for number of result sets
+                if hasattr(mapdl.post_processing, "nsets"):
+                    post_info["nsets"] = mapdl.post_processing.nsets
+            else:
+                post_info["available"] = False
+        except Exception as e:
+            logger.warning(f"Error extracting post_processing data: {e}")
+            post_info["error"] = str(e)
+        info["post_processing"] = post_info
 
     return info
 
