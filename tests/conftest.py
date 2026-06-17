@@ -49,13 +49,13 @@ def mock_mapdl():
     mapdl.platform = "linux"
 
     # Mock Information class
-    mapdl.information = MagicMock()
-    mapdl.information.title = "Test Analysis"
-    mapdl.information.jobname = "file"
-    mapdl.information.routine = "PREP7"
-    mapdl.information.units = "SI"
-    mapdl.information.revision = "2024 R2"
-    mapdl.information.product = "ANSYS Mechanical Enterprise"
+    mapdl.info = MagicMock()
+    mapdl.info.title = "Test Analysis"
+    mapdl.info.jobname = "file"
+    mapdl.info.routine = "PREP7"
+    mapdl.info.units = "SI"
+    mapdl.info.revision = "2024 R2"
+    mapdl.info.product = "ANSYS Mechanical Enterprise"
 
     # Mock Geometry class
     mapdl.geometry = MagicMock()
