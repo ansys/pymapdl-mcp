@@ -1,3 +1,21 @@
+# Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Helper functions for PyMAPDL MCP."""
+
 from typing import TYPE_CHECKING, Any
 
 from ansys.common.mcp.helpers import logger
@@ -8,7 +26,10 @@ if TYPE_CHECKING:
 
 
 def list_instances(
-    instances: bool = False, long: bool = False, cmd: bool = False, location: bool = False
+    instances: bool = False,
+    long: bool = False,
+    cmd: bool = False,
+    location: bool = False,
 ) -> str:
     """
     List running MAPDL instances on the system.
@@ -176,20 +197,14 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
     # Information class attributes
     info_class: dict[str, str] = {}
     try:
-        info_class["title"] = mapdl.information.title if hasattr(mapdl.information, "title") else ""
-        info_class["jobname"] = (
-            mapdl.information.jobname if hasattr(mapdl.information, "jobname") else ""
-        )
-        info_class["routine"] = (
-            mapdl.information.routine if hasattr(mapdl.information, "routine") else ""
-        )
-        info_class["units"] = mapdl.information.units if hasattr(mapdl.information, "units") else ""
-        info_class["revision"] = (
-            mapdl.information.revision if hasattr(mapdl.information, "revision") else ""
-        )
-        info_class["product"] = (
-            mapdl.information.product if hasattr(mapdl.information, "product") else ""
-        )
+        information = getattr(mapdl, "info", None)
+        if information is not None:
+            info_class["title"] = getattr(information, "title", "")
+            info_class["jobname"] = getattr(information, "jobname", "")
+            info_class["routine"] = getattr(information, "routine", "")
+            info_class["units"] = getattr(information, "units", "")
+            info_class["revision"] = getattr(information, "revision", "")
+            info_class["product"] = getattr(information, "product", "")
     except Exception as e:
         logger.warning(f"Error extracting information class data: {e}")
         info_class["error"] = str(e)
@@ -258,6 +273,8 @@ def connect_to_mapdl_in_persistent_python(
     str
         Connection status message.
     """
+    if ctx.request_context is None:
+        return "No request context available."
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:

@@ -1,56 +1,59 @@
-Usage examples - Video demos
-============================
+.. _ref_usage_examples:
 
-This page embeds short video demos showing PyMAPDL-MCP features.
+Usage examples: Videos
+======================
+
+Watch videos demonstrating PyMAPDL-MCP usage in real-world scenarios.
 
 Main features
 -------------
 
-This `video <demo_main_video_>`_ shows a general demonstration of the PyMAPDL-MCP features.
+The following video demonstrates PyMAPDL-MCP's main features in action.
 
-.. video:: ../_static/videos/PyMAPDL-MCP-demo-main.mp4
-   :width: 80%
-   :align: center
-   :muted:
-   :loop:
-   :autoplay:
-   :alt: PyMAPDL-MCP demo video
-   :caption: PyMAPDL-MCP demo video
+.. only:: html
 
+    .. raw:: html
 
-Answering questions
--------------------
-
-This `video <demo_csv_video_>`_ shows a short demo  where the LLM answers a question about MAPDL,
-and uses PyMAPDL-MCP to verify the answer.
-In this case, the question is about reading a CSV file in MAPDL.
-
-.. video:: ../_static/videos/PyMAPDL-MCP-demo-csv.mp4
-   :width: 80%
-   :align: center
-   :muted:
-   :loop:
-   :alt: PyMAPDL-MCP CSV demo video
-   :caption: PyMAPDL-MCP CSV demo video
-
-Fixing bugs
------------
-
-This `video <demo_bugs_video_>`_ shows a short demo where PyMAPDL-MCP is used to fix a
-bug in a MAPDL input file.
-This demonstrates how PyMAPDL-MCP can be used to automate debugging and error
-correction in MAPDL workflows.
-
-.. video:: ../_static/videos/PyMAPDL-MCP-demo-bugs.mp4
-   :width: 80%
-   :align: center
-   :muted:
-   :loop:
-   :alt: PyMAPDL-MCP bug fixing demo video
-   :caption: PyMAPDL-MCP bug fixing demo video
+         <figure style="text-align:center;">
+            <video controls muted loop autoplay style="width:80%;">
+               <source src="../_static/videos/PyMAPDL-MCP-demo-main.mp4" type="video/mp4">
+               Your browser does not support the video tag.
+            </video>
+            <figcaption>Video of PyMAPDL-MCP's main features</figcaption>
+         </figure>
 
 
-.. Links to the videos used in this page:
-.. _demo_main_video: https://github.com/ansys/pymapdl-mcp/blob/docs/adding-video-gifs/doc/source/_static/videos/PyMAPDL-MCP-demo-main.mp4
-.. _demo_csv_video: https://github.com/ansys/pymapdl-mcp/blob/docs/adding-video-gifs/doc/source/_static/videos/PyMAPDL-MCP-demo-csv.mp4
-.. _demo_bugs_video: https://github.com/ansys/pymapdl-mcp/blob/docs/adding-video-gifs/doc/source/_static/videos/PyMAPDL-MCP-demo-bugs.mp4
+Answer questions
+----------------
+
+The following video shows how an LLM answers MAPDL questions and uses PyMAPDL-MCP tools to verify answers.
+It demonstrates the reading of a CSV file in MAPDL.
+
+.. only:: html
+
+    .. raw:: html
+
+         <figure style="text-align:center;">
+            <video controls muted loop style="width:80%;">
+               <source src="../_static/videos/PyMAPDL-MCP-demo-csv.mp4" type="video/mp4">
+               Your browser does not support the video tag.
+            </video>
+            <figcaption>PyMAPDL-MCP video showing how to read a CSV file in MAPDL</figcaption>
+         </figure>
+
+Fix bugs
+--------
+
+The following video shows how PyMAPDL-MCP automates debugging and error correction in MAPDL workflows.
+
+.. only:: html
+
+    .. raw:: html
+
+         <figure style="text-align:center;">
+            <video controls muted loop style="width:80%;">
+               <source src="../_static/videos/PyMAPDL-MCP-demo-bugs.mp4" type="video/mp4">
+               Your browser does not support the video tag.
+            </video>
+            <figcaption>PyMAPDL-MCP video showing bug fixing</figcaption>
+         </figure>

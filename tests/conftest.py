@@ -1,10 +1,26 @@
+# Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Pytest configuration and fixtures for PyMAPDL MCP Server tests."""
 
 import sys
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 from mcp.server.session import ServerSession
+import pytest
 
 from ansys.mapdl.mcp.server import PyMAPDLAppContext
 
@@ -33,13 +49,13 @@ def mock_mapdl():
     mapdl.platform = "linux"
 
     # Mock Information class
-    mapdl.information = MagicMock()
-    mapdl.information.title = "Test Analysis"
-    mapdl.information.jobname = "file"
-    mapdl.information.routine = "PREP7"
-    mapdl.information.units = "SI"
-    mapdl.information.revision = "2024 R2"
-    mapdl.information.product = "ANSYS Mechanical Enterprise"
+    mapdl.info = MagicMock()
+    mapdl.info.title = "Test Analysis"
+    mapdl.info.jobname = "file"
+    mapdl.info.routine = "PREP7"
+    mapdl.info.units = "SI"
+    mapdl.info.revision = "2024 R2"
+    mapdl.info.product = "ANSYS Mechanical Enterprise"
 
     # Mock Geometry class
     mapdl.geometry = MagicMock()
@@ -85,6 +101,8 @@ def mock_context(mock_server_session, app_context):
     context = MagicMock()
     context.request_context = MagicMock()
     context.request_context.lifespan_context = app_context
+    context.enable_components = AsyncMock()
+    context.disable_components = AsyncMock()
     return context
 
 
@@ -94,6 +112,8 @@ def mock_context_no_mapdl(mock_server_session, app_context_no_mapdl):
     context = MagicMock()
     context.request_context = MagicMock()
     context.request_context.lifespan_context = app_context_no_mapdl
+    context.enable_components = AsyncMock()
+    context.disable_components = AsyncMock()
     return context
 
 

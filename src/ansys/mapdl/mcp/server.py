@@ -1,9 +1,25 @@
+# Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Lifespan and CLI entry for the MCP server with startup options."""
 
 import argparse
-import sys
 from dataclasses import dataclass
-from typing import Any, Optional
+import sys
+from typing import Any, Optional, cast
 
 from ansys.common.mcp import (
     PyAnsysBaseMCP,
@@ -89,8 +105,8 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
             command_history=[],
         )
 
-        # Populate context from CLI config on server if available
-        cli_cfg = getattr(self.server, "_cli_config", None)
+        # Populate context from CLI config if available
+        cli_cfg = getattr(self, "_cli_config", None)
 
         if cli_cfg is not None:
             context.transport_type = cli_cfg.get("transport_type", context.transport_type)
@@ -110,20 +126,22 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         """Allow PyMAPDL-MCP specific startup actions."""
         logger.info("PyMAPDL MCP server starting up...")
 
-        context = self.context
+        context = cast(PyMAPDLAppContext, self.context)
 
         if context.connect_on_startup:
-            from ansys.mapdl.core import launch_mapdl
+            from ansys.mapdl.core import Mapdl
 
             try:
                 logger.info(
                     f"Attempting to connect to MAPDL at {context.mapdl_ip}:{context.mapdl_port}..."
                 )
-                context.mapdl = launch_mapdl(
-                    start_instance=False,
-                    ip=context.mapdl_ip,
-                    port=context.mapdl_port,
-                )
+                _connect_kwargs: dict[str, Any] = {
+                    "start_instance": False,
+                    "ip": context.mapdl_ip,
+                    "port": context.mapdl_port,
+                    "cleanup_on_exit": False,
+                }
+                context.mapdl = Mapdl(**_connect_kwargs)
                 logger.info("Successfully connected to MAPDL on startup.")
 
             except Exception as e:
@@ -133,7 +151,7 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
 
     def product_cleanup(self):
         """Perform cleanup actions for MAPDL instances on shutdown."""
-        context = self.context
+        context = cast(PyMAPDLAppContext, self.context)
         # Cleanup on shutdown
         if context.mapdl is not None:
             try:
@@ -264,10 +282,34 @@ def launcher(argv: list[str] | None = None) -> None:
     # Run server using selected transport
     import asyncio
 
-    # import tools, context and resources to register them
+    # import tools, contexts, and prompts to register them
     if not session.on_aali:
         from ansys.mapdl.mcp import contexts  # noqa: F401
-    from ansys.mapdl.mcp import tools  # noqa: F401
+    from ansys.mapdl.mcp import (
+        prompts,  # noqa: F401
+        tools,  # noqa: F401
+    )
+
+    # Guarantee the system prompt is delivered during the MCP initialize handshake
+    app.instructions = prompts.PYMAPDL_SYSTEM_PROMPT
+
+    # Disable tools that require an active MAPDL connection until one is established.
+    # When connect_on_startup is True, MAPDL will be connected during server startup,
+    # so these tools are available immediately and should not be disabled here.
+    if not session.connect_on_startup:
+        from ansys.mapdl.mcp.tools import REQUIRES_MAPDL_TAG
+
+        app.disable(tags={REQUIRES_MAPDL_TAG})
+
+    # Disable the connect and disconnect tools when on AALI or when connection is locked,
+    # since they won't work in those environments and can cause confusion.
+    # The tools will still be visible but will return a message indicating they are not available
+    # in the current environment.
+
+    if session.on_aali:
+        app.disable(tags={"aali"})
+    if session.locked_connection:
+        app.disable(tags={"locked_connection"})
 
     if args.transport_type == "stdio":
         asyncio.run(app.run_stdio_async())
@@ -279,13 +321,3 @@ def launcher(argv: list[str] | None = None) -> None:
                 port=args.http_port,
             )
         )
-
-    # Disable the connect and disconnect tools when on AALI or when connection is locked,
-    # since they won't work in those environments and can cause confusion.
-    # The tools will still be visible but will return a message indicating they are not available
-    # in the current environment.
-
-    if session.on_aali:
-        app.disable(tags={"aali"})
-    if session.locked_connection:
-        app.disable(tags={"locked_connection"})
