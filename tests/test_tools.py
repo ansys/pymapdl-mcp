@@ -331,12 +331,8 @@ class TestCheckMapdlInstalled:
         ):
             result = check_mapdl_installed(MagicMock())
             assert isinstance(result, ToolResult)
-            assert "Error checking MAPDL installation" in result.content[0].text
-            assert "Failed to import MAPDL module" in result.content[0].text
-
-            assert isinstance(result, str)
-            assert "Error checking MAPDL installation" in result
-            assert "Failed to import MAPDL module" in result
+            assert "Error checking MAPDL installation" in str(result)
+            assert "Failed to import MAPDL module" in str(result)
 
     def test_check_installed_with_custom_path(self):
         """Test checking installation with custom ANSYS path."""
