@@ -83,20 +83,19 @@ def mock_mapdl():
     )
     mapdl.components = mock_components
 
-    # Mock get_value for material and section queries
+    # Mock get_value for material, section and parts queries
     def _get_value_side_effect(entity, entnum, item1, *args, **kwargs):
         entity_upper = str(entity).upper()
         item1_upper = str(item1).upper()
         if entity_upper == "MAT":
-            if item1_upper == "NUM":
-                return 2  # max material number
-            if item1_upper == "VALCOUNT":
-                return 1  # all material IDs have at least one property
+            if item1_upper in ("NUM", "COUNT"):
+                return 2
         if entity_upper == "SECP":
-            if item1_upper == "NUM":
-                return 2  # max section number
-            if item1_upper == "TYPE":
-                return "SHELL"
+            if item1_upper in ("NUM", "COUNT"):
+                return 2
+        if entity_upper == "PART":
+            if item1_upper == "NUMP":
+                return 0
         return 0
 
     mapdl.get_value = MagicMock(side_effect=_get_value_side_effect)

@@ -64,6 +64,91 @@ def _is_mapdl_crashed(mapdl: Any) -> bool:
     return False
 
 
+def _four_view_commands(plot_command: str = "EPLOT") -> str:
+    """Return MAPDL commands string that sets up a 2×2 window composite view.
+
+    Windows
+    -------
+    - Upper-left  (1) : Top view, looking from +Z
+    - Upper-right (2) : Right-side view, looking from +X
+    - Lower-left  (3) : Front view, looking from +Y
+    - Lower-right (4) : Isometric view (1, 1, 1)
+
+    The *plot_command* is appended so that MAPDL distributes the plot across
+    all active windows in a single call.
+    """
+    return (
+        "/WINDOW,1,LTOP\n"
+        "/WINDOW,2,RTOP\n"
+        "/WINDOW,3,LBOT\n"
+        "/WINDOW,4,RBOT\n"
+        "/VIEW,1,0,0,1\n"
+        "/VIEW,2,1,0,0\n"
+        "/VIEW,3,0,1,0\n"
+        "/VIEW,4,1,1,1\n"
+        "/TRIAD,OFF\n"
+        f"{plot_command}\n"
+    )
+
+
+_RESTORE_SINGLE_WINDOW = (
+    "/WINDOW,1,FULL\n/WINDOW,2,OFF\n/WINDOW,3,OFF\n/WINDOW,4,OFF\n/TRIAD,ORIG\n"
+)
+
+
+def _capture_screenshot(
+    mapdl: Any,
+    pre_commands: str = "",
+    prefix: str = "mapdl_screenshot_",
+) -> tuple[str, bytes, str]:
+    """Run optional *pre_commands* then capture a MAPDL screenshot.
+
+    Parameters
+    ----------
+    mapdl : Mapdl
+        Connected MAPDL instance.
+    pre_commands : str, optional
+        MAPDL command string to execute before taking the screenshot.
+    prefix : str, optional
+        Prefix for the temporary file name.
+
+    Returns
+    -------
+    tuple[str, bytes, str]
+        *(screenshot_path, image_bytes, mime_type)*
+
+    Raises
+    ------
+    FileNotFoundError
+        If the screenshot file was not created by MAPDL.
+    """
+    temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix=prefix)
+    os.close(temp_fd)
+
+    if pre_commands:
+        mapdl.input_strings(pre_commands)  # type: ignore[union-attr]
+
+    # Ignoring PTH123 since the file is created by MAPDL
+    screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
+
+    image_path = Path(screenshot_path)
+    if not image_path.exists():
+        raise FileNotFoundError(f"Screenshot file not found: {screenshot_path}")
+
+    mime_type = "image/png"
+    if image_path.suffix.lower() in (".jpg", ".jpeg"):
+        mime_type = "image/jpeg"
+    elif image_path.suffix.lower() == ".bmp":
+        mime_type = "image/bmp"
+    elif image_path.suffix.lower() == ".gif":
+        mime_type = "image/gif"
+
+    with open(screenshot_path, "rb") as f:  # noqa: PTH123
+        image_data = f.read()
+
+    return screenshot_path, image_data, mime_type
+
+
 # Tag applied to all tools that require an active MAPDL connection.
 # These tools are disabled at startup (before MAPDL is connected) and enabled
 # once a connection is established via connect_to_mapdl or launch_mapdl_session.
@@ -139,8 +224,28 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
             )
 
         info = get_info(mapdl)
+        json_content = TextContent(type="text", text=json.dumps(info, indent=2))
 
-        return _text_result(json.dumps(info, indent=2))
+        # Attempt to attach a four-view screenshot of the current selection
+        try:
+            logger.info("Capturing four-view screenshot for status report...")
+            _, image_data, mime_type = _capture_screenshot(
+                mapdl,
+                pre_commands=_four_view_commands("EPLOT"),
+                prefix="mapdl_status_",
+            )
+            base64_data = base64.b64encode(image_data).decode("utf-8")
+            return ToolResult(
+                [json_content, ImageContent(type="image", data=base64_data, mimeType=mime_type)]
+            )
+        except Exception as img_err:
+            logger.warning(f"Could not capture four-view screenshot for status: {img_err}")
+            return ToolResult([json_content])
+        finally:
+            try:
+                mapdl.input_strings(_RESTORE_SINGLE_WINDOW)  # type: ignore[union-attr]
+            except Exception as restore_err:
+                logger.warning(f"Could not restore single-window layout: {restore_err}")
 
     except Exception as e:
         error_msg = f"Error checking MAPDL status: {str(e)}"
@@ -594,6 +699,7 @@ def list_mapdl_instances(ctx: Context) -> ToolResult:
 def screenshot(
     ctx: Context,
     commands: str = "",
+    four_view: bool = False,
 ) -> ToolResult:
     """Capture a screenshot of the current MAPDL graphics window.
 
@@ -617,6 +723,21 @@ def screenshot(
         This can be used to set up the plot or visualization before capturing.
         Avoid running long or complex commands that may delay the screenshot.
         Default is empty string.
+    four_view : bool, optional
+        When ``True``, the graphics window is split into four quadrants before
+        the screenshot is taken, each showing a different angle of the current
+        selection:
+
+        - Upper-left  : Top view (from +Z)
+        - Upper-right : Right-side view (from +X)
+        - Lower-left  : Front view (from +Y)
+        - Lower-right : Isometric view
+
+        When *commands* is provided together with ``four_view=True``, the
+        *commands* string is used as the plot command that populates all four
+        windows (default ``EPLOT`` when *commands* is empty).
+        The window layout is automatically restored after the screenshot.
+        Default is ``False``.
 
     Returns
     -------
@@ -635,44 +756,28 @@ def screenshot(
         )
 
     try:
-        logger.info("Capturing MAPDL screenshot...")
+        if four_view:
+            logger.info("Capturing four-view MAPDL screenshot...")
+            plot_cmd = commands if commands else "EPLOT"
+            pre_commands = _four_view_commands(plot_cmd)
+            prefix = "mapdl_4view_"
+        else:
+            logger.info("Capturing MAPDL screenshot...")
+            pre_commands = commands
+            prefix = "mapdl_screenshot_"
 
-        # Create a temporary file with .png extension
-        temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix="mapdl_screenshot_")
+        try:
+            screenshot_path, image_data, mime_type = _capture_screenshot(
+                mapdl, pre_commands, prefix
+            )
+        finally:
+            if four_view:
+                try:
+                    mapdl.input_strings(_RESTORE_SINGLE_WINDOW)  # type: ignore[union-attr]
+                except Exception as restore_err:
+                    logger.warning(f"Could not restore single-window layout: {restore_err}")
 
-        # Close the file descriptor as MAPDL will write to the path
-        os.close(temp_fd)
-
-        if commands:
-            mapdl.input_strings(commands)  # type: ignore[union-attr]
-
-        # Capture screenshot directly to the temporary location
-        screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
-
-        # Verify file was created
-        image_path = Path(screenshot_path)
-        if not image_path.exists():
-            error_msg = f"Screenshot file not found: {screenshot_path}"
-            logger.error(error_msg)
-            return _text_result(error_msg)
-
-        # Read image data
-        # Ignoring PTH123 since the file is created by MAPDL
-        with open(screenshot_path, "rb") as f:  # noqa: PTH123
-            image_data = f.read()
-
-        # Encode to base64
         base64_data = base64.b64encode(image_data).decode("utf-8")
-
-        # Determine mime type based on file extension
-        mime_type = "image/png"  # Default to PNG
-        if image_path.suffix.lower() in [".jpg", ".jpeg"]:
-            mime_type = "image/jpeg"
-        elif image_path.suffix.lower() == ".bmp":
-            mime_type = "image/bmp"
-        elif image_path.suffix.lower() == ".gif":
-            mime_type = "image/gif"
-
         logger.info(f"Screenshot captured successfully: {screenshot_path}")
 
         return ToolResult(
@@ -683,132 +788,9 @@ def screenshot(
         )
 
     except Exception as e:
-        if "temp_path" in locals() and Path(temp_path).exists():
-            Path(temp_path).unlink()  # pyright: ignore[reportPossiblyUnboundVariable]
-
         error_msg = f"Failed to capture screenshot: {str(e)}"
         logger.error(error_msg)
         return _text_result(error_msg)
-
-
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization"})
-def four_view_screenshot(
-    ctx: Context,
-    plot_command: str = "EPLOT",
-) -> ToolResult:
-    """Capture a four-view screenshot of the current MAPDL model in a single image.
-
-    This tool splits the graphics window into four quadrants, each showing the
-    current selection from a different angle, and returns the composite image.
-    The four views are:
-
-    - **Upper-left** — Top view (looking down the +Z axis)
-    - **Upper-right** — Right-side view (looking along the +X axis)
-    - **Lower-left** — Front view (looking along the +Y axis)
-    - **Lower-right** — Isometric view (equal-angle perspective)
-
-    After the screenshot is captured the graphics window is restored to its
-    default single-window layout so subsequent calls to ``screenshot`` or other
-    visualisation tools are unaffected.
-
-    Parameters
-    ----------
-    ctx : Context
-        The MCP context containing server session and application context.
-    plot_command : str, optional
-        MAPDL plot command to execute in all four windows.  Use the commands that
-        are appropriate for the current model state, for example:
-
-        - Solid model   : ``APLOT``, ``LPLOT``, ``KPLOT``, ``VPLOT``
-        - Mesh          : ``EPLOT``, ``NPLOT``
-        - Post-process  : ``PLNSOL,U,SUM``, ``PLDISP,1``
-
-        Default is ``EPLOT``.
-
-    Returns
-    -------
-    ToolResult
-        A result containing:
-        - TextContent with the screenshot file path
-        - ImageContent with the base64-encoded PNG image data
-    """
-    if ctx.request_context is None:
-        return _text_result("No request context available.")
-    mapdl = ctx.request_context.lifespan_context.mapdl
-
-    if mapdl is None:
-        return _text_result(
-            "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
-        )
-
-    if _is_mapdl_crashed(mapdl):
-        return _text_result(
-            "MAPDL instance has exited or is exiting. Please reconnect or launch a new instance."
-        )
-
-    try:
-        logger.info("Setting up four-view layout for screenshot...")
-
-        # Build multi-window setup commands:
-        # Windows are arranged as a 2×2 grid.
-        # /VIEW, WN, XV, YV, ZV  — defines the viewing direction vector for window WN.
-        setup_commands = (
-            "/WINDOW,1,LTOP\n"  # upper-left
-            "/WINDOW,2,RTOP\n"  # upper-right
-            "/WINDOW,3,LBOT\n"  # lower-left
-            "/WINDOW,4,RBOT\n"  # lower-right
-            "/VIEW,1,0,0,1\n"  # top view (from +Z)
-            "/VIEW,2,1,0,0\n"  # right-side view (from +X)
-            "/VIEW,3,0,1,0\n"  # front view (from +Y)
-            "/VIEW,4,1,1,1\n"  # isometric
-            "/TRIAD,OFF\n"  # hide axis triad to reduce clutter
-            f"{plot_command}\n"
-        )
-        mapdl.input_strings(setup_commands)  # type: ignore[union-attr]
-
-        # Capture the composite screenshot
-        temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix="mapdl_4view_")
-        os.close(temp_fd)
-
-        screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
-
-        image_path = Path(screenshot_path)
-        if not image_path.exists():
-            error_msg = f"Four-view screenshot file not found: {screenshot_path}"
-            logger.error(error_msg)
-            return _text_result(error_msg)
-
-        with open(screenshot_path, "rb") as f:  # noqa: PTH123
-            image_data = f.read()
-
-        base64_data = base64.b64encode(image_data).decode("utf-8")
-
-        logger.info(f"Four-view screenshot captured successfully: {screenshot_path}")
-
-        return ToolResult(
-            [
-                TextContent(type="text", text=f"Four-view screenshot saved to: {screenshot_path}"),
-                ImageContent(type="image", data=base64_data, mimeType="image/png"),
-            ]
-        )
-
-    except Exception as e:
-        if "temp_path" in locals() and Path(temp_path).exists():
-            Path(temp_path).unlink()  # pyright: ignore[reportPossiblyUnboundVariable]
-
-        error_msg = f"Failed to capture four-view screenshot: {str(e)}"
-        logger.error(error_msg)
-        return _text_result(error_msg)
-
-    finally:
-        # Always restore single-window layout so subsequent tools are unaffected
-        try:
-            restore_commands = (
-                "/WINDOW,1,FULL\n/WINDOW,2,OFF\n/WINDOW,3,OFF\n/WINDOW,4,OFF\n/TRIAD,ORIG\n"
-            )
-            mapdl.input_strings(restore_commands)  # type: ignore[union-attr]
-        except Exception as restore_err:
-            logger.warning(f"Could not restore single-window layout: {restore_err}")
 
 
 ####################################################################################################
