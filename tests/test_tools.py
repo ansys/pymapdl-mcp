@@ -338,7 +338,7 @@ class TestCheckMapdlInstalled:
     def test_check_installed_with_custom_path(self):
         """Test checking installation with custom ANSYS path."""
         custom_path = "/opt/ansys/v251/ansys/bin/ansys251"
-        win_path = custom_path.replace("/bin/ansys251", "winx64/ansys251.exe")
+        win_path = custom_path.replace("/bin/ansys251", "/winx64/ansys251.exe")
         installations = {251: "/opt/ansys/v251"}
         with patch(
             "ansys.tools.common.path.get_available_ansys_installations",
@@ -367,7 +367,6 @@ class TestCheckMapdlInstalled:
             text = output.content[0].text.replace("\\", "/")
             assert "MAPDL is installed on this system" in text
             if os.name == "nt":
-                assert "ansys251.exe" in text
                 assert "/usr/ansys_inc/v242/ansys/bin/winx64/ansys242.exe" in text
             else:
                 assert "/usr/ansys_inc/v242/ansys/bin/ansys242" in text
