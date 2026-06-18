@@ -41,8 +41,29 @@ Data handling
 Visualization
 -------------
 
+**Prefer MAPDL backend for large models**
+    The default ``screenshot`` mode (``interactive=False``) renders on the MAPDL server
+    and returns only a lightweight image.  For large or complex models this is
+    significantly faster than the interactive PyVista path, which transfers the full
+    mesh to the client.  Reserve ``interactive=True`` for when live rotation or
+    manual inspection of a reasonably sized model is needed.
+
 **Screenshots after key steps**
     Take screenshots after geometry definition, meshing, and solving to verify progress.
+    Pass the plot command in ``commands`` (for example ``EPLOT``) and the ``screenshot``
+    tool captures it as a base64 image returned inline to the AI assistant.
+
+**Popup for full-resolution inspection**
+    Set ``show_plot_on_popup=True`` on ``screenshot`` to also open the captured image in
+    the system's default image viewer, allowing the user to inspect it at full resolution
+    without leaving the chat.
+
+**Interactive plots for exploration**
+    Use ``screenshot`` with ``interactive=True`` and ``interactive_command`` (for example
+    ``NPLOT`` or ``EPLOT``) to open a live PyVista window the user can rotate, zoom, and
+    query interactively.  Requires ``ansys-mapdl-core[graphics]``.
+    The LLM does not have visibility into the interactive window, so it receives only a text
+    confirmation that the plot command was executed and the window has been shown.
 
 **Custom plots for analysis**
     Use custom Matplotlib plots for detailed analysis beyond MAPDL's built-in capabilities.

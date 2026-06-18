@@ -2292,111 +2292,62 @@ class TestScreenshot:
         assert isinstance(result, ToolResult)
         mock_open_viewer.assert_not_called()
 
-    def test_screenshot_interactive_no_session(self, mock_context_no_mapdl):
-        """Test interactive=True returns error when no Python session is available."""
-        mock_context_no_mapdl.request_context.lifespan_context.mapdl = MagicMock()
-        mock_context_no_mapdl.request_context.lifespan_context.python_session = None
+    def test_screenshot_interactive_calls_run_with_command(self, mock_context):
+        """Test that interactive=True calls mapdl.run with the interactive_command."""
+        mock_mapdl = mock_context.request_context.lifespan_context.mapdl
 
-        result = screenshot(mock_context_no_mapdl, commands="mapdl.eplot()", interactive=True)
+        result = screenshot(
+            mock_context,
+            interactive=True,
+            interactive_command="EPLOT",
+        )
+
+        assert isinstance(result, ToolResult)
+        mock_mapdl.run.assert_called_once_with("EPLOT")
+
+    def test_screenshot_interactive_returns_text_message(self, mock_context):
+        """Test that interactive=True returns a text-only confirmation message."""
+        result = screenshot(mock_context, interactive=True, interactive_command="NPLOT")
 
         assert isinstance(result, ToolResult)
         assert len(result.content) == 1
         assert isinstance(result.content[0], TextContent)
-        assert "No Python session available" in result.content[0].text
+        assert "NPLOT" in result.content[0].text
 
-    @patch("ansys.mapdl.mcp.tools.connect_to_mapdl_in_persistent_python")
-    @patch("ansys.mapdl.mcp.tools.create_custom_plot")
-    def test_screenshot_interactive_uses_pyvista(
-        self, mock_create_plot, mock_connect, mock_context, tmp_path
-    ):
-        """Test that interactive=True calls create_custom_plot with pyvista plot_type."""
-        fake_b64 = base64.b64encode(b"fake image").decode()
-        mock_create_plot.return_value = [
-            TextContent(type="text", text="Plot created"),
-            ImageContent(type="image", data=fake_b64, mimeType="image/png"),
-        ]
-
-        # Set up python session mock
-        mock_session = MagicMock()
-        mock_session.metadata = {"mapdl": MagicMock()}
-        mock_context.request_context.lifespan_context.python_session = mock_session
-
-        result = screenshot(
-            mock_context,
-            commands="result = save_plot(mapdl.eplot(return_plotter=True))\nprint(result)",
-            interactive=True,
-        )
-
-        assert isinstance(result, ToolResult)
-        assert len(result.content) == 2
-        mock_create_plot.assert_called_once_with(
-            ctx=mock_context,
-            plot_code="result = save_plot(mapdl.eplot(return_plotter=True))\nprint(result)",
-            plot_type="pyvista",
-            timeout=60,
-        )
-
-    @patch("ansys.mapdl.mcp.tools.connect_to_mapdl_in_persistent_python")
-    @patch("ansys.mapdl.mcp.tools.create_custom_plot")
     @patch("ansys.mapdl.mcp.tools._open_image_in_viewer")
-    def test_screenshot_interactive_with_popup(
-        self, mock_open_viewer, mock_create_plot, mock_connect, mock_context
-    ):
-        """Test interactive=True with show_plot_on_popup=True opens image viewer."""
-        fake_b64 = base64.b64encode(b"fake image").decode()
-        mock_create_plot.return_value = [
-            TextContent(type="text", text="Plot created"),
-            ImageContent(type="image", data=fake_b64, mimeType="image/png"),
-        ]
-
-        mock_session = MagicMock()
-        mock_session.metadata = {"mapdl": MagicMock()}
-        mock_context.request_context.lifespan_context.python_session = mock_session
-
+    def test_screenshot_interactive_popup_ignored(self, mock_open_viewer, mock_context):
+        """Test that show_plot_on_popup has no effect when interactive=True."""
         result = screenshot(
             mock_context,
-            commands="mapdl.eplot()",
             interactive=True,
             show_plot_on_popup=True,
         )
 
         assert isinstance(result, ToolResult)
-        mock_open_viewer.assert_called_once()
+        mock_open_viewer.assert_not_called()
 
-    @patch("ansys.mapdl.mcp.tools.connect_to_mapdl_in_persistent_python")
-    @patch("ansys.mapdl.mcp.tools.create_custom_plot")
-    def test_screenshot_interactive_create_plot_error(
-        self, mock_create_plot, mock_connect, mock_context
-    ):
-        """Test interactive=True handles create_custom_plot returning an error string."""
-        mock_create_plot.return_value = "Plot creation failed: some error"
-
-        mock_session = MagicMock()
-        mock_session.metadata = {"mapdl": MagicMock()}
-        mock_context.request_context.lifespan_context.python_session = mock_session
-
-        result = screenshot(mock_context, commands="mapdl.eplot()", interactive=True)
+    @patch("ansys.mapdl.mcp.tools.HAS_PYVISTA", False)
+    def test_screenshot_interactive_no_pyvista_returns_error(self, mock_context):
+        """Test that interactive=True returns an error when PyVista is not installed."""
+        result = screenshot(mock_context, interactive=True)
 
         assert isinstance(result, ToolResult)
         assert len(result.content) == 1
         assert isinstance(result.content[0], TextContent)
-        assert "Plot creation failed" in result.content[0].text
+        assert "PyVista" in result.content[0].text
 
-    @patch("ansys.mapdl.mcp.tools.connect_to_mapdl_in_persistent_python")
-    def test_screenshot_interactive_mapdl_connect_fails(self, mock_connect, mock_context):
-        """Test interactive=True returns error when MAPDL cannot connect in persistent session."""
-        mock_connect.return_value = "Connection error: MAPDL not reachable"
+    def test_screenshot_interactive_restores_off_screen_on_exception(self, mock_context):
+        """Test that pyvista.OFF_SCREEN is restored to True even when mapdl.run raises."""
+        import ansys.mapdl.mcp.tools as tools_module
 
-        mock_session = MagicMock()
-        mock_session.metadata = {}  # no mapdl key
-        mock_context.request_context.lifespan_context.python_session = mock_session
+        mock_mapdl = mock_context.request_context.lifespan_context.mapdl
+        mock_mapdl.run.side_effect = RuntimeError("MAPDL error")
 
-        result = screenshot(mock_context, commands="mapdl.eplot()", interactive=True)
+        result = screenshot(mock_context, interactive=True)
 
         assert isinstance(result, ToolResult)
-        assert len(result.content) == 1
-        assert isinstance(result.content[0], TextContent)
-        assert "Failed to connect to MAPDL" in result.content[0].text
+        assert "Failed to capture screenshot" in result.content[0].text
+        assert tools_module.pyvista.OFF_SCREEN is True
 
     """Tests for MAPDL-connection-aware tool visibility."""
 
