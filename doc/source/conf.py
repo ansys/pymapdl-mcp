@@ -83,6 +83,16 @@ numpydoc_show_class_members = False
 numpydoc_xref_param_type = True
 autosectionlabel_prefix_document = True
 
+# Type cross-reference aliases.
+# fastmcp uses Mintlify (not Sphinx) so no objects.inv is available — use
+# direct URL hyperlinks for its types.  PyMAPDL's ``Mapdl`` is a type alias
+# not listed as a py:class in the inventory; point to the concrete base class.
+numpydoc_xref_aliases = {
+    "Context": "`Context <https://gofastmcp.com/servers/context>`_",
+    "ToolResult": "`ToolResult <https://gofastmcp.com/servers/tools>`_",
+    "Mapdl": ":class:`Mapdl <ansys.mapdl.core.mapdl.MapdlBase>`",
+}
+
 # Consider enabling numpydoc validation. See:
 # https://numpydoc.readthedocs.io/en/latest/validation.html#
 numpydoc_validate = True
