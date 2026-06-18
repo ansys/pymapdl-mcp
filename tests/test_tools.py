@@ -344,8 +344,9 @@ class TestCheckMapdlInstalled:
         ):
             result = check_mapdl_installed(MagicMock())
 
-            assert "MAPDL is installed" in result.content[0].text
-            assert custom_path in result.content[0].text
+            text = result.content[0].text.replace("\\", "/")
+            assert "MAPDL is installed" in text
+            assert custom_path in text
 
     def test_check_installed_logging(self):
         """Test that check_mapdl_installed logs messages."""
@@ -357,8 +358,9 @@ class TestCheckMapdlInstalled:
             output = check_mapdl_installed(MagicMock())
 
             # Verify logging messages
-            assert "MAPDL is installed on this system" in output.content[0].text
-            assert "/usr/ansys_inc/v242/ansys/bin/ansys242" in output.content[0].text
+            text = output.content[0].text.replace("\\", "/")
+            assert "MAPDL is installed on this system" in text
+            assert "/usr/ansys_inc/v242/ansys/bin/ansys242" in text
 
     def test_check_not_installed_logging(self):
         """Test that check_mapdl_installed logs when not installed."""
