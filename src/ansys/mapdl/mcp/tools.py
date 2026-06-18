@@ -728,14 +728,9 @@ def screenshot(
         Default is empty string.
     four_view : bool, optional
         When ``True``, the graphics window is split into four quadrants before
-        the screenshot is taken, each showing a different angle of the current
-        selection:
-
-        - Upper-left  : Top view (from +Z)
-        - Upper-right : Right-side view (from +X)
-        - Lower-left  : Front view (from +Y)
-        - Lower-right : Isometric view
-
+        the screenshot is taken: upper-left shows the top view (from +Z),
+        upper-right the right-side view (from +X), lower-left the front view
+        (from +Y), and lower-right the isometric view.
         When *commands* is provided together with ``four_view=True``, the
         *commands* string is used as the plot command that populates all four
         windows (default ``EPLOT`` when *commands* is empty).
