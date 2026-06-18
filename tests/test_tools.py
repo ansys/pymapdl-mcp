@@ -338,7 +338,7 @@ class TestCheckMapdlInstalled:
     def test_check_installed_with_custom_path(self):
         """Test checking installation with custom ANSYS path."""
         custom_path = "/opt/ansys/v251/ansys/bin/ansys251"
-        win_path = custom_path.replace("/bin/ansys251", "/winx64/ansys251.exe")
+        win_path = custom_path.replace("/bin/ansys251", "/bin/winx64/ansys251.exe")
         installations = {251: "/opt/ansys/v251"}
         with patch(
             "ansys.tools.common.path.get_available_ansys_installations",
