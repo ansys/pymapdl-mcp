@@ -375,5 +375,5 @@ Next steps
 ----------
 
 - To learn about available tools, see :doc:`../user_guide/tools_and_capabilities`.
-- For a complete API reference, see :doc:`../api/tools`.
+- For a complete API reference, see :doc:`../api/ansys/mapdl/mcp/index`.
 - For practical usage examples, see :doc:`../examples/index`.
