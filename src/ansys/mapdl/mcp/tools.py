@@ -950,7 +950,6 @@ def custom_plot(
     plot_code : str
         Python code to create the plot. Should use matplotlib.pyplot or PyVista.
         For matplotlib, the code should create the figure/plot but NOT call plt.show().
-        Use :func:`run_python_code` for general-purpose Python execution.
         Use the save_matplotlib_plot() or save_plot() helper functions to return
         the plot.
     plot_type : str, optional
