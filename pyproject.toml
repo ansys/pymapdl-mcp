@@ -56,7 +56,9 @@ tests = [
 ]
 
 doc = [
-    "ansys-sphinx-theme[changelog]==1.8.2",
+    "ansys-common-mcp>=0.1.0",
+    "ansys-mapdl-core>=0.72.0",
+    "ansys-sphinx-theme[autoapi,changelog]==1.8.2",
     "numpydoc==1.10.0",
     "sphinx-autodoc-typehints==3.0.1; python_version < '3.11'",
     "sphinx-autodoc-typehints==3.1.0; python_version >= '3.11'",

@@ -91,6 +91,6 @@ Next steps
 ----------
 
 - For an overview of available tools, see :doc:`../user_guide/overview`.
-- For the complete API reference, see :doc:`../api/tools`.
+- For the complete API reference, see :doc:`../api/ansys/mapdl/mcp/index`.
 - For practical examples, browse :doc:`../examples/index`.
 - For containerized deployment, see :doc:`../user_guide/docker`.
