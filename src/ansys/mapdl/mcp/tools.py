@@ -184,13 +184,18 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
         - **geometry**: Solid-model statistics (n_keypoint, n_line, n_area, n_volu).
         - **mesh**: Mesh statistics (n_node, n_elem).
         - **components**: Named components defined in the model. Contains:
+
           - ``count`` (int) — total number of components.
           - ``items`` (dict) — mapping of component name to entity type
             (``NODES``, ``ELEMS``, ``KP``, ``LINE``, ``AREA``, or ``VOLU``).
+
         - **materials**: Material definitions. Contains:
+
           - ``count`` (int) — number of material reference numbers with properties.
           - ``ids`` (list[int]) — list of defined material reference numbers.
+
         - **sections**: Cross-section definitions. Contains:
+
           - ``count`` (int) — number of sections defined.
           - ``ids`` (list[int]) — list of section IDs.
           - ``types`` (dict) — mapping of section ID (as string) to section type
