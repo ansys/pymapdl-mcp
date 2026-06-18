@@ -359,7 +359,7 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
 def run_multiple_mapdl_commands(
     ctx: Context, commands: list[str], comment: str = "", header: str = ""
 ) -> ToolResult:
-    """Execute multiple MAPDL commands in sequence using input_strings.
+    """Execute multiple MAPDL commands in sequence.
 
     This tool is optimized for running multiple commands efficiently by using
     MAPDL's :meth:`~ansys.mapdl.core.Mapdl.input_strings` method, which processes
@@ -458,7 +458,7 @@ async def launch_mapdl_session(
     """Launch a new MAPDL instance.
 
     This tool starts a new MAPDL instance using PyMAPDL's
-    :func:`~ansys.mapdl.core.launch_mapdl` function.
+    :func:`~ansys.mapdl.core.launcher.launch_mapdl` function.
     The launched instance will be automatically connected and stored in the context
     for subsequent operations. The instance can be closed using the
     :func:`disconnect_from_mapdl` tool.
