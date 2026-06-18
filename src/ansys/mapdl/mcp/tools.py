@@ -108,7 +108,7 @@ def _capture_screenshot(
 
     Parameters
     ----------
-    mapdl : Mapdl
+    mapdl : :class:`~ansys.mapdl.core.Mapdl`
         Connected MAPDL instance.
     pre_commands : str, optional
         MAPDL command string to execute before taking the screenshot.

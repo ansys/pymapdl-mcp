@@ -171,7 +171,7 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
 
     Parameters
     ----------
-    mapdl : Mapdl
+    mapdl : :class:`~ansys.mapdl.core.Mapdl`
         MAPDL instance
 
     Returns
