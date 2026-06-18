@@ -716,9 +716,10 @@ def screenshot(
     MAPDL native plotting commands. Use this tool for all standard MAPDL plots.
 
     MAPDL Native Plot Commands (use with screenshot):
-    - Geometry: APLOT, LPLOT, KPLOT, VPLOT
-    - Mesh: EPLOT, NPLOT
-    - Post-processing: PLNSOL, PLESOL, PLDISP
+
+    - Geometry: ``APLOT``, ``LPLOT``, ``KPLOT``, ``VPLOT``
+    - Mesh: ``EPLOT``, ``NPLOT``
+    - Post-processing: ``PLNSOL``, ``PLESOL``, ``PLDISP``
 
     For custom matplotlib or PyVista plots, use the custom_plot tool instead.
 
@@ -817,14 +818,16 @@ async def run_python_code(
     """Execute arbitrary Python and PyMAPDL code in the persistent Python session.
 
     This tool should be used for custom Python code execution, particularly for:
+
     - Custom data processing and analysis
     - Creating custom matplotlib plots not available in MAPDL
     - Advanced PyVista visualizations beyond MAPDL's native capabilities
     - NumPy/Pandas data manipulation and custom visualization
 
-    NOTE: For MAPDL native plotting (aplot, lplot, kplot, post_processing plots, etc.),
-    use the normal MAPDL session commands with the screenshot tool instead, as they
-    provide interactive plots that are directly accessible.
+    .. important:: For MAPDL native plotting (``APLOT``, ``LPLOT``, ``KPLOT``,
+       post_processing plots, etc.), use the normal MAPDL session commands
+       with the screenshot tool instead, as they provide interactive plots
+       that are directly accessible.
 
     Parameters
     ----------
@@ -843,6 +846,7 @@ async def run_python_code(
     Examples
     --------
     Execute simple Python code to compute a value:
+
     >>> code = '''
     ... result = sum([i**2 for i in range(10)])
     ... print(f"Sum of squares: {result}")
@@ -850,6 +854,7 @@ async def run_python_code(
     >>> run_python_code(ctx, code)
 
     Execute PyMAPDL code:
+
     >>> code = '''
     ... displacements = mapdl.get_array("NODE", item1="U", it1num="Y")
     ... print(f"Displacements: {displacements}")
@@ -913,16 +918,19 @@ def custom_plot(
 
     This tool is specifically designed for creating custom plots that are NOT available
     in MAPDL's native plotting capabilities. Use this when you need:
+
     - Custom matplotlib visualizations (line plots, bar charts, histograms, etc.)
     - Advanced PyVista 3D visualizations beyond MAPDL defaults
     - Combined data from multiple sources
     - Custom data processing with visualization
 
-    IMPORTANT: For standard MAPDL plots (aplot, lplot, kplot, post_processing plots),
-    use the normal MAPDL commands with the screenshot tool instead for interactive plots.
+    .. important:: For standard MAPDL plots (``APLOT``, ``LPLOT``, ``KPLOT``, post_processing
+       plots), use the normal MAPDL commands with the screenshot tool instead for interactive
+       plots.
 
     The persistent Python session has pre-configured matplotlib (Agg backend) and
     PyVista (off-screen rendering) with helper functions:
+
     - save_matplotlib_plot(filename, dpi)
     - save_plot(plotter, filename)
 
@@ -949,6 +957,7 @@ def custom_plot(
     Examples
     --------
     Create a custom matplotlib line plot:
+
     >>> plot_code = '''
     ... import matplotlib.pyplot as plt
     ... import numpy as np
@@ -1014,10 +1023,38 @@ def list_tool_sets() -> list[dict]:
     -------
     list[dict]
         List of tool set definitions, each containing:
-        - name: Unique identifier for the tool set
-        - description: Human-readable description of the tool set
-        - skill: Instructions for the AI agent on when and how to use these tool sets
-        - tools: List of tool function names in this set
+
+        - ``name``: Unique identifier for the tool set
+        - ``description``: Human-readable description of the tool set
+        - ``skill``: Instructions for the AI agent on when and how to use these tool sets
+        - ``tools``: List of tool function names in this set
+
+    Examples
+    --------
+    >>> list_tool_sets()
+    [
+        {
+            "name": "session_management",
+            "description": "Tools for managing MAPDL session connections and instances",
+            "skill": (
+                "Use these tools to manage MAPDL connections and sessions. "
+                "Start by checking available installations with check_mapdl_installed, "
+                "then launch a new session with launch_mapdl_session or connect to an existing "
+                "instance with connect_to_mapdl. Use check_mapdl_status to verify the connection"
+                "status. List active instances with list_mapdl_instances and disconnect when done"
+                " using disconnect_from_mapdl."
+            ),
+            "tools": [
+                "check_mapdl_installed",
+                "check_mapdl_status",
+                "launch_mapdl_session",
+                "connect_to_mapdl",
+                "disconnect_from_mapdl",
+                "list_mapdl_instances",
+            ],
+        }
+    ]
+
     """
     return [
         {
@@ -1062,7 +1099,8 @@ def list_tool_sets() -> list[dict]:
             "description": "Tools for visualization, custom analysis, and post-processing",
             "skill": (
                 "Use these tools for visualization and post-processing of MAPDL results. "
-                "Use screenshot to capture MAPDL native plots (APLOT, EPLOT, PLNSOL, etc.). "
+                "Use screenshot to capture MAPDL native plots (``APLOT``, ``EPLOT``, "
+                "``PLNSOL``, etc.). "
                 "Use custom_plot to create custom matplotlib or PyVista visualizations for "
                 "custom analysis. For visualization workflows, use custom_plot rather than "
                 "run_python_code."
