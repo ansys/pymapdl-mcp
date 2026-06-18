@@ -32,11 +32,9 @@ Tools are grouped into the following tool sets via the ``toolsets://definition``
 The `list_tool_sets()` function exposes these tool set definitions as a resource.
 """
 
-import base64
 import json
 import os
 from pathlib import Path
-import tempfile
 from typing import Any, cast
 
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
@@ -45,7 +43,6 @@ from fastmcp.tools.base import ToolResult
 
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
-from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 from ansys.mapdl.mcp import app
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
 from mcp.types import ImageContent, TextContent
@@ -163,9 +160,6 @@ def check_mapdl_installed(ctx: Context) -> ToolResult:
         Status message listing all found MAPDL installations, or a message
         indicating that no installation was found.
     """
-    import os
-    from pathlib import Path
-
     logger.info("Checking if MAPDL is installed...")
 
     try:
@@ -399,7 +393,8 @@ async def launch_mapdl_session(
         if additional_switches:
             kwargs["additional_switches"] = additional_switches
 
-        # Launch MAPDL - import already done at module level
+        from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
+
         mapdl = cast(pymapdl.Mapdl, pymapdl.launch_mapdl(**kwargs))
 
         # Store in context for later use
@@ -471,6 +466,9 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
             "cleanup_on_exit": False,  # Don't clean up since we didn't launch it
             "loglevel": "INFO",
         }
+
+        from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
+
         mapdl = pymapdl.Mapdl(**_connect_kwargs)
 
         # Store in context for later use
@@ -625,6 +623,8 @@ def screenshot(
         logger.info("Capturing MAPDL screenshot...")
 
         # Create a temporary file with .png extension
+        import tempfile
+
         temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix="mapdl_screenshot_")
 
         # Close the file descriptor as MAPDL will write to the path
@@ -649,6 +649,8 @@ def screenshot(
             image_data = f.read()
 
         # Encode to base64
+        import base64
+
         base64_data = base64.b64encode(image_data).decode("utf-8")
 
         # Determine mime type based on file extension
@@ -967,10 +969,10 @@ def download_file(ctx: Context, file_name: str, target_dir: str | None = None) -
     """
     # Check target_dir exists
     if target_dir and not Path(target_dir).is_dir():
-        error_msg= f"The folder {target_dir} doesn't exist. The file could not be downloaded."
+        error_msg = f"The folder {target_dir} doesn't exist. The file could not be downloaded."
         logger.error(error_msg)
         return _text_result(error_msg)
-        
+
     # Get the MAPDL instance
     mapdl, error = _get_mapdl(ctx)
     if error:
