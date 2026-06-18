@@ -28,7 +28,7 @@ Tools are grouped into the following tool sets via the ``toolsets://definition``
 - **visualization**: Tools for visualization and post-processing results
 - **python_execution**: Tools for executing arbitrary Python and PyMAPDL code
 
-The `list_tool_sets()` function exposes these tool set definitions as a resource.
+The :func:`list_tool_sets` function exposes these tool set definitions as a resource.
 """
 
 import base64
@@ -108,7 +108,7 @@ def _capture_screenshot(
 
     Parameters
     ----------
-    mapdl : Mapdl
+    mapdl : :class:`~ansys.mapdl.core.Mapdl`
         Connected MAPDL instance.
     pre_commands : str, optional
         MAPDL command string to execute before taking the screenshot.
@@ -362,7 +362,8 @@ def run_multiple_mapdl_commands(
     """Execute multiple MAPDL commands in sequence using input_strings.
 
     This tool is optimized for running multiple commands efficiently by using
-    MAPDL's input_strings method, which processes commands in batch mode.
+    MAPDL's :meth:`~ansys.mapdl.core.Mapdl.input_strings` method, which processes
+    commands in batch mode.
     This is significantly faster than executing commands one by one.
 
     Parameters
@@ -456,11 +457,14 @@ async def launch_mapdl_session(
 ) -> ToolResult:
     """Launch a new MAPDL instance.
 
-    This tool starts a new MAPDL instance using PyMAPDL's launch_mapdl function.
+    This tool starts a new MAPDL instance using PyMAPDL's
+    :func:`~ansys.mapdl.core.launch_mapdl` function.
     The launched instance will be automatically connected and stored in the context
-    for subsequent operations. The instance can be closed using the disconnect_from_mapdl tool.
+    for subsequent operations. The instance can be closed using the
+    :func:`disconnect_from_mapdl` tool.
     Once you are connected to the launched instance, other tools become available
-    to interact with it, such as run_mapdl_command, check_mapdl_status, screenshot, and more.
+    to interact with it, such as :func:`run_mapdl_command`,
+    :func:`check_mapdl_status`, :func:`screenshot`, and more.
 
     Parameters
     ----------
@@ -547,9 +551,10 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
 
     This tool establishes a connection to a running MAPDL instance using the
     provided port and IP address. The connection is stored for subsequent
-    operations and can be closed using the disconnect_from_mapdl tool.
+    operations and can be closed using the :func:`disconnect_from_mapdl` tool.
     Once you are connected to the MAPDL instance, other tools become available
-    to interact with it, such as run_mapdl_command, check_mapdl_status, screenshot, and more.
+    to interact with it, such as :func:`run_mapdl_command`,
+    :func:`check_mapdl_status`, :func:`screenshot`, and more.
 
     Parameters
     ----------
@@ -615,7 +620,8 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
     """Disconnect from the dynamically connected MAPDL instance.
 
     This tool closes the connection to the MAPDL instance that was established
-    using the connect_to_mapdl tool and releases the associated resources.
+    using the :func:`connect_to_mapdl` tool and releases the associated
+    resources.
 
     Parameters
     ----------
@@ -663,10 +669,12 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
 def list_mapdl_instances(ctx: Context) -> ToolResult:
     """List all MAPDL instances running on the local machine and any remotely connected instance.
 
-    This tool uses PyMAPDL CLI's list_instances function to discover
+    This tool uses PyMAPDL CLI's
+    :func:`~ansys.mapdl.mcp.helpers.list_instances` function to discover
     MAPDL instances running on the machine by scanning for active gRPC
     servers and their associated metadata. It also includes any remotely
-    connected MAPDL instance that was established via the connect_to_mapdl tool.
+    connected MAPDL instance that was established via the
+    :func:`connect_to_mapdl` tool.
 
     Returns
     -------
@@ -721,7 +729,8 @@ def screenshot(
     - Mesh: ``EPLOT``, ``NPLOT``
     - Post-processing: ``PLNSOL``, ``PLESOL``, ``PLDISP``
 
-    For custom matplotlib or PyVista plots, use the custom_plot tool instead.
+    For custom matplotlib or PyVista plots, use the :func:`custom_plot` tool
+    instead.
 
     Parameters
     ----------
@@ -826,8 +835,8 @@ async def run_python_code(
 
     .. important:: For MAPDL native plotting (``APLOT``, ``LPLOT``, ``KPLOT``,
        post_processing plots, etc.), use the normal MAPDL session commands
-       with the screenshot tool instead, as they provide interactive plots
-       that are directly accessible.
+       with the :func:`screenshot` tool instead, as they provide interactive
+       plots that are directly accessible.
 
     Parameters
     ----------
@@ -924,9 +933,9 @@ def custom_plot(
     - Combined data from multiple sources
     - Custom data processing with visualization
 
-    .. important:: For standard MAPDL plots (``APLOT``, ``LPLOT``, ``KPLOT``, post_processing
-       plots), use the normal MAPDL commands with the screenshot tool instead for interactive
-       plots.
+    .. important:: For standard MAPDL plots (``APLOT``, ``LPLOT``, ``KPLOT``,
+       post_processing plots), use the normal MAPDL commands with the
+       :func:`screenshot` tool instead for interactive plots.
 
     The persistent Python session has pre-configured matplotlib (Agg backend) and
     PyVista (off-screen rendering) with helper functions:
@@ -941,7 +950,9 @@ def custom_plot(
     plot_code : str
         Python code to create the plot. Should use matplotlib.pyplot or PyVista.
         For matplotlib, the code should create the figure/plot but NOT call plt.show().
-        Use the save_matplotlib_plot() or save_plot() helper functions to return the plot.
+        Use :func:`run_python_code` for general-purpose Python execution.
+        Use the save_matplotlib_plot() or save_plot() helper functions to return
+        the plot.
     plot_type : str, optional
         Type of plot: "matplotlib" or "pyvista". Default is "matplotlib".
     timeout : int, optional
