@@ -965,6 +965,13 @@ def download_file(ctx: Context, file_name: str, target_dir: str | None = None) -
 
     >>> download_file(ctx, "file*")
     """
+    # Check target_dir exists
+    if target_dir and not Path(target_dir).is_dir():
+        error_msg= f"The folder {target_dir} doesn't exist. The file could not be downloaded."
+        logger.error(error_msg)
+        return _text_result(error_msg)
+        
+    # Get the MAPDL instance
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
