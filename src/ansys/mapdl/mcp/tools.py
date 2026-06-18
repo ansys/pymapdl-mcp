@@ -200,6 +200,7 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
           - ``ids`` (list[int]) — list of section IDs.
           - ``types`` (dict) — mapping of section ID (as string) to section type
             (e.g. ``"SHELL"``, ``"BEAM"``, ``"PIPE"``).
+
         - **post_processing**: Post-processing availability and result sets
           (available, nsets).
 
