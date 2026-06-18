@@ -18,6 +18,7 @@
 
 import base64
 import json
+import os
 from unittest.mock import MagicMock, Mock, patch
 
 from fastmcp.tools.base import ToolResult
@@ -337,6 +338,7 @@ class TestCheckMapdlInstalled:
     def test_check_installed_with_custom_path(self):
         """Test checking installation with custom ANSYS path."""
         custom_path = "/opt/ansys/v251/ansys/bin/ansys251"
+        win_path = custom_path.replace("/bin/ansys251", "winx64/ansys251.exe")
         installations = {251: "/opt/ansys/v251"}
         with patch(
             "ansys.tools.common.path.get_available_ansys_installations",
@@ -346,7 +348,11 @@ class TestCheckMapdlInstalled:
 
             text = result.content[0].text.replace("\\", "/")
             assert "MAPDL is installed" in text
-            assert custom_path in text
+            if os.name == "nt":
+                assert "ansys251.exe" in text
+                assert win_path in text
+            else:
+                assert custom_path in text
 
     def test_check_installed_logging(self):
         """Test that check_mapdl_installed logs messages."""
@@ -360,7 +366,11 @@ class TestCheckMapdlInstalled:
             # Verify logging messages
             text = output.content[0].text.replace("\\", "/")
             assert "MAPDL is installed on this system" in text
-            assert "/usr/ansys_inc/v242/ansys/bin/ansys242" in text
+            if os.name == "nt":
+                assert "ansys251.exe" in text
+                assert "/usr/ansys_inc/v242/ansys/bin/winx64/ansys242.exe" in text
+            else:
+                assert "/usr/ansys_inc/v242/ansys/bin/ansys242" in text
 
     def test_check_not_installed_logging(self):
         """Test that check_mapdl_installed logs when not installed."""
