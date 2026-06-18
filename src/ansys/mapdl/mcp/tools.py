@@ -65,7 +65,7 @@ def _is_mapdl_crashed(mapdl: Any) -> bool:
 
 
 def _four_view_commands(plot_command: str | list[str] = "EPLOT") -> str:
-    """Return MAPDL commands string that sets up a 2×2 window composite view.
+    """Return MAPDL commands string that sets up a 2x2 window composite view.
 
     Windows
     -------
