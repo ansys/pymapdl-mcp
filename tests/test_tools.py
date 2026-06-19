@@ -2292,63 +2292,6 @@ class TestScreenshot:
         assert isinstance(result, ToolResult)
         mock_open_viewer.assert_not_called()
 
-    def test_screenshot_interactive_calls_run_with_command(self, mock_context):
-        """Test that interactive=True calls mapdl.run with the interactive_command."""
-        mock_mapdl = mock_context.request_context.lifespan_context.mapdl
-
-        result = screenshot(
-            mock_context,
-            interactive=True,
-            interactive_command="EPLOT",
-        )
-
-        assert isinstance(result, ToolResult)
-        mock_mapdl.run.assert_called_once_with("EPLOT")
-
-    def test_screenshot_interactive_returns_text_message(self, mock_context):
-        """Test that interactive=True returns a text-only confirmation message."""
-        result = screenshot(mock_context, interactive=True, interactive_command="NPLOT")
-
-        assert isinstance(result, ToolResult)
-        assert len(result.content) == 1
-        assert isinstance(result.content[0], TextContent)
-        assert "NPLOT" in result.content[0].text
-
-    @patch("ansys.mapdl.mcp.tools._open_image_in_viewer")
-    def test_screenshot_interactive_popup_ignored(self, mock_open_viewer, mock_context):
-        """Test that show_plot_on_popup has no effect when interactive=True."""
-        result = screenshot(
-            mock_context,
-            interactive=True,
-            show_plot_on_popup=True,
-        )
-
-        assert isinstance(result, ToolResult)
-        mock_open_viewer.assert_not_called()
-
-    @patch("ansys.mapdl.mcp.tools.HAS_PYVISTA", False)
-    def test_screenshot_interactive_no_pyvista_returns_error(self, mock_context):
-        """Test that interactive=True returns an error when PyVista is not installed."""
-        result = screenshot(mock_context, interactive=True)
-
-        assert isinstance(result, ToolResult)
-        assert len(result.content) == 1
-        assert isinstance(result.content[0], TextContent)
-        assert "PyVista" in result.content[0].text
-
-    def test_screenshot_interactive_restores_off_screen_on_exception(self, mock_context):
-        """Test that pyvista.OFF_SCREEN is restored to True even when mapdl.run raises."""
-        import ansys.mapdl.mcp.tools as tools_module
-
-        mock_mapdl = mock_context.request_context.lifespan_context.mapdl
-        mock_mapdl.run.side_effect = RuntimeError("MAPDL error")
-
-        result = screenshot(mock_context, interactive=True)
-
-        assert isinstance(result, ToolResult)
-        assert "Failed to capture screenshot" in result.content[0].text
-        assert tools_module.pyvista.OFF_SCREEN is True
-
     """Tests for MAPDL-connection-aware tool visibility."""
 
     @pytest.mark.asyncio

@@ -548,12 +548,7 @@ Use the normal MAPDL session for:
    The `screenshot` tool accepts:
    - `commands`: MAPDL APDL commands to run before capturing (e.g. `EPLOT`)
    - `show_plot_on_popup`: set to `True` to also open the captured image in an
-     external popup window (only applies when ``interactive=False``)
-   - `interactive`: set to `True` to have PyMAPDL intercept the plot command
-     and render it via PyVista, opening a live interactive window
-   - `interactive_command`: the MAPDL plot command to render interactively
-     (e.g. ``EPLOT``, ``NPLOT``; default is ``EPLOT``); only used when
-     ``interactive=True``
+     external popup window
 
 #### When to Use Persistent Python Session
 

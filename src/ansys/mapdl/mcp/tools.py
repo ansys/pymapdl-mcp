@@ -38,7 +38,6 @@ from pathlib import Path
 import platform
 import subprocess  # nosec B404
 import tempfile
-import threading
 from typing import Any, cast
 
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
@@ -55,33 +54,15 @@ from mcp.types import ImageContent, TextContent
 try:
     import pyvista  # noqa: F401  # Check if PyVista is available
 
-    HAS_PYVISTA = True
     pyvista.OFF_SCREEN = True  # Set off-screen rendering globally for all tools
 
 except ImportError:
-    HAS_PYVISTA = False
-
-# Serialises access to the pyvista.OFF_SCREEN global so that concurrent
-# interactive-plot requests cannot race when toggling it on and off.
-_pyvista_off_screen_lock = threading.Lock()
+    pass
 
 
 def _text_result(text: str) -> ToolResult:
     """Wrap a plain text string in a single-content ToolResult."""
     return ToolResult([TextContent(type="text", text=text)])
-
-
-def model_is_too_large_for_interactive_plot(mapdl: Any) -> bool:
-    """Return True if the model is likely too large for interactive plotting."""
-    try:
-        n_nodes = getattr(mapdl.mesh, "n_node", 0)
-        n_elements = getattr(mapdl.mesh, "n_elem", 0)
-        n_kpoints = getattr(mapdl.geometry, "n_keypoint", 0)
-        if n_nodes > 10_000 or n_elements > 5_000 or n_kpoints > 20_000:
-            return True
-    except Exception as e:
-        logger.warning(f"Could not determine model size: {e}")
-    return False
 
 
 def _open_image_in_viewer(image_path: str | Path) -> None:
@@ -625,26 +606,17 @@ def screenshot(
     ctx: Context,
     commands: str = "",
     show_plot_on_popup: bool = False,
-    interactive: bool = False,
-    interactive_command: str = "EPLOT",
 ) -> ToolResult:
     """Capture a screenshot of the current MAPDL graphics window.
 
-    By default, all plots use the MAPDL backend (``interactive=False``).
-    This is the preferred and recommended way to obtain plot images,
-    especially if the model is very big or complex, as it leverages
-    MAPDL's native plotting capabilities.
+    All plots use the MAPDL backend, which is the preferred and recommended
+    way to obtain plot images, especially for large or complex models, as it
+    leverages MAPDL's native plotting capabilities.
 
-    MAPDL Native Plot Commands (use with default ``interactive=False``):
+    MAPDL Native Plot Commands:
     - Geometry: APLOT, LPLOT, KPLOT, VPLOT
     - Mesh: EPLOT, NPLOT
     - Post-processing: PLNSOL, PLESOL, PLDISP
-
-    When ``interactive=True``, PyMAPDL intercepts the MAPDL plot command and
-    renders it through the PyVista/VTK pipeline, opening a live interactive
-    window that the user can rotate, zoom, and inspect. The
-    ``show_plot_on_popup`` parameter has no effect in this mode because
-    PyVista handles the window natively.
 
     For fully custom matplotlib or PyVista plots, use the ``custom_plot`` tool.
 
@@ -653,32 +625,19 @@ def screenshot(
     ctx : Context
         The MCP context containing server session and application context.
     commands : str, optional
-        MAPDL APDL commands to execute before capturing the screenshot or
-        before the interactive plot (e.g. ``SET,LAST`` to select a result
-        step, ``EPLOT``, or ``PLNSOL,U,SUM``). Avoid commands unrelated
-        to plotting or visualization. Default is empty string.
+        MAPDL APDL commands to execute before capturing the screenshot
+        (e.g. ``SET,LAST``, ``EPLOT``, or ``PLNSOL,U,SUM``). Avoid commands
+        unrelated to plotting or visualization. Default is empty string.
     show_plot_on_popup : bool, optional
         If ``True``, open the captured image in the system's default image
         viewer as an external popup window in addition to returning it to the
-        LLM. Only relevant when ``interactive=False``. Default is ``False``.
-    interactive : bool, optional
-        If ``False`` (default), use the MAPDL backend for rendering and
-        return a static base64 image.
-        If ``True``, PyMAPDL intercepts ``interactive_command`` and renders
-        it via PyVista, opening a live interactive window.
-    interactive_command : str, optional
-        MAPDL plot command to run when ``interactive=True``. PyMAPDL
-        intercepts this command and renders it through PyVista
-        (e.g. ``EPLOT``, ``NPLOT``, ``LPLOT``). Default is ``EPLOT``.
+        LLM. Default is ``False``.
 
     Returns
     -------
     ToolResult
-        When ``interactive=False``:
         - TextContent with the screenshot file path
         - ImageContent with the base64-encoded image data
-        When ``interactive=True``:
-        - TextContent confirming that the interactive window was opened
     """
     if ctx.request_context is None:
         return _text_result("No request context available.")
@@ -693,43 +652,7 @@ def screenshot(
         if commands:
             mapdl.input_strings(commands)  # type: ignore[union-attr]
 
-        if interactive:
-            warning_msg = ""
-            # PyMAPDL intercepts the APDL plot command and renders it via
-            # PyVista, opening a live interactive window.
-            if model_is_too_large_for_interactive_plot(mapdl):
-                warning_msg = (
-                    "The model appears to be large or complex, which may cause "
-                    "performance issues with interactive plotting. Consider using "
-                    "the non-interactive mode (interactive=False) for better performance. \n"
-                )
-                logger.warning(warning_msg)
-
-            if not HAS_PYVISTA:
-                error_msg = "PyVista is required for interactive plotting but is not installed. Please install PyVista to use this feature."  # noqa: E501
-                logger.error(error_msg)
-                return _text_result(error_msg)
-
-            with _pyvista_off_screen_lock:
-                pyvista.OFF_SCREEN = False  # Allow PyVista to open a real window
-                try:
-                    mapdl.run(interactive_command)  # type: ignore[union-attr]
-                finally:
-                    pyvista.OFF_SCREEN = True  # Restore off-screen for other tools
-
-            return ToolResult(
-                [
-                    TextContent(
-                        type="text",
-                        text=(
-                            f"{warning_msg}Interactive plot command '{interactive_command}' "
-                            "executed. The interactive window has been shown."
-                        ),
-                    )
-                ]
-            )
-
-        # MAPDL backend path (default)
+        # MAPDL backend path
         logger.info("Capturing MAPDL screenshot...")
 
         # Create a temporary file with .png extension
