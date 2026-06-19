@@ -642,7 +642,7 @@ def screenshot(
 
     When ``interactive=True``, PyMAPDL intercepts the MAPDL plot command and
     renders it through the PyVista/VTK pipeline, opening a live interactive
-    window that the user can rotate, zoom, and inspect.  The
+    window that the user can rotate, zoom, and inspect. The
     ``show_plot_on_popup`` parameter has no effect in this mode because
     PyVista handles the window natively.
 
@@ -655,21 +655,21 @@ def screenshot(
     commands : str, optional
         MAPDL APDL commands to execute before capturing the screenshot or
         before the interactive plot (e.g. ``SET,LAST`` to select a result
-        step, ``EPLOT``, or ``PLNSOL,U,SUM``).  Avoid commands unrelated
-        to plotting or visualization.  Default is empty string.
+        step, ``EPLOT``, or ``PLNSOL,U,SUM``). Avoid commands unrelated
+        to plotting or visualization. Default is empty string.
     show_plot_on_popup : bool, optional
         If ``True``, open the captured image in the system's default image
         viewer as an external popup window in addition to returning it to the
-        LLM.  Only relevant when ``interactive=False``.  Default is ``False``.
+        LLM. Only relevant when ``interactive=False``. Default is ``False``.
     interactive : bool, optional
         If ``False`` (default), use the MAPDL backend for rendering and
         return a static base64 image.
         If ``True``, PyMAPDL intercepts ``interactive_command`` and renders
         it via PyVista, opening a live interactive window.
     interactive_command : str, optional
-        MAPDL plot command to run when ``interactive=True``.  PyMAPDL
+        MAPDL plot command to run when ``interactive=True``. PyMAPDL
         intercepts this command and renders it through PyVista
-        (e.g. ``EPLOT``, ``NPLOT``, ``LPLOT``).  Default is ``EPLOT``.
+        (e.g. ``EPLOT``, ``NPLOT``, ``LPLOT``). Default is ``EPLOT``.
 
     Returns
     -------

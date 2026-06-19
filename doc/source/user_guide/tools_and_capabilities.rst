@@ -146,7 +146,7 @@ MAPDL native plot commands:
 **Parameters**
 
 ``commands``
-    Optional APDL commands to run before capturing.  For the static path these produce
+    Optional APDL commands to run before capturing. For the static path these produce
     the plot (for example ``EPLOT``); for the interactive path these set up state
     beforehand (for example ``SET,LAST``).
 
@@ -159,13 +159,13 @@ MAPDL native plot commands:
     When ``interactive=True``, PyMAPDL intercepts ``interactive_command`` (an APDL plot
     command such as ``EPLOT`` or ``NPLOT``, default ``EPLOT``) and renders it through
     the PyVista/VTK pipeline, opening a live interactive window the user can rotate and
-    zoom.  The AI assistant receives a text confirmation; the user interacts with the
-    window directly.  Requires ``ansys-mapdl-core[graphics]``.
+    zoom. The AI assistant receives a text confirmation; the user interacts with the
+    window directly. Requires ``ansys-mapdl-core[graphics]``.
 
 .. tip::
    The MAPDL backend (``interactive=False``, the default) is the preferred way to plot
-   large or complex models.  It renders entirely on the MAPDL server and returns a
-   lightweight image, so performance does not degrade with model size.  Use the
+   large or complex models. It renders entirely on the MAPDL server and returns a
+   lightweight image, so performance does not degrade with model size. Use the
    interactive PyVista path only when live rotation or inspection is needed, as it
    transfers the full mesh data to the client.
 
