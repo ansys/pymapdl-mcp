@@ -134,7 +134,7 @@ Use the ``screenshot`` tool to run a MAPDL plot command and capture the result a
 
 *"Show a plot of the mesh."*
 
-*"Capture the von Mises stress distribution."*
+*"Capture the average stress distribution."*
 
 The tool returns the image directly so the AI assistant can display it inline. It supports all
 MAPDL native plot commands:
