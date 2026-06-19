@@ -42,7 +42,7 @@ classifiers = [
 
 dependencies = [
     "ansys-common-mcp>=0.1.0",
-    "ansys-mapdl-core[graphics]>=0.72.0",
+    "ansys-mapdl-core>=0.72.0",
 ]
 
 [project.optional-dependencies]
