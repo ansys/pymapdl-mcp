@@ -44,7 +44,7 @@ connected. This keeps the AI assistant's context small when MAPDL is not in use.
    * - ``disconnect_from_mapdl``
      - Disconnect from the MAPDL instance
    * - ``screenshot``
-     - Capture the MAPDL graphics window as a static image or open a live interactive PyVista window
+     - Capture the MAPDL graphics window as a static image
    * - ``run_python_code``
      - Execute Python/PyMAPDL code in a persistent session
    * - ``custom_plot``
@@ -146,32 +146,12 @@ MAPDL native plot commands:
 **Parameters**
 
 ``commands``
-    Optional APDL commands to run before capturing. For the static path these produce
-    the plot (for example ``EPLOT``); for the interactive path these set up state
-    beforehand (for example ``SET,LAST``).
+    Optional APDL commands to run before capturing the screenshot
+    (for example ``EPLOT`` or ``SET,LAST``).
 
 ``show_plot_on_popup``
-    When ``True`` (and ``interactive=False``), the captured image is also opened in the
-    system's default image viewer so the user can inspect it at full resolution.
-    Default is ``False``.
-
-``interactive`` / ``interactive_command``
-    When ``interactive=True``, PyMAPDL intercepts ``interactive_command`` (an APDL plot
-    command such as ``EPLOT`` or ``NPLOT``, default ``EPLOT``) and renders it through
-    the PyVista/VTK pipeline, opening a live interactive window the user can rotate and
-    zoom. The AI assistant receives a text confirmation; the user interacts with the
-    window directly. Requires ``ansys-mapdl-core[graphics]``.
-
-.. tip::
-   The MAPDL backend (``interactive=False``, the default) is the preferred way to plot
-   large or complex models. It renders entirely on the MAPDL server and returns a
-   lightweight image, so performance does not degrade with model size. Use the
-   interactive PyVista path only when live rotation or inspection is needed, as it
-   transfers the full mesh data to the client.
-
-.. note::
-   ``show_plot_on_popup`` has no effect when ``interactive=True`` because PyVista
-   opens its own window natively.
+    When ``True``, the captured image is also opened in the system's default image
+    viewer so the user can inspect it at full resolution. Default is ``False``.
 
 Python code execution
 ~~~~~~~~~~~~~~~~~~~~~
