@@ -24,6 +24,7 @@ Tool sets
 Tools are grouped into the following tool sets via the ``toolsets://definition`` resource:
 
 - **session_management**: Tools for managing MAPDL connections and instance discovery
+- **file_management**: Tools for transferring files to/from MAPDL and managing saved models
 - **command_execution**: Tools for executing MAPDL commands and scripts
 - **visualization**: Tools for visualization and post-processing results
 - **python_execution**: Tools for executing arbitrary Python and PyMAPDL code
@@ -31,11 +32,9 @@ Tools are grouped into the following tool sets via the ``toolsets://definition``
 The `list_tool_sets()` function exposes these tool set definitions as a resource.
 """
 
-import base64
 import json
 import os
 from pathlib import Path
-import tempfile
 from typing import Any, cast
 
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
@@ -44,7 +43,6 @@ from fastmcp.tools.base import ToolResult
 
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
-from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 from ansys.mapdl.mcp import app
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
 from mcp.types import ImageContent, TextContent
@@ -62,6 +60,42 @@ def _is_mapdl_crashed(mapdl: Any) -> bool:
     if hasattr(mapdl, "_exiting") and mapdl._exiting is True:
         return True
     return False
+
+
+def _get_mapdl(ctx: Context) -> tuple[Any, str | None]:
+    """Retrieve the active MAPDL instance from context, running all guards.
+
+    Returns ``(mapdl, None)`` on success, or ``(None, error_message)`` when any
+    guard fails (missing context, no MAPDL connection, crashed instance).
+
+    Parameters
+    ----------
+    ctx : Context
+        The MCP request context.
+
+    Returns
+    -------
+    tuple[Any, str | None]
+        A 2-tuple of ``(mapdl_instance, error_text)``.  Exactly one of the two
+        values is ``None`` at any given time.
+    """
+    if ctx.request_context is None:
+        return None, "No request context available."
+
+    mapdl = ctx.request_context.lifespan_context.mapdl
+
+    if mapdl is None:
+        return None, (
+            "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
+        )
+
+    if _is_mapdl_crashed(mapdl):
+        return None, (
+            "MAPDL instance has exited or is exiting. "
+            "Please reconnect or launch a new instance using launch_mapdl_session."
+        )
+
+    return mapdl, None
 
 
 # Tag applied to all tools that require an active MAPDL connection.
@@ -96,28 +130,12 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
 
         Returns an error message if MAPDL is not available or has exited.
     """
-    if ctx.request_context is None:
-        return _text_result("No request context available.")
-    mapdl = ctx.request_context.lifespan_context.mapdl
-
-    if mapdl is None:
-        return _text_result(
-            "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
-        )
+    mapdl, error = _get_mapdl(ctx)
+    if error:
+        return _text_result(error)
 
     try:
         from ansys.mapdl.mcp.helpers import get_info
-
-        # Check if MAPDL has exited
-        if hasattr(mapdl, "_exited") and mapdl._exited:
-            return _text_result(
-                "MAPDL instance has exited. Please reconnect or launch a new instance."
-            )
-
-        if hasattr(mapdl, "_exiting") and mapdl._exiting:
-            return _text_result(
-                "MAPDL instance is currently exiting. Please wait or launch a new instance."
-            )
 
         info = get_info(mapdl)
 
@@ -142,9 +160,6 @@ def check_mapdl_installed(ctx: Context) -> ToolResult:
         Status message listing all found MAPDL installations, or a message
         indicating that no installation was found.
     """
-    import os
-    from pathlib import Path
-
     logger.info("Checking if MAPDL is installed...")
 
     try:
@@ -203,22 +218,17 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
     ToolResult
         Command execution result.
     """
-    if ctx.request_context is None:
-        return _text_result("No request context available.")
-    mapdl = ctx.request_context.lifespan_context.mapdl
-
-    if mapdl is None:
-        return _text_result(
-            "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
-        )
+    mapdl, error = _get_mapdl(ctx)
+    if error:
+        return _text_result(error)
 
     if header:
-        mapdl.com(f"# {header}", mute=True)  # type: ignore[union-attr]
+        mapdl.com(f"# {header}", mute=True)
     if comment:
         for each_line in comment.splitlines():
-            mapdl.com(f"{each_line}", mute=True)  # type: ignore[union-attr]
+            mapdl.com(f"{each_line}", mute=True)
 
-    result = mapdl.run(cmd)  # type: ignore[union-attr]
+    result = mapdl.run(cmd)
     return _text_result(f"MAPDL command executed successfully: {result}")
 
 
@@ -248,14 +258,9 @@ def run_multiple_mapdl_commands(
     ToolResult
         Execution result with summary of commands executed.
     """
-    if ctx.request_context is None:
-        return _text_result("No request context available.")
-    mapdl = ctx.request_context.lifespan_context.mapdl
-
-    if mapdl is None:
-        return _text_result(
-            "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
-        )
+    mapdl, error = _get_mapdl(ctx)
+    if error:
+        return _text_result(error)
 
     if not commands:
         return _text_result("No commands provided. Please provide a list of commands to execute.")
@@ -273,13 +278,13 @@ def run_multiple_mapdl_commands(
         logger.info(f"Executing {len(valid_commands)} MAPDL commands using input_strings")
 
         if header:
-            mapdl.com(f"# {header}", mute=True)  # type: ignore[union-attr]
+            mapdl.com(f"# {header}", mute=True)
         if comment:
             for each_line in comment.splitlines():
-                mapdl.com(f"{each_line}", mute=True)  # type: ignore[union-attr]
+                mapdl.com(f"{each_line}", mute=True)
 
         # Use input_strings for batch command execution
-        result = mapdl.input_strings(valid_commands)  # type: ignore[union-attr]
+        result = mapdl.input_strings(valid_commands)
 
         success_msg = (
             f"Successfully executed {len(valid_commands)} MAPDL commands:\n"
@@ -388,7 +393,8 @@ async def launch_mapdl_session(
         if additional_switches:
             kwargs["additional_switches"] = additional_switches
 
-        # Launch MAPDL - import already done at module level
+        from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
+
         mapdl = cast(pymapdl.Mapdl, pymapdl.launch_mapdl(**kwargs))
 
         # Store in context for later use
@@ -460,6 +466,9 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
             "cleanup_on_exit": False,  # Don't clean up since we didn't launch it
             "loglevel": "INFO",
         }
+
+        from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
+
         mapdl = pymapdl.Mapdl(**_connect_kwargs)
 
         # Store in context for later use
@@ -606,29 +615,26 @@ def screenshot(
         - TextContent with the screenshot file path
         - ImageContent with the base64-encoded image data
     """
-    if ctx.request_context is None:
-        return _text_result("No request context available.")
-    mapdl = ctx.request_context.lifespan_context.mapdl
-
-    if mapdl is None:
-        return _text_result(
-            "No MAPDL connection available. Use connect_to_mapdl tool to establish a connection."
-        )
+    mapdl, error = _get_mapdl(ctx)
+    if error:
+        return _text_result(error)
 
     try:
         logger.info("Capturing MAPDL screenshot...")
 
         # Create a temporary file with .png extension
+        import tempfile
+
         temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix="mapdl_screenshot_")
 
         # Close the file descriptor as MAPDL will write to the path
         os.close(temp_fd)
 
         if commands:
-            mapdl.input_strings(commands)  # type: ignore[union-attr]
+            mapdl.input_strings(commands)
 
         # Capture screenshot directly to the temporary location
-        screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
+        screenshot_path = mapdl.screenshot(savefig=temp_path)
 
         # Verify file was created
         image_path = Path(screenshot_path)
@@ -643,6 +649,8 @@ def screenshot(
             image_data = f.read()
 
         # Encode to base64
+        import base64
+
         base64_data = base64.b64encode(image_data).decode("utf-8")
 
         # Determine mime type based on file extension
@@ -871,6 +879,325 @@ def custom_plot(
 
 
 ####################################################################################################
+# File management tools
+
+
+@app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
+def upload_file(ctx: Context, file_path: str) -> ToolResult:
+    """Upload a local file to the MAPDL instance working directory.
+
+    The file is transferred over gRPC from the local filesystem to the remote
+    (or local) MAPDL working directory so that MAPDL commands such as
+    ``RESUME``, ``CDREAD``, or ``FILE`` can reference it by its base name.
+
+    Parameters
+    ----------
+    ctx : Context
+        The MCP context containing server session and application context.
+    file_path : str
+        Absolute or relative path to the file on the **local** filesystem.
+
+    Returns
+    -------
+    ToolResult
+        Text message with the uploaded filename on success, or an error
+        description if the file cannot be found or the transfer fails.
+
+    Examples
+    --------
+    Upload a database file before resuming a model:
+
+    >>> upload_file(ctx, "/home/user/project/beam.db")
+    >>> resume_model(ctx, "beam", "db")
+    """
+    mapdl, error = _get_mapdl(ctx)
+    if error:
+        return _text_result(error)
+
+    if not Path(file_path).is_file():
+        return _text_result(f"File not found: '{file_path}'")
+
+    try:
+        uploaded_name = mapdl.upload(file_path, progress_bar=False)
+        logger.info(f"Uploaded '{file_path}' to MAPDL working directory as '{uploaded_name}'.")
+        return _text_result(
+            f"File uploaded successfully. "
+            f"The file is now available in the MAPDL working directory as '{uploaded_name}'."
+        )
+    except Exception as e:
+        error_msg = f"Failed to upload '{file_path}': {e}"
+        logger.error(error_msg)
+        return _text_result(error_msg)
+
+
+@app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
+def download_file(ctx: Context, file_name: str, target_dir: str | None = None) -> ToolResult:
+    """Download a file from the MAPDL instance working directory to the local filesystem.
+
+    Use this tool to retrieve result files (e.g. ``file.rst``, ``file.db``),
+    log files, or any other file produced by the current MAPDL session.
+    Glob patterns such as ``"file*"`` or ``"*.rst"`` are supported.
+
+    Parameters
+    ----------
+    ctx : Context
+        The MCP context containing server session and application context.
+    file_name : str
+        Name of the file in the MAPDL working directory to download.
+        Supports glob patterns (e.g. ``"file*"``).
+        Use the ``check_mapdl_status`` tool or the
+        ``files://mapdl/working_directory`` resource to inspect available files.
+    target_dir : str, optional
+        Local directory where the file(s) will be saved.  Defaults to the
+        current Python working directory when ``None``.
+
+    Returns
+    -------
+    ToolResult
+        Text message listing the downloaded files on success, or an error
+        description if the download fails.
+
+    Examples
+    --------
+    Download the main result file:
+
+    >>> download_file(ctx, "file.rst", "/home/user/results")
+
+    Download all output files:
+
+    >>> download_file(ctx, "file*")
+    """
+    # Check target_dir exists
+    if target_dir and not Path(target_dir).is_dir():
+        error_msg = f"The folder {target_dir} doesn't exist. The file could not be downloaded."
+        logger.error(error_msg)
+        return _text_result(error_msg)
+
+    # Get the MAPDL instance
+    mapdl, error = _get_mapdl(ctx)
+    if error:
+        return _text_result(error)
+
+    try:
+        downloaded = mapdl.download(file_name, target_dir=target_dir, progress_bar=False)
+        if not downloaded:
+            return _text_result(f"No files matched '{file_name}' in the MAPDL working directory.")
+        logger.info(f"Downloaded {len(downloaded)} file(s): {downloaded}")
+        files_list = "\n".join(f"  - {f}" for f in downloaded)
+        return _text_result(f"Successfully downloaded {len(downloaded)} file(s):\n{files_list}")
+    except Exception as e:
+        error_msg = f"Failed to download '{file_name}': {e}"
+        logger.error(error_msg)
+        return _text_result(error_msg)
+
+
+@app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
+def resume_model(ctx: Context, file_name: str, extension: str = "db") -> ToolResult:
+    """Resume a previously saved MAPDL model from a database or archive file.
+
+    This tool restores the MAPDL database from a ``.db`` binary database file
+    or a ``.cdb`` coded ASCII archive file.  If the file is on the local
+    filesystem (not yet in the MAPDL working directory), upload it first with
+    the ``upload_file`` tool.
+
+    Parameters
+    ----------
+    ctx : Context
+        The MCP context containing server session and application context.
+    file_name : str
+        Name of the file **without extension** as it exists in the MAPDL
+        working directory (e.g. ``"beam"`` for ``beam.db``).
+    extension : str, optional
+        File extension that identifies the file format. Accepted values:
+
+        * ``"db"`` *(default)* — binary MAPDL database (RESUME command).
+        * ``"cdb"`` — coded ASCII database (CDREAD command).
+
+    Returns
+    -------
+    ToolResult
+        MAPDL command output on success, or an error description.
+
+    Examples
+    --------
+    Resume from a binary database:
+
+    >>> resume_model(ctx, "beam", "db")
+
+    Resume from a coded archive:
+
+    >>> resume_model(ctx, "model", "cdb")
+    """
+    mapdl, error = _get_mapdl(ctx)
+    if error:
+        return _text_result(error)
+
+    ext = extension.lower().strip(".")
+    if ext not in ("db", "cdb"):
+        return _text_result(
+            f"Unsupported extension '{extension}'. Use 'db' for binary database files "
+            "or 'cdb' for coded ASCII archive files."
+        )
+
+    try:
+        if ext == "db":
+            output = mapdl.resume(file_name, ext)
+        else:
+            output = mapdl.cdread("db", file_name, ext)
+
+        msg = output if output else f"Model resumed successfully from '{file_name}.{ext}'."
+        logger.info(f"Resumed model from '{file_name}.{ext}'.")
+        return _text_result(msg)
+    except Exception as e:
+        error_msg = f"Failed to resume model from '{file_name}.{ext}': {e}"
+        logger.error(error_msg)
+        return _text_result(error_msg)
+
+
+@app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
+def open_results(ctx: Context, file_name: str | None = None) -> ToolResult:
+    """Enter POST1 and optionally set the active results file for post-processing.
+
+    This tool switches MAPDL into the POST1 post-processor and, when a file
+    name is supplied, points MAPDL at that results file.  Use it before
+    querying displacements, stresses, or other result quantities.
+
+    If the RST file is stored on the local filesystem (not yet in the MAPDL
+    working directory), upload it first with the ``upload_file`` tool.
+
+    Parameters
+    ----------
+    ctx : Context
+        The MCP context containing server session and application context.
+    file_name : str, optional
+        Name of the result file **without extension** in the MAPDL working
+        directory (e.g. ``"beam"`` for ``beam.rst``).  When omitted, MAPDL
+        uses the current jobname result file.
+
+    Returns
+    -------
+    ToolResult
+        Status message indicating whether POST1 was entered and the results
+        file was set, or an error description.
+
+    Examples
+    --------
+    Open the default results file:
+
+    >>> open_results(ctx)
+
+    Open a specific RST file:
+
+    >>> open_results(ctx, "beam")
+    """
+    mapdl, error = _get_mapdl(ctx)
+    if error:
+        return _text_result(error)
+
+    try:
+        mapdl.post1()
+        if file_name:
+            mapdl.file(file_name, "rst")
+            msg = (
+                f"Entered POST1 and set active results file to '{file_name}.rst'. "
+                "You can now query result quantities."
+            )
+        else:
+            msg = (
+                "Entered POST1 using the current jobname results file. "
+                "You can now query result quantities."
+            )
+        logger.info(msg)
+        return _text_result(msg)
+    except Exception as e:
+        error_msg = f"Failed to open results: {e}"
+        logger.error(error_msg)
+        return _text_result(error_msg)
+
+
+####################################################################################################
+# File path resources
+
+
+@app.resource("files://mapdl/working_directory")
+def mapdl_working_directory() -> str:
+    """Return the working directory of the connected MAPDL instance.
+
+    This resource provides the absolute path to the directory where MAPDL
+    stores all its output files (``file.rst``, ``file.db``, log files, etc.).
+    The path is updated dynamically each time this resource is read.
+
+    Returns
+    -------
+    str
+        Absolute path to the MAPDL working directory, or a message indicating
+        that MAPDL is not connected.
+    """
+    from ansys.mapdl.mcp.server import app as _app
+
+    mapdl = getattr(getattr(_app, "context", None), "mapdl", None)
+
+    if mapdl is None:
+        return "MAPDL is not connected. Use connect_to_mapdl or launch_mapdl_session."
+
+    try:
+        return str(mapdl.directory)
+    except Exception as e:
+        return f"Could not retrieve working directory: {e}"
+
+
+@app.resource("files://mapdl/rst_path")
+def mapdl_rst_path() -> str:
+    """Return the expected path to the current MAPDL result file (RST).
+
+    The path is constructed from the MAPDL working directory and the current
+    jobname.  Before reading this file with an external application, ensure
+    the simulation has finished running.
+
+    Returns
+    -------
+    str
+        Absolute path to ``<working_directory>/<jobname>.rst``, or a message
+        indicating that MAPDL is not connected.
+    """
+    from ansys.mapdl.mcp.server import app as _app
+
+    mapdl = getattr(getattr(_app, "context", None), "mapdl", None)
+    if mapdl is None:
+        return "MAPDL is not connected. Use connect_to_mapdl or launch_mapdl_session."
+    try:
+        return str(Path(mapdl.directory) / f"{mapdl.jobname}.rst")
+    except Exception as e:
+        return f"Could not retrieve RST path: {e}"
+
+
+@app.resource("files://mapdl/db_path")
+def mapdl_db_path() -> str:
+    """Return the expected path to the current MAPDL database file (DB).
+
+    The path is constructed from the MAPDL working directory and the current
+    jobname.  This file is written by the MAPDL ``SAVE`` command and can be
+    restored with the ``resume_model`` tool.
+
+    Returns
+    -------
+    str
+        Absolute path to ``<working_directory>/<jobname>.db``, or a message
+        indicating that MAPDL is not connected.
+    """
+    from ansys.mapdl.mcp.server import app as _app
+
+    mapdl = getattr(getattr(_app, "context", None), "mapdl", None)
+
+    if mapdl is None:
+        return "MAPDL is not connected. Use connect_to_mapdl or launch_mapdl_session."
+    try:
+        return str(Path(mapdl.directory) / f"{mapdl.jobname}.db")
+    except Exception as e:
+        return f"Could not retrieve DB path: {e}"
+
+
+####################################################################################################
 # Tool set definitions
 
 
@@ -950,6 +1277,31 @@ def list_tool_sets() -> list[dict]:
             ),
             "tools": [
                 "run_python_code",
+            ],
+        },
+        {
+            "name": "file_management",
+            "description": (
+                "Tools for transferring files to/from MAPDL and loading saved models or results"
+            ),
+            "skill": (
+                "Use these tools to manage files in the MAPDL working directory. "
+                "Upload local files to MAPDL with upload_file before referencing them in "
+                "commands. "
+                "Download any file produced by MAPDL (results, logs, databases) with "
+                "download_file. "
+                "Restore a previously saved model with resume_model "
+                "(supports .db and .cdb formats). "
+                "Enter POST1 and point MAPDL at a result file with open_results before querying "
+                "displacements, stresses, or other result quantities. "
+                "Use the resources files://mapdl/working_directory, files://mapdl/rst_path, and "
+                "files://mapdl/db_path to discover the paths to MAPDL output files."
+            ),
+            "tools": [
+                "upload_file",
+                "download_file",
+                "resume_model",
+                "open_results",
             ],
         },
     ]

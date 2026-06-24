@@ -73,8 +73,7 @@ class TestCheckMapdlStatus:
         result = check_mapdl_status(mock_context)
 
         assert isinstance(result, ToolResult)
-        assert "MAPDL instance has exited" in result.content[0].text
-        assert "reconnect or launch" in result.content[0].text
+        assert "exited or is exiting" in result.content[0].text
 
     def test_check_status_with_exiting_mapdl(self, mock_context):
         """Test checking status when MAPDL is exiting."""
@@ -83,7 +82,7 @@ class TestCheckMapdlStatus:
         result = check_mapdl_status(mock_context)
 
         assert isinstance(result, ToolResult)
-        assert "MAPDL instance is currently exiting" in result.content[0].text
+        assert "exited or is exiting" in result.content[0].text
 
     def test_check_status_missing_information_attributes(self, mock_context):
         """Test status extraction when information class attributes are missing."""
