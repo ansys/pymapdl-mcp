@@ -4,6 +4,8 @@ Getting started
 Learn how to install and configure PyMAPDL-MCP, and how to contribute to the project.
 
 .. grid:: 2 2 3 3
+    :gutter: 1 2 3 3
+    :padding: 1 2 3 3
 
     .. grid-item-card:: :fa:`download`  Installation
           :link: installation
