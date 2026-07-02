@@ -52,6 +52,16 @@ html_theme_options = {
     "ansys_sphinx_theme_autoapi": {
         "project": project,
     },
+    # Removing the secondary sidebar
+    "secondary_sidebar_items": {"**": []},
+    "navbar_persistent": [],
+    "primary_sidebar_end": ["edit-this-page", "sourcelink"],
+    "navbar_end": [
+        "search-button-field",
+        "version-switcher",
+        "theme-switcher",
+        "navbar-icon-links",
+    ],
 }
 
 html_context = {
