@@ -5,8 +5,7 @@ Learn how to install and configure PyMAPDL-MCP, and how to contribute to the pro
 
 .. grid:: 2 2 3 3
 
-    .. grid-item-card::
-       .. card:: :fa:`download`  Installation
+    .. grid-item-card:: :fa:`download`  Installation
           :link: installation
           :link-type: doc
           :class-card: sd-text-black
@@ -14,8 +13,7 @@ Learn how to install and configure PyMAPDL-MCP, and how to contribute to the pro
 
           A step-by-step guide to installing PyMAPDL-MCP and its dependencies.
 
-    .. grid-item-card::
-       .. card:: :fa:`cogs`  IDE configuration
+    .. grid-item-card:: :fa:`cogs`  IDE configuration
           :link: ide_configuration
           :link-type: doc
           :class-card: sd-text-black
@@ -23,8 +21,7 @@ Learn how to install and configure PyMAPDL-MCP, and how to contribute to the pro
 
           Setting up your IDE for PyMAPDL-MCP development.
 
-    .. grid-item-card::
-       .. card:: :fa:`rocket`  Quick start
+    .. grid-item-card:: :fa:`rocket`  Quick start
           :link: quick_start
           :link-type: doc
           :class-card: sd-text-black
@@ -32,8 +29,7 @@ Learn how to install and configure PyMAPDL-MCP, and how to contribute to the pro
 
           A quick introduction to using PyMAPDL-MCP, with a simple example.
 
-    .. grid-item-card::
-       .. card:: :fa:`users`  Contributing
+    .. grid-item-card:: :fa:`users`  Contributing
           :link: contribution
           :link-type: doc
           :class-card: sd-text-black
@@ -41,8 +37,7 @@ Learn how to install and configure PyMAPDL-MCP, and how to contribute to the pro
 
           Guidelines for contributing to the PyMAPDL-MCP project.
 
-    .. grid-item-card::
-       .. card:: :fa:`file-alt`  Writing documentation
+    .. grid-item-card:: :fa:`file-alt`  Writing documentation
           :link: write_documentation
           :link-type: doc
           :class-card: sd-text-black
@@ -50,8 +45,7 @@ Learn how to install and configure PyMAPDL-MCP, and how to contribute to the pro
 
           Best practices for writing clear and effective documentation.
 
-    .. grid-item-card::
-       .. card:: :fa:`code`  Developing PyMAPDL-MCP
+    .. grid-item-card:: :fa:`code`  Developing PyMAPDL-MCP
           :link: develop_pymapdl_mcp
           :link-type: doc
           :class-card: sd-text-black
