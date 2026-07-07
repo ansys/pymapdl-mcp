@@ -62,7 +62,7 @@ pip install -e .[tests]
 
 For step-by-step setup instructions for VS Code, Claude Code, Claude Desktop, and other
 MCP-compatible clients, see the
-[IDE and Client Configuration](https://mapdl-mcp.docs.pyansys.com/getting_started/ide_configuration.html)
+[IDE and Client Configuration](https://mapdl-mcp.docs.pyansys.com/version/stable/getting_started/ide_configuration.html)
 page in the documentation.
 
 ## License
