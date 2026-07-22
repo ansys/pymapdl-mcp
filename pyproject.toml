@@ -144,10 +144,6 @@ markers = [
     "slow: Tests that take a long time to run",
 ]
 
-[tool.bandit]
-exclude_dirs = ["tests", ".venv", "venv"]
-skips = ["B101"]  # Skip assert_used in tests
-
 [tool.pydocstyle]
 convention = "numpy"
 add_ignore = ["D100", "D104"]  # Missing docstring in public module/package
