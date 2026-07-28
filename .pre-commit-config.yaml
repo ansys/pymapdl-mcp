@@ -52,9 +52,9 @@ repos:
     rev: 1.9.4
     hooks:
       - id: bandit
-        args: ['-c', 'pyproject.toml']
+        args: ['-c', 'pyproject.toml', '-r', 'src']
+        pass_filenames: false
         additional_dependencies: ['bandit[toml]']
-        exclude: ^tests/
 
   # Spell checking with typos
   - repo: https://github.com/crate-ci/typos
