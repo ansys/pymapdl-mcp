@@ -49,6 +49,14 @@ connected. This keeps the AI assistant's context small when MAPDL is not in use.
      - Execute Python/PyMAPDL code in a persistent session
    * - ``custom_plot``
      - Create custom matplotlib or PyVista plots
+   * - ``upload_file``
+     - Upload a local file to the MAPDL working directory
+   * - ``download_file``
+     - Download a file from the MAPDL working directory
+   * - ``resume_model``
+     - Restore a saved model from a ``.db`` or ``.cdb`` file
+   * - ``open_results``
+     - Enter POST1 and set the active results file for post-processing
 
 .. note::
    When you use ``--connect-on-startup``, MAPDL connects at startup and all tools are immediately
@@ -72,6 +80,9 @@ These sets are exposed through the ``toolsets://definition`` resource.
      - Manage MAPDL lifecycle and connection state
      - ``check_mapdl_installed``, ``check_mapdl_status``, ``launch_mapdl_session``,
        ``connect_to_mapdl``, ``disconnect_from_mapdl``, ``list_mapdl_instances``
+   * - ``file_management``
+     - Transfer files to/from MAPDL and manage saved models
+     - ``upload_file``, ``download_file``, ``resume_model``, ``open_results``
    * - ``command_execution``
      - Execute MAPDL commands and command batches
      - ``run_mapdl_command``, ``run_multiple_mapdl_commands``, ``run_python_code``
@@ -159,6 +170,66 @@ Python code execution
 - Run Python code: Execute arbitrary Python code in the persistent session *(requires MAPDL connection)*.
 - Integrate with data analysis: Use NumPy, Pandas, and other Python libraries.
 
+File management
+~~~~~~~~~~~~~~~
+
+Use the file-management tools to transfer files between the local filesystem and the MAPDL
+working directory, and to restore saved models or open result files for post-processing.
+
+**Uploading files to MAPDL**
+
+Use ``upload_file`` to transfer a local file (database, archive, or input file) to the MAPDL
+working directory before referencing it with MAPDL commands:
+
+*"Upload /home/user/project/beam.db to MAPDL."*
+
+**Downloading files from MAPDL**
+
+Use ``download_file`` to retrieve output files (result files, logs, databases) to the local
+filesystem. Glob patterns such as ``"file*"`` are supported:
+
+*"Download file.rst to /home/user/results."*
+
+*"Download all files matching file* from MAPDL."*
+
+**Resuming a saved model**
+
+Use ``resume_model`` to restore a previously saved MAPDL model from a ``.db`` binary database
+file or a ``.cdb`` coded ASCII archive file. If the file is not yet in the MAPDL working
+directory, upload it first with ``upload_file``:
+
+*"Resume the model from beam.db."*
+
+*"Load the archived model from model.cdb."*
+
+**Opening result files for post-processing**
+
+Use ``open_results`` to switch MAPDL into the POST1 post-processor and optionally point it at
+a specific RST result file. After calling this tool, you can query displacements, stresses, and
+other result quantities:
+
+*"Open the result file for post-processing."*
+
+*"Enter POST1 and load beam.rst."*
+
+**File-path resources**
+
+Three MCP resources expose the paths to key MAPDL output files so the AI assistant can share
+them with other tools or applications:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 45 55
+
+   * - Resource URI
+     - Returns
+   * - ``files://mapdl/working_directory``
+     - Absolute path to the MAPDL working directory
+   * - ``files://mapdl/rst_path``
+     - Expected path to ``<jobname>.rst``
+   * - ``files://mapdl/db_path``
+     - Expected path to ``<jobname>.db``
+
 
 Workflow examples
 -----------------
@@ -189,6 +260,22 @@ Result postprocessing
 #. Extract result data.
 #. Create custom visualizations.
 #. Generate analysis reports.
+
+Loading and post-processing an external result file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#. Upload the RST file: ``upload_file("/local/path/beam.rst")``.
+#. Open the result file: ``open_results("beam")``.
+#. Query result quantities (displacements, stresses, etc.) with MAPDL commands.
+#. Download the results if needed: ``download_file("beam.rst", "/local/results/")``.
+
+Restoring a saved model
+~~~~~~~~~~~~~~~~~~~~~~~
+
+#. Upload the database file: ``upload_file("/local/path/model.db")``.
+#. Restore the model: ``resume_model("model", "db")``.
+#. Inspect geometry, mesh, and boundary conditions.
+#. Continue with further pre-processing, solution, or post-processing steps.
 
 Interpreting tool results
 -------------------------
