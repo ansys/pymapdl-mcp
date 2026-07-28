@@ -29,9 +29,10 @@ Tools are grouped into the following tool sets via the ``toolsets://definition``
 - **visualization**: Tools for visualization and post-processing results
 - **python_execution**: Tools for executing arbitrary Python and PyMAPDL code
 
-The `list_tool_sets()` function exposes these tool set definitions as a resource.
+The :func:`list_tool_sets` function exposes these tool set definitions as a resource.
 """
 
+import base64
 import json
 import os
 from pathlib import Path
@@ -130,6 +131,96 @@ def _get_mapdl(ctx: Context) -> tuple[Any, str | None]:
     return mapdl, None
 
 
+def _four_view_commands(plot_command: str | list[str] = "EPLOT") -> str:
+    """Return MAPDL commands string that sets up a 2x2 window composite view.
+
+    Windows
+    -------
+    - Upper-left  (1) : Top view, looking from +Z
+    - Upper-right (2) : Right-side view, looking from +X
+    - Lower-left  (3) : Front view, looking from +Y
+    - Lower-right (4) : Isometric view (1, 1, 1)
+
+    The *plot_command* is appended so that MAPDL distributes the plot across
+    all active windows in a single call.
+    """
+    if isinstance(plot_command, list):
+        plot_command = "\n".join(plot_command)
+
+    return (
+        "/WINDOW,1,LTOP\n"
+        "/WINDOW,2,RTOP\n"
+        "/WINDOW,3,LBOT\n"
+        "/WINDOW,4,RBOT\n"
+        "/VIEW,1,0,0,1\n"
+        "/VIEW,2,1,0,0\n"
+        "/VIEW,3,0,1,0\n"
+        "/VIEW,4,1,1,1\n"
+        "/TRIAD,OFF\n"
+        f"{plot_command}\n"
+    )
+
+
+_RESTORE_SINGLE_WINDOW = (
+    "/WINDOW,1,FULL\n/WINDOW,2,OFF\n/WINDOW,3,OFF\n/WINDOW,4,OFF\n/TRIAD,ORIG\n"
+)
+
+
+def _capture_screenshot(
+    mapdl: Any,
+    pre_commands: str = "",
+    prefix: str = "mapdl_screenshot_",
+) -> tuple[str, bytes, str]:
+    """Run optional *pre_commands* then capture a MAPDL screenshot.
+
+    Parameters
+    ----------
+    mapdl : :class:`~ansys.mapdl.core.Mapdl`
+        Connected MAPDL instance.
+    pre_commands : str, optional
+        MAPDL command string to execute before taking the screenshot.
+    prefix : str, optional
+        Prefix for the temporary file name.
+
+    Returns
+    -------
+    tuple[str, bytes, str]
+        *(screenshot_path, image_bytes, mime_type)*
+
+    Raises
+    ------
+    FileNotFoundError
+        If the screenshot file was not created by MAPDL.
+    """
+    import tempfile
+
+    temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix=prefix)
+    os.close(temp_fd)
+
+    if pre_commands:
+        mapdl.input_strings(pre_commands)  # type: ignore[union-attr]
+
+    # Ignoring PTH123 since the file is created by MAPDL
+    screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
+
+    image_path = Path(screenshot_path)
+    if not image_path.exists():
+        raise FileNotFoundError(f"Screenshot file not found: {screenshot_path}")
+
+    mime_type = "image/png"
+    if image_path.suffix.lower() in (".jpg", ".jpeg"):
+        mime_type = "image/jpeg"
+    elif image_path.suffix.lower() == ".bmp":
+        mime_type = "image/bmp"
+    elif image_path.suffix.lower() == ".gif":
+        mime_type = "image/gif"
+
+    with open(screenshot_path, "rb") as f:  # noqa: PTH123
+        image_data = f.read()
+
+    return screenshot_path, image_data, mime_type
+
+
 # Tag applied to all tools that require an active MAPDL connection.
 # These tools are disabled at startup (before MAPDL is connected) and enabled
 # once a connection is established via connect_to_mapdl or launch_mapdl_session.
@@ -141,9 +232,9 @@ REQUIRES_MAPDL_TAG = "requires_mapdl"
 def check_mapdl_status(ctx: Context) -> ToolResult:
     """Check the status of MAPDL initialization.
 
-    This tool executes the /STATUS command in MAPDL and extracts comprehensive
-    information from PyMAPDL's Information, Geometry, and Post_processing classes.
-    It also checks whether the MAPDL instance has exited or is exiting.
+    This tool extracts comprehensive information from PyMAPDL's API and returns it
+    as a structured JSON object. It also checks whether the MAPDL instance has
+    exited or is exiting.
 
     Parameters
     ----------
@@ -169,9 +260,40 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
     try:
         from ansys.mapdl.mcp.helpers import get_info
 
-        info = get_info(mapdl)
+        # Check if MAPDL has exited
+        if hasattr(mapdl, "_exited") and mapdl._exited:
+            return _text_result(
+                "MAPDL instance has exited. Please reconnect or launch a new instance."
+            )
 
-        return _text_result(json.dumps(info, indent=2))
+        if hasattr(mapdl, "_exiting") and mapdl._exiting:
+            return _text_result(
+                "MAPDL instance is currently exiting. Please wait or launch a new instance."
+            )
+
+        info = get_info(mapdl)
+        json_content = TextContent(type="text", text=json.dumps(info, indent=2))
+
+        # Attempt to attach a four-view screenshot of the current selection
+        try:
+            logger.info("Capturing four-view screenshot for status report...")
+            _, image_data, mime_type = _capture_screenshot(
+                mapdl,
+                pre_commands=_four_view_commands("EPLOT"),
+                prefix="mapdl_status_",
+            )
+            base64_data = base64.b64encode(image_data).decode("utf-8")
+            return ToolResult(
+                [json_content, ImageContent(type="image", data=base64_data, mimeType=mime_type)]
+            )
+        except Exception as img_err:
+            logger.warning(f"Could not capture four-view screenshot for status: {img_err}")
+            return ToolResult([json_content])
+        finally:
+            try:
+                mapdl.input_strings(_RESTORE_SINGLE_WINDOW)  # type: ignore[union-attr]
+            except Exception as restore_err:
+                logger.warning(f"Could not restore single-window layout: {restore_err}")
 
     except Exception as e:
         error_msg = f"Error checking MAPDL status: {str(e)}"
@@ -268,10 +390,11 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
 def run_multiple_mapdl_commands(
     ctx: Context, commands: list[str], comment: str = "", header: str = ""
 ) -> ToolResult:
-    """Execute multiple MAPDL commands in sequence using input_strings.
+    """Execute multiple MAPDL commands in sequence.
 
     This tool is optimized for running multiple commands efficiently by using
-    MAPDL's input_strings method, which processes commands in batch mode.
+    MAPDL's :meth:`~ansys.mapdl.core.Mapdl.input_strings` method, which processes
+    commands in batch mode.
     This is significantly faster than executing commands one by one.
 
     Parameters
@@ -360,11 +483,14 @@ async def launch_mapdl_session(
 ) -> ToolResult:
     """Launch a new MAPDL instance.
 
-    This tool starts a new MAPDL instance using PyMAPDL's launch_mapdl function.
+    This tool starts a new MAPDL instance using PyMAPDL's
+    :func:`~ansys.mapdl.core.launcher.launch_mapdl` function.
     The launched instance will be automatically connected and stored in the context
-    for subsequent operations. The instance can be closed using the disconnect_from_mapdl tool.
+    for subsequent operations. The instance can be closed using the
+    :func:`disconnect_from_mapdl` tool.
     Once you are connected to the launched instance, other tools become available
-    to interact with it, such as run_mapdl_command, check_mapdl_status, screenshot, and more.
+    to interact with it, such as :func:`run_mapdl_command`,
+    :func:`check_mapdl_status`, :func:`screenshot`, and more.
 
     Parameters
     ----------
@@ -452,9 +578,10 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
 
     This tool establishes a connection to a running MAPDL instance using the
     provided port and IP address. The connection is stored for subsequent
-    operations and can be closed using the disconnect_from_mapdl tool.
+    operations and can be closed using the :func:`disconnect_from_mapdl` tool.
     Once you are connected to the MAPDL instance, other tools become available
-    to interact with it, such as run_mapdl_command, check_mapdl_status, screenshot, and more.
+    to interact with it, such as :func:`run_mapdl_command`,
+    :func:`check_mapdl_status`, :func:`screenshot`, and more.
 
     Parameters
     ----------
@@ -523,7 +650,8 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
     """Disconnect from the dynamically connected MAPDL instance.
 
     This tool closes the connection to the MAPDL instance that was established
-    using the connect_to_mapdl tool and releases the associated resources.
+    using the :func:`connect_to_mapdl` tool and releases the associated
+    resources.
 
     Parameters
     ----------
@@ -571,10 +699,12 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
 def list_mapdl_instances(ctx: Context) -> ToolResult:
     """List all MAPDL instances running on the local machine and any remotely connected instance.
 
-    This tool uses PyMAPDL CLI's list_instances function to discover
+    This tool uses PyMAPDL CLI's
+    :func:`~ansys.mapdl.mcp.helpers.list_instances` function to discover
     MAPDL instances running on the machine by scanning for active gRPC
     servers and their associated metadata. It also includes any remotely
-    connected MAPDL instance that was established via the connect_to_mapdl tool.
+    connected MAPDL instance that was established via the
+    :func:`connect_to_mapdl` tool.
 
     Returns
     -------
@@ -617,6 +747,7 @@ def screenshot(
     ctx: Context,
     commands: str = "",
     show_plot_on_popup: bool = False,
+    four_view: bool = False,
 ) -> ToolResult:
     """Capture a screenshot of the current MAPDL graphics window.
 
@@ -624,29 +755,42 @@ def screenshot(
     way to obtain plot images, especially for large or complex models, as it
     leverages MAPDL's native plotting capabilities.
 
-    MAPDL Native Plot Commands:
-    - Geometry: APLOT, LPLOT, KPLOT, VPLOT
-    - Mesh: EPLOT, NPLOT
-    - Post-processing: PLNSOL, PLESOL, PLDISP
+    MAPDL Native Plot Commands (use with screenshot):
 
-    For fully custom matplotlib or PyVista plots, use the ``custom_plot`` tool.
+    - Geometry: ``APLOT``, ``LPLOT``, ``KPLOT``, ``VPLOT``
+    - Mesh: ``EPLOT``, ``NPLOT``
+    - Post-processing: ``PLNSOL``, ``PLESOL``, ``PLDISP``
+
+    For custom matplotlib or PyVista plots, use the :func:`custom_plot` tool
+    instead.
 
     Parameters
     ----------
     ctx : Context
         The MCP context containing server session and application context.
     commands : str, optional
-        MAPDL APDL commands to execute before capturing the screenshot
-        (e.g. ``SET,LAST``, ``EPLOT``, or ``PLNSOL,U,SUM``). Avoid commands
-        unrelated to plotting or visualization. Default is empty string.
+        Optional MAPDL commands to execute before taking the screenshot.
+        Avoid running commands that are not related to plotting or visualization.
+        This can be used to set up the plot or visualization before capturing.
+        Avoid running long or complex commands that may delay the screenshot.
+        Default is empty string.
     show_plot_on_popup : bool, optional
         If ``True``, open the captured image in the system's default image
         viewer as an external popup window in addition to returning it to the
         LLM. Default is ``False``.
+    four_view : bool, optional
+        When ``True``, the graphics window is split into four quadrants before
+        the screenshot is taken. When *commands* is provided together with
+        ``four_view=True``, the *commands* string is used as the plot command
+        that populates all four windows (default ``EPLOT`` when *commands* is
+        empty). The window layout is automatically restored after the
+        screenshot. Default is ``False``. See Notes for the quadrant layout.
 
     Returns
     -------
     ToolResult
+        A result containing:
+
         - TextContent with the screenshot file path
         - ImageContent with the base64-encoded image data
     """
@@ -656,39 +800,28 @@ def screenshot(
 
     try:
         if commands:
-            mapdl.input_strings(commands)  # type: ignore[union-attr]
-
-        # MAPDL backend path
-        logger.info("Capturing MAPDL screenshot...")
-
-        # Create a temporary file with .png extension
-        import tempfile
-
-        temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix="mapdl_screenshot_")
-
-        # Close the file descriptor as MAPDL will write to the path
-        os.close(temp_fd)
-
-        if commands:
             mapdl.input_strings(commands)
+            
+        if four_view:
+            logger.info("Capturing four-view MAPDL screenshot...")
+            plot_cmd = commands if commands else "EPLOT"
+            pre_commands = _four_view_commands(plot_cmd)
+            prefix = "mapdl_4view_"
+        else:
+            logger.info("Capturing MAPDL screenshot...")
+            pre_commands = commands
+            prefix = "mapdl_screenshot_"
 
-        # Capture screenshot directly to the temporary location
-        screenshot_path = mapdl.screenshot(savefig=temp_path)
-
-        # Verify file was created
-        image_path = Path(screenshot_path)
-        if not image_path.exists():
-            error_msg = f"Screenshot file not found: {screenshot_path}"
-            logger.error(error_msg)
-            return _text_result(error_msg)
-
-        # Read image data
-        # Ignoring PTH123 since the file is created by MAPDL
-        with open(screenshot_path, "rb") as f:  # noqa: PTH123
-            image_data = f.read()
-
-        # Encode to base64
-        import base64
+        try:
+            screenshot_path, image_data, mime_type = _capture_screenshot(
+                mapdl, pre_commands, prefix
+            )
+        finally:
+            if four_view:
+                try:
+                    mapdl.input_strings(_RESTORE_SINGLE_WINDOW)  # type: ignore[union-attr]
+                except Exception as restore_err:
+                    logger.warning(f"Could not restore single-window layout: {restore_err}")
 
         base64_data = base64.b64encode(image_data).decode("utf-8")
 
@@ -714,9 +847,6 @@ def screenshot(
         )
 
     except Exception as e:
-        if "temp_path" in locals() and Path(temp_path).exists():
-            Path(temp_path).unlink()  # pyright: ignore[reportPossiblyUnboundVariable]
-
         error_msg = f"Failed to capture screenshot: {str(e)}"
         logger.error(error_msg)
         return _text_result(error_msg)
@@ -735,14 +865,16 @@ async def run_python_code(
     """Execute arbitrary Python and PyMAPDL code in the persistent Python session.
 
     This tool should be used for custom Python code execution, particularly for:
+
     - Custom data processing and analysis
     - Creating custom matplotlib plots not available in MAPDL
     - Advanced PyVista visualizations beyond MAPDL's native capabilities
     - NumPy/Pandas data manipulation and custom visualization
 
-    NOTE: For MAPDL native plotting (aplot, lplot, kplot, post_processing plots, etc.),
-    use the normal MAPDL session commands with the screenshot tool instead, as they
-    provide interactive plots that are directly accessible.
+    .. important:: For MAPDL native plotting (``APLOT``, ``LPLOT``, ``KPLOT``,
+       post_processing plots, etc.), use the normal MAPDL session commands
+       with the :func:`screenshot` tool instead, as they provide interactive
+       plots that are directly accessible.
 
     Parameters
     ----------
@@ -761,6 +893,7 @@ async def run_python_code(
     Examples
     --------
     Execute simple Python code to compute a value:
+
     >>> code = '''
     ... result = sum([i**2 for i in range(10)])
     ... print(f"Sum of squares: {result}")
@@ -768,6 +901,7 @@ async def run_python_code(
     >>> run_python_code(ctx, code)
 
     Execute PyMAPDL code:
+
     >>> code = '''
     ... displacements = mapdl.get_array("NODE", item1="U", it1num="Y")
     ... print(f"Displacements: {displacements}")
@@ -831,16 +965,19 @@ def custom_plot(
 
     This tool is specifically designed for creating custom plots that are NOT available
     in MAPDL's native plotting capabilities. Use this when you need:
+
     - Custom matplotlib visualizations (line plots, bar charts, histograms, etc.)
     - Advanced PyVista 3D visualizations beyond MAPDL defaults
     - Combined data from multiple sources
     - Custom data processing with visualization
 
-    IMPORTANT: For standard MAPDL plots (aplot, lplot, kplot, post_processing plots),
-    use the normal MAPDL commands with the screenshot tool instead for interactive plots.
+    .. important:: For standard MAPDL plots (``APLOT``, ``LPLOT``, ``KPLOT``,
+       post_processing plots), use the normal MAPDL commands with the
+       :func:`screenshot` tool instead for interactive plots.
 
     The persistent Python session has pre-configured matplotlib (Agg backend) and
     PyVista (off-screen rendering) with helper functions:
+
     - save_matplotlib_plot(filename, dpi)
     - save_plot(plotter, filename)
 
@@ -851,7 +988,8 @@ def custom_plot(
     plot_code : str
         Python code to create the plot. Should use matplotlib.pyplot or PyVista.
         For matplotlib, the code should create the figure/plot but NOT call plt.show().
-        Use the save_matplotlib_plot() or save_plot() helper functions to return the plot.
+        Use the save_matplotlib_plot() or save_plot() helper functions to return
+        the plot.
     plot_type : str, optional
         Type of plot: "matplotlib" or "pyvista". Default is "matplotlib".
     timeout : int, optional
@@ -867,6 +1005,7 @@ def custom_plot(
     Examples
     --------
     Create a custom matplotlib line plot:
+
     >>> plot_code = '''
     ... import matplotlib.pyplot as plt
     ... import numpy as np
@@ -1251,10 +1390,38 @@ def list_tool_sets() -> list[dict]:
     -------
     list[dict]
         List of tool set definitions, each containing:
-        - name: Unique identifier for the tool set
-        - description: Human-readable description of the tool set
-        - skill: Instructions for the AI agent on when and how to use these tool sets
-        - tools: List of tool function names in this set
+
+        - ``name``: Unique identifier for the tool set
+        - ``description``: Human-readable description of the tool set
+        - ``skill``: Instructions for the AI agent on when and how to use these tool sets
+        - ``tools``: List of tool function names in this set
+
+    Examples
+    --------
+    >>> list_tool_sets()
+    [
+        {
+            "name": "session_management",
+            "description": "Tools for managing MAPDL session connections and instances",
+            "skill": (
+                "Use these tools to manage MAPDL connections and sessions. "
+                "Start by checking available installations with check_mapdl_installed, "
+                "then launch a new session with launch_mapdl_session or connect to an existing "
+                "instance with connect_to_mapdl. Use check_mapdl_status to verify the connection"
+                "status. List active instances with list_mapdl_instances and disconnect when done"
+                " using disconnect_from_mapdl."
+            ),
+            "tools": [
+                "check_mapdl_installed",
+                "check_mapdl_status",
+                "launch_mapdl_session",
+                "connect_to_mapdl",
+                "disconnect_from_mapdl",
+                "list_mapdl_instances",
+            ],
+        }
+    ]
+
     """
     return [
         {
@@ -1299,7 +1466,8 @@ def list_tool_sets() -> list[dict]:
             "description": "Tools for visualization, custom analysis, and post-processing",
             "skill": (
                 "Use these tools for visualization and post-processing of MAPDL results. "
-                "Use screenshot to capture MAPDL native plots (APLOT, EPLOT, PLNSOL, etc.). "
+                "Use screenshot to capture MAPDL native plots (``APLOT``, ``EPLOT``, "
+                "``PLNSOL``, etc.). "
                 "Use custom_plot to create custom matplotlib or PyVista visualizations for "
                 "custom analysis. For visualization workflows, use custom_plot rather than "
                 "run_python_code."

@@ -99,30 +99,32 @@ class TestCheckMapdlStatus:
         assert data["information"]["product"] == ""
 
     def test_check_status_missing_geometry_attributes(self, mock_context):
-        """Test status extraction when geometry class attributes are missing."""
-        # Remove geometry attributes
+        """Test status extraction when geometry class attributes are missing.
+
+        When attributes are missing, the entire geometry block records an error
+        (no partial defaults) since get_info uses direct attribute access.
+        """
         delattr(mock_context.request_context.lifespan_context.mapdl.geometry, "n_keypoint")
-        delattr(mock_context.request_context.lifespan_context.mapdl.geometry, "n_line")
 
         result = check_mapdl_status(mock_context)
 
-        # Should still return valid JSON with default values
         data = json.loads(result.content[0].text)
         assert "geometry" in data
-        assert data["geometry"]["n_keypoint"] == 0
-        assert data["geometry"]["n_line"] == 0
+        assert "error" in data["geometry"]
 
     def test_check_status_missing_mesh_attributes(self, mock_context):
-        """Test status extraction when mesh class attributes are missing."""
-        # Remove mesh attributes
+        """Test status extraction when mesh class attributes are missing.
+
+        When attributes are missing, the entire mesh block records an error
+        since get_info uses direct attribute access without hasattr fallbacks.
+        """
         delattr(mock_context.request_context.lifespan_context.mapdl.mesh, "n_node")
 
         result = check_mapdl_status(mock_context)
 
-        # Should still return valid JSON with default values
         data = json.loads(result.content[0].text)
         assert "mesh" in data
-        assert data["mesh"]["n_node"] == 0
+        assert "error" in data["mesh"]
 
     def test_check_status_missing_post_processing(self, mock_context):
         """Test status extraction when post_processing is not available."""
@@ -228,6 +230,315 @@ class TestCheckMapdlStatus:
 
         # Verify post_processing data
         assert "available" in data["post_processing"]
+
+        # Verify new sections are present
+        assert "components" in data
+        assert "materials" in data
+        assert "sections" in data
+        assert "parts" in data
+
+    def test_check_status_returns_image_when_screenshot_succeeds(self, mock_context, tmp_path):
+        """Test that check_mapdl_status returns an ImageContent alongside JSON."""
+        fake_image_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        screenshot_path = tmp_path / "status.png"
+        screenshot_path.write_bytes(fake_image_data)
+
+        mapdl = mock_context.request_context.lifespan_context.mapdl
+        mapdl.screenshot.return_value = str(screenshot_path)
+        mapdl.input_strings = MagicMock(return_value="")
+
+        result = check_mapdl_status(mock_context)
+
+        assert isinstance(result, ToolResult)
+        assert len(result.content) == 2
+        assert isinstance(result.content[0], TextContent)
+        assert isinstance(result.content[1], ImageContent)
+        # JSON is still in content[0]
+        data = json.loads(result.content[0].text)
+        assert "connection" in data
+        # Image is base64-encoded PNG
+        assert result.content[1].mimeType == "image/png"
+        # Verify the window was restored after capture
+        restore_call = mapdl.input_strings.call_args_list[-1][0][0]
+        assert "/WINDOW,1,FULL" in restore_call
+
+    def test_check_status_returns_only_json_when_screenshot_fails(self, mock_context):
+        """Test that check_mapdl_status returns only JSON when screenshot fails."""
+        mapdl = mock_context.request_context.lifespan_context.mapdl
+        # Make screenshot raise so the image capture path is skipped
+        mapdl.screenshot.side_effect = RuntimeError("no display")
+        mapdl.input_strings = MagicMock(return_value="")
+
+        result = check_mapdl_status(mock_context)
+
+        assert isinstance(result, ToolResult)
+        # Only JSON content — no image
+        assert len(result.content) == 1
+        assert isinstance(result.content[0], TextContent)
+        data = json.loads(result.content[0].text)
+        assert "connection" in data
+
+    def test_check_status_components_present(self, mock_context):
+        """Test that components section is present with correct structure."""
+        result = check_mapdl_status(mock_context)
+
+        data = json.loads(result.content[0].text)
+        assert "components" in data
+        assert "count" in data["components"]
+        assert "items" in data["components"]
+        assert data["components"]["count"] == 2
+        assert "COMP_NODES" in data["components"]["items"]
+        assert data["components"]["items"]["COMP_NODES"] == "NODES"
+        assert "COMP_ELEMS" in data["components"]["items"]
+        assert data["components"]["items"]["COMP_ELEMS"] == "ELEMS"
+
+    def test_check_status_materials_present(self, mock_context):
+        """Test that materials section is present with count and max_id."""
+        result = check_mapdl_status(mock_context)
+
+        data = json.loads(result.content[0].text)
+        assert "materials" in data
+        assert "count" in data["materials"]
+        assert "max_id" in data["materials"]
+        assert data["materials"]["count"] == 2
+        assert data["materials"]["max_id"] == 2
+
+    def test_check_status_sections_present(self, mock_context):
+        """Test that sections section is present with count and max_id."""
+        result = check_mapdl_status(mock_context)
+
+        data = json.loads(result.content[0].text)
+        assert "sections" in data
+        assert "count" in data["sections"]
+        assert "max_id" in data["sections"]
+        assert data["sections"]["count"] == 2
+        assert data["sections"]["max_id"] == 2
+
+    def test_check_status_components_exception(self, mock_context):
+        """Test graceful degradation when components access raises an exception."""
+        mock_context.request_context.lifespan_context.mapdl.components = property(
+            lambda self: (_ for _ in ()).throw(RuntimeError("Components error"))
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        data = json.loads(result.content[0].text)
+        assert "components" in data
+        assert "error" in data["components"]
+
+    def test_check_status_materials_exception(self, mock_context):
+        """Test graceful degradation when materials retrieval raises an exception."""
+        mock_context.request_context.lifespan_context.mapdl.get_value = MagicMock(
+            side_effect=RuntimeError("Materials error")
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        data = json.loads(result.content[0].text)
+        assert "materials" in data
+        assert "error" in data["materials"]
+
+    def test_check_status_sections_exception(self, mock_context):
+        """Test graceful degradation when sections retrieval raises an exception."""
+
+        def _get_value_raise_for_secp(entity, entnum, item1, *args, **kwargs):
+            if str(entity).upper() == "SECP":
+                raise RuntimeError("Sections error")
+            return 2  # normal return for MAT and PART
+
+        mock_context.request_context.lifespan_context.mapdl.get_value = MagicMock(
+            side_effect=_get_value_raise_for_secp
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        data = json.loads(result.content[0].text)
+        assert "sections" in data
+        assert "error" in data["sections"]
+
+    def test_check_status_no_components(self, mock_context):
+        """Test components section when no components are defined."""
+        empty_comp = MagicMock()
+        empty_comp.__len__ = MagicMock(return_value=0)
+        empty_comp.items = MagicMock(return_value={}.items())
+        mock_context.request_context.lifespan_context.mapdl.components = empty_comp
+
+        result = check_mapdl_status(mock_context)
+
+        data = json.loads(result.content[0].text)
+        assert data["components"]["count"] == 0
+        assert data["components"]["items"] == {}
+
+    def test_check_status_no_materials(self, mock_context):
+        """Test materials section when no materials are defined (count = 0)."""
+
+        def _no_mats(entity, entnum, item1, *args, **kwargs):
+            return 0  # all queries return 0
+
+        mock_context.request_context.lifespan_context.mapdl.get_value = MagicMock(
+            side_effect=_no_mats
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        data = json.loads(result.content[0].text)
+        assert data["materials"]["count"] == 0
+        assert data["materials"]["max_id"] == 0
+
+    def test_check_status_no_sections(self, mock_context):
+        """Test sections section when no sections are defined (count = 0)."""
+
+        def _no_secs(entity, entnum, item1, *args, **kwargs):
+            return 0  # all queries return 0
+
+        mock_context.request_context.lifespan_context.mapdl.get_value = MagicMock(
+            side_effect=_no_secs
+        )
+
+        result = check_mapdl_status(mock_context)
+
+        data = json.loads(result.content[0].text)
+        assert data["sections"]["count"] == 0
+        assert data["sections"]["max_id"] == 0
+
+
+@pytest.mark.unit
+class TestFourViewScreenshot:
+    """Tests for screenshot tool with four_view=True."""
+
+    def test_four_view_no_request_context(self):
+        """Test screenshot(four_view=True) with no request context."""
+        ctx = MagicMock()
+        ctx.request_context = None
+
+        result = screenshot(ctx, four_view=True)
+
+        assert isinstance(result, ToolResult)
+        assert "No request context available" in result.content[0].text
+
+    def test_four_view_no_mapdl(self, mock_context_no_mapdl):
+        """Test screenshot(four_view=True) when MAPDL is not connected."""
+        result = screenshot(mock_context_no_mapdl, four_view=True)
+
+        assert isinstance(result, ToolResult)
+        assert "No MAPDL connection available" in result.content[0].text
+
+    def test_four_view_success(self, mock_context, tmp_path):
+        """Test capturing a four-view screenshot successfully."""
+        fake_image_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        screenshot_path = tmp_path / "4view.png"
+        screenshot_path.write_bytes(fake_image_data)
+
+        mapdl = mock_context.request_context.lifespan_context.mapdl
+        mapdl.screenshot.return_value = str(screenshot_path)
+        mapdl.input_strings = MagicMock(return_value="")
+
+        result = screenshot(mock_context, four_view=True)
+
+        assert isinstance(result, ToolResult)
+        assert len(result.content) == 2
+        assert isinstance(result.content[0], TextContent)
+        assert isinstance(result.content[1], ImageContent)
+        assert "Screenshot saved to" in result.content[0].text
+        assert result.content[1].mimeType == "image/png"
+
+        # Verify setup commands + restore were both called
+        assert mapdl.input_strings.call_count >= 2
+
+        # Verify the setup call contains four-window and view commands
+        setup_call_args = mapdl.input_strings.call_args_list[0][0][0]
+        assert "/WINDOW,1,LTOP" in setup_call_args
+        assert "/WINDOW,2,RTOP" in setup_call_args
+        assert "/WINDOW,3,LBOT" in setup_call_args
+        assert "/WINDOW,4,RBOT" in setup_call_args
+        assert "/VIEW,1,0,0,1" in setup_call_args
+        assert "/VIEW,4,1,1,1" in setup_call_args
+
+    def test_four_view_custom_plot_command(self, mock_context, tmp_path):
+        """Test screenshot(four_view=True) uses commands as the plot command."""
+        fake_image_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        screenshot_path = tmp_path / "4view_aplot.png"
+        screenshot_path.write_bytes(fake_image_data)
+
+        mapdl = mock_context.request_context.lifespan_context.mapdl
+        mapdl.screenshot.return_value = str(screenshot_path)
+        mapdl.input_strings = MagicMock(return_value="")
+
+        result = screenshot(mock_context, commands="APLOT", four_view=True)
+
+        assert isinstance(result, ToolResult)
+        setup_call_args = mapdl.input_strings.call_args_list[0][0][0]
+        assert "APLOT" in setup_call_args
+
+    def test_four_view_default_plot_command_is_eplot(self, mock_context, tmp_path):
+        """Test that EPLOT is used when commands is empty with four_view=True."""
+        fake_image_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        screenshot_path = tmp_path / "4view_eplot.png"
+        screenshot_path.write_bytes(fake_image_data)
+
+        mapdl = mock_context.request_context.lifespan_context.mapdl
+        mapdl.screenshot.return_value = str(screenshot_path)
+        mapdl.input_strings = MagicMock(return_value="")
+
+        screenshot(mock_context, four_view=True)
+
+        setup_call_args = mapdl.input_strings.call_args_list[0][0][0]
+        assert "EPLOT" in setup_call_args
+
+    def test_four_view_restores_single_window(self, mock_context, tmp_path):
+        """Test that screenshot(four_view=True) restores the single-window layout."""
+        fake_image_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        screenshot_path = tmp_path / "4view_restore.png"
+        screenshot_path.write_bytes(fake_image_data)
+
+        mapdl = mock_context.request_context.lifespan_context.mapdl
+        mapdl.screenshot.return_value = str(screenshot_path)
+        mapdl.input_strings = MagicMock(return_value="")
+
+        screenshot(mock_context, four_view=True)
+
+        # The last input_strings call should restore the single-window layout
+        restore_call_args = mapdl.input_strings.call_args_list[-1][0][0]
+        assert "/WINDOW,1,FULL" in restore_call_args
+        assert "/WINDOW,2,OFF" in restore_call_args
+        assert "/WINDOW,3,OFF" in restore_call_args
+        assert "/WINDOW,4,OFF" in restore_call_args
+
+    def test_four_view_screenshot_not_found(self, mock_context, tmp_path):
+        """Test screenshot(four_view=True) when the screenshot file is not created."""
+        mapdl = mock_context.request_context.lifespan_context.mapdl
+        mapdl.screenshot.return_value = str(tmp_path / "nonexistent.png")
+        mapdl.input_strings = MagicMock(return_value="")
+
+        result = screenshot(mock_context, four_view=True)
+
+        assert isinstance(result, ToolResult)
+        assert "Failed to capture screenshot" in result.content[0].text
+
+    def test_four_view_exception_handling(self, mock_context):
+        """Test screenshot(four_view=True) graceful error handling."""
+        mapdl = mock_context.request_context.lifespan_context.mapdl
+        mapdl.input_strings = MagicMock(side_effect=RuntimeError("MAPDL error"))
+
+        result = screenshot(mock_context, four_view=True)
+
+        assert isinstance(result, ToolResult)
+        assert "Failed to capture screenshot" in result.content[0].text
+
+    def test_four_view_false_does_not_use_window_commands(self, mock_context, tmp_path):
+        """Test that four_view=False does not emit window setup commands."""
+        fake_image_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        screenshot_path = tmp_path / "normal.png"
+        screenshot_path.write_bytes(fake_image_data)
+
+        mapdl = mock_context.request_context.lifespan_context.mapdl
+        mapdl.screenshot.return_value = str(screenshot_path)
+        mapdl.input_strings = MagicMock(return_value="")
+
+        screenshot(mock_context, four_view=False)
+
+        # No input_strings calls (commands="" so nothing is run)
+        assert mapdl.input_strings.call_count == 0
 
 
 @pytest.mark.unit
