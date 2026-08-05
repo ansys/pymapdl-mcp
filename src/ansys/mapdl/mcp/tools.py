@@ -198,11 +198,11 @@ def _capture_screenshot(
         mapdl.input_strings(pre_commands)  # type: ignore[union-attr]
 
     # Ignoring PTH123 since the file is created by MAPDL
-    mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
+    screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
 
-    image_path = Path(temp_path)
+    image_path = Path(screenshot_path if screenshot_path else temp_path)
     if not image_path.exists():
-        raise FileNotFoundError(f"Screenshot file not found: {temp_path}")
+        raise FileNotFoundError(f"Screenshot file not found: {image_path}")
 
     mime_type = "image/png"
     if image_path.suffix.lower() in (".jpg", ".jpeg"):
@@ -796,9 +796,6 @@ def screenshot(
         return _text_result(error)
 
     try:
-        if commands:
-            mapdl.input_strings(commands)
-
         if four_view:
             logger.info("Capturing four-view MAPDL screenshot...")
             plot_cmd = commands if commands else "EPLOT"
@@ -823,7 +820,7 @@ def screenshot(
         base64_data = base64.b64encode(image_data).decode("utf-8")
 
         if show_plot_on_popup:
-            _open_image_in_viewer(screenshot_path)
+            _open_image_in_viewer(str(screenshot_path))
 
         logger.info(f"Screenshot captured successfully: {screenshot_path}")
 
