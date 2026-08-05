@@ -200,9 +200,10 @@ def _capture_screenshot(
     # Ignoring PTH123 since the file is created by MAPDL
     screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
 
-    image_path = Path(screenshot_path if screenshot_path else temp_path)
+    raw_path = screenshot_path if screenshot_path else temp_path
+    image_path = Path(raw_path)
     if not image_path.exists():
-        raise FileNotFoundError(f"Screenshot file not found: {image_path}")
+        raise FileNotFoundError(f"Screenshot file not found: {raw_path}")
 
     mime_type = "image/png"
     if image_path.suffix.lower() in (".jpg", ".jpeg"):
