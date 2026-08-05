@@ -44,7 +44,7 @@ connected. This keeps the AI assistant's context small when MAPDL is not in use.
    * - ``disconnect_from_mapdl``
      - Disconnect from the MAPDL instance
    * - ``screenshot``
-     - Capture the MAPDL graphics window
+     - Capture the MAPDL graphics window as a static image
    * - ``run_python_code``
      - Execute Python/PyMAPDL code in a persistent session
    * - ``custom_plot``
@@ -141,18 +141,28 @@ native plotting:
 Capturing plots
 ~~~~~~~~~~~~~~~
 
-After running a MAPDL plot command, use the ``screenshot`` tool to capture the graphics window:
+Use the ``screenshot`` tool to run a MAPDL plot command and capture the result as an image:
 
-*"Show a plot of the geometry."*
+*"Show a plot of the mesh."*
 
-*"Capture the current MAPDL plot."*
+*"Capture the average stress distribution."*
 
-It returns the image directly so the AI assistant can display it inline. Works with all MAPDL
-native plot commands, including:
+The tool returns the image directly so the AI assistant can display it inline. It supports all
+MAPDL native plot commands:
 
 - Geometry: ``APLOT``, ``LPLOT``, ``KPLOT``, ``VPLOT``
 - Mesh: ``EPLOT``, ``NPLOT``
 - Post-processing: ``PLNSOL``, ``PLESOL``, ``PLDISP``
+
+**Parameters**
+
+``commands``
+    Optional APDL commands to run before capturing the screenshot
+    (for example ``EPLOT`` or ``SET,LAST``).
+
+``show_plot_on_popup``
+    When ``True``, the captured image is also opened in the system's default image
+    viewer so the user can inspect it at full resolution. Default is ``False``.
 
 Python code execution
 ~~~~~~~~~~~~~~~~~~~~~

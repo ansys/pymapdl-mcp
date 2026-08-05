@@ -41,8 +41,20 @@ Data handling
 Visualization
 -------------
 
+**Prefer MAPDL backend for large models**
+    The ``screenshot`` tool renders on the MAPDL server and returns only a lightweight
+    image. For large or complex models this is significantly faster than custom PyVista
+    plots, which transfer the full mesh to the client.
+
 **Screenshots after key steps**
     Take screenshots after geometry definition, meshing, and solving to verify progress.
+    Pass the plot command in ``commands`` (for example ``EPLOT``) and the ``screenshot``
+    tool captures it as a base64 image returned inline to the AI assistant.
+
+**Popup for full-resolution inspection**
+    Set ``show_plot_on_popup=True`` on ``screenshot`` to also open the captured image in
+    the system's default image viewer, allowing the user to inspect it at full resolution
+    without leaving the chat.
 
 **Custom plots for analysis**
     Use custom Matplotlib plots for detailed analysis beyond MAPDL's built-in capabilities.

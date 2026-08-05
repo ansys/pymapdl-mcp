@@ -48,7 +48,7 @@ Tool context and lifecycle
 
 Each tool receives a FastMCP context object (``Context``) that provides:
 
-- Access to the application context (``ctx.application_context``)
+- Access to the app context (``ctx.application_context``)
 - Request and response metadata
 - Logging utilities
 

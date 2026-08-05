@@ -36,6 +36,9 @@ import base64
 import json
 import os
 from pathlib import Path
+import platform
+import subprocess  # nosec B404
+import tempfile
 from typing import Any, cast
 
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
@@ -48,10 +51,38 @@ from ansys.mapdl.mcp import app
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
 from mcp.types import ImageContent, TextContent
 
+try:
+    import pyvista  # noqa: F401  # Check if PyVista is available
+
+    pyvista.OFF_SCREEN = True  # Set off-screen rendering globally for all tools
+
+except ImportError:
+    pass
+
 
 def _text_result(text: str) -> ToolResult:
     """Wrap a plain text string in a single-content ToolResult."""
     return ToolResult([TextContent(type="text", text=text)])
+
+
+def _open_image_in_viewer(image_path: str | Path) -> None:
+    """Open an image file in the system's default image viewer.
+
+    Parameters
+    ----------
+    image_path : str or Path
+        Path to the image file to open.
+    """
+    try:
+        system = platform.system()
+        if system == "Darwin":
+            subprocess.Popen(["open", str(image_path)])  # noqa: S603, S607  # nosec B603, B607
+        elif system == "Windows":
+            os.startfile(str(image_path))  # type: ignore[attr-defined]  # noqa: PTH123  # nosec B606
+        else:
+            subprocess.Popen(["xdg-open", str(image_path)])  # noqa: S603, S607  # nosec B603, B607
+    except Exception as e:
+        logger.warning(f"Failed to open image in viewer: {e}")
 
 
 def _is_mapdl_crashed(mapdl: Any) -> bool:
@@ -138,7 +169,7 @@ def _capture_screenshot(
     mapdl: Any,
     pre_commands: str = "",
     prefix: str = "mapdl_screenshot_",
-) -> tuple[str, bytes, str]:
+) -> tuple[Path, bytes, str]:
     """Run optional *pre_commands* then capture a MAPDL screenshot.
 
     Parameters
@@ -152,7 +183,7 @@ def _capture_screenshot(
 
     Returns
     -------
-    tuple[str, bytes, str]
+    tuple[Path, bytes, str]
         *(screenshot_path, image_bytes, mime_type)*
 
     Raises
@@ -160,8 +191,6 @@ def _capture_screenshot(
     FileNotFoundError
         If the screenshot file was not created by MAPDL.
     """
-    import tempfile
-
     temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix=prefix)
     os.close(temp_fd)
 
@@ -171,9 +200,10 @@ def _capture_screenshot(
     # Ignoring PTH123 since the file is created by MAPDL
     screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
 
-    image_path = Path(screenshot_path)
+    raw_path = screenshot_path if screenshot_path else temp_path
+    image_path = Path(raw_path)
     if not image_path.exists():
-        raise FileNotFoundError(f"Screenshot file not found: {screenshot_path}")
+        raise FileNotFoundError(f"Screenshot file not found: {raw_path}")
 
     mime_type = "image/png"
     if image_path.suffix.lower() in (".jpg", ".jpeg"):
@@ -183,10 +213,10 @@ def _capture_screenshot(
     elif image_path.suffix.lower() == ".gif":
         mime_type = "image/gif"
 
-    with open(screenshot_path, "rb") as f:  # noqa: PTH123
+    with open(image_path, "rb") as f:  # noqa: PTH123
         image_data = f.read()
 
-    return screenshot_path, image_data, mime_type
+    return image_path, image_data, mime_type
 
 
 # Tag applied to all tools that require an active MAPDL connection.
@@ -714,12 +744,14 @@ def list_mapdl_instances(ctx: Context) -> ToolResult:
 def screenshot(
     ctx: Context,
     commands: str = "",
+    show_plot_on_popup: bool = False,
     four_view: bool = False,
 ) -> ToolResult:
     """Capture a screenshot of the current MAPDL graphics window.
 
-    This tool captures the current state of the MAPDL graphics window after using
-    MAPDL native plotting commands. Use this tool for all standard MAPDL plots.
+    All plots use the MAPDL backend, which is the preferred and recommended
+    way to obtain plot images, especially for large or complex models, as it
+    leverages MAPDL's native plotting capabilities.
 
     MAPDL Native Plot Commands (use with screenshot):
 
@@ -740,6 +772,10 @@ def screenshot(
         This can be used to set up the plot or visualization before capturing.
         Avoid running long or complex commands that may delay the screenshot.
         Default is empty string.
+    show_plot_on_popup : bool, optional
+        If ``True``, open the captured image in the system's default image
+        viewer as an external popup window in addition to returning it to the
+        LLM. Default is ``False``.
     four_view : bool, optional
         When ``True``, the graphics window is split into four quadrants before
         the screenshot is taken. When *commands* is provided together with
@@ -783,6 +819,10 @@ def screenshot(
                     logger.warning(f"Could not restore single-window layout: {restore_err}")
 
         base64_data = base64.b64encode(image_data).decode("utf-8")
+
+        if show_plot_on_popup:
+            _open_image_in_viewer(str(screenshot_path))
+
         logger.info(f"Screenshot captured successfully: {screenshot_path}")
 
         return ToolResult(
