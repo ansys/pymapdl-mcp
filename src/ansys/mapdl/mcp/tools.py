@@ -39,7 +39,6 @@ from pathlib import Path
 import platform
 import subprocess  # nosec B404
 import tempfile
-
 from typing import Any, cast
 
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
@@ -170,7 +169,7 @@ def _capture_screenshot(
     mapdl: Any,
     pre_commands: str = "",
     prefix: str = "mapdl_screenshot_",
-) -> tuple[str, bytes, str]:
+) -> tuple[Path, bytes, str]:
     """Run optional *pre_commands* then capture a MAPDL screenshot.
 
     Parameters
@@ -184,7 +183,7 @@ def _capture_screenshot(
 
     Returns
     -------
-    tuple[str, bytes, str]
+    tuple[Path, bytes, str]
         *(screenshot_path, image_bytes, mime_type)*
 
     Raises
@@ -192,8 +191,6 @@ def _capture_screenshot(
     FileNotFoundError
         If the screenshot file was not created by MAPDL.
     """
-    import tempfile
-
     temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix=prefix)
     os.close(temp_fd)
 
@@ -201,11 +198,11 @@ def _capture_screenshot(
         mapdl.input_strings(pre_commands)  # type: ignore[union-attr]
 
     # Ignoring PTH123 since the file is created by MAPDL
-    screenshot_path = mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
+    mapdl.screenshot(savefig=temp_path)  # type: ignore[union-attr]
 
-    image_path = Path(screenshot_path)
+    image_path = Path(temp_path)
     if not image_path.exists():
-        raise FileNotFoundError(f"Screenshot file not found: {screenshot_path}")
+        raise FileNotFoundError(f"Screenshot file not found: {temp_path}")
 
     mime_type = "image/png"
     if image_path.suffix.lower() in (".jpg", ".jpeg"):
@@ -215,10 +212,10 @@ def _capture_screenshot(
     elif image_path.suffix.lower() == ".gif":
         mime_type = "image/gif"
 
-    with open(screenshot_path, "rb") as f:  # noqa: PTH123
+    with open(image_path, "rb") as f:  # noqa: PTH123
         image_data = f.read()
 
-    return screenshot_path, image_data, mime_type
+    return image_path, image_data, mime_type
 
 
 # Tag applied to all tools that require an active MAPDL connection.
@@ -801,7 +798,7 @@ def screenshot(
     try:
         if commands:
             mapdl.input_strings(commands)
-            
+
         if four_view:
             logger.info("Capturing four-view MAPDL screenshot...")
             plot_cmd = commands if commands else "EPLOT"
@@ -824,15 +821,6 @@ def screenshot(
                     logger.warning(f"Could not restore single-window layout: {restore_err}")
 
         base64_data = base64.b64encode(image_data).decode("utf-8")
-
-        # Determine mime type based on file extension
-        mime_type = "image/png"  # Default to PNG
-        if image_path.suffix.lower() in [".jpg", ".jpeg"]:
-            mime_type = "image/jpeg"
-        elif image_path.suffix.lower() == ".bmp":
-            mime_type = "image/bmp"
-        elif image_path.suffix.lower() == ".gif":
-            mime_type = "image/gif"
 
         if show_plot_on_popup:
             _open_image_in_viewer(screenshot_path)
