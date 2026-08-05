@@ -174,7 +174,7 @@ This image shows Visual Studio Code settings for enabling MCP servers:
 - **Global**: Visual Studio Code user settings (auto-discovered).
 - **Workspace**: ``.vscode/mcp.json`` file for workspace-specific configuration.
 
-See `Visual Studio Code MCP Servers <https://code.visualstudio.com/docs/copilot/customization/mcp-servers>`_ documentation.
+See `Visual Studio Code MCP Servers <https://code.visualstudio.com/docs/agents/reference/mcp-configuration>`_ documentation.
 
 Claude Desktop
 --------------
