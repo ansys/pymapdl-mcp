@@ -1,0 +1,1506 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>The tools.py module &#8212; PyMAPDL-MCP</title>
+  
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/ansys-sphinx-theme.css?v=5ffe81b6" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/styles/ansys-sphinx-theme.css?v=5ffe81b6" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.23/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://www.nerdfonts.com/assets/css/webfont.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../../_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
+
+
+  <!-- Include desired assets -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  
+
+  
+    <link href="../../../../../_static/css/breadcrumbs.css" rel="stylesheet" />
+  
+    <script src="../../../../../_static/documentation_options.js?v=c66a0e83"></script>
+    <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+    <script src="../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/ansys/mapdl/mcp/tools/index';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.18.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://mapdl-mcp.docs.pyansys.com/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../../_static/ansys-favicon.png"/>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="Examples" href="../../../../../examples/index.html" />
+    <link rel="prev" title="SessionContext" href="../server/SessionContext.html" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.dev0" />
+  
+    
+    <script src="../../../../../_static/searchtools.js"></script>
+    <script src="../../../../../_static/language_data.js"></script>
+    <script src="../../../../../searchindex.js"></script>
+  
+  <link rel="canonical" href="https://mapdl-mcp.docs.pyansys.com/version/stable/api/ansys/mapdl/mcp/tools/index.html" />
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../../_static/pyansys_logo_transparent_black.png" class="logo__image only-light" alt="PyMAPDL-MCP - Home"/>
+    <img src="../../../../../_static/pyansys_logo_transparent_white.png" class="logo__image only-dark pst-js-only" alt="PyMAPDL-MCP - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../index.html" title="PyMAPDL-MCP home">Home</a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../user_guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../../../index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../changelog.html">
+    Release notes
+  </a>
+</li>
+
+  </ul>
+</nav>
+</div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<div class="search-bar pst-js-only" id="search-bar">
+  <form class="bd-search d-flex align-items-center" action="../../../../../search.html" method="get">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="search" class="form-control" name="q" placeholder="Search the docs ..."
+      aria-label="Search the docs ..." autocomplete="off" autocorrect="off"
+      autocapitalize="off" spellcheck="false" />
+    <span class="search-button__kbd-shortcut">
+      <kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd>
+    </span>
+  </form>
+  
+  <div id="static-search-results" class="static-search-results" style="display:none;" tabindex="0"></div>
+  
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/ansys/pymapdl-mcp" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/ansys/pymapdl-mcp/discussions" title="Support" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa fa-comment fa-fw fa-lg" aria-hidden="true"></i><span class="visually-hidden">Support</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+  
+    
+<!--
+  Announcement Version Loader
+  Dynamically loads the announcement.html content into the announcement_msg div.
+-->
+<div id="announcement_msg" aria-live="polite"></div>
+<script>
+  // Fetch and inject the announcement HTML content
+  fetch("announcement.html")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status} Announcement.html file not found, Please ignore this, if you are in dev/stable documentation`);
+      }
+      return response.text();
+    })
+    .then((text) => {
+      var msgDiv = document.getElementById("announcement_msg");
+      if (msgDiv) {
+        msgDiv.innerHTML = text;
+      }
+    })
+    .catch((error) => {
+      // Log only unexpected fetch errors
+      if (!(error.message && error.message.startsWith("HTTP error: 404"))) {
+        console.error(`Fetch problem: ${error.message} Announcement.html could not be loaded.`);
+      }
+    });
+</script>
+  
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../index.html" title="PyMAPDL-MCP home">Home</a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../user_guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../../../index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../changelog.html">
+    Release notes
+  </a>
+</li>
+
+  </ul>
+</nav>
+</div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="search-bar pst-js-only" id="search-bar">
+  <form class="bd-search d-flex align-items-center" action="../../../../../search.html" method="get">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="search" class="form-control" name="q" placeholder="Search the docs ..."
+      aria-label="Search the docs ..." autocomplete="off" autocorrect="off"
+      autocapitalize="off" spellcheck="false" />
+    <span class="search-button__kbd-shortcut">
+      <kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd>
+    </span>
+  </form>
+  
+  <div id="static-search-results" class="static-search-results" style="display:none;" tabindex="0"></div>
+  
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/ansys/pymapdl-mcp" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/ansys/pymapdl-mcp/discussions" title="Support" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa fa-comment fa-fw fa-lg" aria-hidden="true"></i><span class="visually-hidden">Support</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html"><span class="nf nf-md-package"></span> ansys.mapdl.mcp</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../__main__/index.html"> <span class="nf nf-fa-file"></span> __main__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contexts/index.html"> <span class="nf nf-fa-file"></span> contexts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../helpers/index.html"> <span class="nf nf-fa-file"></span> helpers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../prompts/index.html"> <span class="nf nf-fa-file"></span> prompts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../server/index.html"> <span class="nf nf-fa-file"></span> server</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#"> <span class="nf nf-fa-file"></span> tools</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+         
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="https://docs.pyansys.com/" class="nav-link">PyAnsys</a>
+    </li>
+     
+    <li class="breadcrumb-item">
+      <a
+        href="../../../../../index.html"
+        class="nav-link"
+        aria-label="Home"
+      >
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+     
+    <li class="breadcrumb-item">
+      <a href="../../../../index.html" class="nav-link">API reference</a>
+    </li>
+     
+    <li class="breadcrumb-item">
+      <a href="../index.html" class="nav-link">The <code class="docutils literal notranslate"><span class="pre">ansys.mapdl.mcp</span></code> library</a>
+    </li>
+      
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">The <code class="docutils literal notranslate"><span class="pre">tools.py</span></code> module</span></li>
+    
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-ansys.mapdl.mcp.tools">
+<span id="the-tools-py-module"></span><h1>The <code class="docutils literal notranslate"><span class="pre">tools.py</span></code> module<a class="headerlink" href="#module-ansys.mapdl.mcp.tools" title="Link to this heading">#</a></h1>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+Functions</label><div class="sd-tab-content docutils">
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tools.check_mapdl_status" title="tools.check_mapdl_status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_mapdl_status</span></code></a></p></td>
+<td><p>Check the status of MAPDL initialization.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tools.check_mapdl_installed" title="tools.check_mapdl_installed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_mapdl_installed</span></code></a></p></td>
+<td><p>Check if MAPDL is installed on the system.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tools.run_mapdl_command" title="tools.run_mapdl_command"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_mapdl_command</span></code></a></p></td>
+<td><p>Execute an arbitrary MAPDL command.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tools.run_multiple_mapdl_commands" title="tools.run_multiple_mapdl_commands"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_multiple_mapdl_commands</span></code></a></p></td>
+<td><p>Execute multiple MAPDL commands in sequence.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tools.launch_mapdl_session" title="tools.launch_mapdl_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">launch_mapdl_session</span></code></a></p></td>
+<td><p>Launch a new MAPDL instance.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tools.connect_to_mapdl" title="tools.connect_to_mapdl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">connect_to_mapdl</span></code></a></p></td>
+<td><p>Connect to an existing MAPDL instance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tools.disconnect_from_mapdl" title="tools.disconnect_from_mapdl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">disconnect_from_mapdl</span></code></a></p></td>
+<td><p>Disconnect from the dynamically connected MAPDL instance.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tools.list_mapdl_instances" title="tools.list_mapdl_instances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_mapdl_instances</span></code></a></p></td>
+<td><p>List all MAPDL instances running on the local machine and any remotely connected instance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tools.screenshot" title="tools.screenshot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">screenshot</span></code></a></p></td>
+<td><p>Capture a screenshot of the current MAPDL graphics window.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tools.run_python_code" title="tools.run_python_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_python_code</span></code></a></p></td>
+<td><p>Execute arbitrary Python and PyMAPDL code in the persistent Python session.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tools.custom_plot" title="tools.custom_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">custom_plot</span></code></a></p></td>
+<td><p>Create a custom plot using matplotlib or PyVista in the persistent Python session.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tools.upload_file" title="tools.upload_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">upload_file</span></code></a></p></td>
+<td><p>Upload a local file to the MAPDL instance working directory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tools.download_file" title="tools.download_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">download_file</span></code></a></p></td>
+<td><p>Download a file from the MAPDL instance working directory to the local filesystem.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tools.resume_model" title="tools.resume_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resume_model</span></code></a></p></td>
+<td><p>Resume a previously saved MAPDL model from a database or archive file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tools.open_results" title="tools.open_results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">open_results</span></code></a></p></td>
+<td><p>Enter POST1 and optionally set the active results file for post-processing.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tools.mapdl_working_directory" title="tools.mapdl_working_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mapdl_working_directory</span></code></a></p></td>
+<td><p>Return the working directory of the connected MAPDL instance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tools.mapdl_rst_path" title="tools.mapdl_rst_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mapdl_rst_path</span></code></a></p></td>
+<td><p>Return the expected path to the current MAPDL result file (RST).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tools.mapdl_db_path" title="tools.mapdl_db_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mapdl_db_path</span></code></a></p></td>
+<td><p>Return the expected path to the current MAPDL database file (DB).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tools.list_tool_sets" title="tools.list_tool_sets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_tool_sets</span></code></a></p></td>
+<td><p>Tool set definition resource that lists available tool sets for PyMAPDL MCP.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+Constants</label><div class="sd-tab-content docutils">
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tools.REQUIRES_MAPDL_TAG" title="tools.REQUIRES_MAPDL_TAG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REQUIRES_MAPDL_TAG</span></code></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+<section id="description">
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">#</a></h2>
+<p>List of tools in PyMAPDL-MCP.</p>
+<p>This module defines all MCP tools available in the PyMAPDL MCP server, organized into logical
+tool sets for better organization and accessibility.</p>
+</section>
+<section id="tool-sets">
+<h2>Tool sets<a class="headerlink" href="#tool-sets" title="Link to this heading">#</a></h2>
+<p>Tools are grouped into the following tool sets via the <code class="docutils literal notranslate"><span class="pre">toolsets://definition</span></code> resource:</p>
+<ul class="simple">
+<li><p><strong>session_management</strong>: Tools for managing MAPDL connections and instance discovery</p></li>
+<li><p><strong>file_management</strong>: Tools for transferring files to/from MAPDL and managing saved models</p></li>
+<li><p><strong>command_execution</strong>: Tools for executing MAPDL commands and scripts</p></li>
+<li><p><strong>visualization</strong>: Tools for visualization and post-processing results</p></li>
+<li><p><strong>python_execution</strong>: Tools for executing arbitrary Python and PyMAPDL code</p></li>
+</ul>
+<p>The <a class="reference internal" href="#tools.list_tool_sets" title="tools.list_tool_sets"><code class="xref py py-func docutils literal notranslate"><span class="pre">list_tool_sets()</span></code></a> function exposes these tool set definitions as a resource.</p>
+</section>
+<section id="module-detail">
+<h2>Module detail<a class="headerlink" href="#module-detail" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.check_mapdl_status">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">check_mapdl_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.check_mapdl_status" title="Link to this definition">#</a></dt>
+<dd><p>Check the status of MAPDL initialization.</p>
+<p>This tool extracts comprehensive information from PyMAPDL’s API and returns it
+as a structured JSON object. It also checks whether the MAPDL instance has
+exited or is exiting.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>JSON string containing comprehensive MAPDL status information including:
+- connection: Basic connection info (version, port, ip, directory, is_alive)
+- information: Data from Information class (title, jobname, routine, units, etc.)
+- geometry: Geometry statistics (number of keypoints, lines, areas, volumes)
+- post_processing: Post-processing availability and result sets
+- mesh: Mesh statistics (number of nodes and elements)</p>
+<p>Returns an error message if MAPDL is not available or has exited.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.check_mapdl_installed">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">check_mapdl_installed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.check_mapdl_installed" title="Link to this definition">#</a></dt>
+<dd><p>Check if MAPDL is installed on the system.</p>
+<p>This tool lists all ANSYS/MAPDL installations found on the system,
+including their version numbers and executable paths.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>Status message listing all found MAPDL installations, or a message
+indicating that no installation was found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.run_mapdl_command">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">run_mapdl_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.run_mapdl_command" title="Link to this definition">#</a></dt>
+<dd><p>Execute an arbitrary MAPDL command.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+<dt><strong>cmd</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a></span></dt><dd><p>The MAPDL command to execute.</p>
+</dd>
+<dt><strong>comment</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>An optional comment to include before the command execution. Default is empty string.</p>
+</dd>
+<dt><strong>header</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>An optional header to include before the command execution. Default is empty string.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>Command execution result.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.run_multiple_mapdl_commands">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">run_multiple_mapdl_commands</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commands</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.run_multiple_mapdl_commands" title="Link to this definition">#</a></dt>
+<dd><p>Execute multiple MAPDL commands in sequence.</p>
+<p>This tool is optimized for running multiple commands efficiently by using
+MAPDL’s <a class="reference external" href="https://mapdl.docs.pyansys.com/version/stable/api/_autosummary/ansys.mapdl.core.Mapdl.input_strings.html#ansys.mapdl.core.Mapdl.input_strings" title="(in ansys-mapdl-core v0.74.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">input_strings()</span></code></a> method, which processes
+commands in batch mode.
+This is significantly faster than executing commands one by one.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+<dt><strong>commands</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>]</span></dt><dd><p>List of MAPDL commands to execute in sequence.</p>
+</dd>
+<dt><strong>comment</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>An optional comment to include before the command execution. Default is empty string.</p>
+</dd>
+<dt><strong>header</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>An optional header to include before the command execution. Default is empty string.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>Execution result with summary of commands executed.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.launch_mapdl_session">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">launch_mapdl_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exec_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_location</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nproc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_switches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.launch_mapdl_session" title="Link to this definition">#</a></dt>
+<dd><p>Launch a new MAPDL instance.</p>
+<p>This tool starts a new MAPDL instance using PyMAPDL’s
+<a class="reference external" href="https://mapdl.docs.pyansys.com/version/stable/api/_autosummary/ansys.mapdl.core.launcher.launch_mapdl.html#ansys.mapdl.core.launcher.launch_mapdl" title="(in ansys-mapdl-core v0.74.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">launch_mapdl()</span></code></a> function.
+The launched instance will be automatically connected and stored in the context
+for subsequent operations. The instance can be closed using the
+<a class="reference internal" href="#tools.disconnect_from_mapdl" title="tools.disconnect_from_mapdl"><code class="xref py py-func docutils literal notranslate"><span class="pre">disconnect_from_mapdl()</span></code></a> tool.
+Once you are connected to the launched instance, other tools become available
+to interact with it, such as <a class="reference internal" href="#tools.run_mapdl_command" title="tools.run_mapdl_command"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_mapdl_command()</span></code></a>,
+<a class="reference internal" href="#tools.check_mapdl_status" title="tools.check_mapdl_status"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_mapdl_status()</span></code></a>, <a class="reference internal" href="#tools.screenshot" title="tools.screenshot"><code class="xref py py-func docutils literal notranslate"><span class="pre">screenshot()</span></code></a>, and more.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+<dt><strong>exec_file</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>The path to the MAPDL executable. If None, PyMAPDL will attempt to find
+the MAPDL executable automatically.</p>
+</dd>
+<dt><strong>port</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">int</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>The gRPC port for MAPDL to listen on. If None, a default port will be used.</p>
+</dd>
+<dt><strong>run_location</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>The directory where MAPDL will run and store files. If None, a temporary
+directory will be created.</p>
+</dd>
+<dt><strong>nproc</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">int</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">None</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Number of processors to use. Default is None. MAPDL will decide based on
+available resources.</p>
+</dd>
+<dt><strong>additional_switches</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Additional command line switches to pass to MAPDL. Default is empty string.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>Launch status message with MAPDL version and connection information.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.connect_to_mapdl">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">connect_to_mapdl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50052</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'localhost'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.connect_to_mapdl" title="Link to this definition">#</a></dt>
+<dd><p>Connect to an existing MAPDL instance.</p>
+<p>This tool establishes a connection to a running MAPDL instance using the
+provided port and IP address. The connection is stored for subsequent
+operations and can be closed using the <a class="reference internal" href="#tools.disconnect_from_mapdl" title="tools.disconnect_from_mapdl"><code class="xref py py-func docutils literal notranslate"><span class="pre">disconnect_from_mapdl()</span></code></a> tool.
+Once you are connected to the MAPDL instance, other tools become available
+to interact with it, such as <a class="reference internal" href="#tools.run_mapdl_command" title="tools.run_mapdl_command"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_mapdl_command()</span></code></a>,
+<a class="reference internal" href="#tools.check_mapdl_status" title="tools.check_mapdl_status"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_mapdl_status()</span></code></a>, <a class="reference internal" href="#tools.screenshot" title="tools.screenshot"><code class="xref py py-func docutils literal notranslate"><span class="pre">screenshot()</span></code></a>, and more.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+<dt><strong>port</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">int</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>The gRPC port where MAPDL is listening. Default is 50052.</p>
+</dd>
+<dt><strong>ip</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>The IP address where MAPDL is running. Default is “localhost”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>Connection status message with MAPDL version information.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.disconnect_from_mapdl">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">disconnect_from_mapdl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.disconnect_from_mapdl" title="Link to this definition">#</a></dt>
+<dd><p>Disconnect from the dynamically connected MAPDL instance.</p>
+<p>This tool closes the connection to the MAPDL instance that was established
+using the <a class="reference internal" href="#tools.connect_to_mapdl" title="tools.connect_to_mapdl"><code class="xref py py-func docutils literal notranslate"><span class="pre">connect_to_mapdl()</span></code></a> tool and releases the associated
+resources.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>Disconnection status message.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.list_mapdl_instances">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">list_mapdl_instances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.list_mapdl_instances" title="Link to this definition">#</a></dt>
+<dd><p>List all MAPDL instances running on the local machine and any remotely connected instance.</p>
+<p>This tool uses PyMAPDL CLI’s
+<code class="xref py py-func docutils literal notranslate"><span class="pre">list_instances()</span></code> function to discover
+MAPDL instances running on the machine by scanning for active gRPC
+servers and their associated metadata. It also includes any remotely
+connected MAPDL instance that was established via the
+<a class="reference internal" href="#tools.connect_to_mapdl" title="tools.connect_to_mapdl"><code class="xref py py-func docutils literal notranslate"><span class="pre">connect_to_mapdl()</span></code></a> tool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>Formatted table containing information about all running MAPDL instances
+including their names, status, gRPC ports, IP addresses, PIDs, and
+working directories. If a remote instance is connected, it is listed in a
+separate section below the local instances.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.screenshot">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">screenshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commands</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_plot_on_popup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">four_view</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.screenshot" title="Link to this definition">#</a></dt>
+<dd><p>Capture a screenshot of the current MAPDL graphics window.</p>
+<p>All plots use the MAPDL backend, which is the preferred and recommended
+way to obtain plot images, especially for large or complex models, as it
+leverages MAPDL’s native plotting capabilities.</p>
+<p>MAPDL Native Plot Commands (use with screenshot):</p>
+<ul class="simple">
+<li><p>Geometry: <code class="docutils literal notranslate"><span class="pre">APLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">LPLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">KPLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">VPLOT</span></code></p></li>
+<li><p>Mesh: <code class="docutils literal notranslate"><span class="pre">EPLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">NPLOT</span></code></p></li>
+<li><p>Post-processing: <code class="docutils literal notranslate"><span class="pre">PLNSOL</span></code>, <code class="docutils literal notranslate"><span class="pre">PLESOL</span></code>, <code class="docutils literal notranslate"><span class="pre">PLDISP</span></code></p></li>
+</ul>
+<p>For custom matplotlib or PyVista plots, use the <a class="reference internal" href="#tools.custom_plot" title="tools.custom_plot"><code class="xref py py-func docutils literal notranslate"><span class="pre">custom_plot()</span></code></a> tool
+instead.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+<dt><strong>commands</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Optional MAPDL commands to execute before taking the screenshot.
+Avoid running commands that are not related to plotting or visualization.
+This can be used to set up the plot or visualization before capturing.
+Avoid running long or complex commands that may delay the screenshot.
+Default is empty string.</p>
+</dd>
+<dt><strong>show_plot_on_popup</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bltin-boolean-values" title="(in Python v3.14)"><span class="xref std std-ref">bool</span></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, open the captured image in the system’s default image
+viewer as an external popup window in addition to returning it to the
+LLM. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+<dt><strong>four_view</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bltin-boolean-values" title="(in Python v3.14)"><span class="xref std std-ref">bool</span></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>When <code class="docutils literal notranslate"><span class="pre">True</span></code>, the graphics window is split into four quadrants before
+the screenshot is taken. When <em>commands</em> is provided together with
+<code class="docutils literal notranslate"><span class="pre">four_view=True</span></code>, the <em>commands</em> string is used as the plot command
+that populates all four windows (default <code class="docutils literal notranslate"><span class="pre">EPLOT</span></code> when <em>commands</em> is
+empty). The window layout is automatically restored after the
+screenshot. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>. See Notes for the quadrant layout.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>A result containing:</p>
+<ul class="simple">
+<li><p>TextContent with the screenshot file path</p></li>
+<li><p>ImageContent with the base64-encoded image data</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.run_python_code">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">run_python_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.run_python_code" title="Link to this definition">#</a></dt>
+<dd><p>Execute arbitrary Python and PyMAPDL code in the persistent Python session.</p>
+<p>This tool should be used for custom Python code execution, particularly for:</p>
+<ul class="simple">
+<li><p>Custom data processing and analysis</p></li>
+<li><p>Creating custom matplotlib plots not available in MAPDL</p></li>
+<li><p>Advanced PyVista visualizations beyond MAPDL’s native capabilities</p></li>
+<li><p>NumPy/Pandas data manipulation and custom visualization</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>For MAPDL native plotting (<code class="docutils literal notranslate"><span class="pre">APLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">LPLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">KPLOT</span></code>,
+post_processing plots, etc.), use the normal MAPDL session commands
+with the <a class="reference internal" href="#tools.screenshot" title="tools.screenshot"><code class="xref py py-func docutils literal notranslate"><span class="pre">screenshot()</span></code></a> tool instead, as they provide interactive
+plots that are directly accessible.</p>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+<dt><strong>code</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a></span></dt><dd><p>The Python code to execute.</p>
+</dd>
+<dt><strong>timeout</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">int</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Maximum time in seconds to allow for code execution. Default is 60 seconds.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>Execution result or error message.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Execute simple Python code to compute a value:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">>>> </span><span class="n">code</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">result = sum([i**2 for i in range(10)])</span>
+<span class="gp">... </span><span class="s1">print(f&quot;Sum of squares: </span><span class="si">{result}</span><span class="s1">&quot;)</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">>>> </span><span class="n">run_python_code</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">code</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Execute PyMAPDL code:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">>>> </span><span class="n">code</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">displacements = mapdl.get_array(&quot;NODE&quot;, item1=&quot;U&quot;, it1num=&quot;Y&quot;)</span>
+<span class="gp">... </span><span class="s1">print(f&quot;Displacements: </span><span class="si">{displacements}</span><span class="s1">&quot;)</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">>>> </span><span class="n">run_python_code</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">code</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.custom_plot">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">custom_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'matplotlib'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.custom_plot" title="Link to this definition">#</a></dt>
+<dd><p>Create a custom plot using matplotlib or PyVista in the persistent Python session.</p>
+<p>This tool is specifically designed for creating custom plots that are NOT available
+in MAPDL’s native plotting capabilities. Use this when you need:</p>
+<ul class="simple">
+<li><p>Custom matplotlib visualizations (line plots, bar charts, histograms, etc.)</p></li>
+<li><p>Advanced PyVista 3D visualizations beyond MAPDL defaults</p></li>
+<li><p>Combined data from multiple sources</p></li>
+<li><p>Custom data processing with visualization</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>For standard MAPDL plots (<code class="docutils literal notranslate"><span class="pre">APLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">LPLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">KPLOT</span></code>,
+post_processing plots), use the normal MAPDL commands with the
+<a class="reference internal" href="#tools.screenshot" title="tools.screenshot"><code class="xref py py-func docutils literal notranslate"><span class="pre">screenshot()</span></code></a> tool instead for interactive plots.</p>
+</div>
+<p>The persistent Python session has pre-configured matplotlib (Agg backend) and
+PyVista (off-screen rendering) with helper functions:</p>
+<ul class="simple">
+<li><p>save_matplotlib_plot(filename, dpi)</p></li>
+<li><p>save_plot(plotter, filename)</p></li>
+</ul>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+<dt><strong>plot_code</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a></span></dt><dd><p>Python code to create the plot. Should use matplotlib.pyplot or PyVista.
+For matplotlib, the code should create the figure/plot but NOT call plt.show().
+Use the save_matplotlib_plot() or save_plot() helper functions to return
+the plot.</p>
+</dd>
+<dt><strong>plot_type</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Type of plot: “matplotlib” or “pyvista”. Default is “matplotlib”.</p>
+</dd>
+<dt><strong>timeout</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">int</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Maximum time in seconds for plot generation. Default is 60 seconds.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>A result containing:
+- TextContent with the plot creation status message
+- ImageContent with the base64-encoded image data if successful</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Create a custom matplotlib line plot:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">>>> </span><span class="n">plot_code</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">import matplotlib.pyplot as plt</span>
+<span class="gp">... </span><span class="s1">import numpy as np</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># Extract data from MAPDL</span>
+<span class="gp">... </span><span class="s1">displacements = mapdl.get_array(&quot;NODE&quot;, item1=&quot;U&quot;, it1num=&quot;Y&quot;)</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># Create custom plot</span>
+<span class="gp">... </span><span class="s1">plt.figure(figsize=(10, 6))</span>
+<span class="gp">... </span><span class="s1">plt.plot(displacements)</span>
+<span class="gp">... </span><span class="s1">plt.xlabel(&quot;Node Number&quot;)</span>
+<span class="gp">... </span><span class="s1">plt.ylabel(&quot;Displacement (m)&quot;)</span>
+<span class="gp">... </span><span class="s1">plt.title(&quot;Custom Displacement Plot&quot;)</span>
+<span class="gp">... </span><span class="s1">plt.grid(True)</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># Save and return</span>
+<span class="gp">... </span><span class="s1">result = save_matplotlib_plot(dpi=150)</span>
+<span class="gp">... </span><span class="s1">print(result)</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">>>> </span><span class="n">custom_plot</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">plot_code</span><span class="p">,</span> <span class="n">plot_type</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.upload_file">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">upload_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.upload_file" title="Link to this definition">#</a></dt>
+<dd><p>Upload a local file to the MAPDL instance working directory.</p>
+<p>The file is transferred over gRPC from the local filesystem to the remote
+(or local) MAPDL working directory so that MAPDL commands such as
+<code class="docutils literal notranslate"><span class="pre">RESUME</span></code>, <code class="docutils literal notranslate"><span class="pre">CDREAD</span></code>, or <code class="docutils literal notranslate"><span class="pre">FILE</span></code> can reference it by its base name.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+<dt><strong>file_path</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a></span></dt><dd><p>Absolute or relative path to the file on the <strong>local</strong> filesystem.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>Text message with the uploaded filename on success, or an error
+description if the file cannot be found or the transfer fails.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Upload a database file before resuming a model:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">>>> </span><span class="n">upload_file</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s2">&quot;/home/user/project/beam.db&quot;</span><span class="p">)</span>
+<span class="gp">>>> </span><span class="n">resume_model</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s2">&quot;beam&quot;</span><span class="p">,</span> <span class="s2">&quot;db&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.download_file">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">download_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.download_file" title="Link to this definition">#</a></dt>
+<dd><p>Download a file from the MAPDL instance working directory to the local filesystem.</p>
+<p>Use this tool to retrieve result files (e.g. <code class="docutils literal notranslate"><span class="pre">file.rst</span></code>, <code class="docutils literal notranslate"><span class="pre">file.db</span></code>),
+log files, or any other file produced by the current MAPDL session.
+Glob patterns such as <code class="docutils literal notranslate"><span class="pre">&quot;file*&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;*.rst&quot;</span></code> are supported.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+<dt><strong>file_name</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a></span></dt><dd><p>Name of the file in the MAPDL working directory to download.
+Supports glob patterns (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;file*&quot;</span></code>).
+Use the <code class="docutils literal notranslate"><span class="pre">check_mapdl_status</span></code> tool or the
+<code class="docutils literal notranslate"><span class="pre">files://mapdl/working_directory</span></code> resource to inspect available files.</p>
+</dd>
+<dt><strong>target_dir</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Local directory where the file(s) will be saved.  Defaults to the
+current Python working directory when <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>Text message listing the downloaded files on success, or an error
+description if the download fails.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Download the main result file:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">>>> </span><span class="n">download_file</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s2">&quot;file.rst&quot;</span><span class="p">,</span> <span class="s2">&quot;/home/user/results&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Download all output files:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">>>> </span><span class="n">download_file</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s2">&quot;file*&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.resume_model">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">resume_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'db'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.resume_model" title="Link to this definition">#</a></dt>
+<dd><p>Resume a previously saved MAPDL model from a database or archive file.</p>
+<p>This tool restores the MAPDL database from a <code class="docutils literal notranslate"><span class="pre">.db</span></code> binary database file
+or a <code class="docutils literal notranslate"><span class="pre">.cdb</span></code> coded ASCII archive file.  If the file is on the local
+filesystem (not yet in the MAPDL working directory), upload it first with
+the <code class="docutils literal notranslate"><span class="pre">upload_file</span></code> tool.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+<dt><strong>file_name</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a></span></dt><dd><p>Name of the file <strong>without extension</strong> as it exists in the MAPDL
+working directory (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;beam&quot;</span></code> for <code class="docutils literal notranslate"><span class="pre">beam.db</span></code>).</p>
+</dd>
+<dt><strong>extension</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>File extension that identifies the file format. Accepted values:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;db&quot;</span></code> <em>(default)</em> — binary MAPDL database (RESUME command).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;cdb&quot;</span></code> — coded ASCII database (CDREAD command).</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>MAPDL command output on success, or an error description.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Resume from a binary database:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">>>> </span><span class="n">resume_model</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s2">&quot;beam&quot;</span><span class="p">,</span> <span class="s2">&quot;db&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Resume from a coded archive:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">>>> </span><span class="n">resume_model</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;cdb&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.open_results">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">open_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">fastmcp.server.Context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">fastmcp.tools.base.ToolResult</span></span></span><a class="headerlink" href="#tools.open_results" title="Link to this definition">#</a></dt>
+<dd><p>Enter POST1 and optionally set the active results file for post-processing.</p>
+<p>This tool switches MAPDL into the POST1 post-processor and, when a file
+name is supplied, points MAPDL at that results file.  Use it before
+querying displacements, stresses, or other result quantities.</p>
+<p>If the RST file is stored on the local filesystem (not yet in the MAPDL
+working directory), upload it first with the <code class="docutils literal notranslate"><span class="pre">upload_file</span></code> tool.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>ctx</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code></span></dt><dd><p>The MCP context containing server session and application context.</p>
+</dd>
+<dt><strong>file_name</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">optional</span></code></span></dt><dd><p>Name of the result file <strong>without extension</strong> in the MAPDL working
+directory (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;beam&quot;</span></code> for <code class="docutils literal notranslate"><span class="pre">beam.rst</span></code>).  When omitted, MAPDL
+uses the current jobname result file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolResult</span></code></dt><dd><p>Status message indicating whether POST1 was entered and the results
+file was set, or an error description.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Open the default results file:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">>>> </span><span class="n">open_results</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Open a specific RST file:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">>>> </span><span class="n">open_results</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s2">&quot;beam&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.mapdl_working_directory">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">mapdl_working_directory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#tools.mapdl_working_directory" title="Link to this definition">#</a></dt>
+<dd><p>Return the working directory of the connected MAPDL instance.</p>
+<p>This resource provides the absolute path to the directory where MAPDL
+stores all its output files (<code class="docutils literal notranslate"><span class="pre">file.rst</span></code>, <code class="docutils literal notranslate"><span class="pre">file.db</span></code>, log files, etc.).
+The path is updated dynamically each time this resource is read.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a></dt><dd><p>Absolute path to the MAPDL working directory, or a message indicating
+that MAPDL is not connected.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.mapdl_rst_path">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">mapdl_rst_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#tools.mapdl_rst_path" title="Link to this definition">#</a></dt>
+<dd><p>Return the expected path to the current MAPDL result file (RST).</p>
+<p>The path is constructed from the MAPDL working directory and the current
+jobname.  Before reading this file with an external application, ensure
+the simulation has finished running.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a></dt><dd><p>Absolute path to <code class="docutils literal notranslate"><span class="pre"><working_directory>/<jobname>.rst</span></code>, or a message
+indicating that MAPDL is not connected.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.mapdl_db_path">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">mapdl_db_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#tools.mapdl_db_path" title="Link to this definition">#</a></dt>
+<dd><p>Return the expected path to the current MAPDL database file (DB).</p>
+<p>The path is constructed from the MAPDL working directory and the current
+jobname.  This file is written by the MAPDL <code class="docutils literal notranslate"><span class="pre">SAVE</span></code> command and can be
+restored with the <code class="docutils literal notranslate"><span class="pre">resume_model</span></code> tool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">str</span></code></a></dt><dd><p>Absolute path to <code class="docutils literal notranslate"><span class="pre"><working_directory>/<jobname>.db</span></code>, or a message
+indicating that MAPDL is not connected.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tools.list_tool_sets">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">list_tool_sets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tools.list_tool_sets" title="Link to this definition">#</a></dt>
+<dd><p>Tool set definition resource that lists available tool sets for PyMAPDL MCP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">dict</span></code></a>]</dt><dd><p>List of tool set definitions, each containing:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: Unique identifier for the tool set</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">description</span></code>: Human-readable description of the tool set</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skill</span></code>: Instructions for the AI agent on when and how to use these tool sets</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tools</span></code>: List of tool function names in this set</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">>>> </span><span class="n">list_tool_sets</span><span class="p">()</span>
+<span class="go">[</span>
+<span class="go">    {</span>
+<span class="go">        &quot;name&quot;: &quot;session_management&quot;,</span>
+<span class="go">        &quot;description&quot;: &quot;Tools for managing MAPDL session connections and instances&quot;,</span>
+<span class="go">        &quot;skill&quot;: (</span>
+<span class="go">            &quot;Use these tools to manage MAPDL connections and sessions. &quot;</span>
+<span class="go">            &quot;Start by checking available installations with check_mapdl_installed, &quot;</span>
+<span class="go">            &quot;then launch a new session with launch_mapdl_session or connect to an existing &quot;</span>
+<span class="go">            &quot;instance with connect_to_mapdl. Use check_mapdl_status to verify the connection&quot;</span>
+<span class="go">            &quot;status. List active instances with list_mapdl_instances and disconnect when done&quot;</span>
+<span class="go">            &quot; using disconnect_from_mapdl.&quot;</span>
+<span class="go">        ),</span>
+<span class="go">        &quot;tools&quot;: [</span>
+<span class="go">            &quot;check_mapdl_installed&quot;,</span>
+<span class="go">            &quot;check_mapdl_status&quot;,</span>
+<span class="go">            &quot;launch_mapdl_session&quot;,</span>
+<span class="go">            &quot;connect_to_mapdl&quot;,</span>
+<span class="go">            &quot;disconnect_from_mapdl&quot;,</span>
+<span class="go">            &quot;list_mapdl_instances&quot;,</span>
+<span class="go">        ],</span>
+<span class="go">    }</span>
+<span class="go">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="tools.REQUIRES_MAPDL_TAG">
+<span class="sig-prename descclassname"><span class="pre">tools.</span></span><span class="sig-name descname"><span class="pre">REQUIRES_MAPDL_TAG</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'requires_mapdl'</span></em><a class="headerlink" href="#tools.REQUIRES_MAPDL_TAG" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#description">Description</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tool-sets">Tool sets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-detail">Module detail</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.check_mapdl_status"><code class="docutils literal notranslate"><span class="pre">check_mapdl_status()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.check_mapdl_installed"><code class="docutils literal notranslate"><span class="pre">check_mapdl_installed()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.run_mapdl_command"><code class="docutils literal notranslate"><span class="pre">run_mapdl_command()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.run_multiple_mapdl_commands"><code class="docutils literal notranslate"><span class="pre">run_multiple_mapdl_commands()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.launch_mapdl_session"><code class="docutils literal notranslate"><span class="pre">launch_mapdl_session()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.connect_to_mapdl"><code class="docutils literal notranslate"><span class="pre">connect_to_mapdl()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.disconnect_from_mapdl"><code class="docutils literal notranslate"><span class="pre">disconnect_from_mapdl()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.list_mapdl_instances"><code class="docutils literal notranslate"><span class="pre">list_mapdl_instances()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.screenshot"><code class="docutils literal notranslate"><span class="pre">screenshot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.run_python_code"><code class="docutils literal notranslate"><span class="pre">run_python_code()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.custom_plot"><code class="docutils literal notranslate"><span class="pre">custom_plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.upload_file"><code class="docutils literal notranslate"><span class="pre">upload_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.download_file"><code class="docutils literal notranslate"><span class="pre">download_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.resume_model"><code class="docutils literal notranslate"><span class="pre">resume_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.open_results"><code class="docutils literal notranslate"><span class="pre">open_results()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.mapdl_working_directory"><code class="docutils literal notranslate"><span class="pre">mapdl_working_directory()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.mapdl_rst_path"><code class="docutils literal notranslate"><span class="pre">mapdl_rst_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.mapdl_db_path"><code class="docutils literal notranslate"><span class="pre">mapdl_db_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.list_tool_sets"><code class="docutils literal notranslate"><span class="pre">list_tool_sets()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tools.REQUIRES_MAPDL_TAG"><code class="docutils literal notranslate"><span class="pre">REQUIRES_MAPDL_TAG</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+
+  
+  <nav class="tocsection editthispage" aria-label="Edit this page">
+    <a href="http://github.com/ansys/pymapdl-mcp/edit/main/check_mapdl_status.py" rel="noopener noreferrer">
+      <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </nav>
+</div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <ul class="this-page-menu">
+      <li><a href="../../../../../_sources/api/ansys/mapdl/mcp/tools/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
+<script defer src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
+
+
+  <!-- Include desired assets -->
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.7/require.min.js"></script>
+
+<script>
+// Passing the search options to the search.js file
+const SEARCH_OPTIONS = JSON.parse('{"keys": ["title", "text", "objectID"], "limit": 10, "threshold": 0.2}');
+const SEARCH_FILE = "../../../../../_static/search.json";
+const ADVANCE_SEARCH_PATH = "../../../../../search.html";
+const EXTRA_SOURCES = JSON.parse('""');
+</script>
+
+
+<script src="../../../../../_static/js/search.js"></script>
+
+  
+<footer class="bd-footer" font-size="4px">
+  <div class="bd-footer__inner bd-page-width">
+    <div class="footer-items__start">
+      <div class="footer-item">
+        <p class="copyright">
+          PyMAPDL-MCP 0.3.dev0 © Copyright (c) <span id="copyright-year"></span> ANSYS, Inc. All rights reserved.
+          <br>
+        </p>
+        <script>
+          document.getElementById("copyright-year").textContent = new Date().getFullYear();
+        </script>
+      </div>
+    </div>
+    <div class="footer-items__end">
+      <div class="footer-item">
+        <p class="theme-version">
+          Built with the
+          <a href="https://sphinxdocs.ansys.com/version/stable/index.html">Ansys Sphinx Theme</a>
+          1.9.0. and
+           <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+          on <span id="date"></span>
+        </p>
+        <script>
+          var options = { day: "numeric", month: "long", year: "numeric" };
+          var lastModifiedDate = new Date(document.lastModified);
+          var date = lastModifiedDate.toLocaleDateString("en-US", options);
+          document.getElementById("date").innerHTML = date;
+        </script>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  </body>
+</html>

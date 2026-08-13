@@ -1,0 +1,155 @@
+
+
+
+
+
+
+The ``server.py`` module
+========================
+
+.. py:module:: ansys.mapdl.mcp.server
+
+
+Summary
+-------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.. py:currentmodule:: server
+.. tab-set::
+
+
+
+
+    .. tab-item:: Classes
+
+        .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+
+          * - :py:obj:`~ansys.mapdl.mcp.server.PyMAPDLAppContext`
+            - Application context with typed dependencies and CLI options.
+
+
+          * - :py:obj:`~ansys.mapdl.mcp.server.PyMAPDLMCP`
+            - FastMCP server for managing MAPDL instances.
+
+
+          * - :py:obj:`~ansys.mapdl.mcp.server.SessionContext`
+            - Session context for storing CLI options.
+
+
+
+
+
+    .. tab-item:: Functions
+
+        .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+
+          * - :py:obj:`~launcher`
+            - Entry point for the MCP server.
+
+
+
+    .. tab-item:: Attributes
+
+        .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+
+          * - :py:obj:`~app`
+            - 
+
+
+          * - :py:obj:`~session`
+            - 
+
+
+
+
+
+
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+    <span class="nf nf-cod-symbol_class"></span> PyMAPDLAppContext</api/ansys/mapdl/mcp/server/PyMAPDLAppContext>
+    <span class="nf nf-cod-symbol_class"></span> PyMAPDLMCP</api/ansys/mapdl/mcp/server/PyMAPDLMCP>
+    <span class="nf nf-cod-symbol_class"></span> SessionContext</api/ansys/mapdl/mcp/server/SessionContext>
+
+
+
+
+
+
+
+
+
+Description
+-----------
+
+Lifespan and CLI entry for the MCP server with startup options.
+
+..
+    !! processed by numpydoc !!
+
+
+
+
+
+
+Module detail
+-------------
+
+.. py:function:: launcher(argv: list[str] | None = None) -> None
+
+   
+   Entry point for the MCP server.
+
+
+   :Parameters:
+
+       **argv** : :class:`python:list`\[:class:`python:str`] | :data:`python:None`
+           Optional list of arguments for testing. Defaults to `sys.argv[1:]`.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:data:: app
+
+.. py:data:: session
+
+
+

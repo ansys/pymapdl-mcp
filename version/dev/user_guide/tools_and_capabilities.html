@@ -1,0 +1,1024 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tools and capabilities &#8212; PyMAPDL-MCP</title>
+  
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/ansys-sphinx-theme.css?v=5ffe81b6" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/ansys-sphinx-theme.css?v=5ffe81b6" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.23/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://www.nerdfonts.com/assets/css/webfont.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
+
+
+  <!-- Include desired assets -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  
+
+  
+    <link href="../_static/css/breadcrumbs.css" rel="stylesheet" />
+  
+    <script src="../_static/documentation_options.js?v=c66a0e83"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/tools_and_capabilities';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.18.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://mapdl-mcp.docs.pyansys.com/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../_static/ansys-favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.dev0" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  <link rel="canonical" href="https://mapdl-mcp.docs.pyansys.com/version/stable/user_guide/tools_and_capabilities.html" />
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/pyansys_logo_transparent_black.png" class="logo__image only-light" alt="PyMAPDL-MCP - Home"/>
+    <img src="../_static/pyansys_logo_transparent_white.png" class="logo__image only-dark pst-js-only" alt="PyMAPDL-MCP - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html" title="PyMAPDL-MCP home">Home</a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Release notes
+  </a>
+</li>
+
+  </ul>
+</nav>
+</div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<div class="search-bar pst-js-only" id="search-bar">
+  <form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="search" class="form-control" name="q" placeholder="Search the docs ..."
+      aria-label="Search the docs ..." autocomplete="off" autocorrect="off"
+      autocapitalize="off" spellcheck="false" />
+    <span class="search-button__kbd-shortcut">
+      <kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd>
+    </span>
+  </form>
+  
+  <div id="static-search-results" class="static-search-results" style="display:none;" tabindex="0"></div>
+  
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/ansys/pymapdl-mcp" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/ansys/pymapdl-mcp/discussions" title="Support" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa fa-comment fa-fw fa-lg" aria-hidden="true"></i><span class="visually-hidden">Support</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+  
+    
+<!--
+  Announcement Version Loader
+  Dynamically loads the announcement.html content into the announcement_msg div.
+-->
+<div id="announcement_msg" aria-live="polite"></div>
+<script>
+  // Fetch and inject the announcement HTML content
+  fetch("announcement.html")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status} Announcement.html file not found, Please ignore this, if you are in dev/stable documentation`);
+      }
+      return response.text();
+    })
+    .then((text) => {
+      var msgDiv = document.getElementById("announcement_msg");
+      if (msgDiv) {
+        msgDiv.innerHTML = text;
+      }
+    })
+    .catch((error) => {
+      // Log only unexpected fetch errors
+      if (!(error.message && error.message.startsWith("HTTP error: 404"))) {
+        console.error(`Fetch problem: ${error.message} Announcement.html could not be loaded.`);
+      }
+    });
+</script>
+  
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html" title="PyMAPDL-MCP home">Home</a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Release notes
+  </a>
+</li>
+
+  </ul>
+</nav>
+</div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="search-bar pst-js-only" id="search-bar">
+  <form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="search" class="form-control" name="q" placeholder="Search the docs ..."
+      aria-label="Search the docs ..." autocomplete="off" autocorrect="off"
+      autocapitalize="off" spellcheck="false" />
+    <span class="search-button__kbd-shortcut">
+      <kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd>
+    </span>
+  </form>
+  
+  <div id="static-search-results" class="static-search-results" style="display:none;" tabindex="0"></div>
+  
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/ansys/pymapdl-mcp" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/ansys/pymapdl-mcp/discussions" title="Support" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa fa-comment fa-fw fa-lg" aria-hidden="true"></i><span class="visually-hidden">Support</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+         
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="https://docs.pyansys.com/" class="nav-link">PyAnsys</a>
+    </li>
+     
+    <li class="breadcrumb-item">
+      <a
+        href="../index.html"
+        class="nav-link"
+        aria-label="Home"
+      >
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+      
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tools and capabilities</span></li>
+    
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="tools-and-capabilities">
+<h1>Tools and capabilities<a class="headerlink" href="#tools-and-capabilities" title="Link to this heading">#</a></h1>
+<section id="tool-availability">
+<h2>Tool availability<a class="headerlink" href="#tool-availability" title="Link to this heading">#</a></h2>
+<p>PyMAPDL-MCP dynamically enables and disables tools based on whether an MAPDL instance is
+connected. This keeps the AI assistant’s context small when MAPDL is not in use.</p>
+<p><strong>Before connecting to MAPDL</strong>, you can access these tools:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 35.0%" />
+<col style="width: 65.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Tool</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">check_mapdl_installed</span></code></p></td>
+<td><p>Check if MAPDL is installed on the system</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">list_mapdl_instances</span></code></p></td>
+<td><p>Discover running MAPDL instances</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">connect_to_mapdl</span></code></p></td>
+<td><p>Connect to an existing MAPDL instance</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">launch_mapdl_session</span></code></p></td>
+<td><p>Launch and connect to a new MAPDL instance</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_guidelines_for</span></code></p></td>
+<td><p>Workflow guidance and best-practice context tool</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>After connecting to MAPDL</strong>, you gain access to the full set of tools. When you call the
+<code class="docutils literal notranslate"><span class="pre">disconnect_from_mapdl</span></code> tool, the MAPDL-specific tools become unavailable.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 35.0%" />
+<col style="width: 65.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Tool</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">check_mapdl_status</span></code></p></td>
+<td><p>Get comprehensive MAPDL status</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">run_mapdl_command</span></code></p></td>
+<td><p>Execute a single MAPDL command</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">run_multiple_mapdl_commands</span></code></p></td>
+<td><p>Execute multiple MAPDL commands in batch</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">disconnect_from_mapdl</span></code></p></td>
+<td><p>Disconnect from the MAPDL instance</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">screenshot</span></code></p></td>
+<td><p>Capture the MAPDL graphics window as a static image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">run_python_code</span></code></p></td>
+<td><p>Execute Python/PyMAPDL code in a persistent session</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_plot</span></code></p></td>
+<td><p>Create custom matplotlib or PyVista plots</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">upload_file</span></code></p></td>
+<td><p>Upload a local file to the MAPDL working directory</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">download_file</span></code></p></td>
+<td><p>Download a file from the MAPDL working directory</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">resume_model</span></code></p></td>
+<td><p>Restore a saved model from a <code class="docutils literal notranslate"><span class="pre">.db</span></code> or <code class="docutils literal notranslate"><span class="pre">.cdb</span></code> file</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">open_results</span></code></p></td>
+<td><p>Enter POST1 and set the active results file for post-processing</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When you use <code class="docutils literal notranslate"><span class="pre">--connect-on-startup</span></code>, MAPDL connects at startup and all tools are immediately
+available (except <code class="docutils literal notranslate"><span class="pre">connect_to_mapdl</span></code>, <code class="docutils literal notranslate"><span class="pre">launch_mapdl_session</span></code>, and <code class="docutils literal notranslate"><span class="pre">disconnect_from_mapdl</span></code>,
+which are locked).</p>
+</div>
+</section>
+<section id="tool-sets">
+<h2>Tool sets<a class="headerlink" href="#tool-sets" title="Link to this heading">#</a></h2>
+<p>PyMAPDL-MCP groups tools into logical tool sets so MCP clients can discover capabilities by role.
+These sets are exposed through the <code class="docutils literal notranslate"><span class="pre">toolsets://definition</span></code> resource.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 45.0%" />
+<col style="width: 35.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Tool set</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Tools included</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">session_management</span></code></p></td>
+<td><p>Manage MAPDL lifecycle and connection state</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">check_mapdl_installed</span></code>, <code class="docutils literal notranslate"><span class="pre">check_mapdl_status</span></code>, <code class="docutils literal notranslate"><span class="pre">launch_mapdl_session</span></code>,
+<code class="docutils literal notranslate"><span class="pre">connect_to_mapdl</span></code>, <code class="docutils literal notranslate"><span class="pre">disconnect_from_mapdl</span></code>, <code class="docutils literal notranslate"><span class="pre">list_mapdl_instances</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">file_management</span></code></p></td>
+<td><p>Transfer files to/from MAPDL and manage saved models</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">upload_file</span></code>, <code class="docutils literal notranslate"><span class="pre">download_file</span></code>, <code class="docutils literal notranslate"><span class="pre">resume_model</span></code>, <code class="docutils literal notranslate"><span class="pre">open_results</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">command_execution</span></code></p></td>
+<td><p>Execute MAPDL commands and command batches</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_mapdl_command</span></code>, <code class="docutils literal notranslate"><span class="pre">run_multiple_mapdl_commands</span></code>, <code class="docutils literal notranslate"><span class="pre">run_python_code</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">visualization</span></code></p></td>
+<td><p>Capture or generate result visualizations</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">screenshot</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_plot</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">python_execution</span></code></p></td>
+<td><p>Execute arbitrary Python or PyMAPDL code in the persistent session</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_python_code</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">list_tool_sets()</span></code> resource function returns the complete tool set definitions,
+allowing client applications to discover and organize available capabilities.</p>
+</section>
+<section id="using-the-tools">
+<h2>Using the tools<a class="headerlink" href="#using-the-tools" title="Link to this heading">#</a></h2>
+<section id="running-mapdl-commands">
+<h3>Running MAPDL commands<a class="headerlink" href="#running-mapdl-commands" title="Link to this heading">#</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">run_mapdl_command</span></code> for single commands:</p>
+<p><em>“Run VPLOT on the MAPDL instance.”</em></p>
+<p>For multiple commands, use <code class="docutils literal notranslate"><span class="pre">run_multiple_mapdl_commands</span></code>, which uses MAPDL’s <code class="docutils literal notranslate"><span class="pre">input_strings</span></code>
+method for batch execution. This is significantly faster than running commands one by one:</p>
+<p><em>“Run these commands: /PREP7, ET,1,SOLID185, MP,EX,1,200E9.”</em></p>
+</section>
+<section id="custom-python-code-execution">
+<h3>Custom Python code execution<a class="headerlink" href="#custom-python-code-execution" title="Link to this heading">#</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">run_python_code</span></code> to execute arbitrary Python and PyMAPDL code in a persistent session:</p>
+<p><em>“Execute this Python code: displacements = mapdl.get_array(‘NODE’, item1=’U’, it1num=’Y’); print(f’Max displacement: {displacements.max()}’).”</em></p>
+<p>This is useful for:</p>
+<ul class="simple">
+<li><p>Custom data processing and analysis</p></li>
+<li><p>Advanced PyVista visualizations</p></li>
+<li><p>NumPy/Pandas data manipulation</p></li>
+<li><p>Complex computations not available through direct MAPDL commands</p></li>
+</ul>
+</section>
+<section id="creating-custom-plots">
+<h3>Creating custom plots<a class="headerlink" href="#creating-custom-plots" title="Link to this heading">#</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">custom_plot</span></code> to create Matplotlib or PyVista plots that are not available in MAPDL’s
+native plotting:</p>
+<p><em>“Create a Matplotlib plot showing nodal displacements versus node number.”</em></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><code class="docutils literal notranslate"><span class="pre">custom_plot</span></code> is for plots that MAPDL cannot produce natively. For standard MAPDL plots
+(<code class="docutils literal notranslate"><span class="pre">APLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">LPLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">KPLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">PLNSOL</span></code>, etc.), use the MAPDL commands together with
+the <code class="docutils literal notranslate"><span class="pre">screenshot</span></code> tool.</p>
+</div>
+</section>
+<section id="capturing-plots">
+<h3>Capturing plots<a class="headerlink" href="#capturing-plots" title="Link to this heading">#</a></h3>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">screenshot</span></code> tool to run a MAPDL plot command and capture the result as an image:</p>
+<p><em>“Show a plot of the mesh.”</em></p>
+<p><em>“Capture the average stress distribution.”</em></p>
+<p>The tool returns the image directly so the AI assistant can display it inline. It supports all
+MAPDL native plot commands:</p>
+<ul class="simple">
+<li><p>Geometry: <code class="docutils literal notranslate"><span class="pre">APLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">LPLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">KPLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">VPLOT</span></code></p></li>
+<li><p>Mesh: <code class="docutils literal notranslate"><span class="pre">EPLOT</span></code>, <code class="docutils literal notranslate"><span class="pre">NPLOT</span></code></p></li>
+<li><p>Post-processing: <code class="docutils literal notranslate"><span class="pre">PLNSOL</span></code>, <code class="docutils literal notranslate"><span class="pre">PLESOL</span></code>, <code class="docutils literal notranslate"><span class="pre">PLDISP</span></code></p></li>
+</ul>
+<p><strong>Parameters</strong></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">commands</span></code></dt><dd><p>Optional APDL commands to run before capturing the screenshot
+(for example <code class="docutils literal notranslate"><span class="pre">EPLOT</span></code> or <code class="docutils literal notranslate"><span class="pre">SET,LAST</span></code>).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">show_plot_on_popup</span></code></dt><dd><p>When <code class="docutils literal notranslate"><span class="pre">True</span></code>, the captured image is also opened in the system’s default image
+viewer so the user can inspect it at full resolution. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+</dl>
+</section>
+<section id="python-code-execution">
+<h3>Python code execution<a class="headerlink" href="#python-code-execution" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Run Python code: Execute arbitrary Python code in the persistent session <em>(requires MAPDL connection)</em>.</p></li>
+<li><p>Integrate with data analysis: Use NumPy, Pandas, and other Python libraries.</p></li>
+</ul>
+</section>
+<section id="file-management">
+<h3>File management<a class="headerlink" href="#file-management" title="Link to this heading">#</a></h3>
+<p>Use the file-management tools to transfer files between the local filesystem and the MAPDL
+working directory, and to restore saved models or open result files for post-processing.</p>
+<p><strong>Uploading files to MAPDL</strong></p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">upload_file</span></code> to transfer a local file (database, archive, or input file) to the MAPDL
+working directory before referencing it with MAPDL commands:</p>
+<p><em>“Upload /home/user/project/beam.db to MAPDL.”</em></p>
+<p><strong>Downloading files from MAPDL</strong></p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">download_file</span></code> to retrieve output files (result files, logs, databases) to the local
+filesystem. Glob patterns such as <code class="docutils literal notranslate"><span class="pre">&quot;file*&quot;</span></code> are supported:</p>
+<p><em>“Download file.rst to /home/user/results.”</em></p>
+<p><em>“Download all files matching file</em> from MAPDL.”*</p>
+<p><strong>Resuming a saved model</strong></p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">resume_model</span></code> to restore a previously saved MAPDL model from a <code class="docutils literal notranslate"><span class="pre">.db</span></code> binary database
+file or a <code class="docutils literal notranslate"><span class="pre">.cdb</span></code> coded ASCII archive file. If the file is not yet in the MAPDL working
+directory, upload it first with <code class="docutils literal notranslate"><span class="pre">upload_file</span></code>:</p>
+<p><em>“Resume the model from beam.db.”</em></p>
+<p><em>“Load the archived model from model.cdb.”</em></p>
+<p><strong>Opening result files for post-processing</strong></p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">open_results</span></code> to switch MAPDL into the POST1 post-processor and optionally point it at
+a specific RST result file. After calling this tool, you can query displacements, stresses, and
+other result quantities:</p>
+<p><em>“Open the result file for post-processing.”</em></p>
+<p><em>“Enter POST1 and load beam.rst.”</em></p>
+<p><strong>File-path resources</strong></p>
+<p>Three MCP resources expose the paths to key MAPDL output files so the AI assistant can share
+them with other tools or applications:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 45.0%" />
+<col style="width: 55.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Resource URI</p></th>
+<th class="head"><p>Returns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">files://mapdl/working_directory</span></code></p></td>
+<td><p>Absolute path to the MAPDL working directory</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">files://mapdl/rst_path</span></code></p></td>
+<td><p>Expected path to <code class="docutils literal notranslate"><span class="pre">&lt;jobname&gt;.rst</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">files://mapdl/db_path</span></code></p></td>
+<td><p>Expected path to <code class="docutils literal notranslate"><span class="pre">&lt;jobname&gt;.db</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="workflow-examples">
+<h2>Workflow examples<a class="headerlink" href="#workflow-examples" title="Link to this heading">#</a></h2>
+<section id="linear-static-analysis">
+<h3>Linear static analysis<a class="headerlink" href="#linear-static-analysis" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p>Launch MAPDL instance.</p></li>
+<li><p>Define geometry (blocks, cylinders, and so on).</p></li>
+<li><p>Define materials and element types.</p></li>
+<li><p>Mesh the geometry.</p></li>
+<li><p>Apply boundary conditions and loads.</p></li>
+<li><p>Run solution.</p></li>
+<li><p>Extract and visualize results.</p></li>
+</ol>
+</section>
+<section id="parametric-study">
+<h3>Parametric study<a class="headerlink" href="#parametric-study" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p>Set up the base MAPDL model.</p></li>
+<li><p>Define parameter ranges.</p></li>
+<li><p>Update parameters, run analysis, and extract results for each parameter combination.</p></li>
+<li><p>Analyze and plot parameter sensitivity.</p></li>
+</ol>
+</section>
+<section id="result-postprocessing">
+<h3>Result postprocessing<a class="headerlink" href="#result-postprocessing" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p>Run or load MAPDL analysis.</p></li>
+<li><p>Extract result data.</p></li>
+<li><p>Create custom visualizations.</p></li>
+<li><p>Generate analysis reports.</p></li>
+</ol>
+</section>
+<section id="loading-and-post-processing-an-external-result-file">
+<h3>Loading and post-processing an external result file<a class="headerlink" href="#loading-and-post-processing-an-external-result-file" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p>Upload the RST file: <code class="docutils literal notranslate"><span class="pre">upload_file(&quot;/local/path/beam.rst&quot;)</span></code>.</p></li>
+<li><p>Open the result file: <code class="docutils literal notranslate"><span class="pre">open_results(&quot;beam&quot;)</span></code>.</p></li>
+<li><p>Query result quantities (displacements, stresses, etc.) with MAPDL commands.</p></li>
+<li><p>Download the results if needed: <code class="docutils literal notranslate"><span class="pre">download_file(&quot;beam.rst&quot;,</span> <span class="pre">&quot;/local/results/&quot;)</span></code>.</p></li>
+</ol>
+</section>
+<section id="restoring-a-saved-model">
+<h3>Restoring a saved model<a class="headerlink" href="#restoring-a-saved-model" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p>Upload the database file: <code class="docutils literal notranslate"><span class="pre">upload_file(&quot;/local/path/model.db&quot;)</span></code>.</p></li>
+<li><p>Restore the model: <code class="docutils literal notranslate"><span class="pre">resume_model(&quot;model&quot;,</span> <span class="pre">&quot;db&quot;)</span></code>.</p></li>
+<li><p>Inspect geometry, mesh, and boundary conditions.</p></li>
+<li><p>Continue with further pre-processing, solution, or post-processing steps.</p></li>
+</ol>
+</section>
+</section>
+<section id="interpreting-tool-results">
+<h2>Interpreting tool results<a class="headerlink" href="#interpreting-tool-results" title="Link to this heading">#</a></h2>
+<p>Most tools return structured results with one of these outcomes:</p>
+<ul class="simple">
+<li><p>Success: A status or result message.</p></li>
+<li><p>Error: A detailed message describing what failed and how to correct it.</p></li>
+</ul>
+<p>Additionally, some tools might return data as structured payloads (for example, JSON text or image content).</p>
+<p>When building workflows, always validate results before continuing to the next step.
+If a tool returns an error message, adjust the request and retry instead of assuming
+that downstream steps are still valid.</p>
+</section>
+<section id="feature-reference">
+<h2>Feature reference<a class="headerlink" href="#feature-reference" title="Link to this heading">#</a></h2>
+<p>For the documentation of all available tools, including parameters and return values, see
+<a class="reference internal" href="../api/ansys/mapdl/mcp/tools/index.html"><span class="doc">The tools.py module</span></a>.</p>
+</section>
+<section id="best-practices">
+<h2>Best practices<a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<p>For recommendations on using PyMAPDL-MCP effectively, see <a class="reference internal" href="best_practices.html"><span class="doc">Best practices</span></a>.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tool-availability">Tool availability</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tool-sets">Tool sets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-tools">Using the tools</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-mapdl-commands">Running MAPDL commands</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-python-code-execution">Custom Python code execution</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-custom-plots">Creating custom plots</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#capturing-plots">Capturing plots</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#python-code-execution">Python code execution</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-management">File management</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workflow-examples">Workflow examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#linear-static-analysis">Linear static analysis</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parametric-study">Parametric study</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#result-postprocessing">Result postprocessing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-and-post-processing-an-external-result-file">Loading and post-processing an external result file</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#restoring-a-saved-model">Restoring a saved model</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interpreting-tool-results">Interpreting tool results</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feature-reference">Feature reference</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best practices</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+
+  
+  <nav class="tocsection editthispage" aria-label="Edit this page">
+    <a href="https://github.com/ansys/pymapdl-mcp/edit/main/doc/source/user_guide/tools_and_capabilities.rst" rel="noopener noreferrer">
+      <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </nav>
+</div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_guide/tools_and_capabilities.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
+
+
+  <!-- Include desired assets -->
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.7/require.min.js"></script>
+
+<script>
+// Passing the search options to the search.js file
+const SEARCH_OPTIONS = JSON.parse('{"keys": ["title", "text", "objectID"], "limit": 10, "threshold": 0.2}');
+const SEARCH_FILE = "../_static/search.json";
+const ADVANCE_SEARCH_PATH = "../search.html";
+const EXTRA_SOURCES = JSON.parse('""');
+</script>
+
+
+<script src="../_static/js/search.js"></script>
+
+  
+<footer class="bd-footer" font-size="4px">
+  <div class="bd-footer__inner bd-page-width">
+    <div class="footer-items__start">
+      <div class="footer-item">
+        <p class="copyright">
+          PyMAPDL-MCP 0.3.dev0 © Copyright (c) <span id="copyright-year"></span> ANSYS, Inc. All rights reserved.
+          <br>
+        </p>
+        <script>
+          document.getElementById("copyright-year").textContent = new Date().getFullYear();
+        </script>
+      </div>
+    </div>
+    <div class="footer-items__end">
+      <div class="footer-item">
+        <p class="theme-version">
+          Built with the
+          <a href="https://sphinxdocs.ansys.com/version/stable/index.html">Ansys Sphinx Theme</a>
+          1.9.0. and
+           <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+          on <span id="date"></span>
+        </p>
+        <script>
+          var options = { day: "numeric", month: "long", year: "numeric" };
+          var lastModifiedDate = new Date(document.lastModified);
+          var date = lastModifiedDate.toLocaleDateString("en-US", options);
+          document.getElementById("date").innerHTML = date;
+        </script>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  </body>
+</html>
