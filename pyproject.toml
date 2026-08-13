@@ -29,18 +29,17 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 
 dependencies = [
     "ansys-common-mcp>=0.3.0",
-    "ansys-mapdl-core>=0.72.0",
+    "ansys-mapdl-core>=0.72.0"
 ]
 
 [project.optional-dependencies]
@@ -50,7 +49,7 @@ tests = [
     "pytest-asyncio==1.4.0",
     "pytest-cov==7.1.0",
     "pytest-mock==3.15.1",
-    "pytest==9.1.1",
+    "pytest==9.1.1"
 ]
 
 doc = [
@@ -119,7 +118,7 @@ exclude = [
     "^\\.venv/",
     "^venv/",
     "^build/",
-    "^dist/",
+    "^dist/"
 ]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -132,12 +131,12 @@ addopts = [
     "--cov=ansys.mapdl.mcp",
     "--cov-report=term-missing",
     "--cov-report=html",
-    "--cov-report=xml",
+    "--cov-report=xml"
 ]
 markers = [
     "unit: Unit tests that don't require MAPDL",
     "integration: Integration tests that require MAPDL connection",
-    "slow: Tests that take a long time to run",
+    "slow: Tests that take a long time to run"
 ]
 
 [tool.pydocstyle]
@@ -153,7 +152,7 @@ exclude = [
     ".venv",
     "venv",
     "build",
-    "dist",
+    "dist"
 ]
 
 [tool.towncrier]

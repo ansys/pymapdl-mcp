@@ -2605,9 +2605,39 @@ class TestScreenshot:
         assert "Failed to capture screenshot" in result.content[0].text
         assert "command failed" in result.content[0].text
 
+    @patch("ansys.mapdl.mcp.tools._open_image_in_viewer")
+    def test_screenshot_show_plot_on_popup_calls_viewer(
+        self, mock_open_viewer, mock_context, tmp_path
+    ):
+        """Test that show_plot_on_popup=True opens the image in the system viewer."""
+        screenshot_path = tmp_path / "screenshot.png"
+        screenshot_path.write_bytes(b"fake image data")
 
-@pytest.mark.unit
-class TestRequiresMapdlVisibility:
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        result = screenshot(mock_context, show_plot_on_popup=True)
+
+        assert isinstance(result, ToolResult)
+        assert len(result.content) == 2
+        mock_open_viewer.assert_called_once_with(str(screenshot_path))
+
+    @patch("ansys.mapdl.mcp.tools._open_image_in_viewer")
+    def test_screenshot_no_popup_by_default(self, mock_open_viewer, mock_context, tmp_path):
+        """Test that show_plot_on_popup defaults to False and no viewer is opened."""
+        screenshot_path = tmp_path / "screenshot.png"
+        screenshot_path.write_bytes(b"fake image data")
+
+        mock_context.request_context.lifespan_context.mapdl.screenshot.return_value = str(
+            screenshot_path
+        )
+
+        result = screenshot(mock_context)
+
+        assert isinstance(result, ToolResult)
+        mock_open_viewer.assert_not_called()
+
     """Tests for MAPDL-connection-aware tool visibility."""
 
     @pytest.mark.asyncio
