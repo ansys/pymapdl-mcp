@@ -4,7 +4,7 @@ Installation
 Check prerequisites
 -------------------
 
-- Python 3.10 or later
+- Python 3.12 or later
 - Ansys MAPDL installation (for running simulations)
 - PyMAPDL (installed automatically as a dependency)
 
