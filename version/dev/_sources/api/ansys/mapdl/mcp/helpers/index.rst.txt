@@ -1,0 +1,273 @@
+
+
+
+
+
+
+The ``helpers.py`` module
+=========================
+
+.. py:module:: ansys.mapdl.mcp.helpers
+
+
+Summary
+-------
+
+
+
+
+
+
+
+
+.. py:currentmodule:: helpers
+.. tab-set::
+
+
+
+
+
+
+
+    .. tab-item:: Functions
+
+        .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+
+          * - :py:obj:`~list_instances`
+            - List running MAPDL instances on the system.
+
+
+          * - :py:obj:`~get_info`
+            - Get information from the MAPDL instance.
+
+
+          * - :py:obj:`~connect_to_mapdl_in_persistent_python`
+            - Connect to the MAPDL instance in the persistent Python session.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Description
+-----------
+
+Helper functions for PyMAPDL MCP.
+
+..
+    !! processed by numpydoc !!
+
+
+
+
+
+
+Module detail
+-------------
+
+.. py:function:: list_instances(instances: bool = False, long: bool = False, cmd: bool = False, location: bool = False) -> str
+
+   
+   List running MAPDL instances on the system.
+
+   This function scans all running processes to identify ANSYS MAPDL instances
+   that are using gRPC communication. It returns a formatted table with information
+   about each discovered instance.
+
+   :Parameters:
+
+       **instances** : :ref:`bool <python:bltin-boolean-values>`, :obj:`optional`
+           If True, only show main MAPDL instances (exclude child processes).
+           If False, show all MAPDL-related processes. Default is False.
+
+       **long** : :ref:`bool <python:bltin-boolean-values>`, :obj:`optional`
+           If True, enable verbose output including command line and working directory.
+           This automatically sets both `cmd` and `location` to True. Default is False.
+
+       **cmd** : :ref:`bool <python:bltin-boolean-values>`, :obj:`optional`
+           If True, include the command line arguments in the output table.
+           Default is False.
+
+       **location** : :ref:`bool <python:bltin-boolean-values>`, :obj:`optional`
+           If True, include the working directory path in the output table.
+           Default is False.
+
+
+
+   :Returns:
+
+       :class:`python:str`
+           A formatted table string containing information about MAPDL instances.
+           The table includes columns for process name, status, gRPC port, PID,
+           and optionally command line and working directory based on the parameters.
+
+
+
+
+
+
+
+
+   .. rubric:: Notes
+
+   - This function identifies MAPDL processes by looking for "ansys" or "mapdl"
+     in the process name and the presence of "-grpc" flag in command line arguments.
+   - Only processes with status RUNNING, IDLE, or SLEEPING are considered valid.
+   - Main instances are distinguished from child processes by counting their children.
+   - Processes that no longer exist or are zombies are silently skipped.
+
+
+   .. rubric:: Examples
+
+   >>> # List all MAPDL processes
+   >>> print(list_instances())
+
+   >>> # List only main instances with full details
+   >>> print(list_instances(instances=True, long=True))
+
+   >>> # List with command line information
+   >>> print(list_instances(cmd=True))
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_info(mapdl: ansys.mapdl.core.Mapdl) -> dict[str, str | dict[str, Any]]
+
+   
+   Get information from the MAPDL instance.
+
+
+   :Parameters:
+
+       **mapdl** : :class:`~ansys.mapdl.core.Mapdl`
+           MAPDL instance
+
+
+
+   :Returns:
+
+       :class:`python:dict`\[:class:`python:str`, :class:`python:str` | :class:`python:dict`\[:class:`python:str`, :obj:`Any`]]
+           Dictionary containing MAPDL information with the following hierarchy:
+           
+           .. code-block:: text
+           
+               {
+                 "connection": {
+                     "name": str,        # Instance name
+                     "ip": str,          # IP address
+                     "port": int,        # gRPC port
+                     "version": str,     # MAPDL version string
+                     "directory": str,   # Working directory
+                     "status": str,      # Connection status
+                     "is_local": bool,   # Whether the instance is local
+                     "jobname": str,     # MAPDL jobname
+                     "platform": str,    # OS platform
+                 },
+                 "information": {
+                     "title": str,       # Analysis title (/TITLE)
+                     "jobname": str,     # Jobname from Information class
+                     "routine": str,     # Current MAPDL routine (e.g. PREP7, SOLU)
+                     "units": str,       # Unit system
+                     "revision": str,    # MAPDL revision string
+                     "product": str,     # MAPDL product name
+                 },
+                 "geometry": {
+                     "n_keypoint": int,  # Number of keypoints
+                     "n_line": int,      # Number of lines
+                     "n_area": int,      # Number of areas
+                     "n_volu": int,      # Number of volumes
+                 },
+                 "mesh": {
+                     "n_node": int,      # Number of nodes
+                     "n_elem": int,      # Number of elements
+                 },
+                 "components": {
+                     "count": int,               # Total number of named components
+                     "items": {                  # Mapping of component name to entity type
+                         "<name>": "<type>",     # e.g. "MY_NODES": "NODES"
+                         ...                     # Types: NODES, ELEMS, KP, LINE, AREA, VOLU
+                     },
+                 },
+                 "materials": {
+                     "count": int,       # Number of material reference numbers defined
+                     "ids": [int, ...],  # List of defined material reference numbers
+                 },
+                 "sections": {
+                     "count": int,       # Number of sections defined
+                     "ids": [int, ...],  # List of defined section IDs
+                     "types": {          # Mapping of section ID to section type string
+                         "<id>": "<type>",   # e.g. "1": "SHELL"
+                         ...
+                     },
+                 },
+                 "post_processing": {
+                     "available": bool,  # Whether post-processing is accessible
+                     "nsets": int,       # Number of result sets in the result file
+                 },
+               }
+           
+           Any sub-dict may also contain an ``"error"`` key (string) when that
+           section failed to retrieve, so callers should always check for it.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: connect_to_mapdl_in_persistent_python(ctx: fastmcp.server.Context) -> Any
+
+   
+   Connect to the MAPDL instance in the persistent Python session.
+
+   This tool connects to the MAPDL instance from within the persistent Python session.
+   It assumes that the persistent session has already been created.
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+
+
+   :Returns:
+
+       :class:`python:str`
+           Connection status message.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+
