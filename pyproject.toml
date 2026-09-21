@@ -45,8 +45,8 @@ dependencies = [
 
 [project.optional-dependencies]
 tests = [
-    "ansys-common-mcp==0.3.3",
-    "ansys-mapdl-core==0.74.0",
+    "ansys-common-mcp==0.3.4",
+    "ansys-mapdl-core==0.74.1",
     "pytest-asyncio==1.4.0",
     "pytest-cov==7.1.0",
     "pytest-mock==3.15.1",
@@ -54,11 +54,11 @@ tests = [
 ]
 
 doc = [
-    "ansys-common-mcp==0.3.3",
-    "ansys-mapdl-core==0.73.2",
-    "ansys-sphinx-theme[autoapi,changelog]==1.9.0",
+    "ansys-common-mcp==0.3.4",
+    "ansys-mapdl-core==0.74.1",
+    "ansys-sphinx-theme[autoapi,changelog]==1.11.0",
     "numpydoc==1.10.0",
-    "sphinx-autodoc-typehints==3.1.0",
+    "sphinx-autodoc-typehints==3.13.6",
     "sphinx-notfound-page==1.1.0",
     "sphinx==9.1.0",
     "sphinxcontrib-video==0.4.2",
