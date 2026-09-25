@@ -1,0 +1,198 @@
+
+
+
+
+
+
+:class:`PyMAPDLAppContext`
+==========================
+
+
+.. py:class:: ansys.mapdl.mcp.server.PyMAPDLAppContext
+
+   Bases: :py:obj:`ansys.common.mcp.context.PyAnsysBaseAppContext`
+
+
+   
+   Application context with typed dependencies and CLI options.
+
+
+
+   :Attributes:
+
+       **mapdl** : :obj:`Optional`\[:obj:`Any`]
+           MAPDL instance connection. Using Any to avoid type issues with MAPDL variants.
+
+       **transport_type** : :class:`python:str`
+           Transport type for MCP server ('stdio' or 'http').
+
+       **mapdl_ip** : :obj:`Optional`\[:class:`python:str`]
+           IP address or hostname for MAPDL connection.
+
+       **mapdl_port** : :obj:`Optional`\[:class:`python:int`]
+           Port number for MAPDL connection.
+
+       **connect_on_startup** : :ref:`bool <python:bltin-boolean-values>`
+           Whether to attempt MAPDL connection on MCP startup.
+
+       **http_host** : :class:`python:str`
+           Host address for HTTP transport.
+
+       **http_port** : :class:`python:int`
+           Port number for HTTP transport.
+
+       **cors_origins** : :obj:`Optional`\[:class:`python:list`\[:class:`python:str`]]
+           List of allowed CORS origins for HTTP transport.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+.. py:currentmodule:: PyMAPDLAppContext
+
+Overview
+--------
+
+.. tab-set::
+
+
+
+
+   .. tab-item:: Properties
+
+      .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+          * - :py:attr:`~product_instance`
+            - Returns the default MAPDL instance for backward compatibility.
+
+
+   .. tab-item:: Attributes
+
+      .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+          * - :py:attr:`~mapdl`
+            - 
+          * - :py:attr:`~transport_type`
+            - 
+          * - :py:attr:`~mapdl_ip`
+            - 
+          * - :py:attr:`~mapdl_port`
+            - 
+          * - :py:attr:`~connect_on_startup`
+            - 
+          * - :py:attr:`~http_host`
+            - 
+          * - :py:attr:`~http_port`
+            - 
+          * - :py:attr:`~cors_origins`
+            - 
+
+
+
+
+
+
+Import detail
+-------------
+
+.. code-block:: python
+
+    from ansys.mapdl.mcp.server import PyMAPDLAppContext
+
+Property detail
+---------------
+
+.. py:property:: product_instance
+   :type: Optional[Any]
+
+
+   
+   Returns the default MAPDL instance for backward compatibility.
+
+
+
+
+
+   :Returns:
+
+       :obj:`Optional`\[:obj:`Any`]
+           The default MAPDL instance from the pool, or None if no pool exists.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+
+Attribute detail
+----------------
+
+.. py:attribute:: mapdl
+   :type:  Any | None
+   :value: None
+
+
+.. py:attribute:: transport_type
+   :type:  str
+   :value: 'stdio'
+
+
+.. py:attribute:: mapdl_ip
+   :type:  str | None
+   :value: None
+
+
+.. py:attribute:: mapdl_port
+   :type:  int | None
+   :value: None
+
+
+.. py:attribute:: connect_on_startup
+   :type:  bool
+   :value: False
+
+
+.. py:attribute:: http_host
+   :type:  str
+   :value: '127.0.0.1'
+
+
+.. py:attribute:: http_port
+   :type:  int
+   :value: 8080
+
+
+.. py:attribute:: cors_origins
+   :type:  list[str] | None
+   :value: None
+
+
+
+
+
+
