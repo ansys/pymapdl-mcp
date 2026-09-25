@@ -24,8 +24,8 @@ Answer discussions
 
 Answering discussions is an excellent way to contribute to PyMAPDL-MCP without
 any setup. Only a GitHub account is required. Engaging with discussions deepens
-your understanding of the project and helps other users facing similar issues,
-making the repository more welcoming and inclusive.
+your understanding of the project, helps other users facing similar issues, and
+makes the repository more welcoming and inclusive.
 
 To see where you can help, visit the `PyMAPDL-MCP Discussions <https://github.com/ansys/pymapdl-mcp/discussions>`_ page.
 

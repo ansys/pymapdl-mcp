@@ -256,7 +256,7 @@ For remote clients or web-based clients:
    The HTTP transport has no authentication or encryption. Only bind it to an
    interface reachable from a trusted network, and put it behind a reverse
    proxy that provides TLS and authentication before exposing it more broadly.
-   Do not use ``--http-host 0.0.0.0`` on untrusted networks.
+   Do not use ``--http-host 0.0.0.0`` on a network you do not fully trust.
 
 Claude Code versus Visual Studio Code
 -------------------------------------

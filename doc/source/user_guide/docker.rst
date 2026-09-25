@@ -10,8 +10,8 @@ instance or a local MAPDL installation.
    reach the port can call every tool with no credential, including
    ``run_python_code`` (arbitrary Python execution) and ``run_mapdl_command``
    (arbitrary APDL, including ``/SYS`` which shells out to the OS). Never publish
-   this port on an untrusted network or the public internet. Only expose it beyond
-   ``localhost`` if it is placed behind a reverse proxy (such as Nginx or HAProxy)
+   this port on a network you do not fully trust, or on the public internet. Only
+   expose it beyond ``localhost`` if it is placed behind a reverse proxy (such as Nginx or HAProxy)
    that provides both TLS/SSL **and** its own authentication (for example mutual
    TLS or an authenticating gateway). The examples on this page publish the port
    on ``127.0.0.1`` only, so it is not reachable from other machines by default.
@@ -110,7 +110,7 @@ Connect to a remote MAPDL instance:
    ``-p 127.0.0.1:8080:8080`` publishes the port on the loopback interface only,
    so it is reachable from the host machine but not from the network. Do not
    replace this with ``-p 8080:8080`` (equivalent to binding ``0.0.0.0``) unless
-   the port is protected as described in the warning above.
+   the port is protected as described in the preceding warning.
 
    ``--network host`` on Linux exposes the port on every network interface of the
    host, so use it only on trusted, isolated hosts.

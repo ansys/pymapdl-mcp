@@ -1,6 +1,6 @@
 .. _ref_usage_examples:
 
-Usage examples: Videos
+Usage examples: videos
 ======================
 
 Watch videos demonstrating PyMAPDL-MCP usage in real-world scenarios.
