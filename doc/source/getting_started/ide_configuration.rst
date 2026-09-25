@@ -147,14 +147,22 @@ For remote access or web-based clients:
 
 .. code-block:: bash
 
-   # Basic HTTP server
+   # Basic HTTP server (binds to 127.0.0.1 by default)
    python -m ansys.mapdl.mcp --transport http
 
-   # Custom host and port
-   python -m ansys.mapdl.mcp --transport http --http-host 0.0.0.0 --http-port 9000
+   # Custom port, still local-only
+   python -m ansys.mapdl.mcp --transport http --http-port 9000
 
    # With CORS for web clients
    python -m ansys.mapdl.mcp --transport http --cors-origins "http://localhost:3000"
+
+.. warning::
+   The HTTP transport has no authentication. Do not pass
+   ``--http-host 0.0.0.0`` (or any non-loopback address) unless the port is
+   placed behind a reverse proxy that provides both TLS and its own
+   authentication. Anyone who can reach the port can call every tool with no
+   credential, including arbitrary Python (``run_python_code``) and arbitrary
+   APDL/OS commands (``run_mapdl_command`` with ``/SYS``).
 
 Enable MCP in Visual Studio Code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -238,11 +246,17 @@ For remote clients or web-based clients:
 
 .. code-block:: bash
 
-   # Start the server with HTTP
-   python -m ansys.mapdl.mcp --transport http --http-host 0.0.0.0 --http-port 8080
+   # Start the server with HTTP, bound to a specific trusted interface
+   python -m ansys.mapdl.mcp --transport http --http-host <trusted-ip> --http-port 8080
 
    # Configure your client to connect to
    # http://[server-ip]:8080
+
+.. warning::
+   The HTTP transport has no authentication or encryption. Only bind it to an
+   interface reachable from a trusted network, and put it behind a reverse
+   proxy that provides TLS and authentication before exposing it more broadly.
+   Do not use ``--http-host 0.0.0.0`` on untrusted networks.
 
 Claude Code versus Visual Studio Code
 -------------------------------------
@@ -365,7 +379,7 @@ For containerized deployments with HTTP transport:
 
 .. code-block:: bash
 
-   docker run -p 8080:8080 \
+   docker run -p 127.0.0.1:8080:8080 \
      -e PYMAPDL_IP=host.docker.internal \
      pymapdl-mcp
 

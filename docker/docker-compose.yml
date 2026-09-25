@@ -6,7 +6,12 @@ services:
     image: pymapdl-mcp:latest
     container_name: pymapdl-mcp-server
     ports:
-      - "${HTTP_PORT:-8080}:8080"
+      # Published on loopback only: the HTTP transport has no authentication, so
+      # binding to 0.0.0.0 here would expose arbitrary code execution tools
+      # (run_python_code, run_mapdl_command, etc.) to the network. Only change
+      # this if the port is protected by a reverse proxy that performs auth.
+      # https://docs.docker.com/get-started/docker-concepts/running-containers/publishing-ports#publishing-on-a-specific-host-ip
+      - "127.0.0.1:${HTTP_PORT:-8080}:8080"
     env_file:
       - .env
     environment:
