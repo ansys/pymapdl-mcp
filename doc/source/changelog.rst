@@ -9,6 +9,22 @@ This section contains the release notes for PyMAPDL-MCP.
 
 .. towncrier release notes start
 
+`0.3.2 <https://github.com/ansys/pymapdl-mcp/releases/tag/v0.3.2>`_ - October 06, 2026
+======================================================================================
+
+.. tab-set::
+
+
+  .. tab-item:: Fixed
+
+    .. list-table::
+        :header-rows: 0
+        :widths: auto
+
+        * - Adjust formatting for getting started page cards
+          - `#191 <https://github.com/ansys/pymapdl-mcp/pull/191>`_
+
+
 `0.3.1 <https://github.com/ansys/pymapdl-mcp/releases/tag/v0.3.1>`_ - September 28, 2026
 ========================================================================================
 
