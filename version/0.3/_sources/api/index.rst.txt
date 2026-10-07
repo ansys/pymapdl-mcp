@@ -1,0 +1,11 @@
+API reference
+=============
+
+This section describes pymapdl-mcp endpoints, their capabilities, and how
+to interact with them programmatically.
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   <span class="nf nf-md-package"></span> ansys.mapdl.mcp</api/ansys/mapdl/mcp/index>
