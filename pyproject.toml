@@ -39,7 +39,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "ansys-common-mcp>=0.3.0",
+    "ansys-common-mcp>=0.3.4",
     "ansys-mapdl-core>=0.72.0"
 ]
 

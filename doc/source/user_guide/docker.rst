@@ -15,6 +15,11 @@ instance or a local MAPDL installation.
    that provides both TLS/SSL **and** its own authentication (for example mutual
    TLS or an authenticating gateway). The examples on this page publish the port
    on ``127.0.0.1`` only, so it is not reachable from other machines by default.
+   ``--apdl-log-dir`` is opt-in and stores native client logs on the MCP host.
+   Mount an operator-owned persistent directory if you need logs after container
+   removal. HTTP clients share its sensitive command data and paths. Logs record
+   partial command attempts, not an exhaustive execution audit. Logging adds no
+   authentication. Manage retention and disk quota outside the server.
 
 Quick start with Docker Compose
 -------------------------------

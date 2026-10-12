@@ -141,3 +141,22 @@ def test_launcher_does_not_disable_requires_mapdl_when_connect_on_startup():
         tag for c in mock_disable.call_args_list for tag in (c.kwargs.get("tags") or set())
     }
     assert "requires_mapdl" not in disabled_tags
+
+
+@pytest.mark.unit
+def test_log_directory_reaches_immutable_context(tmp_path):
+    from dataclasses import FrozenInstanceError
+
+    with patch.object(asyncio, "run", side_effect=lambda coroutine: coroutine.close()):
+        launcher(["--apdl-log-dir", str(tmp_path)])
+    server = PyMAPDLMCP()
+    server._cli_config = dict(app._cli_config)
+    context = server.create_context()
+    assert context.security_options.apdl_log_dir == tmp_path
+    assert context.command_log_dir.parent == tmp_path
+    with pytest.raises(FrozenInstanceError):
+        context.security_options.apdl_log_dir = None
+    with patch.object(asyncio, "run", side_effect=lambda coroutine: coroutine.close()):
+        launcher([])
+    server._cli_config = dict(app._cli_config)
+    assert server.create_context().command_log_dir is None

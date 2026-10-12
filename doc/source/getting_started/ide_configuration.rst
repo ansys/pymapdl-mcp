@@ -163,6 +163,10 @@ For remote access or web-based clients:
    authentication. Anyone who can reach the port can call every tool with no
    credential, including arbitrary Python (``run_python_code``) and arbitrary
    APDL/OS commands (``run_mapdl_command`` with ``/SYS``).
+   If you enable ``--apdl-log-dir``, reachable clients can also retrieve sensitive
+   command attempts and paths from the application-shared log catalogue. Logging
+   does not add authentication or per-user privacy. Use an operator-owned directory
+   and manage retained files and disk quota.
 
 Enable MCP in Visual Studio Code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

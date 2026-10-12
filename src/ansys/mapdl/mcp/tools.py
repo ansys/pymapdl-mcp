@@ -33,6 +33,7 @@ The :func:`list_tool_sets` function exposes these tool set definitions as a reso
 """
 
 import base64
+from itertools import islice
 import json
 import os
 from pathlib import Path
@@ -44,12 +45,14 @@ from typing import Any, cast
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
 from fastmcp.server import Context
 from fastmcp.tools.base import ToolResult
+from pydantic import StrictInt
 
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl.mcp import app
+from ansys.mapdl.mcp._security import _attach_main_log, _retire_native_log
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
-from mcp.types import ImageContent, TextContent
+from mcp.types import ImageContent, TextContent, ToolListChangedNotification
 
 try:
     import pyvista  # noqa: F401  # Check if PyVista is available
@@ -223,6 +226,20 @@ def _capture_screenshot(
 # These tools are disabled at startup (before MAPDL is connected) and enabled
 # once a connection is established via connect_to_mapdl or launch_mapdl_session.
 REQUIRES_MAPDL_TAG = "requires_mapdl"
+
+
+async def _refresh_mapdl_tool_visibility(ctx: Context) -> None:
+    mapdl = ctx.request_context.lifespan_context.mapdl
+    if mapdl is None or _is_mapdl_crashed(mapdl):
+        ctx.fastmcp.disable(tags={REQUIRES_MAPDL_TAG})
+    else:
+        ctx.fastmcp.enable(tags={REQUIRES_MAPDL_TAG})
+        cli_config = getattr(ctx.fastmcp, "_cli_config", {})
+        if cli_config.get("on_aali"):
+            ctx.fastmcp.disable(tags={"aali"})
+        if ctx.request_context.lifespan_context.connect_on_startup:
+            ctx.fastmcp.disable(tags={"locked_connection"})
+    await ctx.send_notification(ToolListChangedNotification())
 
 
 # Access type-safe lifespan context in tools
@@ -470,6 +487,122 @@ def run_multiple_mapdl_commands(
         return ToolResult([TextContent(type="text", text=error_msg)])
 
 
+@app.tool(tags={"command_execution"})
+def list_command_logs(ctx: Context, offset: StrictInt = 0, limit: StrictInt = 50) -> ToolResult:
+    """List this server run's native log IDs, including after MAPDL disconnect.
+
+    Catalogue offsets are nonnegative indexes. Limit must be between 1 and 100.
+    Paths are not exposed. Logging is opt-in through --apdl-log-dir.
+    """
+    if ctx.request_context is None:
+        return _text_result(
+            json.dumps({"success": False, "error": "No request context available."})
+        )
+    context = ctx.request_context.lifespan_context
+    if type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= 100:
+        return _text_result(
+            json.dumps(
+                {
+                    "success": False,
+                    "error": "offset must be a nonnegative integer and limit must be 1-100.",
+                }
+            )
+        )
+    if context.command_log_dir is None:
+        return _text_result(
+            json.dumps({"success": True, "enabled": False, "logs": [], "next_offset": None})
+        )
+    with context.command_log_lock:
+        count = len(context.command_logs)
+        if offset > count:
+            return _text_result(
+                json.dumps({"success": False, "error": "Catalogue offset is out of range."})
+            )
+        entries = list(islice(context.command_logs.items(), offset, min(offset + limit, count)))
+    end = offset + len(entries)
+    return _text_result(
+        json.dumps(
+            {
+                "success": True,
+                "enabled": True,
+                "logs": [{"log_id": log_id, "source": ref.source} for log_id, ref in entries],
+                "next_offset": end if end < count else None,
+            }
+        )
+    )
+
+
+@app.tool(tags={"command_execution"})
+def read_command_log(
+    ctx: Context,
+    log_id: str,
+    offset: StrictInt = 0,
+    max_bytes: StrictInt = 65536,
+) -> ToolResult:
+    """Read a bounded on-disk prefix of a catalogue-owned native log as base64 bytes.
+
+    Offset is a nonnegative byte position. Max_bytes must be between 1 and 65536.
+    Logs are mutable command attempts, not flushed execution receipts.
+    """
+    if ctx.request_context is None:
+        return _text_result(
+            json.dumps({"success": False, "error": "No request context available."})
+        )
+    context = ctx.request_context.lifespan_context
+    if context.command_log_dir is None:
+        return _text_result(json.dumps({"success": False, "error": "Command logging is disabled."}))
+    if (
+        type(offset) is not int
+        or offset < 0
+        or type(max_bytes) is not int
+        or not 1 <= max_bytes <= 65536
+    ):
+        return _text_result(
+            json.dumps(
+                {
+                    "success": False,
+                    "error": "offset must be a nonnegative integer and max_bytes must be 1-65536.",
+                }
+            )
+        )
+    with context.command_log_lock:
+        ref = context.command_logs.get(log_id)
+    if ref is None:
+        return _text_result(json.dumps({"success": False, "error": "Unknown command log ID."}))
+    try:
+        with ref.path.open("rb") as stream:
+            size = os.fstat(stream.fileno()).st_size
+            if offset > size:
+                return _text_result(
+                    json.dumps({"success": False, "error": "Byte offset is out of range."})
+                )
+            stream.seek(offset)
+            data = stream.read(min(max_bytes, size - offset))
+    except FileNotFoundError:
+        return _text_result(json.dumps({"success": False, "error": "Command log file is missing."}))
+    except OSError as exc:
+        return _text_result(
+            json.dumps(
+                {
+                    "success": False,
+                    "error": f"Cannot read command log: {exc.strerror or type(exc).__name__}",
+                }
+            )
+        )
+    return _text_result(
+        json.dumps(
+            {
+                "success": True,
+                "log_id": log_id,
+                "source": ref.source,
+                "data_base64": base64.b64encode(data).decode("ascii"),
+                "size_bytes": size,
+                "next_offset": offset + len(data),
+            }
+        )
+    )
+
+
 @app.tool(tags={"aali", "locked_connection", "session_management"})
 async def launch_mapdl_session(
     ctx: Context,
@@ -524,6 +657,8 @@ async def launch_mapdl_session(
                 logger.warning(
                     "Cached MAPDL instance has crashed or exited. Clearing the cached instance."
                 )
+                if ctx.request_context.lifespan_context.security_options.apdl_log_dir is not None:
+                    _retire_native_log(ctx.request_context.lifespan_context.mapdl)
                 ctx.request_context.lifespan_context.mapdl = None
             else:
                 return _text_result(
@@ -552,11 +687,16 @@ async def launch_mapdl_session(
         from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 
         mapdl = cast(pymapdl.Mapdl, pymapdl.launch_mapdl(**kwargs))
+        try:
+            _attach_main_log(ctx.request_context.lifespan_context, mapdl)
+        except Exception:
+            mapdl.exit()
+            raise
 
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
 
-        await ctx.enable_components(tags={REQUIRES_MAPDL_TAG})
+        await _refresh_mapdl_tool_visibility(ctx)
         logger.info(f"MAPDL launched successfully at {mapdl.ip}:{mapdl.port}!")
         return _text_result(
             f"Successfully launched MAPDL at {mapdl.ip}:{mapdl.port}\n"
@@ -567,6 +707,7 @@ async def launch_mapdl_session(
     except Exception as e:
         error_msg = f"Failed to launch MAPDL: {str(e)}"
         logger.error(error_msg)
+        await _refresh_mapdl_tool_visibility(ctx)
         return _text_result(error_msg)
 
 
@@ -606,6 +747,8 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
                 logger.warning(
                     "Cached MAPDL instance has crashed or exited. Clearing the cached instance."
                 )
+                if ctx.request_context.lifespan_context.security_options.apdl_log_dir is not None:
+                    _retire_native_log(ctx.request_context.lifespan_context.mapdl)
                 ctx.request_context.lifespan_context.mapdl = None
             else:
                 return _text_result(
@@ -627,11 +770,12 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
         from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 
         mapdl = pymapdl.Mapdl(**_connect_kwargs)
+        _attach_main_log(ctx.request_context.lifespan_context, mapdl)
 
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
 
-        await ctx.enable_components(tags={REQUIRES_MAPDL_TAG})
+        await _refresh_mapdl_tool_visibility(ctx)
         logger.info(f"Connected to MAPDL successfully at {ip}:{port}!")
         return _text_result(
             f"Successfully connected to MAPDL at {ip}:{port}\nMAPDL Version: {mapdl.version}\n"
@@ -640,6 +784,7 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
     except Exception as e:
         error_msg = f"Failed to connect to MAPDL at {ip}:{port}: {str(e)}"
         logger.error(error_msg)
+        await _refresh_mapdl_tool_visibility(ctx)
         return _text_result(error_msg)
 
 
@@ -673,15 +818,17 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
         port = mapdl._port
         logger.info(f"Disconnecting from MAPDL at {ip}:{port}...")
 
-        # Exit the MAPDL connection
-        # Just disconnect the client
-        mapdl.exit()
+        try:
+            if ctx.request_context.lifespan_context.security_options.apdl_log_dir is not None:
+                _retire_native_log(mapdl)
+        finally:
+            mapdl.exit()
         del mapdl
 
         # Clear from context
         ctx.request_context.lifespan_context.mapdl = None
 
-        await ctx.disable_components(tags={REQUIRES_MAPDL_TAG})
+        await _refresh_mapdl_tool_visibility(ctx)
         logger.info("Disconnected successfully!")
         return _text_result(f"Successfully disconnected from MAPDL at {ip}:{port}")
 
@@ -690,6 +837,7 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
         logger.error(error_msg)
         # Still clear the reference even if disconnect failed
         ctx.request_context.lifespan_context.mapdl = None
+        await _refresh_mapdl_tool_visibility(ctx)
         return _text_result(error_msg)
 
 
@@ -913,24 +1061,14 @@ async def run_python_code(
             )
         )
 
-    # Check if MAPDL is connected in the persistent session
-    mapdl_instance = session.metadata.get("mapdl", None)
-    if mapdl_instance is None or isinstance(mapdl_instance, str):
+    try:
         mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
-
+    except Exception as exc:
+        mapdl_instance = f"Failed to connect to MAPDL in persistent Python session: {exc}"
     if mapdl_instance is None or isinstance(mapdl_instance, str):
-        try:
-            mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
-        except Exception as e:
-            error_msg = f"Failed to connect to MAPDL in persistent Python session: {str(e)}"
-            logger.error(error_msg)
-            return _text_result(
-                json.dumps(
-                    {"success": False, "error": error_msg},
-                    ensure_ascii=False,
-                    indent=2,
-                )
-            )
+        return _text_result(
+            json.dumps({"success": False, "error": mapdl_instance or "MAPDL bootstrap failed"})
+        )
 
     result: str = await execute_python_code(
         ctx=ctx,
@@ -1022,10 +1160,10 @@ def custom_plot(
             "No Python session available. The persistent Python session was not initialized."
         )
 
-    # Check if MAPDL is connected in the persistent session
-    mapdl_instance = session.metadata.get("mapdl", None)
-    if mapdl_instance is None or isinstance(mapdl_instance, str):
+    try:
         mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
+    except Exception as exc:
+        mapdl_instance = str(exc)
 
     if mapdl_instance is None or isinstance(mapdl_instance, str):
         if isinstance(mapdl_instance, str):
@@ -1440,11 +1578,16 @@ def list_tool_sets() -> list[dict]:
                 "is optimized for performance. Alternatively, use run_python_code to execute "
                 "MAPDL commands via PyMAPDL for more complex scripting scenarios. Always ensure "
                 "a MAPDL connection is active before executing commands."
+                " Discover native client log IDs with list_command_logs and retrieve bounded "
+                "base64 byte pages with read_command_log, even after disconnect. "
+                "These are client-side command attempts, not complete solver execution history."
             ),
             "tools": [
                 "run_mapdl_command",
                 "run_multiple_mapdl_commands",
                 "run_python_code",
+                "list_command_logs",
+                "read_command_log",
             ],
         },
         {

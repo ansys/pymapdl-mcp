@@ -29,6 +29,7 @@ import time
 from unittest.mock import AsyncMock, MagicMock
 
 from ansys.mapdl.core import launch_mapdl
+from fastmcp import FastMCP
 from fastmcp.tools.base import ToolResult
 import numpy as np
 import pytest
@@ -345,8 +346,8 @@ class TestLaunchMapdlIntegration:
         context = MagicMock()
         context.request_context = MagicMock()
         context.request_context.lifespan_context = PyMAPDLAppContext(mapdl=None)
-        context.enable_components = AsyncMock()
-        context.disable_components = AsyncMock()
+        context.fastmcp = FastMCP("test-mapdl-integration")
+        context.send_notification = AsyncMock()
 
         return context
 
@@ -484,6 +485,10 @@ class TestPythonPersistentSessionIntegration:
         lc = PyMAPDLAppContext(mapdl=real_mapdl)
         py_session = MagicMock()
         py_session.metadata = {}
+        py_session.process = object()
+        from tests.test_helpers_persistent_session import LocalSession
+
+        py_session.execute.side_effect = LocalSession().execute
         lc.python_session = py_session
         ctx.request_context.lifespan_context = lc
         return ctx
@@ -554,8 +559,9 @@ class TestPythonPersistentSessionIntegration:
 
         result = connect_to_mapdl_in_persistent_python(persistent_real_context)
 
-        # On failure, function returns whatever is in metadata (likely None)
-        assert result is None
+        assert result == (
+            "Failed to connect to MAPDL in the persistent PyMAPDL session: Execution failed"
+        )
 
     @pytest.mark.asyncio
     async def test_run_python_code_executes_simple(self, persistent_real_context, capsys):
@@ -563,6 +569,8 @@ class TestPythonPersistentSessionIntegration:
         # Attach a mocked persistent python session to the real_context lifespan
         session = MagicMock()
         session.metadata = {"mapdl": persistent_real_context.request_context.lifespan_context.mapdl}
+        session.process = object()
+        session.metadata["mapdl_process"] = session.process
         # Simulate a normal dict-shaped execution result
         session.execute.return_value = {
             "success": True,

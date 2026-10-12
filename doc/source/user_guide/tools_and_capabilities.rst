@@ -6,6 +6,8 @@ Tool availability
 
 PyMAPDL-MCP dynamically enables and disables tools based on whether an MAPDL instance is
 connected. This keeps the AI assistant's context small when MAPDL is not in use.
+Connection state is shared by the application. Connecting or disconnecting changes tool
+availability for all clients, not only the client that changes the connection.
 
 **Before connecting to MAPDL**, you can access these tools:
 
@@ -25,6 +27,10 @@ connected. This keeps the AI assistant's context small when MAPDL is not in use.
      - Launch and connect to a new MAPDL instance
    * - ``get_guidelines_for``
      - Workflow guidance and best-practice context tool
+   * - ``list_command_logs``
+     - List native client command log IDs, even after disconnect
+   * - ``read_command_log``
+     - Read a bounded base64 byte page from a known command log
 
 **After connecting to MAPDL**, you gain access to the full set of tools. When you call the
 ``disconnect_from_mapdl`` tool, the MAPDL-specific tools become unavailable.
@@ -85,7 +91,8 @@ These sets are exposed through the ``toolsets://definition`` resource.
      - ``upload_file``, ``download_file``, ``resume_model``, ``open_results``
    * - ``command_execution``
      - Execute MAPDL commands and command batches
-     - ``run_mapdl_command``, ``run_multiple_mapdl_commands``, ``run_python_code``
+     - ``run_mapdl_command``, ``run_multiple_mapdl_commands``, ``run_python_code``,
+       ``list_command_logs``, ``read_command_log``
    * - ``visualization``
      - Capture or generate result visualizations
      - ``screenshot``, ``custom_plot``
@@ -110,6 +117,54 @@ For multiple commands, use ``run_multiple_mapdl_commands``, which uses MAPDL's `
 method for batch execution. This is significantly faster than running commands one by one:
 
 *"Run these commands: /PREP7, ET,1,SOLID185, MP,EX,1,200E9."*
+
+Native command logs
+~~~~~~~~~~~~~~~~~~~
+
+Logging is off by default. Start the server with an operator-owned directory to enable it:
+
+.. code-block:: bash
+
+   python -m ansys.mapdl.mcp --apdl-log-dir /private/mapdl-logs
+
+Each server run has its own directory. Each managed main connection and persistent
+Python connection writes a separate exclusively created native PyMAPDL log file.
+Both ``run_python_code`` and ``custom_plot`` use the managed Python connection.
+A requested logging attachment failure is an error, not a silent fallback to logging off.
+
+``list_command_logs(offset=0, limit=50)`` returns a JSON object with ``success``,
+``enabled``, ``logs``, and ``next_offset``. Each entry has an opaque ``log_id`` and
+``source``, either ``main`` or ``python``. The offset is a nonnegative integer catalogue index.
+The limit is an integer between 1 and 100. ``next_offset`` is null at the end of the catalogue.
+An offset equal to the catalogue size returns an empty final page. A larger offset returns
+``success=false`` with an ``error`` string. When logging is off, ``enabled`` is false and
+``logs`` is empty.
+
+``read_command_log(log_id, offset=0, max_bytes=65536)`` accepts only a returned ID,
+not a filesystem path. Its JSON result has ``success``, ``log_id``, ``source``,
+``data_base64``, ``size_bytes``, and ``next_offset``. Decode ``data_base64`` to obtain
+the exact bytes. The offset is a nonnegative integer byte position and ``max_bytes`` is an
+integer between 1 and 65536. The next offset follows the returned bytes, including at the current end.
+Read again at that offset to see later growth. A byte page can split an encoded character.
+Unknown IDs, missing files, read failures, and invalid ranges return ``success=false``
+with an ``error`` string.
+For both tools, booleans, numeric strings, and floating-point values fail MCP argument
+validation before retrieval. Only the retrieval arguments use this strict integer rule.
+
+Both tools remain available after disconnect. They read a bounded on-disk prefix without
+flushing or executing work in Python. Logs record partial, mutable command attempts,
+not execution receipts or every solver-executed command. Native logging can be suppressed
+by arbitrary Python. Referenced input files, macros, and independently created clients
+are not an exhaustive command history. No order across the main and Python streams is claimed.
+
+Files stay on the MCP host after disconnect and shutdown. ``download_file`` accesses
+MAPDL-host files, not these client-local logs. The operator manages retention and disk
+quota. Files and catalogue metadata grow until operator cleanup. The server does not
+delete or rotate evidence. Process termination can leave an unflushed suffix.
+
+.. warning::
+   Logs can contain sensitive model data and paths. HTTP clients share this application's
+   catalogue. Logging adds no authentication, per-user privacy, or solver sandbox.
 
 Custom Python code execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -42,6 +42,35 @@ The server uses a strongly typed ``PyMAPDLAppContext`` dataclass that holds:
 - Transport configuration (STDIO or HTTP)
 - Connection settings (IP, port, auto-connect flags)
 - Command history tracking
+- Immutable startup logging options and a catalogue of native log IDs
+
+``_security.py`` owns log allocation, successful registration, and the isolated private
+PyMAPDL ``_close_apdl_log`` compatibility call. The context stores only each opaque ID's
+source and client-local path. A short lock protects catalogue registration, snapshots,
+and lookup. Solver, subprocess, and file I/O run outside that lock.
+
+Main and child clients use separate files with ``open_apdl_log(mode="x")`` before caller
+work. The child helper confirms both the main client identity and persistent process
+identity on every code or custom-plot invocation. The process starts without eager plotting
+imports. Its first ensured connection initializes the existing plotting namespace inside
+one finite ``exec(repr(source))`` submission with ``no_output_timeout=None``. The native
+module cache prevents repeated wildcard assignment when only the main client changes,
+so user-modified plotting globals survive same-process reconnection. A real process
+restart imports and initializes that namespace again before caller work.
+
+The same protected submission creates the candidate, attaches its native file, retires
+the old logger, publishes global ``mapdl``, and prints a unique acknowledgement in that
+order. An earlier exception prevents publication and acknowledgement in the interactive
+REPL. Reusable host metadata requires executor success, that exact acknowledgement line,
+and unchanged main and process identities. The existing finite bootstrap deadline still
+applies to first-use imports. General user-code timeout behavior is unchanged.
+Replacement and Python restart create new files. Native retirement does not send solver
+EXIT merely to close a child logger. Shutdown stops the child process before main-client
+cleanup.
+
+The two retrieval tools read only catalogue-owned paths, including after disconnect.
+They do not flush a child client or promise a complete execution trace. Persisted native
+files and catalogue metadata have operator-managed retention, not a hidden storage cap.
 
 Tool context and lifecycle
 --------------------------
@@ -51,6 +80,17 @@ Each tool receives a FastMCP context object (``Context``) that provides:
 - Access to the app context (``ctx.application_context``)
 - Request and response metadata
 - Logging utilities
+
+Dynamic connection tools share one visibility transition in ``tools.py``. It reads the
+application's current MAPDL connection and enables or disables ``requires_mapdl`` on
+``ctx.fastmcp`` for all clients, including after failed replacement or disconnect.
+It preserves startup connection and AALI restrictions and sends the invoking client a
+``ToolListChangedNotification`` through ``ctx.send_notification``. No per-session connection
+override is retained.
+
+Retrieval integer parameters use Pydantic ``StrictInt`` at the FastMCP argument boundary.
+Direct calls retain their range and type guards. Catalogue range checks precede the bounded
+snapshot slice under the existing metadata lock.
 
 The MAPDL lifecycle follows these phases:
 

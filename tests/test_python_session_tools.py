@@ -28,9 +28,10 @@ from ansys.mapdl.mcp.tools import custom_plot, run_python_code
 
 
 @pytest.fixture
-def mock_python_session():
+def mock_python_session(mock_context):
     session = MagicMock()
-    session.metadata = {}
+    session.process = object()
+    session.metadata = {"mapdl_process": session.process}
     return session
 
 
@@ -55,10 +56,9 @@ class TestRunPythonCode:
     async def test_connect_failure_returns_error_string(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
 
-        # Mock the connection function to raise an exception on the second try
         with patch(
             "ansys.mapdl.mcp.tools.connect_to_mapdl_in_persistent_python",
-            side_effect=["Failed to connect to MAPDL", Exception("Connection failed")],
+            side_effect=RuntimeError("Connection failed"),
         ):
             result = await run_python_code(mock_context, code="print('x')")
 
@@ -70,7 +70,7 @@ class TestRunPythonCode:
     @pytest.mark.asyncio
     async def test_success_with_dict_result(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
         mock_python_session.execute.return_value = {
             "success": True,
             "stdout": "ok\n",
@@ -86,7 +86,7 @@ class TestRunPythonCode:
     @pytest.mark.asyncio
     async def test_failure_with_error_message(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
         mock_python_session.execute.return_value = {
             "success": False,
             "stdout": "",
@@ -102,7 +102,7 @@ class TestRunPythonCode:
     @pytest.mark.asyncio
     async def test_non_dict_result_is_wrapped(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
         mock_python_session.execute.return_value = "SOME OUTPUT"
 
         result = await run_python_code(mock_context, code="'SOME OUTPUT'")
@@ -114,7 +114,7 @@ class TestRunPythonCode:
     @pytest.mark.asyncio
     async def test_timeout(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
         mock_python_session.execute.side_effect = TimeoutError("too slow")
 
         result = await run_python_code(mock_context, code="while True: pass", timeout=1)
@@ -125,7 +125,7 @@ class TestRunPythonCode:
     @pytest.mark.asyncio
     async def test_code_is_sanitized_before_execute(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
         mock_python_session.execute.return_value = {
             "success": True,
             "stdout": "",
@@ -143,7 +143,7 @@ class TestRunPythonCode:
     @pytest.mark.asyncio
     async def test_stdout_is_sanitized(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
 
         # stdout includes characters that should be sanitized by _sanitize_output
         raw_stdout = "\u2713 ok | box \u2514\u2502\u2500 | block \u2588 | nb\u00a0sp"
@@ -165,7 +165,7 @@ class TestRunPythonCode:
     @pytest.mark.asyncio
     async def test_stderr_is_sanitized(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
 
         raw_stderr = "\u2717 error | box \u2514\u2502\u2500 | nb\u00a0sp"
         mock_python_session.execute.return_value = {
@@ -210,7 +210,7 @@ class TestCreateCustomPlot:
 
     def test_success_returns_image_content(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
 
         payload = base64.b64encode(b"img").decode()
         mock_python_session.execute.return_value = {
@@ -233,7 +233,7 @@ class TestCreateCustomPlot:
 
     def test_success_returns_text_when_saved_to_file(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
         mock_python_session.execute.return_value = {
             "success": True,
             "stdout": "Plot saved to C:/tmp/plot.png",
@@ -247,7 +247,7 @@ class TestCreateCustomPlot:
 
     def test_unexpected_output_format(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
         mock_python_session.execute.return_value = {
             "success": True,
             "stdout": "not an image or path",
@@ -261,7 +261,7 @@ class TestCreateCustomPlot:
 
     def test_pyvista_plot_branch(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
 
         payload = base64.b64encode(b"pvimg").decode()
         mock_python_session.execute.return_value = {
@@ -284,7 +284,7 @@ class TestCreateCustomPlot:
 
     def test_error_branch_includes_message(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
         mock_python_session.execute.return_value = {
             "success": False,
             "stdout": "",
@@ -300,7 +300,7 @@ class TestCreateCustomPlot:
 
     def test_timeout(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
-        mock_python_session.metadata["mapdl"] = MagicMock()
+        mock_python_session.metadata["mapdl"] = mock_context.request_context.lifespan_context.mapdl
         mock_python_session.execute.side_effect = TimeoutError("too slow")
 
         result = custom_plot(mock_context, plot_code="while True: pass", timeout=1)
