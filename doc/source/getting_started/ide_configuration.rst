@@ -169,8 +169,9 @@ For remote access or web-based clients:
    and manage retained files and disk quota.
    ``--block-apdl-command`` can reject selected direct ``/SYS``, ``/SYP``, or ``/INPUT``
    families, but arbitrary Python and indirect file commands remain outside that filter.
-   Disable Python execution when relying on it. APDL blocks do not authenticate HTTP
-   clients or create a solver sandbox.
+   Use ``--disable-python`` to remove both ``run_python_code`` and ``custom_plot`` and
+   prevent their subprocess from starting. These independent startup controls do not
+   authenticate HTTP clients or create a solver sandbox.
 
 Enable MCP in Visual Studio Code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

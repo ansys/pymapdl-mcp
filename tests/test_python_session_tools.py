@@ -24,7 +24,10 @@ from fastmcp.tools.base import ToolResult
 from mcp.types import ImageContent, TextContent
 import pytest
 
+from ansys.mapdl.mcp._security import _SecurityOptions
+from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
 from ansys.mapdl.mcp.tools import custom_plot, run_python_code
+from tests.test_helpers_persistent_session import LocalSession
 
 
 @pytest.fixture
@@ -307,3 +310,54 @@ class TestCreateCustomPlot:
         assert isinstance(result, ToolResult)
         assert isinstance(result.content[0], TextContent)
         assert "Plot creation timed out after" in result.content[0].text
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+@pytest.mark.parametrize("stale_session", [False, True])
+async def test_python_off_denies_before_child_or_native_effects(
+    mock_context, tmp_path, stale_session
+):
+    context = mock_context.request_context.lifespan_context
+    context.security_options = _SecurityOptions(python_enabled=False)
+    session = LocalSession()
+    context.python_session = session if stale_session else None
+    marker = tmp_path / "python-ran"
+    code = f"from pathlib import Path; Path({str(marker)!r}).write_text('ran')"
+    result = await run_python_code(mock_context, code)
+    denied = json.loads(result.content[0].text)
+    assert denied["success"] is False
+    assert isinstance(denied["error"], str)
+    plot = custom_plot(mock_context, code)
+    assert all(isinstance(content, TextContent) for content in plot.content)
+    assert isinstance(connect_to_mapdl_in_persistent_python(mock_context), str)
+    assert session.namespace == {}
+    assert session.metadata == {}
+    assert context.mapdl.mock_calls == []
+    assert not marker.exists()
+
+    context.security_options = _SecurityOptions()
+    context.python_session = session
+    session.metadata = {"mapdl": context.mapdl, "mapdl_process": session.process}
+    enabled = await run_python_code(mock_context, code + "; print(6 * 7)")
+    assert json.loads(enabled.content[0].text)["stdout"].strip() == "42"
+    assert marker.read_text() == "ran"
+    assert connect_to_mapdl_in_persistent_python(mock_context) is context.mapdl
+
+
+@pytest.mark.unit
+def test_toolsets_follow_request_policy_not_global_app(mock_context):
+    from ansys.mapdl.mcp.tools import list_tool_sets
+
+    context = mock_context.request_context.lifespan_context
+    context.security_options = _SecurityOptions(python_enabled=False)
+    disabled = {item["name"]: item for item in list_tool_sets(mock_context)}
+    assert "python_execution" not in disabled
+    assert disabled["visualization"]["tools"] == ["screenshot"]
+    context.security_options = _SecurityOptions()
+    enabled = {item["name"]: item for item in list_tool_sets(mock_context)}
+    assert enabled["python_execution"]["tools"] == ["run_python_code", "custom_plot"]
+    assert enabled["visualization"]["tools"] == ["screenshot", "custom_plot"]
+    assert "run_python_code" in enabled["command_execution"]["tools"]
+    assert "run_python_code" in enabled["command_execution"]["skill"]
+    assert "custom_plot" in enabled["visualization"]["skill"]

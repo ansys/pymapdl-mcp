@@ -93,6 +93,16 @@ Logging and APDL restrictions are independent. Unrestricted admission returns wi
 changing existing input behavior. Python capability is unchanged by APDL blocks; the
 existing logger warns when Python remains enabled because it bypasses the text filter.
 
+``_SecurityOptions.python_enabled`` is independent of logging and APDL restrictions.
+``create_context`` combines inherited ``need_python`` with CLI ``--disable-python``
+before the base lifespan considers subprocess startup. Disabled contexts have no
+``PersistentPythonSession``. Programmatic ``PyMAPDLMCP(need_python=False)`` has the same
+policy. Both Python tools and the persistent-connection helper enforce it before work;
+tool tags control discovery but are not the execution authority. The shared connection
+visibility helper reapplies Python-off after connection changes. ``custom_plot`` belongs
+to ``python_execution`` as well as ``visualization``. ``list_tool_sets(ctx)`` reads the
+request lifespan policy rather than the module-global server context.
+
 
 Tool context and lifecycle
 --------------------------

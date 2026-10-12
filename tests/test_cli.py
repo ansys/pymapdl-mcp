@@ -17,6 +17,7 @@
 """Unit tests for MCP CLI parsing and startup connection behavior."""
 
 import asyncio
+import json
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -234,3 +235,31 @@ def test_apdl_blocks_warn_without_changing_python_capability(monkeypatch):
     server._cli_config = {"block_apdl_command": frozenset({"/SYS"})}
     server.create_context()
     assert warnings == []
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_disable_python_cli_reaches_runtime_policy(monkeypatch, mock_context, tmp_path):
+    from dataclasses import FrozenInstanceError
+
+    import ansys.mapdl.mcp.server as server_module
+    from ansys.mapdl.mcp.tools import run_python_code
+
+    server = PyMAPDLMCP()
+    monkeypatch.setattr(server_module, "app", server)
+    monkeypatch.setattr(server, "run_stdio_async", lambda: asyncio.sleep(0))
+    with patch.object(asyncio, "run", side_effect=lambda coroutine: coroutine.close()):
+        launcher(["--disable-python", "--apdl-log-dir", str(tmp_path)])
+    context = server.create_context()
+    context.mapdl = mock_context.request_context.lifespan_context.mapdl
+    mock_context.request_context.lifespan_context = context
+    result = await run_python_code(mock_context, "print('should not run')")
+
+    denied = json.loads(result.content[0].text)
+    assert denied["success"] is False
+    assert isinstance(denied["error"], str)
+    assert context.python_session is None
+    assert context.command_log_dir.parent == tmp_path
+    assert context.security_options.blocked_commands == frozenset()
+    with pytest.raises(FrozenInstanceError):
+        context.security_options.python_enabled = True

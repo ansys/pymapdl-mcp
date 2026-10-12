@@ -22,6 +22,7 @@ _APDL_COMMAND_PREFIXES: dict[_BlockedCommand, str] = {
 class _SecurityOptions:
     apdl_log_dir: Path | None = None
     blocked_commands: frozenset[_BlockedCommand] = frozenset()
+    python_enabled: bool = True
 
 
 @dataclass(frozen=True)

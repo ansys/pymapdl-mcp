@@ -32,8 +32,8 @@ availability for all clients, not only the client that changes the connection.
    * - ``read_command_log``
      - Read a bounded base64 byte page from a known command log
 
-**After connecting to MAPDL**, you gain access to the full set of tools. When you call the
-``disconnect_from_mapdl`` tool, the MAPDL-specific tools become unavailable.
+**After connecting to MAPDL**, you gain access to the tools allowed by startup policy.
+When you call ``disconnect_from_mapdl``, the MAPDL-specific tools become unavailable.
 
 .. list-table::
    :header-rows: 1
@@ -65,9 +65,9 @@ availability for all clients, not only the client that changes the connection.
      - Enter POST1 and set the active results file for post-processing
 
 .. note::
-   When you use ``--connect-on-startup``, MAPDL connects at startup and all tools are immediately
-   available (except ``connect_to_mapdl``, ``launch_mapdl_session``, and ``disconnect_from_mapdl``,
-   which are locked).
+   When you use ``--connect-on-startup``, MAPDL connects at startup and permitted tools
+   are immediately available. ``connect_to_mapdl``, ``launch_mapdl_session``, and
+   ``disconnect_from_mapdl`` are locked. Python-off remains effective after startup.
 
 Tool sets
 ---------
@@ -98,10 +98,11 @@ These sets are exposed through the ``toolsets://definition`` resource.
      - ``screenshot``, ``custom_plot``
    * - ``python_execution``
      - Execute arbitrary Python or PyMAPDL code in the persistent session
-     - ``run_python_code``
+     - ``run_python_code``, ``custom_plot``
 
-The ``list_tool_sets()`` resource function returns the complete tool set definitions,
-allowing client applications to discover and organize available capabilities.
+The ``list_tool_sets(ctx)`` resource function reads the request's startup policy.
+With Python disabled, it omits both Python tools, their recommendations, and the empty
+``python_execution`` set. Native screenshot guidance remains available.
 
 Using the tools
 ---------------
@@ -171,8 +172,28 @@ A submitted batch error reports attempts because some commands may not have exec
 
 .. warning::
    Arbitrary Python, including ``run_python_code`` and ``custom_plot``, can bypass this
-   direct text filter. Disable Python execution when relying on APDL restrictions.
+   direct text filter. Use ``--disable-python`` when relying on APDL restrictions.
    Restrictions add no HTTP authentication, filesystem isolation, or solver sandbox.
+
+Disabling arbitrary Python
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Python is enabled by default. To disable both code execution and custom plotting, start
+the server with ``--disable-python``:
+
+.. code-block:: bash
+
+   python -m ansys.mapdl.mcp --disable-python
+
+The server does not construct or start a persistent Python subprocess. Both
+``run_python_code`` and ``custom_plot`` are hidden and reject direct calls before
+connection bootstrap or code execution. Connect, launch, disconnect, reconnect, and
+startup connections preserve this policy. Native ``screenshot`` remains usable where
+the deployment permits it. AALI retains its separate visualization restrictions.
+
+This option is independent of ``--apdl-log-dir`` and ``--block-apdl-command``.
+Operators can combine all three. Disabling Python does not block internal Python used
+by the server, inspect nested APDL files, or create a solver or OS sandbox.
 
 
 Native command logs

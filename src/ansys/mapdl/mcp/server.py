@@ -116,12 +116,19 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         PyMAPDLAppContext
             The application context for managing MAPDL instances.
         """
-        python_session = PersistentPythonSession(
-            python_executable=self.python_executable,
-            working_directory=self.working_directory,
-        )
-
         cli_cfg = getattr(self, "_cli_config", None)
+        python_enabled = self._need_python and not (cli_cfg or {}).get("disable_python", False)
+        self._need_python = python_enabled
+        python_session = (
+            PersistentPythonSession(
+                python_executable=self.python_executable,
+                working_directory=self.working_directory,
+            )
+            if python_enabled
+            else None
+        )
+        if not python_enabled:
+            self.disable(tags={"python_execution"})
         log_dir = cli_cfg.get("apdl_log_dir") if cli_cfg is not None else None
         blocked = cli_cfg.get("block_apdl_command", ()) if cli_cfg is not None else ()
         context = PyMAPDLAppContext(
@@ -130,6 +137,7 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
             security_options=_SecurityOptions(
                 apdl_log_dir=Path(log_dir) if log_dir else None,
                 blocked_commands=frozenset(blocked),
+                python_enabled=python_enabled,
             ),
         )
 
@@ -276,6 +284,11 @@ def launcher(argv: list[str] | None = None) -> None:
         help="Block a direct APDL command family; repeat for /SYS, /SYP, /INPUT (default: none)",
     )
     parser.add_argument(
+        "--disable-python",
+        action="store_true",
+        help="Disable arbitrary Python code, custom plots, and their subprocess",
+    )
+    parser.add_argument(
         "--http-host",
         dest="http_host",
         default="127.0.0.1",
@@ -332,6 +345,7 @@ def launcher(argv: list[str] | None = None) -> None:
             "on_aali": session.on_aali,
             "apdl_log_dir": args.apdl_log_dir,
             "block_apdl_command": frozenset(args.block_apdl_command),
+            "disable_python": args.disable_python,
         },
     )
 
@@ -366,6 +380,8 @@ def launcher(argv: list[str] | None = None) -> None:
         app.disable(tags={"aali"})
     if session.locked_connection:
         app.disable(tags={"locked_connection"})
+    if args.disable_python or not app._need_python:
+        app.disable(tags={"python_execution"})
 
     if args.transport_type == "stdio":
         asyncio.run(app.run_stdio_async())

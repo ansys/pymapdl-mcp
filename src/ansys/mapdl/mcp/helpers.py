@@ -365,6 +365,8 @@ def connect_to_mapdl_in_persistent_python(ctx: Context) -> Any:
     if ctx.request_context is None:
         return "No request context available."
     context = ctx.request_context.lifespan_context
+    if not context.security_options.python_enabled:
+        return "Python execution is disabled by the operator."
     session = context.python_session
     if session is None:
         return "No Python session available. The persistent Python session was not initialized."
