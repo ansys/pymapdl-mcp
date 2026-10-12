@@ -20,6 +20,10 @@ instance or a local MAPDL installation.
    removal. HTTP clients share its sensitive command data and paths. Logs record
    partial command attempts, not an exhaustive execution audit. Logging adds no
    authentication. Manage retention and disk quota outside the server.
+   Repeat ``--block-apdl-command`` for selected direct ``/SYS``, ``/SYP``, or ``/INPUT``
+   families. Arbitrary Python can bypass this text filter; disable Python execution when
+   relying on it. Macro and CDB contents are not scanned. Restrictions do not replace
+   HTTP authentication or isolate the solver from its host.
 
 Quick start with Docker Compose
 -------------------------------

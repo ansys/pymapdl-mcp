@@ -31,6 +31,7 @@ from ansys.common.mcp.context import PyAnsysBaseAppContext
 from ansys.common.mcp.helpers import PersistentPythonSession, logger
 
 from ansys.mapdl.mcp._security import (
+    _APDL_COMMAND_PREFIXES,
     _attach_main_log,
     _LogRef,
     _retire_native_log,
@@ -122,10 +123,14 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
 
         cli_cfg = getattr(self, "_cli_config", None)
         log_dir = cli_cfg.get("apdl_log_dir") if cli_cfg is not None else None
+        blocked = cli_cfg.get("block_apdl_command", ()) if cli_cfg is not None else ()
         context = PyMAPDLAppContext(
             python_session=python_session,
             command_history=[],
-            security_options=_SecurityOptions(apdl_log_dir=Path(log_dir) if log_dir else None),
+            security_options=_SecurityOptions(
+                apdl_log_dir=Path(log_dir) if log_dir else None,
+                blocked_commands=frozenset(blocked),
+            ),
         )
 
         # Populate context from CLI config if available
@@ -142,6 +147,12 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
             context.cors_origins = cli_cfg.get("cors_origins", context.cors_origins)
 
         self.context = context
+        if context.security_options.blocked_commands and self._need_python:
+            logger.warning(
+                "APDL command restrictions do not constrain arbitrary Python. "
+                "Disable Python execution when relying on the direct APDL filter. "
+                "These restrictions are not a solver or OS sandbox."
+            )
         return context
 
     def product_startup(self):
@@ -258,6 +269,13 @@ def launcher(argv: list[str] | None = None) -> None:
         help="Directory for persistent native client command logs (default: off)",
     )
     parser.add_argument(
+        "--block-apdl-command",
+        action="append",
+        choices=tuple(_APDL_COMMAND_PREFIXES),
+        default=[],
+        help="Block a direct APDL command family; repeat for /SYS, /SYP, /INPUT (default: none)",
+    )
+    parser.add_argument(
         "--http-host",
         dest="http_host",
         default="127.0.0.1",
@@ -313,6 +331,7 @@ def launcher(argv: list[str] | None = None) -> None:
             "cors_origins": cors_origins,
             "on_aali": session.on_aali,
             "apdl_log_dir": args.apdl_log_dir,
+            "block_apdl_command": frozenset(args.block_apdl_command),
         },
     )
 

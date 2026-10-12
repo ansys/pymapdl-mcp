@@ -118,6 +118,63 @@ method for batch execution. This is significantly faster than running commands o
 
 *"Run these commands: /PREP7, ET,1,SOLID185, MP,EX,1,200E9."*
 
+Direct APDL restrictions
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+APDL is unrestricted by default. Operators can block selected direct command families
+at startup without changing command logging or Python capability:
+
+.. code-block:: bash
+
+   python -m ansys.mapdl.mcp --block-apdl-command /SYS --block-apdl-command /SYP --block-apdl-command /INPUT
+
+The repeatable option accepts only ``/SYS``, ``/SYP``, and ``/INPUT``. Each family
+is independent. The checker reads the first comma-delimited command-head field and
+trims its outer Unicode whitespace before quote recognition. This matches PyMAPDL's
+downstream Python ``strip()`` boundary, including nonbreaking and em spaces; it does
+not establish additional solver syntax. For unquoted heads, the checker removes only
+internal ASCII spaces and tabs before case-insensitive significant-prefix matching.
+Other internal head whitespace fails closed when restricted rather than assuming
+the solver ignores it. A matching pair of single or double quotes around a whole head
+is removed for classification only. Quoted heads containing whitespace or further
+quotes, and malformed or mixed head quotes, fail closed in restricted mode.
+Unicode in ordinary arguments or filename data is not generically banned.
+The significant first four label characters match, including ``/INP`` and trailing
+ignored spelling for ``/INPUT``. Shorter guessed abbreviations are not aliases.
+Allowed dispatch text is unchanged apart from the batch tool's existing outer trimming.
+
+The server checks every physical line and ``$`` command chain before dispatch. Unquoted
+``!`` comments end the physical line, including later dollar-separated text. Restricted
+mode rejects a physical line if its executable text contains a quote and the line uses
+a dollar or comment delimiter, even if the quotes match or enclose a command head.
+Quotes inside an actual comment are ignored. Delimiter-free quoted arguments remain
+allowed. Whole-head quote recognition does not grant argument quote or escape protection.
+MAPDL quote and delimiter behavior varies by command and form; this filter can reject
+benign delimiter-bearing text. It is not a complete solver parser.
+
+Single commands include their effective header and comment. Batches check all normalized
+entries and metadata before sending any header or allowed entry. Screenshot commands are
+checked before view changes, temporary files, capture, or restoration. A denied request
+does not change the solver through these tools.
+
+With any family blocked, headers reject line breaks, ``$``, and unsafe controls.
+Comments still support separate physical lines but reject ``$`` and unsafe controls.
+The interpolated ``resume_model.file_name`` and ``open_results.file_name`` reject
+command separators, comma fields, comment delimiters, line breaks, and unsafe controls
+before RESUME, CDREAD, or POST1. Ordinary paths are not whitelisted or scanned.
+These extra boundary checks do not apply when APDL is unrestricted.
+
+Allowed batch execution still uses PyMAPDL's internal temporary input-file transport.
+Binary databases and CDB restoration remain available. The server does not inspect
+macro or CDB contents, follow nested input files, or interpret generated command names.
+A submitted batch error reports attempts because some commands may not have executed.
+
+.. warning::
+   Arbitrary Python, including ``run_python_code`` and ``custom_plot``, can bypass this
+   direct text filter. Disable Python execution when relying on APDL restrictions.
+   Restrictions add no HTTP authentication, filesystem isolation, or solver sandbox.
+
+
 Native command logs
 ~~~~~~~~~~~~~~~~~~~
 

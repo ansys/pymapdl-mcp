@@ -42,7 +42,7 @@ The server uses a strongly typed ``PyMAPDLAppContext`` dataclass that holds:
 - Transport configuration (STDIO or HTTP)
 - Connection settings (IP, port, auto-connect flags)
 - Command history tracking
-- Immutable startup logging options and a catalogue of native log IDs
+- Immutable startup security options and a catalogue of native log IDs
 
 ``_security.py`` owns log allocation, successful registration, and the isolated private
 PyMAPDL ``_close_apdl_log`` compatibility call. The context stores only each opaque ID's
@@ -71,6 +71,28 @@ cleanup.
 The two retrieval tools read only catalogue-owned paths, including after disconnect.
 They do not flush a child client or promise a complete execution trace. Persisted native
 files and catalogue metadata have operator-managed retention, not a hidden storage cap.
+
+``_SecurityOptions.blocked_commands`` is an immutable ``frozenset`` of selected canonical
+families. The shared ``_APDL_COMMAND_PREFIXES`` table supplies CLI choices and significant
+command prefixes. Pure admission functions in ``_security.py`` check complete direct
+requests before tools issue metadata, batch prefixes, screenshot changes, or POST1.
+The two interpolated filename fields have restricted-only literal boundary checks.
+Command admission parses the first comma field and applies Unicode-aware outer ``strip()``
+before quote recognition, matching PyMAPDL's downstream client boundary. It removes only
+internal ASCII spaces and tabs from unquoted heads, or unwraps a matching whole-head quote
+pair without internal whitespace or quotes, before comparing significant prefixes.
+Other internal head whitespace and unsupported or malformed head quotes fail closed when
+restricted. This grants no unproven internal Unicode grammar and does not ban Unicode in
+ordinary argument or filename data. Classification never rewrites dispatched text.
+The conservative quote-plus-delimiter rejection remains separate and grants no argument
+escape syntax.
+Keep every direct caller on this shared policy. Do not intercept PyMAPDL transport,
+scan referenced files, or add a second per-tool command list.
+
+Logging and APDL restrictions are independent. Unrestricted admission returns without
+changing existing input behavior. Python capability is unchanged by APDL blocks; the
+existing logger warns when Python remains enabled because it bypasses the text filter.
+
 
 Tool context and lifecycle
 --------------------------
