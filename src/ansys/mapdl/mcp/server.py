@@ -84,7 +84,7 @@ class PyMAPDLAppContext(PyAnsysBaseAppContext):
             self.command_log_dir = root / uuid4().hex
             self.command_log_dir.mkdir()
 
-    @property
+    @property  # type: ignore[misc]
     def product_instance(self) -> Optional[Any]:
         """Returns the default MAPDL instance for backward compatibility.
 

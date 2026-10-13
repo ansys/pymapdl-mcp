@@ -234,7 +234,10 @@ REQUIRES_MAPDL_TAG = "requires_mapdl"
 
 
 async def _refresh_mapdl_tool_visibility(ctx: Context) -> None:
-    mapdl = ctx.request_context.lifespan_context.mapdl
+    if ctx.request_context is None:
+        return
+    lifespan_context = ctx.request_context.lifespan_context
+    mapdl = lifespan_context.mapdl
     if mapdl is None or _is_mapdl_crashed(mapdl):
         ctx.fastmcp.disable(tags={REQUIRES_MAPDL_TAG})
     else:
@@ -242,9 +245,9 @@ async def _refresh_mapdl_tool_visibility(ctx: Context) -> None:
         cli_config = getattr(ctx.fastmcp, "_cli_config", {})
         if cli_config.get("on_aali"):
             ctx.fastmcp.disable(tags={"aali"})
-        if ctx.request_context.lifespan_context.connect_on_startup:
+        if lifespan_context.connect_on_startup:
             ctx.fastmcp.disable(tags={"locked_connection"})
-    if not ctx.request_context.lifespan_context.security_options.python_enabled:
+    if not lifespan_context.security_options.python_enabled:
         ctx.fastmcp.disable(tags={"python_execution"})
     await ctx.send_notification(ToolListChangedNotification())
 
@@ -306,7 +309,7 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
             )
             base64_data = base64.b64encode(image_data).decode("utf-8")
             return ToolResult(
-                [json_content, ImageContent(type="image", data=base64_data, mimeType=mime_type)]
+                [json_content, ImageContent(type="image", data=base64_data, mime_type=mime_type)]
             )
         except Exception as img_err:
             logger.warning(f"Could not capture four-view screenshot for status: {img_err}")
@@ -401,6 +404,8 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
 
     _check_apdl_request(
         (cmd,),
@@ -452,6 +457,8 @@ def run_multiple_mapdl_commands(
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
 
     if not commands:
         return _text_result("No commands provided. Please provide a list of commands to execute.")
@@ -977,6 +984,8 @@ def screenshot(
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
 
     try:
         _check_apdl_request(
@@ -1014,7 +1023,7 @@ def screenshot(
         return ToolResult(
             [
                 TextContent(type="text", text=f"Screenshot saved to: {screenshot_path}"),
-                ImageContent(type="image", data=base64_data, mimeType=mime_type),
+                ImageContent(type="image", data=base64_data, mime_type=mime_type),
             ]
         )
 
@@ -1380,6 +1389,8 @@ def resume_model(ctx: Context, file_name: str, extension: str = "db") -> ToolRes
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
 
     ext = extension.lower().strip(".")
     if ext not in ("db", "cdb"):
@@ -1449,6 +1460,8 @@ def open_results(ctx: Context, file_name: str | None = None) -> ToolResult:
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
 
     try:
         if file_name:
@@ -1603,7 +1616,11 @@ def list_tool_sets(ctx: Context) -> list[dict]:
     ]
 
     """
-    python_enabled = ctx.request_context.lifespan_context.security_options.python_enabled
+    python_enabled = (
+        ctx.request_context.lifespan_context.security_options.python_enabled
+        if ctx.request_context is not None
+        else False
+    )
     tool_sets = [
         {
             "name": "session_management",

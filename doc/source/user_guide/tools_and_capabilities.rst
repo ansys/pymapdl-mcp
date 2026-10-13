@@ -176,7 +176,7 @@ A submitted batch error reports attempts because some commands may not have exec
    Restrictions add no HTTP authentication, filesystem isolation, or solver sandbox.
 
 Disabling arbitrary Python
-~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Python is enabled by default. To disable both code execution and custom plotting, start
 the server with ``--disable-python``:
