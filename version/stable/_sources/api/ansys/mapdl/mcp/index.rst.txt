@@ -1,0 +1,178 @@
+
+
+
+
+
+
+The ``ansys.mapdl.mcp`` library
+===============================
+
+.. py:module:: ansys.mapdl.mcp
+
+
+Summary
+-------
+
+
+
+
+
+
+
+
+.. py:currentmodule:: mcp
+.. tab-set::
+
+
+    .. tab-item:: Submodules
+
+        .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+
+          * - :py:obj:`~ansys.mapdl.mcp.__main__`
+            - Entry point for running the MCP server as a module.
+
+
+          * - :py:obj:`~ansys.mapdl.mcp.contexts`
+            - Context tools for PyMAPDL MCP Server.
+
+
+          * - :py:obj:`~ansys.mapdl.mcp.helpers`
+            - Helper functions for PyMAPDL MCP.
+
+
+          * - :py:obj:`~ansys.mapdl.mcp.prompts`
+            - Prompt templates for PyMAPDL MCP server.
+
+
+          * - :py:obj:`~ansys.mapdl.mcp.server`
+            - Lifespan and CLI entry for the MCP server with startup options.
+
+
+          * - :py:obj:`~ansys.mapdl.mcp.tools`
+            - List of tools in PyMAPDL-MCP.
+
+
+
+
+
+
+
+    .. tab-item:: Functions
+
+        .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+
+          * - :py:obj:`~launcher`
+            - Entry point for the MCP server.
+
+
+
+    .. tab-item:: Attributes
+
+        .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+
+          * - :py:obj:`~__version__`
+            - PyMAPDL MCP version.
+
+
+          * - :py:obj:`~app`
+            - 
+
+
+
+
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+    <span class="nf nf-fa-file"></span> __main__</api/ansys/mapdl/mcp/__main__/index>
+    <span class="nf nf-fa-file"></span> contexts</api/ansys/mapdl/mcp/contexts/index>
+    <span class="nf nf-fa-file"></span> helpers</api/ansys/mapdl/mcp/helpers/index>
+    <span class="nf nf-fa-file"></span> prompts</api/ansys/mapdl/mcp/prompts/index>
+    <span class="nf nf-fa-file"></span> server</api/ansys/mapdl/mcp/server/index>
+    <span class="nf nf-fa-file"></span> tools</api/ansys/mapdl/mcp/tools/index>
+
+
+
+
+
+
+
+
+
+
+
+Description
+-----------
+
+
+PyMAPDL MCP Server - Model Context Protocol server for Ansys MAPDL.
+
+This package provides a Model Context Protocol (MCP) server that enables
+AI assistants to interact with Ansys MAPDL through PyMAPDL. By default,
+it is configured to use PyMAPDL code unless a clear statement is made to
+use APDL code or for plotting MAPDL/PyMAPDL plots.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+..
+    !! processed by numpydoc !!
+
+
+
+
+
+
+Module detail
+-------------
+
+
+.. py:data:: __version__
+
+   
+   PyMAPDL MCP version.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+
+

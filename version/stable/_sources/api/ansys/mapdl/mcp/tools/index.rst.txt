@@ -1,0 +1,1081 @@
+
+
+
+
+
+
+The ``tools.py`` module
+=======================
+
+.. py:module:: ansys.mapdl.mcp.tools
+
+
+Summary
+-------
+
+
+
+
+
+
+
+
+.. py:currentmodule:: tools
+.. tab-set::
+
+
+
+
+
+
+
+    .. tab-item:: Functions
+
+        .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+
+          * - :py:obj:`~check_mapdl_status`
+            - Check the status of MAPDL initialization.
+
+
+          * - :py:obj:`~check_mapdl_installed`
+            - Check if MAPDL is installed on the system.
+
+
+          * - :py:obj:`~run_mapdl_command`
+            - Execute an arbitrary MAPDL command.
+
+
+          * - :py:obj:`~run_multiple_mapdl_commands`
+            - Execute multiple MAPDL commands in sequence.
+
+
+          * - :py:obj:`~launch_mapdl_session`
+            - Launch a new MAPDL instance.
+
+
+          * - :py:obj:`~connect_to_mapdl`
+            - Connect to an existing MAPDL instance.
+
+
+          * - :py:obj:`~disconnect_from_mapdl`
+            - Disconnect from the dynamically connected MAPDL instance.
+
+
+          * - :py:obj:`~list_mapdl_instances`
+            - List all MAPDL instances running on the local machine and any remotely connected instance.
+
+
+          * - :py:obj:`~screenshot`
+            - Capture a screenshot of the current MAPDL graphics window.
+
+
+          * - :py:obj:`~run_python_code`
+            - Execute arbitrary Python and PyMAPDL code in the persistent Python session.
+
+
+          * - :py:obj:`~custom_plot`
+            - Create a custom plot using matplotlib or PyVista in the persistent Python session.
+
+
+          * - :py:obj:`~upload_file`
+            - Upload a local file to the MAPDL instance working directory.
+
+
+          * - :py:obj:`~download_file`
+            - Download a file from the MAPDL instance working directory to the local filesystem.
+
+
+          * - :py:obj:`~resume_model`
+            - Resume a previously saved MAPDL model from a database or archive file.
+
+
+          * - :py:obj:`~open_results`
+            - Enter POST1 and optionally set the active results file for post-processing.
+
+
+          * - :py:obj:`~mapdl_working_directory`
+            - Return the working directory of the connected MAPDL instance.
+
+
+          * - :py:obj:`~mapdl_rst_path`
+            - Return the expected path to the current MAPDL result file (RST).
+
+
+          * - :py:obj:`~mapdl_db_path`
+            - Return the expected path to the current MAPDL database file (DB).
+
+
+          * - :py:obj:`~list_tool_sets`
+            - Tool set definition resource that lists available tool sets for PyMAPDL MCP.
+
+
+
+
+    .. tab-item:: Constants
+
+        .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+
+          * - :py:obj:`~REQUIRES_MAPDL_TAG`
+            - 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Description
+-----------
+
+List of tools in PyMAPDL-MCP.
+
+This module defines all MCP tools available in the PyMAPDL MCP server, organized into logical
+tool sets for better organization and accessibility.
+
+Tool sets
+---------
+Tools are grouped into the following tool sets via the ``toolsets://definition`` resource:
+
+- **session_management**: Tools for managing MAPDL connections and instance discovery
+- **file_management**: Tools for transferring files to/from MAPDL and managing saved models
+- **command_execution**: Tools for executing MAPDL commands and scripts
+- **visualization**: Tools for visualization and post-processing results
+- **python_execution**: Tools for executing arbitrary Python and PyMAPDL code
+
+The :func:`list_tool_sets` function exposes these tool set definitions as a resource.
+
+..
+    !! processed by numpydoc !!
+
+
+
+
+
+
+Module detail
+-------------
+
+.. py:function:: check_mapdl_status(ctx: fastmcp.server.Context) -> fastmcp.tools.base.ToolResult
+
+   
+   Check the status of MAPDL initialization.
+
+   This tool extracts comprehensive information from PyMAPDL's API and returns it
+   as a structured JSON object. It also checks whether the MAPDL instance has
+   exited or is exiting.
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           JSON string containing comprehensive MAPDL status information including:
+           - connection: Basic connection info (version, port, ip, directory, is_alive)
+           - information: Data from Information class (title, jobname, routine, units, etc.)
+           - geometry: Geometry statistics (number of keypoints, lines, areas, volumes)
+           - post_processing: Post-processing availability and result sets
+           - mesh: Mesh statistics (number of nodes and elements)
+           
+           Returns an error message if MAPDL is not available or has exited.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: check_mapdl_installed(ctx: fastmcp.server.Context) -> fastmcp.tools.base.ToolResult
+
+   
+   Check if MAPDL is installed on the system.
+
+   This tool lists all ANSYS/MAPDL installations found on the system,
+   including their version numbers and executable paths.
+
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           Status message listing all found MAPDL installations, or a message
+           indicating that no installation was found.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: run_mapdl_command(ctx: fastmcp.server.Context, cmd: str, comment: str = '', header: str = '') -> fastmcp.tools.base.ToolResult
+
+   
+   Execute an arbitrary MAPDL command.
+
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+       **cmd** : :class:`python:str`
+           The MAPDL command to execute.
+
+       **comment** : :class:`python:str`, :obj:`optional`
+           An optional comment to include before the command execution. Default is empty string.
+
+       **header** : :class:`python:str`, :obj:`optional`
+           An optional header to include before the command execution. Default is empty string.
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           Command execution result.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: run_multiple_mapdl_commands(ctx: fastmcp.server.Context, commands: list[str], comment: str = '', header: str = '') -> fastmcp.tools.base.ToolResult
+
+   
+   Execute multiple MAPDL commands in sequence.
+
+   This tool is optimized for running multiple commands efficiently by using
+   MAPDL's :meth:`~ansys.mapdl.core.Mapdl.input_strings` method, which processes
+   commands in batch mode.
+   This is significantly faster than executing commands one by one.
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+       **commands** : :class:`python:list`\[:class:`python:str`]
+           List of MAPDL commands to execute in sequence.
+
+       **comment** : :class:`python:str`, :obj:`optional`
+           An optional comment to include before the command execution. Default is empty string.
+
+       **header** : :class:`python:str`, :obj:`optional`
+           An optional header to include before the command execution. Default is empty string.
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           Execution result with summary of commands executed.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: launch_mapdl_session(ctx: fastmcp.server.Context, exec_file: str | None = None, port: int | None = None, run_location: str | None = None, nproc: int | None = None, additional_switches: str = '') -> fastmcp.tools.base.ToolResult
+   :async:
+
+
+   
+   Launch a new MAPDL instance.
+
+   This tool starts a new MAPDL instance using PyMAPDL's
+   :func:`~ansys.mapdl.core.launcher.launch_mapdl` function.
+   The launched instance will be automatically connected and stored in the context
+   for subsequent operations. The instance can be closed using the
+   :func:`disconnect_from_mapdl` tool.
+   Once you are connected to the launched instance, other tools become available
+   to interact with it, such as :func:`run_mapdl_command`,
+   :func:`check_mapdl_status`, :func:`screenshot`, and more.
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+       **exec_file** : :class:`python:str`, :obj:`optional`
+           The path to the MAPDL executable. If None, PyMAPDL will attempt to find
+           the MAPDL executable automatically.
+
+       **port** : :class:`python:int`, :obj:`optional`
+           The gRPC port for MAPDL to listen on. If None, a default port will be used.
+
+       **run_location** : :class:`python:str`, :obj:`optional`
+           The directory where MAPDL will run and store files. If None, a temporary
+           directory will be created.
+
+       **nproc** : :class:`python:int` | :data:`python:None`, :obj:`optional`
+           Number of processors to use. Default is None. MAPDL will decide based on
+           available resources.
+
+       **additional_switches** : :class:`python:str`, :obj:`optional`
+           Additional command line switches to pass to MAPDL. Default is empty string.
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           Launch status message with MAPDL version and connection information.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: connect_to_mapdl(ctx: fastmcp.server.Context, port: int = 50052, ip: str = 'localhost') -> fastmcp.tools.base.ToolResult
+   :async:
+
+
+   
+   Connect to an existing MAPDL instance.
+
+   This tool establishes a connection to a running MAPDL instance using the
+   provided port and IP address. The connection is stored for subsequent
+   operations and can be closed using the :func:`disconnect_from_mapdl` tool.
+   Once you are connected to the MAPDL instance, other tools become available
+   to interact with it, such as :func:`run_mapdl_command`,
+   :func:`check_mapdl_status`, :func:`screenshot`, and more.
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+       **port** : :class:`python:int`, :obj:`optional`
+           The gRPC port where MAPDL is listening. Default is 50052.
+
+       **ip** : :class:`python:str`, :obj:`optional`
+           The IP address where MAPDL is running. Default is "localhost".
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           Connection status message with MAPDL version information.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: disconnect_from_mapdl(ctx: fastmcp.server.Context) -> fastmcp.tools.base.ToolResult
+   :async:
+
+
+   
+   Disconnect from the dynamically connected MAPDL instance.
+
+   This tool closes the connection to the MAPDL instance that was established
+   using the :func:`connect_to_mapdl` tool and releases the associated
+   resources.
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           Disconnection status message.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: list_mapdl_instances(ctx: fastmcp.server.Context) -> fastmcp.tools.base.ToolResult
+
+   
+   List all MAPDL instances running on the local machine and any remotely connected instance.
+
+   This tool uses PyMAPDL CLI's
+   :func:`~ansys.mapdl.mcp.helpers.list_instances` function to discover
+   MAPDL instances running on the machine by scanning for active gRPC
+   servers and their associated metadata. It also includes any remotely
+   connected MAPDL instance that was established via the
+   :func:`connect_to_mapdl` tool.
+
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           Formatted table containing information about all running MAPDL instances
+           including their names, status, gRPC ports, IP addresses, PIDs, and
+           working directories. If a remote instance is connected, it is listed in a
+           separate section below the local instances.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: screenshot(ctx: fastmcp.server.Context, commands: str = '', show_plot_on_popup: bool = False, four_view: bool = False) -> fastmcp.tools.base.ToolResult
+
+   
+   Capture a screenshot of the current MAPDL graphics window.
+
+   All plots use the MAPDL backend, which is the preferred and recommended
+   way to obtain plot images, especially for large or complex models, as it
+   leverages MAPDL's native plotting capabilities.
+
+   MAPDL Native Plot Commands (use with screenshot):
+
+   - Geometry: ``APLOT``, ``LPLOT``, ``KPLOT``, ``VPLOT``
+   - Mesh: ``EPLOT``, ``NPLOT``
+   - Post-processing: ``PLNSOL``, ``PLESOL``, ``PLDISP``
+
+   For custom matplotlib or PyVista plots, use the :func:`custom_plot` tool
+   instead.
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+       **commands** : :class:`python:str`, :obj:`optional`
+           Optional MAPDL commands to execute before taking the screenshot.
+           Avoid running commands that are not related to plotting or visualization.
+           This can be used to set up the plot or visualization before capturing.
+           Avoid running long or complex commands that may delay the screenshot.
+           Default is empty string.
+
+       **show_plot_on_popup** : :ref:`bool <python:bltin-boolean-values>`, :obj:`optional`
+           If ``True``, open the captured image in the system's default image
+           viewer as an external popup window in addition to returning it to the
+           LLM. Default is ``False``.
+
+       **four_view** : :ref:`bool <python:bltin-boolean-values>`, :obj:`optional`
+           When ``True``, the graphics window is split into four quadrants before
+           the screenshot is taken. When *commands* is provided together with
+           ``four_view=True``, the *commands* string is used as the plot command
+           that populates all four windows (default ``EPLOT`` when *commands* is
+           empty). The window layout is automatically restored after the
+           screenshot. Default is ``False``. See Notes for the quadrant layout.
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           A result containing:
+           
+           - TextContent with the screenshot file path
+           - ImageContent with the base64-encoded image data
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: run_python_code(ctx: fastmcp.server.Context, code: str, timeout: int = 60) -> fastmcp.tools.base.ToolResult
+   :async:
+
+
+   
+   Execute arbitrary Python and PyMAPDL code in the persistent Python session.
+
+   This tool should be used for custom Python code execution, particularly for:
+
+   - Custom data processing and analysis
+   - Creating custom matplotlib plots not available in MAPDL
+   - Advanced PyVista visualizations beyond MAPDL's native capabilities
+   - NumPy/Pandas data manipulation and custom visualization
+
+   .. important:: For MAPDL native plotting (``APLOT``, ``LPLOT``, ``KPLOT``,
+      post_processing plots, etc.), use the normal MAPDL session commands
+      with the :func:`screenshot` tool instead, as they provide interactive
+      plots that are directly accessible.
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+       **code** : :class:`python:str`
+           The Python code to execute.
+
+       **timeout** : :class:`python:int`, :obj:`optional`
+           Maximum time in seconds to allow for code execution. Default is 60 seconds.
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           Execution result or error message.
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Examples
+
+   Execute simple Python code to compute a value:
+
+   >>> code = '''
+   ... result = sum([i**2 for i in range(10)])
+   ... print(f"Sum of squares: {result}")
+   ... '''
+   >>> run_python_code(ctx, code)
+
+   Execute PyMAPDL code:
+
+   >>> code = '''
+   ... displacements = mapdl.get_array("NODE", item1="U", it1num="Y")
+   ... print(f"Displacements: {displacements}")
+   ... '''
+   >>> run_python_code(ctx, code)
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: custom_plot(ctx: fastmcp.server.Context, plot_code: str, plot_type: str = 'matplotlib', timeout: int = 60) -> fastmcp.tools.base.ToolResult
+
+   
+   Create a custom plot using matplotlib or PyVista in the persistent Python session.
+
+   This tool is specifically designed for creating custom plots that are NOT available
+   in MAPDL's native plotting capabilities. Use this when you need:
+
+   - Custom matplotlib visualizations (line plots, bar charts, histograms, etc.)
+   - Advanced PyVista 3D visualizations beyond MAPDL defaults
+   - Combined data from multiple sources
+   - Custom data processing with visualization
+
+   .. important:: For standard MAPDL plots (``APLOT``, ``LPLOT``, ``KPLOT``,
+      post_processing plots), use the normal MAPDL commands with the
+      :func:`screenshot` tool instead for interactive plots.
+
+   The persistent Python session has pre-configured matplotlib (Agg backend) and
+   PyVista (off-screen rendering) with helper functions:
+
+   - save_matplotlib_plot(filename, dpi)
+   - save_plot(plotter, filename)
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+       **plot_code** : :class:`python:str`
+           Python code to create the plot. Should use matplotlib.pyplot or PyVista.
+           For matplotlib, the code should create the figure/plot but NOT call plt.show().
+           Use the save_matplotlib_plot() or save_plot() helper functions to return
+           the plot.
+
+       **plot_type** : :class:`python:str`, :obj:`optional`
+           Type of plot: "matplotlib" or "pyvista". Default is "matplotlib".
+
+       **timeout** : :class:`python:int`, :obj:`optional`
+           Maximum time in seconds for plot generation. Default is 60 seconds.
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           A result containing:
+           - TextContent with the plot creation status message
+           - ImageContent with the base64-encoded image data if successful
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Examples
+
+   Create a custom matplotlib line plot:
+
+   >>> plot_code = '''
+   ... import matplotlib.pyplot as plt
+   ... import numpy as np
+   ...
+   ... # Extract data from MAPDL
+   ... displacements = mapdl.get_array("NODE", item1="U", it1num="Y")
+   ...
+   ... # Create custom plot
+   ... plt.figure(figsize=(10, 6))
+   ... plt.plot(displacements)
+   ... plt.xlabel("Node Number")
+   ... plt.ylabel("Displacement (m)")
+   ... plt.title("Custom Displacement Plot")
+   ... plt.grid(True)
+   ...
+   ... # Save and return
+   ... result = save_matplotlib_plot(dpi=150)
+   ... print(result)
+   ... '''
+   >>> custom_plot(ctx, plot_code, plot_type="matplotlib")
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: upload_file(ctx: fastmcp.server.Context, file_path: str) -> fastmcp.tools.base.ToolResult
+
+   
+   Upload a local file to the MAPDL instance working directory.
+
+   The file is transferred over gRPC from the local filesystem to the remote
+   (or local) MAPDL working directory so that MAPDL commands such as
+   ``RESUME``, ``CDREAD``, or ``FILE`` can reference it by its base name.
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+       **file_path** : :class:`python:str`
+           Absolute or relative path to the file on the **local** filesystem.
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           Text message with the uploaded filename on success, or an error
+           description if the file cannot be found or the transfer fails.
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Examples
+
+   Upload a database file before resuming a model:
+
+   >>> upload_file(ctx, "/home/user/project/beam.db")
+   >>> resume_model(ctx, "beam", "db")
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: download_file(ctx: fastmcp.server.Context, file_name: str, target_dir: str | None = None) -> fastmcp.tools.base.ToolResult
+
+   
+   Download a file from the MAPDL instance working directory to the local filesystem.
+
+   Use this tool to retrieve result files (e.g. ``file.rst``, ``file.db``),
+   log files, or any other file produced by the current MAPDL session.
+   Glob patterns such as ``"file*"`` or ``"*.rst"`` are supported.
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+       **file_name** : :class:`python:str`
+           Name of the file in the MAPDL working directory to download.
+           Supports glob patterns (e.g. ``"file*"``).
+           Use the ``check_mapdl_status`` tool or the
+           ``files://mapdl/working_directory`` resource to inspect available files.
+
+       **target_dir** : :class:`python:str`, :obj:`optional`
+           Local directory where the file(s) will be saved.  Defaults to the
+           current Python working directory when ``None``.
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           Text message listing the downloaded files on success, or an error
+           description if the download fails.
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Examples
+
+   Download the main result file:
+
+   >>> download_file(ctx, "file.rst", "/home/user/results")
+
+   Download all output files:
+
+   >>> download_file(ctx, "file*")
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: resume_model(ctx: fastmcp.server.Context, file_name: str, extension: str = 'db') -> fastmcp.tools.base.ToolResult
+
+   
+   Resume a previously saved MAPDL model from a database or archive file.
+
+   This tool restores the MAPDL database from a ``.db`` binary database file
+   or a ``.cdb`` coded ASCII archive file.  If the file is on the local
+   filesystem (not yet in the MAPDL working directory), upload it first with
+   the ``upload_file`` tool.
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+       **file_name** : :class:`python:str`
+           Name of the file **without extension** as it exists in the MAPDL
+           working directory (e.g. ``"beam"`` for ``beam.db``).
+
+       **extension** : :class:`python:str`, :obj:`optional`
+           File extension that identifies the file format. Accepted values:
+           
+           * ``"db"`` *(default)* — binary MAPDL database (RESUME command).
+           * ``"cdb"`` — coded ASCII database (CDREAD command).
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           MAPDL command output on success, or an error description.
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Examples
+
+   Resume from a binary database:
+
+   >>> resume_model(ctx, "beam", "db")
+
+   Resume from a coded archive:
+
+   >>> resume_model(ctx, "model", "cdb")
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: open_results(ctx: fastmcp.server.Context, file_name: str | None = None) -> fastmcp.tools.base.ToolResult
+
+   
+   Enter POST1 and optionally set the active results file for post-processing.
+
+   This tool switches MAPDL into the POST1 post-processor and, when a file
+   name is supplied, points MAPDL at that results file.  Use it before
+   querying displacements, stresses, or other result quantities.
+
+   If the RST file is stored on the local filesystem (not yet in the MAPDL
+   working directory), upload it first with the ``upload_file`` tool.
+
+   :Parameters:
+
+       **ctx** : :obj:`Context`
+           The MCP context containing server session and application context.
+
+       **file_name** : :class:`python:str`, :obj:`optional`
+           Name of the result file **without extension** in the MAPDL working
+           directory (e.g. ``"beam"`` for ``beam.rst``).  When omitted, MAPDL
+           uses the current jobname result file.
+
+
+
+   :Returns:
+
+       :obj:`ToolResult`
+           Status message indicating whether POST1 was entered and the results
+           file was set, or an error description.
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Examples
+
+   Open the default results file:
+
+   >>> open_results(ctx)
+
+   Open a specific RST file:
+
+   >>> open_results(ctx, "beam")
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: mapdl_working_directory() -> str
+
+   
+   Return the working directory of the connected MAPDL instance.
+
+   This resource provides the absolute path to the directory where MAPDL
+   stores all its output files (``file.rst``, ``file.db``, log files, etc.).
+   The path is updated dynamically each time this resource is read.
+
+
+
+
+   :Returns:
+
+       :class:`python:str`
+           Absolute path to the MAPDL working directory, or a message indicating
+           that MAPDL is not connected.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: mapdl_rst_path() -> str
+
+   
+   Return the expected path to the current MAPDL result file (RST).
+
+   The path is constructed from the MAPDL working directory and the current
+   jobname.  Before reading this file with an external application, ensure
+   the simulation has finished running.
+
+
+
+
+   :Returns:
+
+       :class:`python:str`
+           Absolute path to ``<working_directory>/<jobname>.rst``, or a message
+           indicating that MAPDL is not connected.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: mapdl_db_path() -> str
+
+   
+   Return the expected path to the current MAPDL database file (DB).
+
+   The path is constructed from the MAPDL working directory and the current
+   jobname.  This file is written by the MAPDL ``SAVE`` command and can be
+   restored with the ``resume_model`` tool.
+
+
+
+
+   :Returns:
+
+       :class:`python:str`
+           Absolute path to ``<working_directory>/<jobname>.db``, or a message
+           indicating that MAPDL is not connected.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: list_tool_sets() -> list[dict]
+
+   
+   Tool set definition resource that lists available tool sets for PyMAPDL MCP.
+
+
+
+
+
+   :Returns:
+
+       :class:`python:list`\[:class:`python:dict`]
+           List of tool set definitions, each containing:
+           
+           - ``name``: Unique identifier for the tool set
+           - ``description``: Human-readable description of the tool set
+           - ``skill``: Instructions for the AI agent on when and how to use these tool sets
+           - ``tools``: List of tool function names in this set
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Examples
+
+   >>> list_tool_sets()
+   [
+       {
+           "name": "session_management",
+           "description": "Tools for managing MAPDL session connections and instances",
+           "skill": (
+               "Use these tools to manage MAPDL connections and sessions. "
+               "Start by checking available installations with check_mapdl_installed, "
+               "then launch a new session with launch_mapdl_session or connect to an existing "
+               "instance with connect_to_mapdl. Use check_mapdl_status to verify the connection"
+               "status. List active instances with list_mapdl_instances and disconnect when done"
+               " using disconnect_from_mapdl."
+           ),
+           "tools": [
+               "check_mapdl_installed",
+               "check_mapdl_status",
+               "launch_mapdl_session",
+               "connect_to_mapdl",
+               "disconnect_from_mapdl",
+               "list_mapdl_instances",
+           ],
+       }
+   ]
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:data:: REQUIRES_MAPDL_TAG
+   :value: 'requires_mapdl'
+
+
+
+
