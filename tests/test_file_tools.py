@@ -41,14 +41,14 @@ from ansys.mapdl.mcp.tools import (
 class TestUploadFile:
     """Tests for the upload_file tool."""
 
-    def test_upload_success(self, mock_context, tmp_path):
+    async def test_upload_success(self, mock_context, tmp_path):
         """Happy path: local file exists and upload succeeds."""
         local_file = tmp_path / "model.db"
         local_file.write_bytes(b"dummy content")
 
         mock_context.request_context.lifespan_context.mapdl.upload.return_value = "model.db"
 
-        result = upload_file(mock_context, str(local_file))
+        result = await upload_file(mock_context, str(local_file))
 
         assert isinstance(result, ToolResult)
         assert "uploaded successfully" in result.content[0].text
@@ -57,34 +57,34 @@ class TestUploadFile:
             str(local_file), progress_bar=False
         )
 
-    def test_upload_file_not_found(self, mock_context):
+    async def test_upload_file_not_found(self, mock_context):
         """Error returned when the local file does not exist."""
-        result = upload_file(mock_context, "/nonexistent/path/model.db")
+        result = await upload_file(mock_context, "/nonexistent/path/model.db")
 
         assert isinstance(result, ToolResult)
         assert "not found" in result.content[0].text.lower()
 
-    def test_upload_no_mapdl(self, mock_context_no_mapdl, tmp_path):
+    async def test_upload_no_mapdl(self, mock_context_no_mapdl, tmp_path):
         """Error returned when MAPDL is not connected."""
         local_file = tmp_path / "model.db"
         local_file.write_bytes(b"dummy content")
 
-        result = upload_file(mock_context_no_mapdl, str(local_file))
+        result = await upload_file(mock_context_no_mapdl, str(local_file))
 
         assert isinstance(result, ToolResult)
         assert "No MAPDL connection available" in result.content[0].text
 
-    def test_upload_no_context(self, mock_context, tmp_path):
+    async def test_upload_no_context(self, mock_context, tmp_path):
         """Error returned when request context is absent."""
         mock_context.request_context = None
         local_file = tmp_path / "model.db"
         local_file.write_bytes(b"dummy content")
 
-        result = upload_file(mock_context, str(local_file))
+        result = await upload_file(mock_context, str(local_file))
 
         assert "No request context available" in result.content[0].text
 
-    def test_upload_mapdl_raises(self, mock_context, tmp_path):
+    async def test_upload_mapdl_raises(self, mock_context, tmp_path):
         """Error message returned when mapdl.upload raises an exception."""
         local_file = tmp_path / "model.db"
         local_file.write_bytes(b"dummy content")
@@ -92,7 +92,7 @@ class TestUploadFile:
             "Transfer failed"
         )
 
-        result = upload_file(mock_context, str(local_file))
+        result = await upload_file(mock_context, str(local_file))
 
         assert "Failed to upload" in result.content[0].text
         assert "Transfer failed" in result.content[0].text
@@ -107,13 +107,13 @@ class TestUploadFile:
 class TestDownloadFile:
     """Tests for the download_file tool."""
 
-    def test_download_success(self, mock_context, tmp_path):
+    async def test_download_success(self, mock_context, tmp_path):
         """Happy path: download returns a list of files."""
         mock_context.request_context.lifespan_context.mapdl.download.return_value = [
             str(tmp_path / "file.rst")
         ]
 
-        result = download_file(mock_context, "file.rst", str(tmp_path))
+        result = await download_file(mock_context, "file.rst", str(tmp_path))
 
         assert isinstance(result, ToolResult)
         assert "Successfully downloaded 1 file" in result.content[0].text
@@ -121,48 +121,48 @@ class TestDownloadFile:
             "file.rst", target_dir=str(tmp_path), progress_bar=False
         )
 
-    def test_download_multiple_files(self, mock_context, tmp_path):
+    async def test_download_multiple_files(self, mock_context, tmp_path):
         """Happy path: glob pattern returns multiple files."""
         mock_context.request_context.lifespan_context.mapdl.download.return_value = [
             str(tmp_path / "file.rst"),
             str(tmp_path / "file.db"),
         ]
 
-        result = download_file(mock_context, "file*")
+        result = await download_file(mock_context, "file*")
 
         assert "2 file" in result.content[0].text
 
-    def test_download_no_match(self, mock_context):
+    async def test_download_no_match(self, mock_context):
         """Empty list from MAPDL returns a 'no files matched' message."""
         mock_context.request_context.lifespan_context.mapdl.download.return_value = []
 
-        result = download_file(mock_context, "missing.rst")
+        result = await download_file(mock_context, "missing.rst")
 
         assert "No files matched" in result.content[0].text
 
-    def test_download_default_target_dir(self, mock_context):
+    async def test_download_default_target_dir(self, mock_context):
         """When target_dir is None, it is passed through unchanged."""
         mock_context.request_context.lifespan_context.mapdl.download.return_value = ["file.rst"]
 
-        download_file(mock_context, "file.rst")
+        await download_file(mock_context, "file.rst")
 
         mock_context.request_context.lifespan_context.mapdl.download.assert_called_once_with(
             "file.rst", target_dir=None, progress_bar=False
         )
 
-    def test_download_no_mapdl(self, mock_context_no_mapdl):
+    async def test_download_no_mapdl(self, mock_context_no_mapdl):
         """Error returned when MAPDL is not connected."""
-        result = download_file(mock_context_no_mapdl, "file.rst")
+        result = await download_file(mock_context_no_mapdl, "file.rst")
 
         assert "No MAPDL connection available" in result.content[0].text
 
-    def test_download_mapdl_raises(self, mock_context):
+    async def test_download_mapdl_raises(self, mock_context):
         """Error message returned when mapdl.download raises an exception."""
         mock_context.request_context.lifespan_context.mapdl.download.side_effect = Exception(
             "gRPC error"
         )
 
-        result = download_file(mock_context, "file.rst")
+        result = await download_file(mock_context, "file.rst")
 
         assert "Failed to download" in result.content[0].text
         assert "gRPC error" in result.content[0].text

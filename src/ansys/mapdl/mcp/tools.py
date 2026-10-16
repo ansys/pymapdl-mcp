@@ -32,6 +32,7 @@ Tools are grouped into the following tool sets via the ``toolsets://definition``
 The :func:`list_tool_sets` function exposes these tool set definitions as a resource.
 """
 
+import asyncio
 import base64
 import json
 import os
@@ -39,18 +40,19 @@ from pathlib import Path
 import platform
 import subprocess  # nosec B404
 import tempfile
+from types import SimpleNamespace
 from typing import Any, cast
 
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
-from fastmcp.exceptions import ToolError
 from fastmcp.server import Context
 from fastmcp.tools.base import ToolResult
 
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl.mcp import app
+from ansys.mapdl.mcp.busy import check_not_busy, exclusive
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
-from ansys.mapdl.mcp.tasks import RUNNING, running_result, task_manager
+from ansys.mapdl.mcp.server import PyMAPDLAppContext
 from mcp.types import ImageContent, TextContent
 
 try:
@@ -96,6 +98,34 @@ def _is_mapdl_crashed(mapdl: Any) -> bool:
     return False
 
 
+def _app_context(ctx: Context) -> Any | None:
+    """Return the application context, also when running as a background task.
+
+    Background tasks run in a worker where ``ctx.request_context`` is not available, so the
+    application context is read from the server instead.
+    """
+    if ctx.request_context is not None:
+        return ctx.request_context.lifespan_context
+
+    server_context = getattr(ctx.fastmcp, "context", None)
+    return server_context if isinstance(server_context, PyMAPDLAppContext) else None
+
+
+class _TaskContext:
+    """Context proxy exposing the application context as ``request_context.lifespan_context``.
+
+    Helpers from ``ansys-common-mcp`` read the application context from ``request_context``,
+    which is not available in background tasks.
+    """
+
+    def __init__(self, ctx: Context, app_context: Any) -> None:
+        self._ctx = ctx
+        self.request_context = SimpleNamespace(lifespan_context=app_context)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._ctx, name)
+
+
 def _get_mapdl(ctx: Context) -> tuple[Any, str | None]:
     """Retrieve the active MAPDL instance from context, running all guards.
 
@@ -118,10 +148,11 @@ def _get_mapdl(ctx: Context) -> tuple[Any, str | None]:
     BusyError
         If a long-running task is currently using the MAPDL instance.
     """
-    if ctx.request_context is None:
+    app_context = _app_context(ctx)
+    if app_context is None:
         return None, "No request context available."
 
-    mapdl = ctx.request_context.lifespan_context.mapdl
+    mapdl = app_context.mapdl
 
     if mapdl is None:
         return None, (
@@ -134,7 +165,7 @@ def _get_mapdl(ctx: Context) -> tuple[Any, str | None]:
             "Please reconnect or launch a new instance using launch_mapdl_session."
         )
 
-    task_manager.check_not_busy(mapdl)
+    check_not_busy(mapdl)
 
     return mapdl, None
 
@@ -359,8 +390,10 @@ def check_mapdl_installed(ctx: Context) -> ToolResult:
         return _text_result(error_msg)
 
 
-@app.tool(tags={REQUIRES_MAPDL_TAG, "command_execution"})
-def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "") -> ToolResult:
+@app.tool(tags={REQUIRES_MAPDL_TAG, "command_execution"}, task=True)
+async def run_mapdl_command(
+    ctx: Context, cmd: str, comment: str = "", header: str = ""
+) -> ToolResult:
     """Execute an arbitrary MAPDL command.
 
     Parameters
@@ -393,11 +426,12 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
         result = mapdl.run(cmd)
         return _text_result(f"MAPDL command executed successfully: {result}")
 
-    return task_manager.run("run_mapdl_command", mapdl, _work)
+    async with exclusive(mapdl, "run_mapdl_command"):
+        return await asyncio.to_thread(_work)
 
 
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "command_execution"})
-def run_multiple_mapdl_commands(
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "command_execution"}, task=True)
+async def run_multiple_mapdl_commands(
     ctx: Context, commands: list[str], comment: str = "", header: str = ""
 ) -> ToolResult:
     """Execute multiple MAPDL commands in sequence.
@@ -483,7 +517,8 @@ def run_multiple_mapdl_commands(
             logger.error(error_msg)
             return ToolResult([TextContent(type="text", text=error_msg)])
 
-    return task_manager.run("run_multiple_mapdl_commands", mapdl, _work)
+    async with exclusive(mapdl, "run_multiple_mapdl_commands"):
+        return await asyncio.to_thread(_work)
 
 
 @app.tool(tags={"aali", "locked_connection", "session_management"})
@@ -858,7 +893,7 @@ def screenshot(
 # Tools that uses the PythonPersistentSession
 
 
-@app.tool(tags={REQUIRES_MAPDL_TAG, "python_execution", "command_execution"})
+@app.tool(tags={REQUIRES_MAPDL_TAG, "python_execution", "command_execution"}, task=True)
 async def run_python_code(
     ctx: Context,
     code: str,
@@ -910,13 +945,16 @@ async def run_python_code(
     ... '''
     >>> run_python_code(ctx, code)
     """
-    if ctx.request_context is None:
+    app_context = _app_context(ctx)
+    if app_context is None:
         return _text_result(
             json.dumps(
                 {"success": False, "error": "No request context available."}, ensure_ascii=False
             )
         )
-    session = ctx.request_context.lifespan_context.python_session
+    if ctx.request_context is None:
+        ctx = cast(Context, _TaskContext(ctx, app_context))
+    session = app_context.python_session
 
     if session is None:
         return _text_result(
@@ -948,13 +986,10 @@ async def run_python_code(
                 )
             )
 
-    async def _work() -> ToolResult:
+    mapdl_key = app_context.mapdl
+    async with exclusive(mapdl_key, "run_python_code"):
         result: str = await execute_python_code(ctx=ctx, code=code, timeout=timeout)
-        return _text_result(result)
-
-    mapdl_key = ctx.request_context.lifespan_context.mapdl
-    task_manager.check_not_busy(mapdl_key)
-    return await task_manager.run_async("run_python_code", mapdl_key, _work)
+    return _text_result(result)
 
 
 @app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization"})
@@ -1066,8 +1101,8 @@ def custom_plot(
 # File management tools
 
 
-@app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
-def upload_file(ctx: Context, file_path: str) -> ToolResult:
+@app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"}, task=True)
+async def upload_file(ctx: Context, file_path: str) -> ToolResult:
     """Upload a local file to the MAPDL instance working directory.
 
     The file is transferred over gRPC from the local filesystem to the remote
@@ -1114,11 +1149,12 @@ def upload_file(ctx: Context, file_path: str) -> ToolResult:
             logger.error(error_msg)
             return _text_result(error_msg)
 
-    return task_manager.run("upload_file", mapdl, _work)
+    async with exclusive(mapdl, "upload_file"):
+        return await asyncio.to_thread(_work)
 
 
-@app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
-def download_file(ctx: Context, file_name: str, target_dir: str | None = None) -> ToolResult:
+@app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"}, task=True)
+async def download_file(ctx: Context, file_name: str, target_dir: str | None = None) -> ToolResult:
     """Download a file from the MAPDL instance working directory to the local filesystem.
 
     Use this tool to retrieve result files (e.g. ``file.rst``, ``file.db``),
@@ -1180,7 +1216,8 @@ def download_file(ctx: Context, file_name: str, target_dir: str | None = None) -
             logger.error(error_msg)
             return _text_result(error_msg)
 
-    return task_manager.run("download_file", mapdl, _work)
+    async with exclusive(mapdl, "download_file"):
+        return await asyncio.to_thread(_work)
 
 
 @app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
@@ -1305,79 +1342,6 @@ def open_results(ctx: Context, file_name: str | None = None) -> ToolResult:
         error_msg = f"Failed to open results: {e}"
         logger.error(error_msg)
         return _text_result(error_msg)
-
-
-####################################################################################################
-# Task polling tools
-
-
-@app.tool(tags={"task_management"})
-def get_task_status(task_id: str) -> ToolResult:
-    """Get the status of a long-running task started by another tool.
-
-    Use it when a tool replied with ``"status": "running"`` and a ``task_id``.
-    While a task is running MAPDL cannot accept other calls.
-
-    Parameters
-    ----------
-    task_id : str
-        Identifier returned by the tool that started the task.
-
-    Returns
-    -------
-    ToolResult
-        JSON with ``status`` (``running``, ``completed`` or ``failed``) and elapsed time.
-        Call :func:`get_task_result` once the status is not ``running``.
-    """
-    info = task_manager.get(task_id).summary()
-    return ToolResult(
-        [TextContent(type="text", text=json.dumps(info, indent=2))], structured_content=info
-    )
-
-
-@app.tool(tags={"task_management"})
-def get_task_result(task_id: str) -> ToolResult:
-    """Get the result of a finished long-running task.
-
-    Parameters
-    ----------
-    task_id : str
-        Identifier returned by the tool that started the task.
-
-    Returns
-    -------
-    ToolResult
-        The result the original tool would have returned. If the task is still running, its
-        status is returned instead and the call should be retried later.
-
-    Raises
-    ------
-    ToolError
-        If the task failed or does not exist.
-    """
-    task = task_manager.get(task_id)
-    if task.status == RUNNING:
-        return running_result(task)
-    if task.error is not None:
-        raise ToolError(f"Task '{task_id}' ({task.tool}) failed: {task.error}")
-    assert task.result is not None  # nosec B101
-    return task.result
-
-
-@app.tool(tags={"task_management"})
-def list_tasks() -> ToolResult:
-    """List the known long-running tasks and their status.
-
-    Returns
-    -------
-    ToolResult
-        JSON list of tasks.
-    """
-    tasks = [t.summary() for t in task_manager.list()]
-    return ToolResult(
-        [TextContent(type="text", text=json.dumps(tasks, indent=2))],
-        structured_content={"tasks": tasks},
-    )
 
 
 ####################################################################################################
@@ -1596,24 +1560,6 @@ def list_tool_sets() -> list[dict]:
                 "download_file",
                 "resume_model",
                 "open_results",
-            ],
-        },
-        {
-            "name": "task_management",
-            "description": "Tools to poll long-running operations started by other tools",
-            "skill": (
-                "Commands, Python code and file transfers that take longer than a few seconds "
-                "return a JSON with status 'running' and a task_id instead of their result. "
-                "This means the work is still going on, NOT that it failed: do not re-send it. "
-                "MAPDL cannot run anything else meanwhile, and other MAPDL tools raise a busy "
-                "error. Poll get_task_status(task_id) (waiting between calls) until the status "
-                "is 'completed' or 'failed', then call get_task_result(task_id). "
-                "list_tasks shows all known tasks. Running tasks cannot be cancelled."
-            ),
-            "tools": [
-                "get_task_status",
-                "get_task_result",
-                "list_tasks",
             ],
         },
     ]

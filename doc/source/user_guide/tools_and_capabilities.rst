@@ -92,9 +92,6 @@ These sets are exposed through the ``toolsets://definition`` resource.
    * - ``python_execution``
      - Execute arbitrary Python or PyMAPDL code in the persistent session
      - ``run_python_code``
-   * - ``task_management``
-     - Poll long-running operations started by other tools
-     - ``get_task_status``, ``get_task_result``, ``list_tasks``
 
 The ``list_tool_sets()`` resource function returns the complete tool set definitions,
 allowing client applications to discover and organize available capabilities.
@@ -103,14 +100,15 @@ Long-running operations
 -----------------------
 
 ``run_mapdl_command``, ``run_multiple_mapdl_commands``, ``run_python_code``, ``upload_file`` and
-``download_file`` wait up to 5 seconds for the operation to finish (configurable with the
-``PYMAPDL_MCP_TASK_WAIT`` environment variable). If it finishes in time the normal result is
-returned. Otherwise, a ``task_id`` with status ``running`` is returned and the result can be
-retrieved with ``get_task_status`` and ``get_task_result``. Finished tasks are kept for
-one hour (``PYMAPDL_MCP_TASK_TTL``, in seconds).
+``download_file`` are declared as `FastMCP background tasks
+<https://gofastmcp.com/servers/tasks>`_ (MCP tasks extension). A client that supports background
+tasks starts the call, receives a task ID immediately, and polls the task until the result is
+ready, so long operations such as ``SOLVE`` do not hit client timeouts. Clients without task
+support (or using the legacy protocol) call these tools synchronously, as before.
 
-MAPDL cannot execute commands in parallel, so while a task is running any other tool using the
-same MAPDL instance raises a *busy* error. Running tasks cannot be cancelled.
+MAPDL cannot execute commands in parallel, so while one of these tools is running, any other tool
+using the same MAPDL instance raises a *busy* error. Running tasks cannot be cancelled, since a
+running MAPDL command cannot be interrupted without killing MAPDL.
 
 Using the tools
 ---------------
