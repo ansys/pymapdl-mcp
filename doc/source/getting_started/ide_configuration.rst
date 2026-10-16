@@ -163,6 +163,15 @@ For remote access or web-based clients:
    authentication. Anyone who can reach the port can call every tool with no
    credential, including arbitrary Python (``run_python_code``) and arbitrary
    APDL/OS commands (``run_mapdl_command`` with ``/SYS``).
+   If you enable ``--apdl-log-dir``, reachable clients can also retrieve sensitive
+   command attempts and paths from the application-shared log catalogue. Logging
+   does not add authentication or per-user privacy. Use an operator-owned directory
+   and manage retained files and disk quota.
+   ``--block-apdl-command`` can reject selected direct ``/SYS``, ``/SYP``, or ``/INPUT``
+   families, but arbitrary Python and indirect file commands remain outside that filter.
+   Use ``--disable-python`` to remove both ``run_python_code`` and ``custom_plot`` and
+   prevent their subprocess from starting. These independent startup controls do not
+   authenticate HTTP clients or create a solver sandbox.
 
 Enable MCP in Visual Studio Code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
