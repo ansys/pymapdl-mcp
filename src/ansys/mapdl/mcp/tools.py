@@ -42,6 +42,7 @@ import tempfile
 from typing import Any, cast
 
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
+from fastmcp.exceptions import ToolError
 from fastmcp.server import Context
 from fastmcp.tools.base import ToolResult
 
@@ -49,6 +50,7 @@ from fastmcp.tools.base import ToolResult
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl.mcp import app
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
+from ansys.mapdl.mcp.tasks import RUNNING, running_result, task_manager
 from mcp.types import ImageContent, TextContent
 
 try:
@@ -110,6 +112,11 @@ def _get_mapdl(ctx: Context) -> tuple[Any, str | None]:
     tuple[Any, str | None]
         A 2-tuple of ``(mapdl_instance, error_text)``.  Exactly one of the two
         values is ``None`` at any given time.
+
+    Raises
+    ------
+    BusyError
+        If a long-running task is currently using the MAPDL instance.
     """
     if ctx.request_context is None:
         return None, "No request context available."
@@ -126,6 +133,8 @@ def _get_mapdl(ctx: Context) -> tuple[Any, str | None]:
             "MAPDL instance has exited or is exiting. "
             "Please reconnect or launch a new instance using launch_mapdl_session."
         )
+
+    task_manager.check_not_busy(mapdl)
 
     return mapdl, None
 
@@ -374,14 +383,17 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
     if error:
         return _text_result(error)
 
-    if header:
-        mapdl.com(f"# {header}", mute=True)
-    if comment:
-        for each_line in comment.splitlines():
-            mapdl.com(f"{each_line}", mute=True)
+    def _work() -> ToolResult:
+        if header:
+            mapdl.com(f"# {header}", mute=True)
+        if comment:
+            for each_line in comment.splitlines():
+                mapdl.com(f"{each_line}", mute=True)
 
-    result = mapdl.run(cmd)
-    return _text_result(f"MAPDL command executed successfully: {result}")
+        result = mapdl.run(cmd)
+        return _text_result(f"MAPDL command executed successfully: {result}")
+
+    return task_manager.run("run_mapdl_command", mapdl, _work)
 
 
 @app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "command_execution"})
@@ -427,47 +439,51 @@ def run_multiple_mapdl_commands(
     if not valid_commands:
         return _text_result("No valid commands found after filtering empty entries.")
 
-    try:
-        logger.info(f"Executing {len(valid_commands)} MAPDL commands using input_strings")
+    def _work() -> ToolResult:
+        try:
+            logger.info(f"Executing {len(valid_commands)} MAPDL commands using input_strings")
 
-        if header:
-            mapdl.com(f"# {header}", mute=True)
-        if comment:
-            for each_line in comment.splitlines():
-                mapdl.com(f"{each_line}", mute=True)
+            if header:
+                mapdl.com(f"# {header}", mute=True)
+            if comment:
+                for each_line in comment.splitlines():
+                    mapdl.com(f"{each_line}", mute=True)
 
-        # Use input_strings for batch command execution
-        result = mapdl.input_strings(valid_commands)
+            # Use input_strings for batch command execution
+            result = mapdl.input_strings(valid_commands)
 
-        success_msg = (
-            f"Successfully executed {len(valid_commands)} MAPDL commands:\n"
-            f"Commands:\n" + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
-        )
+            success_msg = (
+                f"Successfully executed {len(valid_commands)} MAPDL commands:\n"
+                f"Commands:\n"
+                + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
+            )
 
-        if result:
-            success_msg += f"\n\nOutput:\n{result}"
+            if result:
+                success_msg += f"\n\nOutput:\n{result}"
 
-        return ToolResult(
-            [
-                TextContent(type="text", text="True"),
-                TextContent(type="text", text=success_msg),
-            ],
-            structured_content={
-                "success": True,
-                "commands_executed": valid_commands,
-                "output": result or "",
-            },
-        )
+            return ToolResult(
+                [
+                    TextContent(type="text", text="True"),
+                    TextContent(type="text", text=success_msg),
+                ],
+                structured_content={
+                    "success": True,
+                    "commands_executed": valid_commands,
+                    "output": result or "",
+                },
+            )
 
-    except Exception as e:
-        error_msg = (
-            f"Error executing commands. Executed {len(valid_commands)} commands "
-            f"but encountered error: {str(e)}\n"
-            f"Commands that were attempted:\n"
-            + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
-        )
-        logger.error(error_msg)
-        return ToolResult([TextContent(type="text", text=error_msg)])
+        except Exception as e:
+            error_msg = (
+                f"Error executing commands. Executed {len(valid_commands)} commands "
+                f"but encountered error: {str(e)}\n"
+                f"Commands that were attempted:\n"
+                + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
+            )
+            logger.error(error_msg)
+            return ToolResult([TextContent(type="text", text=error_msg)])
+
+    return task_manager.run("run_multiple_mapdl_commands", mapdl, _work)
 
 
 @app.tool(tags={"aali", "locked_connection", "session_management"})
@@ -932,12 +948,13 @@ async def run_python_code(
                 )
             )
 
-    result: str = await execute_python_code(
-        ctx=ctx,
-        code=code,
-        timeout=timeout,
-    )
-    return _text_result(result)
+    async def _work() -> ToolResult:
+        result: str = await execute_python_code(ctx=ctx, code=code, timeout=timeout)
+        return _text_result(result)
+
+    mapdl_key = ctx.request_context.lifespan_context.mapdl
+    task_manager.check_not_busy(mapdl_key)
+    return await task_manager.run_async("run_python_code", mapdl_key, _work)
 
 
 @app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization"})
@@ -1084,17 +1101,20 @@ def upload_file(ctx: Context, file_path: str) -> ToolResult:
     if not Path(file_path).is_file():
         return _text_result(f"File not found: '{file_path}'")
 
-    try:
-        uploaded_name = mapdl.upload(file_path, progress_bar=False)
-        logger.info(f"Uploaded '{file_path}' to MAPDL working directory as '{uploaded_name}'.")
-        return _text_result(
-            f"File uploaded successfully. "
-            f"The file is now available in the MAPDL working directory as '{uploaded_name}'."
-        )
-    except Exception as e:
-        error_msg = f"Failed to upload '{file_path}': {e}"
-        logger.error(error_msg)
-        return _text_result(error_msg)
+    def _work() -> ToolResult:
+        try:
+            uploaded_name = mapdl.upload(file_path, progress_bar=False)
+            logger.info(f"Uploaded '{file_path}' to MAPDL working directory as '{uploaded_name}'.")
+            return _text_result(
+                f"File uploaded successfully. "
+                f"The file is now available in the MAPDL working directory as '{uploaded_name}'."
+            )
+        except Exception as e:
+            error_msg = f"Failed to upload '{file_path}': {e}"
+            logger.error(error_msg)
+            return _text_result(error_msg)
+
+    return task_manager.run("upload_file", mapdl, _work)
 
 
 @app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
@@ -1145,17 +1165,22 @@ def download_file(ctx: Context, file_name: str, target_dir: str | None = None) -
     if error:
         return _text_result(error)
 
-    try:
-        downloaded = mapdl.download(file_name, target_dir=target_dir, progress_bar=False)
-        if not downloaded:
-            return _text_result(f"No files matched '{file_name}' in the MAPDL working directory.")
-        logger.info(f"Downloaded {len(downloaded)} file(s): {downloaded}")
-        files_list = "\n".join(f"  - {f}" for f in downloaded)
-        return _text_result(f"Successfully downloaded {len(downloaded)} file(s):\n{files_list}")
-    except Exception as e:
-        error_msg = f"Failed to download '{file_name}': {e}"
-        logger.error(error_msg)
-        return _text_result(error_msg)
+    def _work() -> ToolResult:
+        try:
+            downloaded = mapdl.download(file_name, target_dir=target_dir, progress_bar=False)
+            if not downloaded:
+                return _text_result(
+                    f"No files matched '{file_name}' in the MAPDL working directory."
+                )
+            logger.info(f"Downloaded {len(downloaded)} file(s): {downloaded}")
+            files_list = "\n".join(f"  - {f}" for f in downloaded)
+            return _text_result(f"Successfully downloaded {len(downloaded)} file(s):\n{files_list}")
+        except Exception as e:
+            error_msg = f"Failed to download '{file_name}': {e}"
+            logger.error(error_msg)
+            return _text_result(error_msg)
+
+    return task_manager.run("download_file", mapdl, _work)
 
 
 @app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
@@ -1280,6 +1305,79 @@ def open_results(ctx: Context, file_name: str | None = None) -> ToolResult:
         error_msg = f"Failed to open results: {e}"
         logger.error(error_msg)
         return _text_result(error_msg)
+
+
+####################################################################################################
+# Task polling tools
+
+
+@app.tool(tags={"task_management"})
+def get_task_status(task_id: str) -> ToolResult:
+    """Get the status of a long-running task started by another tool.
+
+    Use it when a tool replied with ``"status": "running"`` and a ``task_id``.
+    While a task is running MAPDL cannot accept other calls.
+
+    Parameters
+    ----------
+    task_id : str
+        Identifier returned by the tool that started the task.
+
+    Returns
+    -------
+    ToolResult
+        JSON with ``status`` (``running``, ``completed`` or ``failed``) and elapsed time.
+        Call :func:`get_task_result` once the status is not ``running``.
+    """
+    info = task_manager.get(task_id).summary()
+    return ToolResult(
+        [TextContent(type="text", text=json.dumps(info, indent=2))], structured_content=info
+    )
+
+
+@app.tool(tags={"task_management"})
+def get_task_result(task_id: str) -> ToolResult:
+    """Get the result of a finished long-running task.
+
+    Parameters
+    ----------
+    task_id : str
+        Identifier returned by the tool that started the task.
+
+    Returns
+    -------
+    ToolResult
+        The result the original tool would have returned. If the task is still running, its
+        status is returned instead and the call should be retried later.
+
+    Raises
+    ------
+    ToolError
+        If the task failed or does not exist.
+    """
+    task = task_manager.get(task_id)
+    if task.status == RUNNING:
+        return running_result(task)
+    if task.error is not None:
+        raise ToolError(f"Task '{task_id}' ({task.tool}) failed: {task.error}")
+    assert task.result is not None  # nosec B101
+    return task.result
+
+
+@app.tool(tags={"task_management"})
+def list_tasks() -> ToolResult:
+    """List the known long-running tasks and their status.
+
+    Returns
+    -------
+    ToolResult
+        JSON list of tasks.
+    """
+    tasks = [t.summary() for t in task_manager.list()]
+    return ToolResult(
+        [TextContent(type="text", text=json.dumps(tasks, indent=2))],
+        structured_content={"tasks": tasks},
+    )
 
 
 ####################################################################################################
@@ -1498,6 +1596,24 @@ def list_tool_sets() -> list[dict]:
                 "download_file",
                 "resume_model",
                 "open_results",
+            ],
+        },
+        {
+            "name": "task_management",
+            "description": "Tools to poll long-running operations started by other tools",
+            "skill": (
+                "Commands, Python code and file transfers that take longer than a few seconds "
+                "return a JSON with status 'running' and a task_id instead of their result. "
+                "This means the work is still going on, NOT that it failed: do not re-send it. "
+                "MAPDL cannot run anything else meanwhile, and other MAPDL tools raise a busy "
+                "error. Poll get_task_status(task_id) (waiting between calls) until the status "
+                "is 'completed' or 'failed', then call get_task_result(task_id). "
+                "list_tasks shows all known tasks. Running tasks cannot be cancelled."
+            ),
+            "tools": [
+                "get_task_status",
+                "get_task_result",
+                "list_tasks",
             ],
         },
     ]
