@@ -17,6 +17,7 @@
 """Unit tests for MCP CLI parsing and startup connection behavior."""
 
 import asyncio
+import json
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -141,3 +142,124 @@ def test_launcher_does_not_disable_requires_mapdl_when_connect_on_startup():
         tag for c in mock_disable.call_args_list for tag in (c.kwargs.get("tags") or set())
     }
     assert "requires_mapdl" not in disabled_tags
+
+
+@pytest.mark.unit
+def test_log_directory_reaches_immutable_context(tmp_path):
+    from dataclasses import FrozenInstanceError
+
+    with patch.object(asyncio, "run", side_effect=lambda coroutine: coroutine.close()):
+        launcher(["--apdl-log-dir", str(tmp_path)])
+    server = PyMAPDLMCP()
+    server._cli_config = dict(app._cli_config)
+    context = server.create_context()
+    assert context.security_options.apdl_log_dir == tmp_path
+    assert context.command_log_dir.parent == tmp_path
+    with pytest.raises(FrozenInstanceError):
+        context.security_options.apdl_log_dir = None
+    with patch.object(asyncio, "run", side_effect=lambda coroutine: coroutine.close()):
+        launcher([])
+    server._cli_config = dict(app._cli_config)
+    assert server.create_context().command_log_dir is None
+
+
+@pytest.mark.unit
+def test_repeatable_apdl_blocks_reach_consumers(mock_context, tmp_path):
+    from dataclasses import FrozenInstanceError
+
+    from ansys.mapdl.mcp.tools import run_mapdl_command
+
+    with patch.object(asyncio, "run", side_effect=lambda coroutine: coroutine.close()):
+        launcher(
+            [
+                "--block-apdl-command",
+                "/SYS",
+                "--block-apdl-command",
+                "/INPUT",
+                "--block-apdl-command",
+                "/SYS",
+                "--apdl-log-dir",
+                str(tmp_path),
+            ]
+        )
+    server = PyMAPDLMCP()
+    server._cli_config = dict(app._cli_config)
+    context = server.create_context()
+    context.mapdl = mock_context.request_context.lifespan_context.mapdl
+    mock_context.request_context.lifespan_context = context
+    with pytest.raises(ValueError, match="/SYS"):
+        run_mapdl_command(mock_context, " /sysignored,unused")
+    with pytest.raises(ValueError, match="/INPUT"):
+        run_mapdl_command(mock_context, "/INP,unused")
+    assert context.mapdl.mock_calls == []
+    assert context.command_log_dir.parent == tmp_path
+    with pytest.raises(FrozenInstanceError):
+        context.security_options.blocked_commands = frozenset()
+    result = run_mapdl_command(mock_context, "FINISH")
+    assert "MAPDL command executed successfully" in result.content[0].text
+    assert context.mapdl.run.call_args.args == ("FINISH",)
+
+    with patch.object(asyncio, "run", side_effect=lambda coroutine: coroutine.close()):
+        launcher([])
+    server._cli_config = dict(app._cli_config)
+    unrestricted = server.create_context()
+    unrestricted.mapdl = context.mapdl
+    mock_context.request_context.lifespan_context = unrestricted
+    result = run_mapdl_command(mock_context, "/SYS,not-executed-by-mock")
+    assert "MAPDL command executed successfully" in result.content[0].text
+    assert context.mapdl.run.call_args.args == ("/SYS,not-executed-by-mock",)
+    assert unrestricted.command_log_dir is None
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("command", ["/INP", "/sys", "/SY", "FINISH"])
+def test_apdl_block_cli_rejects_noncanonical_choices(command):
+    with pytest.raises(SystemExit) as error:
+        launcher(["--block-apdl-command", command])
+    assert error.value.code == 2
+
+
+@pytest.mark.unit
+def test_apdl_blocks_warn_without_changing_python_capability(monkeypatch):
+    from ansys.mapdl.mcp.server import logger
+
+    warnings = []
+    monkeypatch.setattr(logger, "warning", warnings.append)
+    server = PyMAPDLMCP()
+    server._cli_config = {"block_apdl_command": frozenset({"/SYS"})}
+    context = server.create_context()
+    assert context.python_session is not None
+    assert len(warnings) == 1
+    warnings.clear()
+    server = PyMAPDLMCP(need_python=False)
+    server._cli_config = {"block_apdl_command": frozenset({"/SYS"})}
+    server.create_context()
+    assert warnings == []
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_disable_python_cli_reaches_runtime_policy(monkeypatch, mock_context, tmp_path):
+    from dataclasses import FrozenInstanceError
+
+    import ansys.mapdl.mcp.server as server_module
+    from ansys.mapdl.mcp.tools import run_python_code
+
+    server = PyMAPDLMCP()
+    monkeypatch.setattr(server_module, "app", server)
+    monkeypatch.setattr(server, "run_stdio_async", lambda: asyncio.sleep(0))
+    with patch.object(asyncio, "run", side_effect=lambda coroutine: coroutine.close()):
+        launcher(["--disable-python", "--apdl-log-dir", str(tmp_path)])
+    context = server.create_context()
+    context.mapdl = mock_context.request_context.lifespan_context.mapdl
+    mock_context.request_context.lifespan_context = context
+    result = await run_python_code(mock_context, "print('should not run')")
+
+    denied = json.loads(result.content[0].text)
+    assert denied["success"] is False
+    assert isinstance(denied["error"], str)
+    assert context.python_session is None
+    assert context.command_log_dir.parent == tmp_path
+    assert context.security_options.blocked_commands == frozenset()
+    with pytest.raises(FrozenInstanceError):
+        context.security_options.python_enabled = True

@@ -17,15 +17,26 @@
 """Lifespan and CLI entry for the MCP server with startup options."""
 
 import argparse
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from pathlib import Path
 import sys
+from threading import Lock
 from typing import Any, Optional, cast
+from uuid import uuid4
 
 from ansys.common.mcp import (
     PyAnsysBaseMCP,
 )
 from ansys.common.mcp.context import PyAnsysBaseAppContext
 from ansys.common.mcp.helpers import PersistentPythonSession, logger
+
+from ansys.mapdl.mcp._security import (
+    _APDL_COMMAND_PREFIXES,
+    _attach_main_log,
+    _LogRef,
+    _retire_native_log,
+    _SecurityOptions,
+)
 
 
 @dataclass
@@ -60,8 +71,20 @@ class PyMAPDLAppContext(PyAnsysBaseAppContext):
     http_host: str = "127.0.0.1"
     http_port: int = 8080
     cors_origins: list[str] | None = None
+    security_options: _SecurityOptions = field(default_factory=_SecurityOptions)
+    command_log_dir: Path | None = field(default=None, init=False)
+    command_logs: dict[str, _LogRef] = field(default_factory=dict, init=False)
+    command_log_lock: Any = field(default_factory=Lock, init=False, repr=False)
 
-    @property
+    def __post_init__(self) -> None:
+        """Create the operator-owned native log directory for this run."""
+        if self.security_options.apdl_log_dir is not None:
+            root = self.security_options.apdl_log_dir.expanduser().resolve()
+            root.mkdir(parents=True, exist_ok=True)
+            self.command_log_dir = root / uuid4().hex
+            self.command_log_dir.mkdir()
+
+    @property  # type: ignore[misc]
     def product_instance(self) -> Optional[Any]:
         """Returns the default MAPDL instance for backward compatibility.
 
@@ -93,20 +116,32 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         PyMAPDLAppContext
             The application context for managing MAPDL instances.
         """
-        startup_code = "from ansys.mapdl.mcp.python_helper.startup_code import *"
-        python_session = PersistentPythonSession(
-            python_executable=self.python_executable,
-            working_directory=self.working_directory,
-            startup_code=startup_code,
+        cli_cfg = getattr(self, "_cli_config", None)
+        python_enabled = self._need_python and not (cli_cfg or {}).get("disable_python", False)
+        self._need_python = python_enabled
+        python_session = (
+            PersistentPythonSession(
+                python_executable=self.python_executable,
+                working_directory=self.working_directory,
+            )
+            if python_enabled
+            else None
         )
-
+        if not python_enabled:
+            self.disable(tags={"python_execution"})
+        log_dir = cli_cfg.get("apdl_log_dir") if cli_cfg is not None else None
+        blocked = cli_cfg.get("block_apdl_command", ()) if cli_cfg is not None else ()
         context = PyMAPDLAppContext(
             python_session=python_session,
             command_history=[],
+            security_options=_SecurityOptions(
+                apdl_log_dir=Path(log_dir) if log_dir else None,
+                blocked_commands=frozenset(blocked),
+                python_enabled=python_enabled,
+            ),
         )
 
         # Populate context from CLI config if available
-        cli_cfg = getattr(self, "_cli_config", None)
 
         if cli_cfg is not None:
             context.transport_type = cli_cfg.get("transport_type", context.transport_type)
@@ -120,6 +155,12 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
             context.cors_origins = cli_cfg.get("cors_origins", context.cors_origins)
 
         self.context = context
+        if context.security_options.blocked_commands and self._need_python:
+            logger.warning(
+                "APDL command restrictions do not constrain arbitrary Python. "
+                "Disable Python execution when relying on the direct APDL filter. "
+                "These restrictions are not a solver or OS sandbox."
+            )
         return context
 
     def product_startup(self):
@@ -141,11 +182,15 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
                     "port": context.mapdl_port,
                     "cleanup_on_exit": False,
                 }
-                context.mapdl = Mapdl(**_connect_kwargs)
+                mapdl = Mapdl(**_connect_kwargs)
+                _attach_main_log(context, mapdl)
+                context.mapdl = mapdl
                 logger.info("Successfully connected to MAPDL on startup.")
 
             except Exception as e:
                 logger.error(f"Failed to connect to MAPDL on startup: {e}")
+                if context.security_options.apdl_log_dir is not None:
+                    raise
         else:
             logger.info("MCP Server initialized. Use connect_to_mapdl to establish a connection.")
 
@@ -156,7 +201,11 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         if context.mapdl is not None:
             try:
                 logger.info("Disconnecting from MAPDL...")
-                context.mapdl.exit()
+                try:
+                    if context.security_options.apdl_log_dir is not None:
+                        _retire_native_log(context.mapdl)
+                finally:
+                    context.mapdl.exit()
                 logger.info("MAPDL disconnect complete")
             except Exception as e:
                 logger.error(f"Error during MAPDL disconnect: {e}")
@@ -222,6 +271,24 @@ def launcher(argv: list[str] | None = None) -> None:
         help="Attempt to connect to MAPDL during MCP startup",
     )
     parser.add_argument(
+        "--apdl-log-dir",
+        type=Path,
+        default=None,
+        help="Directory for persistent native client command logs (default: off)",
+    )
+    parser.add_argument(
+        "--block-apdl-command",
+        action="append",
+        choices=tuple(_APDL_COMMAND_PREFIXES),
+        default=[],
+        help="Block a direct APDL command family; repeat for /SYS, /SYP, /INPUT (default: none)",
+    )
+    parser.add_argument(
+        "--disable-python",
+        action="store_true",
+        help="Disable arbitrary Python code, custom plots, and their subprocess",
+    )
+    parser.add_argument(
         "--http-host",
         dest="http_host",
         default="127.0.0.1",
@@ -276,6 +343,9 @@ def launcher(argv: list[str] | None = None) -> None:
             "http_port": args.http_port,
             "cors_origins": cors_origins,
             "on_aali": session.on_aali,
+            "apdl_log_dir": args.apdl_log_dir,
+            "block_apdl_command": frozenset(args.block_apdl_command),
+            "disable_python": args.disable_python,
         },
     )
 
@@ -310,6 +380,8 @@ def launcher(argv: list[str] | None = None) -> None:
         app.disable(tags={"aali"})
     if session.locked_connection:
         app.disable(tags={"locked_connection"})
+    if args.disable_python or not app._need_python:
+        app.disable(tags={"python_execution"})
 
     if args.transport_type == "stdio":
         asyncio.run(app.run_stdio_async())

@@ -33,6 +33,7 @@ The :func:`list_tool_sets` function exposes these tool set definitions as a reso
 """
 
 import base64
+from itertools import islice
 import json
 import os
 from pathlib import Path
@@ -44,12 +45,19 @@ from typing import Any, cast
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
 from fastmcp.server import Context
 from fastmcp.tools.base import ToolResult
+from pydantic import StrictInt
 
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl.mcp import app
+from ansys.mapdl.mcp._security import (
+    _attach_main_log,
+    _check_apdl_literal,
+    _check_apdl_request,
+    _retire_native_log,
+)
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
-from mcp.types import ImageContent, TextContent
+from mcp.types import ImageContent, TextContent, ToolListChangedNotification
 
 try:
     import pyvista  # noqa: F401  # Check if PyVista is available
@@ -225,6 +233,25 @@ def _capture_screenshot(
 REQUIRES_MAPDL_TAG = "requires_mapdl"
 
 
+async def _refresh_mapdl_tool_visibility(ctx: Context) -> None:
+    if ctx.request_context is None:
+        return
+    lifespan_context = ctx.request_context.lifespan_context
+    mapdl = lifespan_context.mapdl
+    if mapdl is None or _is_mapdl_crashed(mapdl):
+        ctx.fastmcp.disable(tags={REQUIRES_MAPDL_TAG})
+    else:
+        ctx.fastmcp.enable(tags={REQUIRES_MAPDL_TAG})
+        cli_config = getattr(ctx.fastmcp, "_cli_config", {})
+        if cli_config.get("on_aali"):
+            ctx.fastmcp.disable(tags={"aali"})
+        if lifespan_context.connect_on_startup:
+            ctx.fastmcp.disable(tags={"locked_connection"})
+    if not lifespan_context.security_options.python_enabled:
+        ctx.fastmcp.disable(tags={"python_execution"})
+    await ctx.send_notification(ToolListChangedNotification())
+
+
 # Access type-safe lifespan context in tools
 @app.tool(tags={REQUIRES_MAPDL_TAG, "session_management"})
 def check_mapdl_status(ctx: Context) -> ToolResult:
@@ -282,7 +309,7 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
             )
             base64_data = base64.b64encode(image_data).decode("utf-8")
             return ToolResult(
-                [json_content, ImageContent(type="image", data=base64_data, mimeType=mime_type)]
+                [json_content, ImageContent(type="image", data=base64_data, mime_type=mime_type)]
             )
         except Exception as img_err:
             logger.warning(f"Could not capture four-view screenshot for status: {img_err}")
@@ -354,6 +381,10 @@ def check_mapdl_installed(ctx: Context) -> ToolResult:
 def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "") -> ToolResult:
     """Execute an arbitrary MAPDL command.
 
+    Operator-selected direct command families and unsafe effective metadata are
+    rejected before any command or comment is sent. Arbitrary Python and nested
+    file contents are outside this text filter.
+
     Parameters
     ----------
     ctx : Context
@@ -373,6 +404,15 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
+
+    _check_apdl_request(
+        (cmd,),
+        ctx.request_context.lifespan_context.security_options.blocked_commands,
+        header=header,
+        comment=comment,
+    )
 
     if header:
         mapdl.com(f"# {header}", mute=True)
@@ -395,6 +435,9 @@ def run_multiple_mapdl_commands(
     commands in batch mode.
     This is significantly faster than executing commands one by one.
 
+    Operator-selected restrictions preflight the complete normalized batch and
+    metadata before any effects. A solver error can leave a partially executed batch.
+
     Parameters
     ----------
     ctx : Context
@@ -414,6 +457,8 @@ def run_multiple_mapdl_commands(
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
 
     if not commands:
         return _text_result("No commands provided. Please provide a list of commands to execute.")
@@ -426,6 +471,16 @@ def run_multiple_mapdl_commands(
 
     if not valid_commands:
         return _text_result("No valid commands found after filtering empty entries.")
+
+    try:
+        _check_apdl_request(
+            valid_commands,
+            ctx.request_context.lifespan_context.security_options.blocked_commands,
+            header=header,
+            comment=comment,
+        )
+    except ValueError as exc:
+        return _text_result(str(exc))
 
     try:
         logger.info(f"Executing {len(valid_commands)} MAPDL commands using input_strings")
@@ -461,13 +516,129 @@ def run_multiple_mapdl_commands(
 
     except Exception as e:
         error_msg = (
-            f"Error executing commands. Executed {len(valid_commands)} commands "
-            f"but encountered error: {str(e)}\n"
+            f"Error executing commands. Attempted a batch of {len(valid_commands)} commands "
+            f"but encountered error: {str(e)}. Some commands may not have executed.\n"
             f"Commands that were attempted:\n"
             + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
         )
         logger.error(error_msg)
         return ToolResult([TextContent(type="text", text=error_msg)])
+
+
+@app.tool(tags={"command_execution"})
+def list_command_logs(ctx: Context, offset: StrictInt = 0, limit: StrictInt = 50) -> ToolResult:
+    """List this server run's native log IDs, including after MAPDL disconnect.
+
+    Catalogue offsets are nonnegative indexes. Limit must be between 1 and 100.
+    Paths are not exposed. Logging is opt-in through --apdl-log-dir.
+    """
+    if ctx.request_context is None:
+        return _text_result(
+            json.dumps({"success": False, "error": "No request context available."})
+        )
+    context = ctx.request_context.lifespan_context
+    if type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= 100:
+        return _text_result(
+            json.dumps(
+                {
+                    "success": False,
+                    "error": "offset must be a nonnegative integer and limit must be 1-100.",
+                }
+            )
+        )
+    if context.command_log_dir is None:
+        return _text_result(
+            json.dumps({"success": True, "enabled": False, "logs": [], "next_offset": None})
+        )
+    with context.command_log_lock:
+        count = len(context.command_logs)
+        if offset > count:
+            return _text_result(
+                json.dumps({"success": False, "error": "Catalogue offset is out of range."})
+            )
+        entries = list(islice(context.command_logs.items(), offset, min(offset + limit, count)))
+    end = offset + len(entries)
+    return _text_result(
+        json.dumps(
+            {
+                "success": True,
+                "enabled": True,
+                "logs": [{"log_id": log_id, "source": ref.source} for log_id, ref in entries],
+                "next_offset": end if end < count else None,
+            }
+        )
+    )
+
+
+@app.tool(tags={"command_execution"})
+def read_command_log(
+    ctx: Context,
+    log_id: str,
+    offset: StrictInt = 0,
+    max_bytes: StrictInt = 65536,
+) -> ToolResult:
+    """Read a bounded on-disk prefix of a catalogue-owned native log as base64 bytes.
+
+    Offset is a nonnegative byte position. Max_bytes must be between 1 and 65536.
+    Logs are mutable command attempts, not flushed execution receipts.
+    """
+    if ctx.request_context is None:
+        return _text_result(
+            json.dumps({"success": False, "error": "No request context available."})
+        )
+    context = ctx.request_context.lifespan_context
+    if context.command_log_dir is None:
+        return _text_result(json.dumps({"success": False, "error": "Command logging is disabled."}))
+    if (
+        type(offset) is not int
+        or offset < 0
+        or type(max_bytes) is not int
+        or not 1 <= max_bytes <= 65536
+    ):
+        return _text_result(
+            json.dumps(
+                {
+                    "success": False,
+                    "error": "offset must be a nonnegative integer and max_bytes must be 1-65536.",
+                }
+            )
+        )
+    with context.command_log_lock:
+        ref = context.command_logs.get(log_id)
+    if ref is None:
+        return _text_result(json.dumps({"success": False, "error": "Unknown command log ID."}))
+    try:
+        with ref.path.open("rb") as stream:
+            size = os.fstat(stream.fileno()).st_size
+            if offset > size:
+                return _text_result(
+                    json.dumps({"success": False, "error": "Byte offset is out of range."})
+                )
+            stream.seek(offset)
+            data = stream.read(min(max_bytes, size - offset))
+    except FileNotFoundError:
+        return _text_result(json.dumps({"success": False, "error": "Command log file is missing."}))
+    except OSError as exc:
+        return _text_result(
+            json.dumps(
+                {
+                    "success": False,
+                    "error": f"Cannot read command log: {exc.strerror or type(exc).__name__}",
+                }
+            )
+        )
+    return _text_result(
+        json.dumps(
+            {
+                "success": True,
+                "log_id": log_id,
+                "source": ref.source,
+                "data_base64": base64.b64encode(data).decode("ascii"),
+                "size_bytes": size,
+                "next_offset": offset + len(data),
+            }
+        )
+    )
 
 
 @app.tool(tags={"aali", "locked_connection", "session_management"})
@@ -524,6 +695,8 @@ async def launch_mapdl_session(
                 logger.warning(
                     "Cached MAPDL instance has crashed or exited. Clearing the cached instance."
                 )
+                if ctx.request_context.lifespan_context.security_options.apdl_log_dir is not None:
+                    _retire_native_log(ctx.request_context.lifespan_context.mapdl)
                 ctx.request_context.lifespan_context.mapdl = None
             else:
                 return _text_result(
@@ -552,11 +725,16 @@ async def launch_mapdl_session(
         from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 
         mapdl = cast(pymapdl.Mapdl, pymapdl.launch_mapdl(**kwargs))
+        try:
+            _attach_main_log(ctx.request_context.lifespan_context, mapdl)
+        except Exception:
+            mapdl.exit()
+            raise
 
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
 
-        await ctx.enable_components(tags={REQUIRES_MAPDL_TAG})
+        await _refresh_mapdl_tool_visibility(ctx)
         logger.info(f"MAPDL launched successfully at {mapdl.ip}:{mapdl.port}!")
         return _text_result(
             f"Successfully launched MAPDL at {mapdl.ip}:{mapdl.port}\n"
@@ -567,6 +745,7 @@ async def launch_mapdl_session(
     except Exception as e:
         error_msg = f"Failed to launch MAPDL: {str(e)}"
         logger.error(error_msg)
+        await _refresh_mapdl_tool_visibility(ctx)
         return _text_result(error_msg)
 
 
@@ -606,6 +785,8 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
                 logger.warning(
                     "Cached MAPDL instance has crashed or exited. Clearing the cached instance."
                 )
+                if ctx.request_context.lifespan_context.security_options.apdl_log_dir is not None:
+                    _retire_native_log(ctx.request_context.lifespan_context.mapdl)
                 ctx.request_context.lifespan_context.mapdl = None
             else:
                 return _text_result(
@@ -627,11 +808,12 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
         from ansys.mapdl import core as pymapdl  # pyright: ignore[reportMissingTypeStubs]
 
         mapdl = pymapdl.Mapdl(**_connect_kwargs)
+        _attach_main_log(ctx.request_context.lifespan_context, mapdl)
 
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
 
-        await ctx.enable_components(tags={REQUIRES_MAPDL_TAG})
+        await _refresh_mapdl_tool_visibility(ctx)
         logger.info(f"Connected to MAPDL successfully at {ip}:{port}!")
         return _text_result(
             f"Successfully connected to MAPDL at {ip}:{port}\nMAPDL Version: {mapdl.version}\n"
@@ -640,6 +822,7 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
     except Exception as e:
         error_msg = f"Failed to connect to MAPDL at {ip}:{port}: {str(e)}"
         logger.error(error_msg)
+        await _refresh_mapdl_tool_visibility(ctx)
         return _text_result(error_msg)
 
 
@@ -673,15 +856,17 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
         port = mapdl._port
         logger.info(f"Disconnecting from MAPDL at {ip}:{port}...")
 
-        # Exit the MAPDL connection
-        # Just disconnect the client
-        mapdl.exit()
+        try:
+            if ctx.request_context.lifespan_context.security_options.apdl_log_dir is not None:
+                _retire_native_log(mapdl)
+        finally:
+            mapdl.exit()
         del mapdl
 
         # Clear from context
         ctx.request_context.lifespan_context.mapdl = None
 
-        await ctx.disable_components(tags={REQUIRES_MAPDL_TAG})
+        await _refresh_mapdl_tool_visibility(ctx)
         logger.info("Disconnected successfully!")
         return _text_result(f"Successfully disconnected from MAPDL at {ip}:{port}")
 
@@ -690,6 +875,7 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
         logger.error(error_msg)
         # Still clear the reference even if disconnect failed
         ctx.request_context.lifespan_context.mapdl = None
+        await _refresh_mapdl_tool_visibility(ctx)
         return _text_result(error_msg)
 
 
@@ -762,6 +948,9 @@ def screenshot(
     For custom matplotlib or PyVista plots, use the :func:`custom_plot` tool
     instead.
 
+    Operator-selected APDL restrictions check caller commands before view changes,
+    capture, or restoration. A denied request sends no restore commands.
+
     Parameters
     ----------
     ctx : Context
@@ -795,8 +984,14 @@ def screenshot(
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
 
     try:
+        _check_apdl_request(
+            (commands,),
+            ctx.request_context.lifespan_context.security_options.blocked_commands,
+        )
         if four_view:
             logger.info("Capturing four-view MAPDL screenshot...")
             plot_cmd = commands if commands else "EPLOT"
@@ -828,7 +1023,7 @@ def screenshot(
         return ToolResult(
             [
                 TextContent(type="text", text=f"Screenshot saved to: {screenshot_path}"),
-                ImageContent(type="image", data=base64_data, mimeType=mime_type),
+                ImageContent(type="image", data=base64_data, mime_type=mime_type),
             ]
         )
 
@@ -900,6 +1095,10 @@ async def run_python_code(
                 {"success": False, "error": "No request context available."}, ensure_ascii=False
             )
         )
+    if not ctx.request_context.lifespan_context.security_options.python_enabled:
+        return _text_result(
+            json.dumps({"success": False, "error": "Python execution is disabled by the operator."})
+        )
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:
@@ -913,24 +1112,14 @@ async def run_python_code(
             )
         )
 
-    # Check if MAPDL is connected in the persistent session
-    mapdl_instance = session.metadata.get("mapdl", None)
-    if mapdl_instance is None or isinstance(mapdl_instance, str):
+    try:
         mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
-
+    except Exception as exc:
+        mapdl_instance = f"Failed to connect to MAPDL in persistent Python session: {exc}"
     if mapdl_instance is None or isinstance(mapdl_instance, str):
-        try:
-            mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
-        except Exception as e:
-            error_msg = f"Failed to connect to MAPDL in persistent Python session: {str(e)}"
-            logger.error(error_msg)
-            return _text_result(
-                json.dumps(
-                    {"success": False, "error": error_msg},
-                    ensure_ascii=False,
-                    indent=2,
-                )
-            )
+        return _text_result(
+            json.dumps({"success": False, "error": mapdl_instance or "MAPDL bootstrap failed"})
+        )
 
     result: str = await execute_python_code(
         ctx=ctx,
@@ -940,7 +1129,7 @@ async def run_python_code(
     return _text_result(result)
 
 
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization"})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization", "python_execution"})
 def custom_plot(
     ctx: Context,
     plot_code: str,
@@ -1015,6 +1204,8 @@ def custom_plot(
     """
     if ctx.request_context is None:
         return _text_result("No request context available.")
+    if not ctx.request_context.lifespan_context.security_options.python_enabled:
+        return _text_result("Python execution is disabled by the operator.")
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:
@@ -1022,10 +1213,10 @@ def custom_plot(
             "No Python session available. The persistent Python session was not initialized."
         )
 
-    # Check if MAPDL is connected in the persistent session
-    mapdl_instance = session.metadata.get("mapdl", None)
-    if mapdl_instance is None or isinstance(mapdl_instance, str):
+    try:
         mapdl_instance = connect_to_mapdl_in_persistent_python(ctx)
+    except Exception as exc:
+        mapdl_instance = str(exc)
 
     if mapdl_instance is None or isinstance(mapdl_instance, str):
         if isinstance(mapdl_instance, str):
@@ -1198,6 +1389,8 @@ def resume_model(ctx: Context, file_name: str, extension: str = "db") -> ToolRes
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
 
     ext = extension.lower().strip(".")
     if ext not in ("db", "cdb"):
@@ -1207,6 +1400,10 @@ def resume_model(ctx: Context, file_name: str, extension: str = "db") -> ToolRes
         )
 
     try:
+        _check_apdl_literal(
+            file_name,
+            ctx.request_context.lifespan_context.security_options.blocked_commands,
+        )
         if ext == "db":
             output = mapdl.resume(file_name, ext)
         else:
@@ -1231,6 +1428,9 @@ def open_results(ctx: Context, file_name: str | None = None) -> ToolResult:
 
     If the RST file is stored on the local filesystem (not yet in the MAPDL
     working directory), upload it first with the ``upload_file`` tool.
+
+    With APDL restrictions enabled, unsafe filename delimiters are rejected before
+    entering POST1. The server does not scan results-file contents.
 
     Parameters
     ----------
@@ -1260,8 +1460,15 @@ def open_results(ctx: Context, file_name: str | None = None) -> ToolResult:
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    if ctx.request_context is None:
+        return _text_result("No request context available.")
 
     try:
+        if file_name:
+            _check_apdl_literal(
+                file_name,
+                ctx.request_context.lifespan_context.security_options.blocked_commands,
+            )
         mapdl.post1()
         if file_name:
             mapdl.file(file_name, "rst")
@@ -1369,7 +1576,7 @@ def mapdl_db_path() -> str:
 
 
 @app.resource("toolsets://definition")
-def list_tool_sets() -> list[dict]:
+def list_tool_sets(ctx: Context) -> list[dict]:
     """Tool set definition resource that lists available tool sets for PyMAPDL MCP.
 
     Returns
@@ -1384,7 +1591,7 @@ def list_tool_sets() -> list[dict]:
 
     Examples
     --------
-    >>> list_tool_sets()
+    >>> list_tool_sets(ctx)
     [
         {
             "name": "session_management",
@@ -1409,7 +1616,12 @@ def list_tool_sets() -> list[dict]:
     ]
 
     """
-    return [
+    python_enabled = (
+        ctx.request_context.lifespan_context.security_options.python_enabled
+        if ctx.request_context is not None
+        else False
+    )
+    tool_sets = [
         {
             "name": "session_management",
             "description": "Tools for managing MAPDL session connections and instances",
@@ -1437,14 +1649,27 @@ def list_tool_sets() -> list[dict]:
                 "Use these tools to execute MAPDL commands and scripts. "
                 "Use run_mapdl_command for single commands with optional comments and headers. "
                 "Use run_multiple_mapdl_commands for batch execution of multiple commands, which "
-                "is optimized for performance. Alternatively, use run_python_code to execute "
-                "MAPDL commands via PyMAPDL for more complex scripting scenarios. Always ensure "
-                "a MAPDL connection is active before executing commands."
+                "is optimized for performance. "
+                + (
+                    "Alternatively, use run_python_code to execute MAPDL commands via PyMAPDL "
+                    "for more complex scripting scenarios. "
+                    if python_enabled
+                    else ""
+                )
+                + "Always ensure a MAPDL connection is active before executing commands."
+                " Discover native client log IDs with list_command_logs and retrieve bounded "
+                "base64 byte pages with read_command_log, even after disconnect. "
+                "These are client-side command attempts, not complete solver execution history."
+                " Operator-selected direct APDL families are rejected before dispatch. "
+                "Do not use Python or indirect file commands to bypass those restrictions; "
+                "the text filter does not constrain arbitrary Python or nested file contents."
             ),
             "tools": [
                 "run_mapdl_command",
                 "run_multiple_mapdl_commands",
-                "run_python_code",
+                *(["run_python_code"] if python_enabled else []),
+                "list_command_logs",
+                "read_command_log",
             ],
         },
         {
@@ -1454,13 +1679,17 @@ def list_tool_sets() -> list[dict]:
                 "Use these tools for visualization and post-processing of MAPDL results. "
                 "Use screenshot to capture MAPDL native plots (``APLOT``, ``EPLOT``, "
                 "``PLNSOL``, etc.). "
-                "Use custom_plot to create custom matplotlib or PyVista visualizations for "
-                "custom analysis. For visualization workflows, use custom_plot rather than "
-                "run_python_code."
+                + (
+                    "Use custom_plot to create custom matplotlib or PyVista visualizations "
+                    "for custom analysis. For visualization workflows, use custom_plot rather "
+                    "than run_python_code."
+                    if python_enabled
+                    else ""
+                )
             ),
             "tools": [
                 "screenshot",
-                "custom_plot",
+                *(["custom_plot"] if python_enabled else []),
             ],
         },
         {
@@ -1473,6 +1702,7 @@ def list_tool_sets() -> list[dict]:
             ),
             "tools": [
                 "run_python_code",
+                "custom_plot",
             ],
         },
         {
@@ -1500,4 +1730,9 @@ def list_tool_sets() -> list[dict]:
                 "open_results",
             ],
         },
+    ]
+    return [
+        tool_set
+        for tool_set in tool_sets
+        if python_enabled or tool_set["name"] != "python_execution"
     ]

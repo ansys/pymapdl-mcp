@@ -15,6 +15,16 @@ instance or a local MAPDL installation.
    that provides both TLS/SSL **and** its own authentication (for example mutual
    TLS or an authenticating gateway). The examples on this page publish the port
    on ``127.0.0.1`` only, so it is not reachable from other machines by default.
+   ``--apdl-log-dir`` is opt-in and stores native client logs on the MCP host.
+   Mount an operator-owned persistent directory if you need logs after container
+   removal. HTTP clients share its sensitive command data and paths. Logs record
+   partial command attempts, not an exhaustive execution audit. Logging adds no
+   authentication. Manage retention and disk quota outside the server.
+   Repeat ``--block-apdl-command`` for selected direct ``/SYS``, ``/SYP``, or ``/INPUT``
+   families. Arbitrary Python can bypass this text filter. Add ``--disable-python``
+   to disable both code execution and custom plotting without creating their subprocess.
+   Macro and CDB contents are not scanned. Restrictions do not replace HTTP
+   authentication or isolate the solver from its host.
 
 Quick start with Docker Compose
 -------------------------------
