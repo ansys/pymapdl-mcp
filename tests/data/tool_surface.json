@@ -1,0 +1,422 @@
+{
+  "check_mapdl_installed": {
+    "description": "Check if MAPDL is installed on the system.\n\nThis tool lists all ANSYS/MAPDL installations found on the system,\nincluding their version numbers and executable paths.\n\nReturns\n-------\nToolResult\n    Status message listing all found MAPDL installations, or a message\n    indicating that no installation was found.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "tags": [
+      "aali",
+      "session_management"
+    ]
+  },
+  "check_mapdl_status": {
+    "description": "Check the status of MAPDL initialization.\n\nThis tool extracts comprehensive information from PyMAPDL's API and returns it\nas a structured JSON object. It also checks whether the MAPDL instance has\nexited or is exiting.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "tags": [
+      "requires_mapdl",
+      "session_management"
+    ]
+  },
+  "connect_to_mapdl": {
+    "description": "Connect to an existing MAPDL instance.\n\nThis tool establishes a connection to a running MAPDL instance using the\nprovided port and IP address. The connection is stored for subsequent\noperations and can be closed using the :func:`disconnect_from_mapdl` tool.\nOnce you are connected to the MAPDL instance, other tools become available\nto interact with it, such as :func:`run_mapdl_command`,\n:func:`check_mapdl_status`, :func:`screenshot`, and more.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "ip": {
+          "default": "localhost",
+          "description": "The IP address where MAPDL is running. Default is \"localhost\".",
+          "type": "string"
+        },
+        "port": {
+          "default": 50052,
+          "description": "The gRPC port where MAPDL is listening. Default is 50052.",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "tags": [
+      "aali",
+      "locked_connection",
+      "session_management"
+    ]
+  },
+  "custom_plot": {
+    "description": "Create a custom plot using matplotlib or PyVista in the persistent Python session.\n\nThis tool is specifically designed for creating custom plots that are NOT available\nin MAPDL's native plotting capabilities. Use this when you need:\n\n- Custom matplotlib visualizations (line plots, bar charts, histograms, etc.)\n- Advanced PyVista 3D visualizations beyond MAPDL defaults\n- Combined data from multiple sources\n- Custom data processing with visualization\n\n.. important:: For standard MAPDL plots (``APLOT``, ``LPLOT``, ``KPLOT``,\n   post_processing plots), use the normal MAPDL commands with the\n   :func:`screenshot` tool instead for interactive plots.\n\nThe persistent Python session has pre-configured matplotlib (Agg backend) and\nPyVista (off-screen rendering) with helper functions:\n\n- save_matplotlib_plot(filename, dpi)\n- save_plot(plotter, filename)",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "plot_code": {
+          "description": "Python code to create the plot. Should use matplotlib.pyplot or PyVista.\nFor matplotlib, the code should create the figure/plot but NOT call plt.show().\nUse the save_matplotlib_plot() or save_plot() helper functions to return\nthe plot.",
+          "type": "string"
+        },
+        "plot_type": {
+          "default": "matplotlib",
+          "description": "Type of plot: \"matplotlib\" or \"pyvista\". Default is \"matplotlib\".",
+          "type": "string"
+        },
+        "timeout": {
+          "default": 60,
+          "description": "Maximum time in seconds for plot generation. Default is 60 seconds.",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "plot_code"
+      ],
+      "type": "object"
+    },
+    "tags": [
+      "aali",
+      "requires_mapdl",
+      "visualization"
+    ]
+  },
+  "disconnect_from_mapdl": {
+    "description": "Disconnect from the dynamically connected MAPDL instance.\n\nThis tool closes the connection to the MAPDL instance that was established\nusing the :func:`connect_to_mapdl` tool and releases the associated\nresources.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "tags": [
+      "aali",
+      "locked_connection",
+      "requires_mapdl",
+      "session_management"
+    ]
+  },
+  "download_file": {
+    "description": "Download a file from the MAPDL instance working directory to the local filesystem.\n\nUse this tool to retrieve result files (e.g. ``file.rst``, ``file.db``),\nlog files, or any other file produced by the current MAPDL session.\nGlob patterns such as ``\"file*\"`` or ``\"*.rst\"`` are supported.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "file_name": {
+          "description": "Name of the file in the MAPDL working directory to download.\nSupports glob patterns (e.g. ``\"file*\"``).\nUse the ``check_mapdl_status`` tool or the\n``files://mapdl/working_directory`` resource to inspect available files.",
+          "type": "string"
+        },
+        "target_dir": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Local directory where the file(s) will be saved.  Defaults to the\ncurrent Python working directory when ``None``."
+        }
+      },
+      "required": [
+        "file_name"
+      ],
+      "type": "object"
+    },
+    "tags": [
+      "file_management",
+      "requires_mapdl"
+    ]
+  },
+  "get_guidelines_for": {
+    "description": "Get MAPDL simulation guidelines for a specific topic.\n\nUse this tool before writing any PyMAPDL or MAPDL code to retrieve the\nrelevant guidelines for the workflow step you are about to implement.\nCall it once per topic needed; it is strongly recommended before every\ncode-generation task.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "description": "The guideline topic to retrieve. One of:\n\n- ``\"workflow\"``: Complete simulation workflow overview\n  (preprocessing \u2192 solution \u2192 postprocessing).\n- ``\"geometry\"``: Geometry creation: 2D/3D defaults, primitive\n  shapes, meshing requirement.\n- ``\"elements\"``: Element type selection: SOLID186, SHELL181,\n  BEAM189, PLANE183, thermal and contact elements.\n- ``\"materials\"``: Material property definition: elastic,\n  plastic, thermal, damping; default steel/aluminum values.\n- ``\"mesh\"``: Mesh generation: sizing, quality, VMESH/\n  AMESH commands, smart sizing.\n- ``\"boundary_conditions\"``: Boundary conditions and loads: fixed/pinned\n  supports, forces, pressures, beam element constraints.\n- ``\"solution\"``: Solution configuration: analysis type\n  (STATIC, MODAL, TRANSIENT, HARMONIC), solver options, SOLVE.\n- ``\"postprocessing\"``: Results extraction and visualization: POST1/\n  POST26, plot methods, data extraction.\n- ``\"general\"``: General rules and best practices: accuracy\n  factors, verification steps, code quality.",
+          "enum": [
+            "workflow",
+            "geometry",
+            "elements",
+            "materials",
+            "mesh",
+            "boundary_conditions",
+            "solution",
+            "postprocessing",
+            "general"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "content"
+      ],
+      "type": "object"
+    },
+    "tags": []
+  },
+  "launch_mapdl_session": {
+    "description": "Launch a new MAPDL instance.\n\nThis tool starts a new MAPDL instance using PyMAPDL's\n:func:`~ansys.mapdl.core.launcher.launch_mapdl` function.\nThe launched instance will be automatically connected and stored in the context\nfor subsequent operations. The instance can be closed using the\n:func:`disconnect_from_mapdl` tool.\nOnce you are connected to the launched instance, other tools become available\nto interact with it, such as :func:`run_mapdl_command`,\n:func:`check_mapdl_status`, :func:`screenshot`, and more.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "additional_switches": {
+          "default": "",
+          "description": "Additional command line switches to pass to MAPDL. Default is empty string.",
+          "type": "string"
+        },
+        "exec_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The path to the MAPDL executable. If None, PyMAPDL will attempt to find\nthe MAPDL executable automatically."
+        },
+        "nproc": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Number of processors to use. Default is None. MAPDL will decide based on\navailable resources."
+        },
+        "port": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The gRPC port for MAPDL to listen on. If None, a default port will be used."
+        },
+        "run_location": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The directory where MAPDL will run and store files. If None, a temporary\ndirectory will be created."
+        }
+      },
+      "type": "object"
+    },
+    "tags": [
+      "aali",
+      "locked_connection",
+      "session_management"
+    ]
+  },
+  "list_mapdl_instances": {
+    "description": "List all MAPDL instances running on the local machine and any remotely connected instance.\n\nThis tool uses PyMAPDL CLI's\n:func:`~ansys.mapdl.mcp.helpers.list_instances` function to discover\nMAPDL instances running on the machine by scanning for active gRPC\nservers and their associated metadata. It also includes any remotely\nconnected MAPDL instance that was established via the\n:func:`connect_to_mapdl` tool.\n\nReturns\n-------\nToolResult\n    Formatted table containing information about all running MAPDL instances\n    including their names, status, gRPC ports, IP addresses, PIDs, and\n    working directories. If a remote instance is connected, it is listed in a\n    separate section below the local instances.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "tags": [
+      "session_management"
+    ]
+  },
+  "open_results": {
+    "description": "Enter POST1 and optionally set the active results file for post-processing.\n\nThis tool switches MAPDL into the POST1 post-processor and, when a file\nname is supplied, points MAPDL at that results file.  Use it before\nquerying displacements, stresses, or other result quantities.\n\nIf the RST file is stored on the local filesystem (not yet in the MAPDL\nworking directory), upload it first with the ``upload_file`` tool.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "file_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Name of the result file **without extension** in the MAPDL working\ndirectory (e.g. ``\"beam\"`` for ``beam.rst``).  When omitted, MAPDL\nuses the current jobname result file."
+        }
+      },
+      "type": "object"
+    },
+    "tags": [
+      "file_management",
+      "requires_mapdl"
+    ]
+  },
+  "resume_model": {
+    "description": "Resume a previously saved MAPDL model from a database or archive file.\n\nThis tool restores the MAPDL database from a ``.db`` binary database file\nor a ``.cdb`` coded ASCII archive file.  If the file is on the local\nfilesystem (not yet in the MAPDL working directory), upload it first with\nthe ``upload_file`` tool.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "extension": {
+          "default": "db",
+          "description": "File extension that identifies the file format. Accepted values:\n\n* ``\"db\"`` *(default)* \u2014 binary MAPDL database (RESUME command).\n* ``\"cdb\"`` \u2014 coded ASCII database (CDREAD command).",
+          "type": "string"
+        },
+        "file_name": {
+          "description": "Name of the file **without extension** as it exists in the MAPDL\nworking directory (e.g. ``\"beam\"`` for ``beam.db``).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "file_name"
+      ],
+      "type": "object"
+    },
+    "tags": [
+      "file_management",
+      "requires_mapdl"
+    ]
+  },
+  "run_mapdl_command": {
+    "description": "Execute an arbitrary MAPDL command.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "cmd": {
+          "description": "The MAPDL command to execute.",
+          "type": "string"
+        },
+        "comment": {
+          "default": "",
+          "description": "An optional comment to include before the command execution. Default is empty string.",
+          "type": "string"
+        },
+        "header": {
+          "default": "",
+          "description": "An optional header to include before the command execution. Default is empty string.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cmd"
+      ],
+      "type": "object"
+    },
+    "tags": [
+      "command_execution",
+      "requires_mapdl"
+    ]
+  },
+  "run_multiple_mapdl_commands": {
+    "description": "Execute multiple MAPDL commands in sequence.\n\nThis tool is optimized for running multiple commands efficiently by using\nMAPDL's :meth:`~ansys.mapdl.core.Mapdl.input_strings` method, which processes\ncommands in batch mode.\nThis is significantly faster than executing commands one by one.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "commands": {
+          "description": "List of MAPDL commands to execute in sequence.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "comment": {
+          "default": "",
+          "description": "An optional comment to include before the command execution. Default is empty string.",
+          "type": "string"
+        },
+        "header": {
+          "default": "",
+          "description": "An optional header to include before the command execution. Default is empty string.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "commands"
+      ],
+      "type": "object"
+    },
+    "tags": [
+      "aali",
+      "command_execution",
+      "requires_mapdl"
+    ]
+  },
+  "run_python_code": {
+    "description": "Execute arbitrary Python and PyMAPDL code in the persistent Python session.\n\nThis tool should be used for custom Python code execution, particularly for:\n\n- Custom data processing and analysis\n- Creating custom matplotlib plots not available in MAPDL\n- Advanced PyVista visualizations beyond MAPDL's native capabilities\n- NumPy/Pandas data manipulation and custom visualization\n\n.. important:: For MAPDL native plotting (``APLOT``, ``LPLOT``, ``KPLOT``,\n   post_processing plots, etc.), use the normal MAPDL session commands\n   with the :func:`screenshot` tool instead, as they provide interactive\n   plots that are directly accessible.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "description": "The Python code to execute.",
+          "type": "string"
+        },
+        "timeout": {
+          "default": 60,
+          "description": "Maximum time in seconds to allow for code execution. Default is 60 seconds.",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "type": "object"
+    },
+    "tags": [
+      "command_execution",
+      "python_execution",
+      "requires_mapdl"
+    ]
+  },
+  "screenshot": {
+    "description": "Capture a screenshot of the current MAPDL graphics window.\n\nAll plots use the MAPDL backend, which is the preferred and recommended\nway to obtain plot images, especially for large or complex models, as it\nleverages MAPDL's native plotting capabilities.\n\nMAPDL Native Plot Commands (use with screenshot):\n\n- Geometry: ``APLOT``, ``LPLOT``, ``KPLOT``, ``VPLOT``\n- Mesh: ``EPLOT``, ``NPLOT``\n- Post-processing: ``PLNSOL``, ``PLESOL``, ``PLDISP``\n\nFor custom matplotlib or PyVista plots, use the :func:`custom_plot` tool\ninstead.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "commands": {
+          "default": "",
+          "description": "Optional MAPDL commands to execute before taking the screenshot.\nAvoid running commands that are not related to plotting or visualization.\nThis can be used to set up the plot or visualization before capturing.\nAvoid running long or complex commands that may delay the screenshot.\nDefault is empty string.",
+          "type": "string"
+        },
+        "four_view": {
+          "default": false,
+          "description": "When ``True``, the graphics window is split into four quadrants before\nthe screenshot is taken. When *commands* is provided together with\n``four_view=True``, the *commands* string is used as the plot command\nthat populates all four windows (default ``EPLOT`` when *commands* is\nempty). The window layout is automatically restored after the\nscreenshot. Default is ``False``. See Notes for the quadrant layout.",
+          "type": "boolean"
+        },
+        "show_plot_on_popup": {
+          "default": false,
+          "description": "If ``True``, open the captured image in the system's default image\nviewer as an external popup window in addition to returning it to the\nLLM. Default is ``False``.",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "tags": [
+      "aali",
+      "requires_mapdl",
+      "visualization"
+    ]
+  },
+  "upload_file": {
+    "description": "Upload a local file to the MAPDL instance working directory.\n\nThe file is transferred over gRPC from the local filesystem to the remote\n(or local) MAPDL working directory so that MAPDL commands such as\n``RESUME``, ``CDREAD``, or ``FILE`` can reference it by its base name.",
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "file_path": {
+          "description": "Absolute or relative path to the file on the **local** filesystem.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "file_path"
+      ],
+      "type": "object"
+    },
+    "tags": [
+      "file_management",
+      "requires_mapdl"
+    ]
+  }
+}
