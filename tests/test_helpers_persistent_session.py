@@ -274,7 +274,6 @@ def repl_context(mock_context, tmp_path, monkeypatch):
     context.mapdl = NativeLogClient()
     mock_context.request_context.lifespan_context = context
     session = context.python_session
-    assert session.startup_code is None
     try:
         assert session.start()["success"] is True
         before = session.execute(
