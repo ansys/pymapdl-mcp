@@ -1,6 +1,6 @@
 {
   "check_mapdl_installed": {
-    "description": "Check if MAPDL is installed on the system.\n\nThis tool lists all ANSYS/MAPDL installations found on the system,\nincluding their version numbers and executable paths.\n\nReturns\n-------\nToolResult\n    Status message listing all found MAPDL installations, or a message\n    indicating that no installation was found.",
+    "description": "Check if MAPDL is installed on the system.\n\nThis tool lists all ANSYS/MAPDL installations found on the system,\nincluding their version numbers and executable paths.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {},
@@ -220,7 +220,7 @@
     ]
   },
   "list_mapdl_instances": {
-    "description": "List all MAPDL instances running on the local machine and any remotely connected instance.\n\nThis tool uses PyMAPDL CLI's\n:func:`~ansys.mapdl.mcp.helpers.list_instances` function to discover\nMAPDL instances running on the machine by scanning for active gRPC\nservers and their associated metadata. It also includes any remotely\nconnected MAPDL instance that was established via the\n:func:`connect_to_mapdl` tool.\n\nReturns\n-------\nToolResult\n    Formatted table containing information about all running MAPDL instances\n    including their names, status, gRPC ports, IP addresses, PIDs, and\n    working directories. If a remote instance is connected, it is listed in a\n    separate section below the local instances.",
+    "description": "List all MAPDL instances running on the local machine and any remotely connected instance.\n\nThis tool uses PyMAPDL CLI's\n:func:`~ansys.mapdl.mcp.helpers.list_instances` function to discover\nMAPDL instances running on the machine by scanning for active gRPC\nservers and their associated metadata. It also includes any remotely\nconnected MAPDL instance that was established via the\n:func:`connect_to_mapdl` tool.",
     "input_schema": {
       "additionalProperties": false,
       "properties": {},
