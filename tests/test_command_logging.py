@@ -308,6 +308,7 @@ async def test_close_failure_is_explicit_and_still_cleans_owned_client(logged_co
     context = logged_context.request_context.lifespan_context
     client = NativeLogClient()
     _attach_main_log(context, client)
+    context.mapdl = client
     with patch.object(client, "_close_apdl_log", side_effect=OSError("close failed")):
         result = await disconnect_from_mapdl(logged_context)
     assert result.content[0].text == "Error during disconnect: close failed"
@@ -527,7 +528,9 @@ async def test_failed_main_transitions_preserve_shared_log_retrieval(
                 else "ansys.mapdl.core.launch_mapdl"
             )
             with patch(target, side_effect=RuntimeError("replacement failed")):
-                tool = "connect_to_mapdl" if failed_transition == "connect" else "launch_mapdl_session"
+                tool = (
+                    "connect_to_mapdl" if failed_transition == "connect" else "launch_mapdl_session"
+                )
                 result = await second.call_tool(tool, {})
             assert "replacement failed" in result.content[0].text
             assert context.mapdl is None

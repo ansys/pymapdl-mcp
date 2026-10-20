@@ -179,7 +179,9 @@ async def test_callers_stop_on_bootstrap_failure_and_recover(child_context, tool
             failed = await run_python_code(child_context, "caller_ran = True; print('ok')")
             assert json.loads(failed.content[0].text)["success"] is False
         else:
-            failed = custom_plot(child_context, "caller_ran = True; print('Plot saved to result.png')")
+            failed = custom_plot(
+                child_context, "caller_ran = True; print('Plot saved to result.png')"
+            )
             assert "Failed to connect" in failed.content[0].text
         assert "caller_ran" not in session.namespace
         session.discard_stdout = False
