@@ -344,7 +344,7 @@ def logging_mcp_server(tmp_path):
         yield context
 
     server = FastMCP("logging-boundary", lifespan=lifespan)
-    for tool in [list_command_logs, read_command_log]:
+    for tool in [list_command_logs, read_command_log, connect_to_mapdl, disconnect_from_mapdl]:
         server.add_tool(tool)
     return server, context, allocations
 
@@ -452,3 +452,33 @@ def test_direct_catalogue_rejects_beyond_end_before_slicing(logged_context, offs
         "logs": [],
         "next_offset": None,
     }
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_clients_share_logs_across_disconnect_and_reconnect(logging_mcp_server):
+    server, context, _ = logging_mcp_server
+    first_client = NativeLogClient()
+    second_client = NativeLogClient()
+    async with Client(server) as first, Client(server) as second:
+        with patch("ansys.mapdl.core.Mapdl", return_value=first_client):
+            connected = await first.call_tool("connect_to_mapdl", {})
+        assert "Successfully connected to MAPDL" in connected.content[0].text
+        first_client._apdl_log.write("/COM,shared-client\n")
+        page = payload(await second.call_tool("list_command_logs", {}))
+        entry = page["logs"][-1]
+        assert entry["source"] == "main"
+
+        disconnected = await first.call_tool("disconnect_from_mapdl", {})
+        assert "Successfully disconnected" in disconnected.content[0].text
+        retrieved = payload(await second.call_tool("read_command_log", {"log_id": entry["log_id"]}))
+        assert b"/COM,shared-client" in base64.b64decode(retrieved["data_base64"])
+
+        with patch("ansys.mapdl.core.Mapdl", return_value=second_client):
+            reconnected = await second.call_tool("connect_to_mapdl", {})
+        assert "Successfully connected to MAPDL" in reconnected.content[0].text
+        assert first_client._apdl_log is None
+        assert context.mapdl is second_client
+        assert payload(await first.call_tool("list_command_logs", {}))["logs"][-1]["source"] == (
+            "main"
+        )
