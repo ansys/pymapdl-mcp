@@ -31,7 +31,7 @@ from ansys.common.mcp.context import PyAnsysBaseAppContext
 from ansys.common.mcp.helpers import PersistentPythonSession, logger
 
 from ansys.mapdl.mcp._apdl_security import _APDL_COMMAND_PREFIXES
-from ansys.mapdl.mcp._command_logging import _LogRef, _attach_main_log, _retire_native_log
+from ansys.mapdl.mcp._command_logging import _attach_main_log, _LogRef, _retire_native_log
 
 
 @dataclass
@@ -123,11 +123,9 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         self._need_python = python_enabled
         python_session = None
         if python_enabled:
-            startup_code = "from ansys.mapdl.mcp.python_helper.startup_code import *"
             python_session = PersistentPythonSession(
                 python_executable=self.python_executable,
                 working_directory=self.working_directory,
-                startup_code=startup_code,
             )
         else:
             self.disable(tags={"python_execution"})
