@@ -33,6 +33,13 @@ def mock_python_session():
     session.metadata = {}
     return session
 
+@pytest.fixture(autouse=True)
+def confirmed_python_connection(monkeypatch):
+    monkeypatch.setattr(
+        "ansys.mapdl.mcp.tools.connect_to_mapdl_in_persistent_python",
+        lambda ctx: ctx.request_context.lifespan_context.mapdl,
+    )
+
 
 @pytest.mark.unit
 class TestRunPythonCode:
@@ -55,10 +62,9 @@ class TestRunPythonCode:
     async def test_connect_failure_returns_error_string(self, mock_context, mock_python_session):
         mock_context.request_context.lifespan_context.python_session = mock_python_session
 
-        # Mock the connection function to raise an exception on the second try
         with patch(
             "ansys.mapdl.mcp.tools.connect_to_mapdl_in_persistent_python",
-            side_effect=["Failed to connect to MAPDL", Exception("Connection failed")],
+            side_effect=RuntimeError("Connection failed"),
         ):
             result = await run_python_code(mock_context, code="print('x')")
 
