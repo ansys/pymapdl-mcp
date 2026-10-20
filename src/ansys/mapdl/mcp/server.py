@@ -60,12 +60,12 @@ class PyMAPDLAppContext(PyAnsysBaseAppContext):
     transport_type: str = "stdio"
     mapdl_ip: str | None = None
     mapdl_port: int | None = None
+    blocked_commands: frozenset[str] = frozenset()
     connect_on_startup: bool = False
     http_host: str = "127.0.0.1"
     http_port: int = 8080
     cors_origins: list[str] | None = None
     python_enabled: bool = True
-    blocked_commands: frozenset[str] = frozenset()
 
     @property
     def product_instance(self) -> Optional[Any]:
