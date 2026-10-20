@@ -137,8 +137,8 @@ ordinary argument Unicode is not generically banned.
 
 .. warning::
    Arbitrary Python, including ``run_python_code`` and ``custom_plot``, can bypass this
-   direct text filter. Disable or constrain those tools through deployment policy when
-   relying on APDL restrictions. This filter is not an HTTP, filesystem, or solver sandbox.
+   direct text filter. Use ``--disable-python`` when relying on APDL restrictions.
+   This filter is not an HTTP, filesystem, or solver sandbox.
 
 Custom Python code execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
