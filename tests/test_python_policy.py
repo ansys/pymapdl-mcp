@@ -58,8 +58,7 @@ def test_cli_option_disables_python(monkeypatch):
 
     assert app._cli_config["disable_python"] is True
     assert any(
-        "python_execution" in call.kwargs.get("tags", set())
-        for call in disable.call_args_list
+        "python_execution" in call.kwargs.get("tags", set()) for call in disable.call_args_list
     )
 
 
