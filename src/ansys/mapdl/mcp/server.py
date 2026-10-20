@@ -26,6 +26,7 @@ from ansys.common.mcp import (
 )
 from ansys.common.mcp.context import PyAnsysBaseAppContext
 from ansys.common.mcp.helpers import PersistentPythonSession, logger
+
 from ansys.mapdl.mcp._apdl_security import _APDL_COMMAND_PREFIXES
 
 

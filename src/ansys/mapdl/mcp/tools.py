@@ -828,10 +828,6 @@ def screenshot(
     context = ctx.request_context.lifespan_context
     try:
         _check_apdl_request((commands,), context.blocked_commands)
-    except ValueError as e:
-        return _text_result(str(e))
-
-    try:
         if four_view:
             logger.info("Capturing four-view MAPDL screenshot...")
             plot_cmd = commands if commands else "EPLOT"
@@ -1311,13 +1307,9 @@ def open_results(ctx: Context, file_name: str | None = None) -> ToolResult:
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
-    if file_name:
-        try:
-            _check_apdl_literal(file_name, ctx.request_context.lifespan_context.blocked_commands)
-        except ValueError as e:
-            return _text_result(str(e))
-
     try:
+        if file_name:
+            _check_apdl_literal(file_name, ctx.request_context.lifespan_context.blocked_commands)
         mapdl.post1()
         if file_name:
             mapdl.file(file_name, "rst")
