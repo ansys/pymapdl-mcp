@@ -494,6 +494,10 @@ class TestPythonPersistentSessionIntegration:
     ):
         """Test connecting to MAPDL in persistent Python session."""
         from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
+        context = persistent_real_context.request_context.lifespan_context
+        session = context.python_session
+        session.process = object()
+        session.metadata = {"mapdl": context.mapdl, "mapdl_process": session.process}
 
         result = connect_to_mapdl_in_persistent_python(persistent_real_context)
 
@@ -555,15 +559,17 @@ class TestPythonPersistentSessionIntegration:
 
         result = connect_to_mapdl_in_persistent_python(persistent_real_context)
 
-        # On failure, function returns whatever is in metadata (likely None)
-        assert result is None
+        assert isinstance(result, str)
+        assert result.endswith("Execution failed")
 
     @pytest.mark.asyncio
     async def test_run_python_code_executes_simple(self, persistent_real_context, capsys):
         """Light-weight execution test using mocked python_session near integration suite."""
         # Attach a mocked persistent python session to the real_context lifespan
         session = MagicMock()
-        session.metadata = {"mapdl": persistent_real_context.request_context.lifespan_context.mapdl}
+        session.process = object()
+        context = persistent_real_context.request_context.lifespan_context
+        session.metadata = {"mapdl": context.mapdl, "mapdl_process": session.process}
         # Simulate a normal dict-shaped execution result
         session.execute.return_value = {
             "success": True,

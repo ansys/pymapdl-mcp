@@ -43,6 +43,7 @@ def test_main_parses_defaults(monkeypatch):
     assert cfg["http_host"] == "127.0.0.1"
     assert cfg["http_port"] == 8080
     assert cfg["cors_origins"] is None
+    assert cfg["apdl_log_dir"] is None
 
 
 @pytest.mark.unit
@@ -164,3 +165,14 @@ def test_apdl_block_cli_rejects_noncanonical_choices(command):
     with pytest.raises(SystemExit) as error:
         launcher(["--block-apdl-command", command])
     assert error.value.code == 2
+
+
+@pytest.mark.unit
+def test_apdl_log_dir_creates_a_private_run_directory(tmp_path):
+    with patch.object(asyncio, "run"):
+        launcher(["--apdl-log-dir", str(tmp_path)])
+
+    context = app.create_context()
+    assert context.apdl_log_dir == tmp_path
+    assert context.command_log_dir.parent == tmp_path
+    assert context.command_log_dir.is_dir()
