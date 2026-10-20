@@ -98,7 +98,7 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         """
         cli_cfg = getattr(self, "_cli_config", None)
         python_enabled = self._need_python and not (cli_cfg or {}).get("disable_python", False)
-        self._need_python = python_enabled
+        self._need_python: bool = python_enabled
         python_session = None
         if python_enabled:
             startup_code = "from ansys.mapdl.mcp.python_helper.startup_code import *"
