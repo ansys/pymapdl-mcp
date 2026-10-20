@@ -33,6 +33,7 @@ def mock_python_session():
     session.metadata = {}
     return session
 
+
 @pytest.fixture(autouse=True)
 def confirmed_python_connection(monkeypatch):
     monkeypatch.setattr(

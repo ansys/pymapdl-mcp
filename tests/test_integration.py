@@ -494,6 +494,7 @@ class TestPythonPersistentSessionIntegration:
     ):
         """Test connecting to MAPDL in persistent Python session."""
         from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
+
         context = persistent_real_context.request_context.lifespan_context
         session = context.python_session
         session.process = object()

@@ -502,6 +502,7 @@ def run_multiple_mapdl_commands(
         logger.error(error_msg)
         return ToolResult([TextContent(type="text", text=error_msg)])
 
+
 @app.tool(tags={"command_execution"})
 def list_command_logs(ctx: Context, offset: StrictInt = 0, limit: StrictInt = 50) -> ToolResult:
     """List this server run's native log IDs, including after MAPDL disconnect.

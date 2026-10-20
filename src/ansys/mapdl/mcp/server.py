@@ -127,11 +127,9 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         python_enabled = self._need_python
         python_session = None
         if python_enabled:
-            startup_code = "from ansys.mapdl.mcp.python_helper.startup_code import *"
             python_session = PersistentPythonSession(
                 python_executable=self.python_executable,
                 working_directory=self.working_directory,
-                startup_code=startup_code,
             )
 
         context = PyMAPDLAppContext(
@@ -329,7 +327,6 @@ def launcher(argv: list[str] | None = None) -> None:
             "http_port": args.http_port,
             "cors_origins": cors_origins,
             "on_aali": session.on_aali,
-            "disable_python": args.disable_python,
             "apdl_log_dir": args.apdl_log_dir,
         },
     )
