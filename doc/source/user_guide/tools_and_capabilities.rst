@@ -25,6 +25,10 @@ connected. This keeps the AI assistant's context small when MAPDL is not in use.
      - Launch and connect to a new MAPDL instance
    * - ``get_guidelines_for``
      - Workflow guidance and best-practice context tool
+   * - ``list_command_logs``
+     - List native client log IDs, including after MAPDL disconnect
+   * - ``read_command_log``
+     - Read a bounded base64 byte page from a known command log
 
 **After connecting to MAPDL**, you gain access to the full set of tools. When you call the
 ``disconnect_from_mapdl`` tool, the MAPDL-specific tools become unavailable.
@@ -85,7 +89,8 @@ These sets are exposed through the ``toolsets://definition`` resource.
      - ``upload_file``, ``download_file``, ``resume_model``, ``open_results``
    * - ``command_execution``
      - Execute MAPDL commands and command batches
-     - ``run_mapdl_command``, ``run_multiple_mapdl_commands``, ``run_python_code``
+     - ``run_mapdl_command``, ``run_multiple_mapdl_commands``, ``run_python_code``,
+       ``list_command_logs``, ``read_command_log``
    * - ``visualization``
      - Capture or generate result visualizations
      - ``screenshot``, ``custom_plot``
@@ -139,6 +144,42 @@ ordinary argument Unicode is not generically banned.
    Arbitrary Python, including ``run_python_code`` and ``custom_plot``, can bypass this
    direct text filter. Use ``--disable-python`` when relying on APDL restrictions.
    This filter is not an HTTP, filesystem, or solver sandbox.
+
+Native command logs
+~~~~~~~~~~~~~~~~~~~
+
+Logging is disabled by default. Pass an operator-owned directory to enable native PyMAPDL
+client logs:
+
+.. code-block:: bash
+
+   python -m ansys.mapdl.mcp --apdl-log-dir /private/mapdl-logs
+
+Each server run creates a separate directory below the selected root. The server creates a
+separate native log for each managed main MAPDL connection and persistent Python connection.
+The server creates log files exclusively. Both ``run_python_code`` and ``custom_plot`` use the
+persistent Python connection. If the server cannot attach a requested log, it fails that connection.
+
+``list_command_logs(offset=0, limit=50)`` returns ``success``, ``enabled``, ``logs``, and
+``next_offset``. Each entry contains an opaque ``log_id`` and a ``source`` of ``main`` or
+``python``. The offset is a nonnegative integer; the limit is an integer from 1 to 100. An offset
+equal to the catalogue size returns an empty final page. A larger offset returns an error. Both
+tools remain available after disconnect. The listing tool reports ``enabled=false`` when logging
+is disabled.
+
+``read_command_log(log_id, offset=0, max_bytes=65536)`` accepts only a returned ID, never a
+filesystem path. Its result contains ``success``, ``log_id``, ``source``, ``data_base64``,
+``size_bytes``, and ``next_offset``. The offset is a nonnegative byte position and ``max_bytes``
+is an integer from 1 to 65536. Booleans, strings, and floating-point values fail MCP integer
+validation. A byte page can split an encoded character. Read again at ``next_offset`` to see later
+log growth. Unknown IDs, missing files, read failures, and invalid ranges return ``success=false``
+with an ``error`` string.
+
+These files record mutable client-side command attempts, not exhaustive solver execution receipts.
+Python code can suppress native logging. The server does not guarantee an order between the main
+and Python logs.
+Logs remain on the MCP host after disconnect and shutdown. The operator manages retention and
+disk usage. Logs can contain sensitive model data and paths.
 
 Custom Python code execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

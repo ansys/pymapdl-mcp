@@ -49,6 +49,8 @@ class TestMCPProtocol:
         from ansys.mapdl.mcp.tools import (
             check_mapdl_status,
             launch_mapdl_session,
+            list_command_logs,
+            read_command_log,
             run_mapdl_command,
             run_multiple_mapdl_commands,
         )
@@ -56,6 +58,8 @@ class TestMCPProtocol:
         tools = [
             check_mapdl_status,
             launch_mapdl_session,
+            list_command_logs,
+            read_command_log,
             run_mapdl_command,
             run_multiple_mapdl_commands,
         ]

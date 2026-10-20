@@ -17,9 +17,12 @@
 """Helper functions for PyMAPDL MCP."""
 
 from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 from ansys.common.mcp.helpers import logger
 from fastmcp.server import Context
+
+from ansys.mapdl.mcp._command_logging import _allocate_log, _register_log, _retire_native_log
 
 if TYPE_CHECKING:
     from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
@@ -357,76 +360,98 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
     return info
 
 
-def connect_to_mapdl_in_persistent_python(
-    ctx: Context,
-) -> Any:
-    """Connect to the MAPDL instance in the persistent Python session.
-
-    This tool connects to the MAPDL instance from within the persistent Python session.
-    It assumes that the persistent session has already been created.
-
-
-    Parameters
-    ----------
-    ctx : Context
-        The MCP context containing server session and application context.
-
-    Returns
-    -------
-    str
-        Connection status message.
-    """
+def connect_to_mapdl_in_persistent_python(ctx: Context) -> Any:
+    """Ensure a confirmed child connection for the current main client and process."""
     if ctx.request_context is None:
         return "No request context available."
     context = ctx.request_context.lifespan_context
     if not context.python_enabled:
         return "Python execution is disabled by the operator."
     session = context.python_session
-
     if session is None:
         return "No Python session available. The persistent Python session was not initialized."
-
-    try:
-        # Check if already connected
-        if session.metadata.get("mapdl", None) is not None:
-            mapdl = session.metadata["mapdl"]
-            return (
-                f"Already connected to persistent PyMAPDL session with MAPDL at "
-                f"{mapdl._ip}:{mapdl._port}."
-            )
-
-        # First, check if MAPDL is available in lifespan context
-        mapdl_instance = ctx.request_context.lifespan_context.mapdl
-        if mapdl_instance is None:
-            return (
-                "No MAPDL instance available in lifespan context. "
-                "Please launch or connect to MAPDL first using ``launch_mapdl_session``"
-                "or ``connect_to_mapdl`` tools."
-            )
-
-        connection_code = f"""
-# Connect to the persistent MAPDL instance
-from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
-
-mapdl = Mapdl(
-    start_instance=False,
-    ip='{mapdl_instance.ip}',
-    port={mapdl_instance.port},
-    cleanup_on_exit=False,
-)
-        """
-        session.execute(connection_code)
-
-        # Store in persistent session
-        session.metadata["mapdl"] = mapdl_instance
-
-        logger.info(
-            "Connected to persistent PyMAPDL session successfully at"
-            f" {mapdl_instance.ip}:{mapdl_instance.port}!"
+    mapdl_instance = context.mapdl
+    if mapdl_instance is None:
+        return (
+            "No MAPDL instance available in lifespan context. "
+            "Please launch or connect to MAPDL first."
         )
+    if (
+        session.metadata.get("mapdl") is mapdl_instance
+        and session.process is not None
+        and session.metadata.get("mapdl_process") is session.process
+    ):
+        return mapdl_instance
 
-    except Exception as e:
-        error_msg = f"Failed to connect to MAPDL in the persistent PyMAPDL session: {str(e)}"
+    session.metadata.pop("mapdl", None)
+    session.metadata.pop("mapdl_process", None)
+    try:
+        process = session.process
+        if process is None:
+            raise RuntimeError("Persistent Python process is unavailable")
+        allocation = _allocate_log(context, "python")
+        acknowledgement = f"__MAPDL_CONNECTED_{uuid4().hex}__"
+        connection_code = (
+            "from ansys.mapdl.core import Mapdl as _mcp_Mapdl\n"
+            "from ansys.mapdl.mcp._command_logging import "
+            "_retire_native_log as _mcp_retire_native_log\n"
+            "import sys as _mcp_sys\n"
+            "if 'ansys.mapdl.mcp.python_helper.startup_code' not in _mcp_sys.modules:\n"
+            "    from ansys.mapdl.mcp.python_helper.startup_code import *\n"
+            "del _mcp_sys\n"
+            "_mcp_mapdl_candidate = _mcp_Mapdl(\n"
+            "    start_instance=False,\n"
+            f"    ip={mapdl_instance.ip!r},\n"
+            f"    port={mapdl_instance.port!r},\n"
+            "    cleanup_on_exit=False,\n"
+            ")\n"
+        )
+        connection_code += "try:\n"
+        if allocation is not None:
+            connection_code += (
+                f"    _mcp_mapdl_candidate.open_apdl_log({str(allocation[1].path)!r}, mode='x')\n"
+            )
+        connection_code += (
+            "    if 'mapdl' in globals():\n"
+            "        _mcp_retire_native_log(mapdl)\n"
+            "except Exception:\n"
+            "    _mcp_retire_native_log(_mcp_mapdl_candidate)\n"
+            "    raise\n"
+            "mapdl = _mcp_mapdl_candidate\n"
+            "del _mcp_mapdl_candidate\n"
+            f"print({acknowledgement!r})\n"
+        )
+        result = session.execute(f"exec({connection_code!r})", no_output_timeout=None)
+        if not isinstance(result, dict):
+            raise RuntimeError("Invalid bootstrap result")
+        detail = None
+        if result.get("success") is not True:
+            detail = "Bootstrap execution failed"
+        elif not isinstance(result.get("stdout"), str) or (
+            acknowledgement not in result["stdout"].splitlines()
+        ):
+            detail = "Bootstrap acknowledgement missing"
+        elif session.process is not process:
+            detail = "Persistent Python process changed during bootstrap"
+        elif context.mapdl is not mapdl_instance:
+            detail = "Main MAPDL connection changed during bootstrap"
+        if detail is not None:
+            error = result.get("error") or ""
+            stderr = result.get("stderr") or ""
+            if isinstance(error, str) and error.strip():
+                detail = error
+            if isinstance(stderr, str) and stderr.strip() and stderr != error:
+                detail += f"\n{stderr}"
+            raise RuntimeError(detail)
+        if allocation is not None:
+            _register_log(context, allocation)
+        session.metadata["mapdl"] = mapdl_instance
+        session.metadata["mapdl_process"] = process
+        return mapdl_instance
+    except Exception as exc:
+        detail = str(exc)
+        if not detail.strip():
+            detail = "Bootstrap execution failed"
+        error_msg = f"Failed to connect to MAPDL in the persistent PyMAPDL session: {detail}"
         logger.error(error_msg)
-
-    return session.metadata.get("mapdl", None)
+        return error_msg
