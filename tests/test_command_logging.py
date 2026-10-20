@@ -281,6 +281,9 @@ async def test_reconnect_retires_stale_main_log_before_attaching_replacement(log
     assert old_handle.closed is True
     assert context.mapdl is replacement
     assert [ref.source for ref in context.command_logs.values()] == ["main", "main"]
+    stale.exit()
+    _retire_native_log(replacement)
+    replacement.exit()
 
 
 @pytest.mark.unit
@@ -344,7 +347,13 @@ def logging_mcp_server(tmp_path):
         yield context
 
     server = FastMCP("logging-boundary", lifespan=lifespan)
-    for tool in [list_command_logs, read_command_log, connect_to_mapdl, disconnect_from_mapdl]:
+    for tool in [
+        list_command_logs,
+        read_command_log,
+        connect_to_mapdl,
+        launch_mapdl_session,
+        disconnect_from_mapdl,
+    ]:
         server.add_tool(tool)
     return server, context, allocations
 
@@ -482,3 +491,59 @@ async def test_clients_share_logs_across_disconnect_and_reconnect(logging_mcp_se
         assert payload(await first.call_tool("list_command_logs", {}))["logs"][-1]["source"] == (
             "main"
         )
+        _retire_native_log(second_client)
+        second_client.exit()
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failed_transition", ["connect", "launch", "disconnect", "retirement"])
+async def test_failed_main_transitions_preserve_shared_log_retrieval(
+    logging_mcp_server, failed_transition
+):
+    server, context, log_ids = logging_mcp_server
+    client = NativeLogClient()
+    async with Client(server) as first, Client(server) as second:
+        with patch("ansys.mapdl.core.Mapdl", return_value=client):
+            connected = await first.call_tool("connect_to_mapdl", {})
+        assert "Successfully connected to MAPDL" in connected.content[0].text
+        if failed_transition == "disconnect":
+            with patch.object(client, "exit", side_effect=RuntimeError("exit failed")):
+                result = await second.call_tool("disconnect_from_mapdl", {})
+            assert "exit failed" in result.content[0].text
+        elif failed_transition == "retirement":
+            client._exited = True
+            with patch.object(
+                client, "_close_apdl_log", side_effect=RuntimeError("retirement failed")
+            ):
+                result = await second.call_tool("connect_to_mapdl", {})
+            assert "retirement failed" in result.content[0].text
+            assert context.mapdl is client
+        else:
+            client._exited = True
+            target = (
+                "ansys.mapdl.core.Mapdl"
+                if failed_transition == "connect"
+                else "ansys.mapdl.core.launch_mapdl"
+            )
+            with patch(target, side_effect=RuntimeError("replacement failed")):
+                tool = "connect_to_mapdl" if failed_transition == "connect" else "launch_mapdl_session"
+                result = await second.call_tool(tool, {})
+            assert "replacement failed" in result.content[0].text
+            assert context.mapdl is None
+
+        for reader in [first, second]:
+            result = payload(await reader.call_tool("read_command_log", {"log_id": log_ids[0]}))
+            assert base64.b64decode(result["data_base64"]) == b"A\xc3\xa9Z"
+
+        recovered = NativeLogClient()
+        with patch("ansys.mapdl.core.Mapdl", return_value=recovered):
+            connected = await first.call_tool("connect_to_mapdl", {})
+        assert "Successfully connected to MAPDL" in connected.content[0].text
+        assert context.mapdl is recovered
+        for reader in [first, second]:
+            result = payload(await reader.call_tool("read_command_log", {"log_id": log_ids[0]}))
+            assert base64.b64decode(result["data_base64"]) == b"A\xc3\xa9Z"
+        _retire_native_log(recovered)
+        recovered.exit()
+        client.exit()
