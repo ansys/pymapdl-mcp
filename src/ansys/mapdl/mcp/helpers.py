@@ -22,7 +22,7 @@ from uuid import uuid4
 from ansys.common.mcp.helpers import logger
 from fastmcp.server import Context
 
-from ansys.mapdl.mcp._command_logging import _allocate_log, _register_log, _retire_native_log
+from ansys.mapdl.mcp._command_logging import _allocate_log, _register_log
 
 if TYPE_CHECKING:
     from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
