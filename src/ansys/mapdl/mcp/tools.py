@@ -48,6 +48,7 @@ from fastmcp.tools.base import ToolResult
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl.mcp import app
+from ansys.mapdl.mcp._apdl_security import _check_apdl_literal, _check_apdl_request
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
 from mcp.types import ImageContent, TextContent, ToolListChangedNotification
 
@@ -392,6 +393,8 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    context = ctx.request_context.lifespan_context
+    _check_apdl_request((cmd,), context.blocked_commands, header=header, comment=comment)
 
     if header:
         mapdl.com(f"# {header}", mute=True)
@@ -447,6 +450,14 @@ def run_multiple_mapdl_commands(
         return _text_result("No valid commands found after filtering empty entries.")
 
     try:
+        context = ctx.request_context.lifespan_context
+        _check_apdl_request(
+            valid_commands, context.blocked_commands, header=header, comment=comment
+        )
+    except ValueError as e:
+        return _text_result(str(e))
+
+    try:
         logger.info(f"Executing {len(valid_commands)} MAPDL commands using input_strings")
 
         if header:
@@ -480,10 +491,9 @@ def run_multiple_mapdl_commands(
 
     except Exception as e:
         error_msg = (
-            f"Error executing commands. Executed {len(valid_commands)} commands "
-            f"but encountered error: {str(e)}\n"
-            f"Commands that were attempted:\n"
-            + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
+            f"Attempted a batch of {len(valid_commands)} commands, but MAPDL reported an error: "
+            f"{e}\nSome commands may not have executed.\nCommands attempted:\n"
+            + "\n".join(f"  {i + 1}. {command}" for i, command in enumerate(valid_commands))
         )
         logger.error(error_msg)
         return ToolResult([TextContent(type="text", text=error_msg)])
@@ -815,6 +825,11 @@ def screenshot(
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    context = ctx.request_context.lifespan_context
+    try:
+        _check_apdl_request((commands,), context.blocked_commands)
+    except ValueError as e:
+        return _text_result(str(e))
 
     try:
         if four_view:
@@ -1237,6 +1252,10 @@ def resume_model(ctx: Context, file_name: str, extension: str = "db") -> ToolRes
             f"Unsupported extension '{extension}'. Use 'db' for binary database files "
             "or 'cdb' for coded ASCII archive files."
         )
+    try:
+        _check_apdl_literal(file_name, ctx.request_context.lifespan_context.blocked_commands)
+    except ValueError as e:
+        return _text_result(str(e))
 
     try:
         if ext == "db":
@@ -1292,6 +1311,11 @@ def open_results(ctx: Context, file_name: str | None = None) -> ToolResult:
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    if file_name:
+        try:
+            _check_apdl_literal(file_name, ctx.request_context.lifespan_context.blocked_commands)
+        except ValueError as e:
+            return _text_result(str(e))
 
     try:
         mapdl.post1()

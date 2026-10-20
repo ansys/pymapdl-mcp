@@ -26,6 +26,7 @@ from ansys.common.mcp import (
 )
 from ansys.common.mcp.context import PyAnsysBaseAppContext
 from ansys.common.mcp.helpers import PersistentPythonSession, logger
+from ansys.mapdl.mcp._apdl_security import _APDL_COMMAND_PREFIXES
 
 
 @dataclass
@@ -63,6 +64,7 @@ class PyMAPDLAppContext(PyAnsysBaseAppContext):
     http_port: int = 8080
     cors_origins: list[str] | None = None
     python_enabled: bool = True
+    blocked_commands: frozenset[str] = frozenset()
 
     @property
     def product_instance(self) -> Optional[Any]:
@@ -127,8 +129,14 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
             context.http_host = cli_cfg.get("http_host", context.http_host)
             context.http_port = cli_cfg.get("http_port", context.http_port)
             context.cors_origins = cli_cfg.get("cors_origins", context.cors_origins)
+            context.blocked_commands = frozenset(cli_cfg.get("block_apdl_command", ()))
 
         self.context = context
+        if context.blocked_commands and self._need_python:
+            logger.warning(
+                "APDL command restrictions do not constrain arbitrary Python. "
+                "Disable Python execution when relying on the direct APDL filter."
+            )
         return context
 
     def product_startup(self):
@@ -255,6 +263,13 @@ def launcher(argv: list[str] | None = None) -> None:
         help="Allowed CORS origins (comma-separated URLs, for http transport)",
     )
     parser.add_argument(
+        "--block-apdl-command",
+        action="append",
+        choices=tuple(_APDL_COMMAND_PREFIXES),
+        default=[],
+        help="Block direct APDL command families. Repeat to block multiple families.",
+    )
+    parser.add_argument(
         "--on-aali",
         dest="on_aali",
         action="store_true",
@@ -289,6 +304,7 @@ def launcher(argv: list[str] | None = None) -> None:
             "http_host": args.http_host,
             "http_port": args.http_port,
             "cors_origins": cors_origins,
+            "block_apdl_command": frozenset(args.block_apdl_command),
             "on_aali": session.on_aali,
             "disable_python": args.disable_python,
         },
