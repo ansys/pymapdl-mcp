@@ -345,8 +345,9 @@ class TestLaunchMapdlIntegration:
         context = MagicMock()
         context.request_context = MagicMock()
         context.request_context.lifespan_context = PyMAPDLAppContext(mapdl=None)
-        context.enable_components = AsyncMock()
-        context.disable_components = AsyncMock()
+        context.fastmcp = MagicMock()
+        context.fastmcp._cli_config = {}
+        context.send_notification = AsyncMock()
 
         return context
 
