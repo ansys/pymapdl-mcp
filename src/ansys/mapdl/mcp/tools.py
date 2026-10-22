@@ -32,6 +32,7 @@ Tools are grouped into the following tool sets via the ``toolsets://definition``
 The :func:`list_tool_sets` function exposes these tool set definitions as a resource.
 """
 
+import asyncio
 import base64
 import json
 import os
@@ -39,6 +40,7 @@ from pathlib import Path
 import platform
 import subprocess  # nosec B404
 import tempfile
+from types import SimpleNamespace
 from typing import Any, cast
 
 from ansys.common.mcp.tools import create_custom_plot, execute_python_code
@@ -48,7 +50,9 @@ from fastmcp.tools.base import ToolResult
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl.mcp import app
+from ansys.mapdl.mcp.busy import check_not_busy, exclusive, exclusive_sync, run_exclusive
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
+from ansys.mapdl.mcp.server import PyMAPDLAppContext
 from mcp.types import ImageContent, TextContent
 
 try:
@@ -94,6 +98,34 @@ def _is_mapdl_crashed(mapdl: Any) -> bool:
     return False
 
 
+def _app_context(ctx: Context) -> Any | None:
+    """Return the application context, also when running as a background task.
+
+    Background tasks run in a worker where ``ctx.request_context`` is not available, so the
+    application context is read from the server instead.
+    """
+    if ctx.request_context is not None:
+        return ctx.request_context.lifespan_context
+
+    server_context = getattr(ctx.fastmcp, "context", None)
+    return server_context if isinstance(server_context, PyMAPDLAppContext) else None
+
+
+class _TaskContext:
+    """Context proxy exposing the application context as ``request_context.lifespan_context``.
+
+    Helpers from ``ansys-common-mcp`` read the application context from ``request_context``,
+    which is not available in background tasks.
+    """
+
+    def __init__(self, ctx: Context, app_context: Any) -> None:
+        self._ctx = ctx
+        self.request_context = SimpleNamespace(lifespan_context=app_context)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._ctx, name)
+
+
 def _get_mapdl(ctx: Context) -> tuple[Any, str | None]:
     """Retrieve the active MAPDL instance from context, running all guards.
 
@@ -110,11 +142,17 @@ def _get_mapdl(ctx: Context) -> tuple[Any, str | None]:
     tuple[Any, str | None]
         A 2-tuple of ``(mapdl_instance, error_text)``.  Exactly one of the two
         values is ``None`` at any given time.
+
+    Raises
+    ------
+    BusyError
+        If a long-running task is currently using the MAPDL instance.
     """
-    if ctx.request_context is None:
+    app_context = _app_context(ctx)
+    if app_context is None:
         return None, "No request context available."
 
-    mapdl = ctx.request_context.lifespan_context.mapdl
+    mapdl = app_context.mapdl
 
     if mapdl is None:
         return None, (
@@ -126,6 +164,8 @@ def _get_mapdl(ctx: Context) -> tuple[Any, str | None]:
             "MAPDL instance has exited or is exiting. "
             "Please reconnect or launch a new instance using launch_mapdl_session."
         )
+
+    check_not_busy(mapdl)
 
     return mapdl, None
 
@@ -254,49 +294,49 @@ def check_mapdl_status(ctx: Context) -> ToolResult:
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
-
-    try:
-        from ansys.mapdl.mcp.helpers import get_info
-
-        # Check if MAPDL has exited
-        if hasattr(mapdl, "_exited") and mapdl._exited:
-            return _text_result(
-                "MAPDL instance has exited. Please reconnect or launch a new instance."
-            )
-
-        if hasattr(mapdl, "_exiting") and mapdl._exiting:
-            return _text_result(
-                "MAPDL instance is currently exiting. Please wait or launch a new instance."
-            )
-
-        info = get_info(mapdl)
-        json_content = TextContent(type="text", text=json.dumps(info, indent=2))
-
-        # Attempt to attach a four-view screenshot of the current selection
+    with exclusive_sync(mapdl, "check_mapdl_status"):
         try:
-            logger.info("Capturing four-view screenshot for status report...")
-            _, image_data, mime_type = _capture_screenshot(
-                mapdl,
-                pre_commands=_four_view_commands("EPLOT"),
-                prefix="mapdl_status_",
-            )
-            base64_data = base64.b64encode(image_data).decode("utf-8")
-            return ToolResult(
-                [json_content, ImageContent(type="image", data=base64_data, mimeType=mime_type)]
-            )
-        except Exception as img_err:
-            logger.warning(f"Could not capture four-view screenshot for status: {img_err}")
-            return ToolResult([json_content])
-        finally:
-            try:
-                mapdl.input_strings(_RESTORE_SINGLE_WINDOW)  # type: ignore[union-attr]
-            except Exception as restore_err:
-                logger.warning(f"Could not restore single-window layout: {restore_err}")
+            from ansys.mapdl.mcp.helpers import get_info
 
-    except Exception as e:
-        error_msg = f"Error checking MAPDL status: {str(e)}"
-        logger.error(error_msg)
-        return _text_result(error_msg)
+            # Check if MAPDL has exited
+            if hasattr(mapdl, "_exited") and mapdl._exited:
+                return _text_result(
+                    "MAPDL instance has exited. Please reconnect or launch a new instance."
+                )
+
+            if hasattr(mapdl, "_exiting") and mapdl._exiting:
+                return _text_result(
+                    "MAPDL instance is currently exiting. Please wait or launch a new instance."
+                )
+
+            info = get_info(mapdl)
+            json_content = TextContent(type="text", text=json.dumps(info, indent=2))
+
+            # Attempt to attach a four-view screenshot of the current selection
+            try:
+                logger.info("Capturing four-view screenshot for status report...")
+                _, image_data, mime_type = _capture_screenshot(
+                    mapdl,
+                    pre_commands=_four_view_commands("EPLOT"),
+                    prefix="mapdl_status_",
+                )
+                base64_data = base64.b64encode(image_data).decode("utf-8")
+                return ToolResult(
+                    [json_content, ImageContent(type="image", data=base64_data, mimeType=mime_type)]
+                )
+            except Exception as img_err:
+                logger.warning(f"Could not capture four-view screenshot for status: {img_err}")
+                return ToolResult([json_content])
+            finally:
+                try:
+                    mapdl.input_strings(_RESTORE_SINGLE_WINDOW)  # type: ignore[union-attr]
+                except Exception as restore_err:
+                    logger.warning(f"Could not restore single-window layout: {restore_err}")
+
+        except Exception as e:
+            error_msg = f"Error checking MAPDL status: {str(e)}"
+            logger.error(error_msg)
+            return _text_result(error_msg)
 
 
 @app.tool(tags={"aali", "session_management"})
@@ -350,8 +390,10 @@ def check_mapdl_installed(ctx: Context) -> ToolResult:
         return _text_result(error_msg)
 
 
-@app.tool(tags={REQUIRES_MAPDL_TAG, "command_execution"})
-def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "") -> ToolResult:
+@app.tool(tags={REQUIRES_MAPDL_TAG, "command_execution"}, task=True)
+async def run_mapdl_command(
+    ctx: Context, cmd: str, comment: str = "", header: str = ""
+) -> ToolResult:
     """Execute an arbitrary MAPDL command.
 
     Parameters
@@ -374,18 +416,21 @@ def run_mapdl_command(ctx: Context, cmd: str, comment: str = "", header: str = "
     if error:
         return _text_result(error)
 
-    if header:
-        mapdl.com(f"# {header}", mute=True)
-    if comment:
-        for each_line in comment.splitlines():
-            mapdl.com(f"{each_line}", mute=True)
+    def _work() -> ToolResult:
+        if header:
+            mapdl.com(f"# {header}", mute=True)
+        if comment:
+            for each_line in comment.splitlines():
+                mapdl.com(f"{each_line}", mute=True)
 
-    result = mapdl.run(cmd)
-    return _text_result(f"MAPDL command executed successfully: {result}")
+        result = mapdl.run(cmd)
+        return _text_result(f"MAPDL command executed successfully: {result}")
+
+    return await run_exclusive(mapdl, "run_mapdl_command", _work)
 
 
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "command_execution"})
-def run_multiple_mapdl_commands(
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "command_execution"}, task=True)
+async def run_multiple_mapdl_commands(
     ctx: Context, commands: list[str], comment: str = "", header: str = ""
 ) -> ToolResult:
     """Execute multiple MAPDL commands in sequence.
@@ -427,47 +472,51 @@ def run_multiple_mapdl_commands(
     if not valid_commands:
         return _text_result("No valid commands found after filtering empty entries.")
 
-    try:
-        logger.info(f"Executing {len(valid_commands)} MAPDL commands using input_strings")
+    def _work() -> ToolResult:
+        try:
+            logger.info(f"Executing {len(valid_commands)} MAPDL commands using input_strings")
 
-        if header:
-            mapdl.com(f"# {header}", mute=True)
-        if comment:
-            for each_line in comment.splitlines():
-                mapdl.com(f"{each_line}", mute=True)
+            if header:
+                mapdl.com(f"# {header}", mute=True)
+            if comment:
+                for each_line in comment.splitlines():
+                    mapdl.com(f"{each_line}", mute=True)
 
-        # Use input_strings for batch command execution
-        result = mapdl.input_strings(valid_commands)
+            # Use input_strings for batch command execution
+            result = mapdl.input_strings(valid_commands)
 
-        success_msg = (
-            f"Successfully executed {len(valid_commands)} MAPDL commands:\n"
-            f"Commands:\n" + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
-        )
+            success_msg = (
+                f"Successfully executed {len(valid_commands)} MAPDL commands:\n"
+                f"Commands:\n"
+                + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
+            )
 
-        if result:
-            success_msg += f"\n\nOutput:\n{result}"
+            if result:
+                success_msg += f"\n\nOutput:\n{result}"
 
-        return ToolResult(
-            [
-                TextContent(type="text", text="True"),
-                TextContent(type="text", text=success_msg),
-            ],
-            structured_content={
-                "success": True,
-                "commands_executed": valid_commands,
-                "output": result or "",
-            },
-        )
+            return ToolResult(
+                [
+                    TextContent(type="text", text="True"),
+                    TextContent(type="text", text=success_msg),
+                ],
+                structured_content={
+                    "success": True,
+                    "commands_executed": valid_commands,
+                    "output": result or "",
+                },
+            )
 
-    except Exception as e:
-        error_msg = (
-            f"Error executing commands. Executed {len(valid_commands)} commands "
-            f"but encountered error: {str(e)}\n"
-            f"Commands that were attempted:\n"
-            + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
-        )
-        logger.error(error_msg)
-        return ToolResult([TextContent(type="text", text=error_msg)])
+        except Exception as e:
+            error_msg = (
+                f"Error executing commands. Executed {len(valid_commands)} commands "
+                f"but encountered error: {str(e)}\n"
+                f"Commands that were attempted:\n"
+                + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
+            )
+            logger.error(error_msg)
+            return ToolResult([TextContent(type="text", text=error_msg)])
+
+    return await run_exclusive(mapdl, "run_multiple_mapdl_commands", _work)
 
 
 @app.tool(tags={"aali", "locked_connection", "session_management"})
@@ -668,29 +717,30 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
     if mapdl is None:
         return _text_result("No MAPDL connection to disconnect.")
 
-    try:
-        ip = mapdl._ip
-        port = mapdl._port
-        logger.info(f"Disconnecting from MAPDL at {ip}:{port}...")
+    async with exclusive(mapdl, "disconnect_from_mapdl"):
+        try:
+            ip = mapdl._ip
+            port = mapdl._port
+            logger.info(f"Disconnecting from MAPDL at {ip}:{port}...")
 
-        # Exit the MAPDL connection
-        # Just disconnect the client
-        mapdl.exit()
-        del mapdl
+            # Exit the MAPDL connection
+            # Just disconnect the client
+            mapdl.exit()
+            del mapdl
 
-        # Clear from context
-        ctx.request_context.lifespan_context.mapdl = None
+            # Clear from context
+            ctx.request_context.lifespan_context.mapdl = None
 
-        await ctx.disable_components(tags={REQUIRES_MAPDL_TAG})
-        logger.info("Disconnected successfully!")
-        return _text_result(f"Successfully disconnected from MAPDL at {ip}:{port}")
+            await ctx.disable_components(tags={REQUIRES_MAPDL_TAG})
+            logger.info("Disconnected successfully!")
+            return _text_result(f"Successfully disconnected from MAPDL at {ip}:{port}")
 
-    except Exception as e:
-        error_msg = f"Error during disconnect: {str(e)}"
-        logger.error(error_msg)
-        # Still clear the reference even if disconnect failed
-        ctx.request_context.lifespan_context.mapdl = None
-        return _text_result(error_msg)
+        except Exception as e:
+            error_msg = f"Error during disconnect: {str(e)}"
+            logger.error(error_msg)
+            # Still clear the reference even if disconnect failed
+            ctx.request_context.lifespan_context.mapdl = None
+            return _text_result(error_msg)
 
 
 @app.tool(tags={"session_management"})
@@ -795,54 +845,54 @@ def screenshot(
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
-
-    try:
-        if four_view:
-            logger.info("Capturing four-view MAPDL screenshot...")
-            plot_cmd = commands if commands else "EPLOT"
-            pre_commands = _four_view_commands(plot_cmd)
-            prefix = "mapdl_4view_"
-        else:
-            logger.info("Capturing MAPDL screenshot...")
-            pre_commands = commands
-            prefix = "mapdl_screenshot_"
-
+    with exclusive_sync(mapdl, "screenshot"):
         try:
-            screenshot_path, image_data, mime_type = _capture_screenshot(
-                mapdl, pre_commands, prefix
-            )
-        finally:
             if four_view:
-                try:
-                    mapdl.input_strings(_RESTORE_SINGLE_WINDOW)  # type: ignore[union-attr]
-                except Exception as restore_err:
-                    logger.warning(f"Could not restore single-window layout: {restore_err}")
+                logger.info("Capturing four-view MAPDL screenshot...")
+                plot_cmd = commands if commands else "EPLOT"
+                pre_commands = _four_view_commands(plot_cmd)
+                prefix = "mapdl_4view_"
+            else:
+                logger.info("Capturing MAPDL screenshot...")
+                pre_commands = commands
+                prefix = "mapdl_screenshot_"
 
-        base64_data = base64.b64encode(image_data).decode("utf-8")
+            try:
+                screenshot_path, image_data, mime_type = _capture_screenshot(
+                    mapdl, pre_commands, prefix
+                )
+            finally:
+                if four_view:
+                    try:
+                        mapdl.input_strings(_RESTORE_SINGLE_WINDOW)  # type: ignore[union-attr]
+                    except Exception as restore_err:
+                        logger.warning(f"Could not restore single-window layout: {restore_err}")
 
-        if show_plot_on_popup:
-            _open_image_in_viewer(str(screenshot_path))
+            base64_data = base64.b64encode(image_data).decode("utf-8")
 
-        logger.info(f"Screenshot captured successfully: {screenshot_path}")
+            if show_plot_on_popup:
+                _open_image_in_viewer(str(screenshot_path))
 
-        return ToolResult(
-            [
-                TextContent(type="text", text=f"Screenshot saved to: {screenshot_path}"),
-                ImageContent(type="image", data=base64_data, mimeType=mime_type),
-            ]
-        )
+            logger.info(f"Screenshot captured successfully: {screenshot_path}")
 
-    except Exception as e:
-        error_msg = f"Failed to capture screenshot: {str(e)}"
-        logger.error(error_msg)
-        return _text_result(error_msg)
+            return ToolResult(
+                [
+                    TextContent(type="text", text=f"Screenshot saved to: {screenshot_path}"),
+                    ImageContent(type="image", data=base64_data, mimeType=mime_type),
+                ]
+            )
+
+        except Exception as e:
+            error_msg = f"Failed to capture screenshot: {str(e)}"
+            logger.error(error_msg)
+            return _text_result(error_msg)
 
 
 ####################################################################################################
 # Tools that uses the PythonPersistentSession
 
 
-@app.tool(tags={REQUIRES_MAPDL_TAG, "python_execution", "command_execution"})
+@app.tool(tags={REQUIRES_MAPDL_TAG, "python_execution", "command_execution"}, task=True)
 async def run_python_code(
     ctx: Context,
     code: str,
@@ -894,13 +944,16 @@ async def run_python_code(
     ... '''
     >>> run_python_code(ctx, code)
     """
-    if ctx.request_context is None:
+    app_context = _app_context(ctx)
+    if app_context is None:
         return _text_result(
             json.dumps(
                 {"success": False, "error": "No request context available."}, ensure_ascii=False
             )
         )
-    session = ctx.request_context.lifespan_context.python_session
+    if ctx.request_context is None:
+        ctx = cast(Context, _TaskContext(ctx, app_context))
+    session = app_context.python_session
 
     if session is None:
         return _text_result(
@@ -932,11 +985,14 @@ async def run_python_code(
                 )
             )
 
-    result: str = await execute_python_code(
-        ctx=ctx,
-        code=code,
-        timeout=timeout,
-    )
+    mapdl_key = app_context.mapdl
+
+    def _work() -> str:
+        # execute_python_code is a coroutine that blocks on session.execute(); run it in its
+        # own event loop inside a worker thread so the server's loop stays responsive.
+        return str(asyncio.run(execute_python_code(ctx=ctx, code=code, timeout=timeout)))
+
+    result = await run_exclusive(mapdl_key, "run_python_code", _work)
     return _text_result(result)
 
 
@@ -1034,12 +1090,13 @@ def custom_plot(
             error_msg = "An error occurred while connecting to MAPDL in the persistent Python session. Please, restart the session and try again."  # noqa: E501
         return _text_result(f"Failed to connect to MAPDL in persistent Python session: {error_msg}")
 
-    result: list[TextContent | ImageContent] | str = create_custom_plot(
-        ctx=ctx,
-        plot_code=plot_code,
-        plot_type=plot_type,
-        timeout=timeout,
-    )
+    with exclusive_sync(ctx.request_context.lifespan_context.mapdl, "custom_plot"):
+        result: list[TextContent | ImageContent] | str = create_custom_plot(
+            ctx=ctx,
+            plot_code=plot_code,
+            plot_type=plot_type,
+            timeout=timeout,
+        )
     if isinstance(result, str):
         return _text_result(result)
     return ToolResult(result)
@@ -1049,8 +1106,8 @@ def custom_plot(
 # File management tools
 
 
-@app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
-def upload_file(ctx: Context, file_path: str) -> ToolResult:
+@app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"}, task=True)
+async def upload_file(ctx: Context, file_path: str) -> ToolResult:
     """Upload a local file to the MAPDL instance working directory.
 
     The file is transferred over gRPC from the local filesystem to the remote
@@ -1084,21 +1141,24 @@ def upload_file(ctx: Context, file_path: str) -> ToolResult:
     if not Path(file_path).is_file():
         return _text_result(f"File not found: '{file_path}'")
 
-    try:
-        uploaded_name = mapdl.upload(file_path, progress_bar=False)
-        logger.info(f"Uploaded '{file_path}' to MAPDL working directory as '{uploaded_name}'.")
-        return _text_result(
-            f"File uploaded successfully. "
-            f"The file is now available in the MAPDL working directory as '{uploaded_name}'."
-        )
-    except Exception as e:
-        error_msg = f"Failed to upload '{file_path}': {e}"
-        logger.error(error_msg)
-        return _text_result(error_msg)
+    def _work() -> ToolResult:
+        try:
+            uploaded_name = mapdl.upload(file_path, progress_bar=False)
+            logger.info(f"Uploaded '{file_path}' to MAPDL working directory as '{uploaded_name}'.")
+            return _text_result(
+                f"File uploaded successfully. "
+                f"The file is now available in the MAPDL working directory as '{uploaded_name}'."
+            )
+        except Exception as e:
+            error_msg = f"Failed to upload '{file_path}': {e}"
+            logger.error(error_msg)
+            return _text_result(error_msg)
+
+    return await run_exclusive(mapdl, "upload_file", _work)
 
 
-@app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
-def download_file(ctx: Context, file_name: str, target_dir: str | None = None) -> ToolResult:
+@app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"}, task=True)
+async def download_file(ctx: Context, file_name: str, target_dir: str | None = None) -> ToolResult:
     """Download a file from the MAPDL instance working directory to the local filesystem.
 
     Use this tool to retrieve result files (e.g. ``file.rst``, ``file.db``),
@@ -1145,17 +1205,22 @@ def download_file(ctx: Context, file_name: str, target_dir: str | None = None) -
     if error:
         return _text_result(error)
 
-    try:
-        downloaded = mapdl.download(file_name, target_dir=target_dir, progress_bar=False)
-        if not downloaded:
-            return _text_result(f"No files matched '{file_name}' in the MAPDL working directory.")
-        logger.info(f"Downloaded {len(downloaded)} file(s): {downloaded}")
-        files_list = "\n".join(f"  - {f}" for f in downloaded)
-        return _text_result(f"Successfully downloaded {len(downloaded)} file(s):\n{files_list}")
-    except Exception as e:
-        error_msg = f"Failed to download '{file_name}': {e}"
-        logger.error(error_msg)
-        return _text_result(error_msg)
+    def _work() -> ToolResult:
+        try:
+            downloaded = mapdl.download(file_name, target_dir=target_dir, progress_bar=False)
+            if not downloaded:
+                return _text_result(
+                    f"No files matched '{file_name}' in the MAPDL working directory."
+                )
+            logger.info(f"Downloaded {len(downloaded)} file(s): {downloaded}")
+            files_list = "\n".join(f"  - {f}" for f in downloaded)
+            return _text_result(f"Successfully downloaded {len(downloaded)} file(s):\n{files_list}")
+        except Exception as e:
+            error_msg = f"Failed to download '{file_name}': {e}"
+            logger.error(error_msg)
+            return _text_result(error_msg)
+
+    return await run_exclusive(mapdl, "download_file", _work)
 
 
 @app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
@@ -1198,27 +1263,27 @@ def resume_model(ctx: Context, file_name: str, extension: str = "db") -> ToolRes
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
+    with exclusive_sync(mapdl, "resume_model"):
+        ext = extension.lower().strip(".")
+        if ext not in ("db", "cdb"):
+            return _text_result(
+                f"Unsupported extension '{extension}'. Use 'db' for binary database files "
+                "or 'cdb' for coded ASCII archive files."
+            )
 
-    ext = extension.lower().strip(".")
-    if ext not in ("db", "cdb"):
-        return _text_result(
-            f"Unsupported extension '{extension}'. Use 'db' for binary database files "
-            "or 'cdb' for coded ASCII archive files."
-        )
+        try:
+            if ext == "db":
+                output = mapdl.resume(file_name, ext)
+            else:
+                output = mapdl.cdread("db", file_name, ext)
 
-    try:
-        if ext == "db":
-            output = mapdl.resume(file_name, ext)
-        else:
-            output = mapdl.cdread("db", file_name, ext)
-
-        msg = output if output else f"Model resumed successfully from '{file_name}.{ext}'."
-        logger.info(f"Resumed model from '{file_name}.{ext}'.")
-        return _text_result(msg)
-    except Exception as e:
-        error_msg = f"Failed to resume model from '{file_name}.{ext}': {e}"
-        logger.error(error_msg)
-        return _text_result(error_msg)
+            msg = output if output else f"Model resumed successfully from '{file_name}.{ext}'."
+            logger.info(f"Resumed model from '{file_name}.{ext}'.")
+            return _text_result(msg)
+        except Exception as e:
+            error_msg = f"Failed to resume model from '{file_name}.{ext}': {e}"
+            logger.error(error_msg)
+            return _text_result(error_msg)
 
 
 @app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
@@ -1260,26 +1325,26 @@ def open_results(ctx: Context, file_name: str | None = None) -> ToolResult:
     mapdl, error = _get_mapdl(ctx)
     if error:
         return _text_result(error)
-
-    try:
-        mapdl.post1()
-        if file_name:
-            mapdl.file(file_name, "rst")
-            msg = (
-                f"Entered POST1 and set active results file to '{file_name}.rst'. "
-                "You can now query result quantities."
-            )
-        else:
-            msg = (
-                "Entered POST1 using the current jobname results file. "
-                "You can now query result quantities."
-            )
-        logger.info(msg)
-        return _text_result(msg)
-    except Exception as e:
-        error_msg = f"Failed to open results: {e}"
-        logger.error(error_msg)
-        return _text_result(error_msg)
+    with exclusive_sync(mapdl, "open_results"):
+        try:
+            mapdl.post1()
+            if file_name:
+                mapdl.file(file_name, "rst")
+                msg = (
+                    f"Entered POST1 and set active results file to '{file_name}.rst'. "
+                    "You can now query result quantities."
+                )
+            else:
+                msg = (
+                    "Entered POST1 using the current jobname results file. "
+                    "You can now query result quantities."
+                )
+            logger.info(msg)
+            return _text_result(msg)
+        except Exception as e:
+            error_msg = f"Failed to open results: {e}"
+            logger.error(error_msg)
+            return _text_result(error_msg)
 
 
 ####################################################################################################
