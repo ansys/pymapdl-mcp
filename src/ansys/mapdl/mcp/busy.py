@@ -25,8 +25,8 @@ a time. If another tool tries to use it meanwhile, :class:`BusyError` is raised.
 """
 
 import asyncio
-from collections.abc import AsyncIterator, Callable
-from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator, Callable, Iterator
+from contextlib import asynccontextmanager, contextmanager
 import threading
 import time
 from typing import Any, TypeVar
@@ -72,6 +72,16 @@ def _acquire(mapdl: Any, tool: str) -> None:
 def _release(mapdl: Any) -> None:
     with _lock:
         _running.pop(id(mapdl), None)
+
+
+@contextmanager
+def exclusive_sync(mapdl: Any, tool: str) -> Iterator[None]:
+    """Mark *mapdl* as in use like :func:`exclusive`, for tools that block their own thread."""
+    _acquire(mapdl, tool)
+    try:
+        yield
+    finally:
+        _release(mapdl)
 
 
 @asynccontextmanager

@@ -19,6 +19,7 @@
 
 import asyncio
 import threading
+from unittest.mock import patch
 
 from fastmcp import Client
 from fastmcp_tasks import call_tool_task
@@ -74,6 +75,50 @@ class TestExclusive:
                 await tools.run_multiple_mapdl_commands(mock_context, ["/PREP7"])
             with pytest.raises(BusyError):
                 await tools.upload_file(mock_context, __file__)
+
+
+@pytest.mark.unit
+class TestGuardedTools:
+    @pytest.mark.parametrize(
+        "tool, args",
+        [
+            ("check_mapdl_status", ()),
+            ("screenshot", ()),
+            ("resume_model", ("beam",)),
+            ("open_results", ()),
+        ],
+    )
+    def test_sync_tools_hold_guard_while_running(self, mock_context, mock_mapdl, tool, args):
+        seen = []
+
+        def probe(*_a, **_k):
+            try:
+                check_not_busy(mock_mapdl)
+                seen.append(False)
+            except BusyError:
+                seen.append(True)
+            raise RuntimeError("stop")
+
+        mock_mapdl.post1.side_effect = probe
+        mock_mapdl.resume.side_effect = probe
+        mock_mapdl.input_strings.side_effect = probe
+        mock_mapdl.run.side_effect = probe
+        with (
+            patch.object(tools, "get_info", probe, create=True),
+            patch("ansys.mapdl.mcp.helpers.get_info", probe),
+            patch.object(tools, "_capture_screenshot", probe),
+        ):
+            getattr(tools, tool)(mock_context, *args)
+
+        assert seen and all(seen)
+        check_not_busy(mock_mapdl)
+
+    async def test_disconnect_refused_while_busy(self, mock_context, mock_mapdl):
+        async with exclusive(mock_mapdl, "run_mapdl_command"):
+            with pytest.raises(BusyError):
+                await tools.disconnect_from_mapdl(mock_context)
+
+        mock_mapdl.exit.assert_not_called()
 
 
 @pytest.mark.unit
