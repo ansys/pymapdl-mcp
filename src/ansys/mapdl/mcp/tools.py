@@ -32,6 +32,7 @@ Tools are grouped into the following tool sets via the ``toolsets://definition``
 The :func:`list_tool_sets` function exposes these tool set definitions as a resource.
 """
 
+import asyncio
 import base64
 import json
 import os
@@ -985,8 +986,13 @@ async def run_python_code(
             )
 
     mapdl_key = app_context.mapdl
-    async with exclusive(mapdl_key, "run_python_code"):
-        result: str = await execute_python_code(ctx=ctx, code=code, timeout=timeout)
+
+    def _work() -> str:
+        # execute_python_code is a coroutine that blocks on session.execute(); run it in its
+        # own event loop inside a worker thread so the server's loop stays responsive.
+        return str(asyncio.run(execute_python_code(ctx=ctx, code=code, timeout=timeout)))
+
+    result = await run_exclusive(mapdl_key, "run_python_code", _work)
     return _text_result(result)
 
 
