@@ -25,7 +25,7 @@ from fastmcp_tasks import call_tool_task
 import pytest
 
 from ansys.mapdl.mcp import app, tools
-from ansys.mapdl.mcp.busy import BusyError, check_not_busy, exclusive
+from ansys.mapdl.mcp.busy import BusyError, check_not_busy, exclusive, run_exclusive
 
 
 @pytest.mark.unit
@@ -45,6 +45,27 @@ class TestExclusive:
             async with exclusive(mock_mapdl, "run_mapdl_command"):
                 raise RuntimeError("boom")
 
+        check_not_busy(mock_mapdl)
+
+    async def test_guard_held_until_thread_finishes_after_cancel(self, mock_mapdl):
+        release = threading.Event()
+        task = asyncio.create_task(run_exclusive(mock_mapdl, "solve", lambda: release.wait(10)))
+        await asyncio.sleep(0.2)
+
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        with pytest.raises(BusyError, match="solve"):
+            check_not_busy(mock_mapdl)
+
+        release.set()
+        for _ in range(50):
+            await asyncio.sleep(0.05)
+            try:
+                check_not_busy(mock_mapdl)
+                break
+            except BusyError:
+                continue
         check_not_busy(mock_mapdl)
 
     async def test_other_tools_raise_busy(self, mock_context, mock_mapdl):

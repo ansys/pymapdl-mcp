@@ -32,7 +32,6 @@ Tools are grouped into the following tool sets via the ``toolsets://definition``
 The :func:`list_tool_sets` function exposes these tool set definitions as a resource.
 """
 
-import asyncio
 import base64
 import json
 import os
@@ -50,7 +49,7 @@ from fastmcp.tools.base import ToolResult
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl.mcp import app
-from ansys.mapdl.mcp.busy import check_not_busy, exclusive
+from ansys.mapdl.mcp.busy import check_not_busy, exclusive, run_exclusive
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
 from ansys.mapdl.mcp.server import PyMAPDLAppContext
 from mcp.types import ImageContent, TextContent
@@ -426,8 +425,7 @@ async def run_mapdl_command(
         result = mapdl.run(cmd)
         return _text_result(f"MAPDL command executed successfully: {result}")
 
-    async with exclusive(mapdl, "run_mapdl_command"):
-        return await asyncio.to_thread(_work)
+    return await run_exclusive(mapdl, "run_mapdl_command", _work)
 
 
 @app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "command_execution"}, task=True)
@@ -517,8 +515,7 @@ async def run_multiple_mapdl_commands(
             logger.error(error_msg)
             return ToolResult([TextContent(type="text", text=error_msg)])
 
-    async with exclusive(mapdl, "run_multiple_mapdl_commands"):
-        return await asyncio.to_thread(_work)
+    return await run_exclusive(mapdl, "run_multiple_mapdl_commands", _work)
 
 
 @app.tool(tags={"aali", "locked_connection", "session_management"})
@@ -1149,8 +1146,7 @@ async def upload_file(ctx: Context, file_path: str) -> ToolResult:
             logger.error(error_msg)
             return _text_result(error_msg)
 
-    async with exclusive(mapdl, "upload_file"):
-        return await asyncio.to_thread(_work)
+    return await run_exclusive(mapdl, "upload_file", _work)
 
 
 @app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"}, task=True)
@@ -1216,8 +1212,7 @@ async def download_file(ctx: Context, file_name: str, target_dir: str | None = N
             logger.error(error_msg)
             return _text_result(error_msg)
 
-    async with exclusive(mapdl, "download_file"):
-        return await asyncio.to_thread(_work)
+    return await run_exclusive(mapdl, "download_file", _work)
 
 
 @app.tool(tags={REQUIRES_MAPDL_TAG, "file_management"})
