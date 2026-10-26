@@ -50,6 +50,8 @@ class PyMAPDLAppContext(PyAnsysBaseAppContext):
         Port number for HTTP transport.
     cors_origins : Optional[list[str]]
         List of allowed CORS origins for HTTP transport.
+    python_enabled : bool
+        Whether Python execution tools are enabled for this application context.
     """
 
     mapdl: Any | None = None  # Using Any to avoid type issues with MAPDL variants
@@ -60,6 +62,7 @@ class PyMAPDLAppContext(PyAnsysBaseAppContext):
     http_host: str = "127.0.0.1"
     http_port: int = 8080
     cors_origins: list[str] | None = None
+    python_enabled: bool = True
 
     @property
     def product_instance(self) -> Optional[Any]:
@@ -93,21 +96,27 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         PyMAPDLAppContext
             The application context for managing MAPDL instances.
         """
-        startup_code = "from ansys.mapdl.mcp.python_helper.startup_code import *"
-        python_session = PersistentPythonSession(
-            python_executable=self.python_executable,
-            working_directory=self.working_directory,
-            startup_code=startup_code,
-        )
+        cli_cfg = getattr(self, "_cli_config", None)
+        python_enabled = self._need_python and not (cli_cfg or {}).get("disable_python", False)
+        self._need_python: bool = python_enabled
+        python_session = None
+        if python_enabled:
+            startup_code = "from ansys.mapdl.mcp.python_helper.startup_code import *"
+            python_session = PersistentPythonSession(
+                python_executable=self.python_executable,
+                working_directory=self.working_directory,
+                startup_code=startup_code,
+            )
+        else:
+            self.disable(tags={"python_execution"})
 
         context = PyMAPDLAppContext(
             python_session=python_session,
             command_history=[],
+            python_enabled=python_enabled,
         )
 
         # Populate context from CLI config if available
-        cli_cfg = getattr(self, "_cli_config", None)
-
         if cli_cfg is not None:
             context.transport_type = cli_cfg.get("transport_type", context.transport_type)
             context.mapdl_ip = cli_cfg.get("mapdl_ip", context.mapdl_ip)
@@ -222,6 +231,11 @@ def launcher(argv: list[str] | None = None) -> None:
         help="Attempt to connect to MAPDL during MCP startup",
     )
     parser.add_argument(
+        "--disable-python",
+        action="store_true",
+        help="Disable arbitrary Python code, custom plots, and their subprocess",
+    )
+    parser.add_argument(
         "--http-host",
         dest="http_host",
         default="127.0.0.1",
@@ -276,6 +290,7 @@ def launcher(argv: list[str] | None = None) -> None:
             "http_port": args.http_port,
             "cors_origins": cors_origins,
             "on_aali": session.on_aali,
+            "disable_python": args.disable_python,
         },
     )
 
@@ -310,6 +325,8 @@ def launcher(argv: list[str] | None = None) -> None:
         app.disable(tags={"aali"})
     if session.locked_connection:
         app.disable(tags={"locked_connection"})
+    if args.disable_python or not app._need_python:
+        app.disable(tags={"python_execution"})
 
     if args.transport_type == "stdio":
         asyncio.run(app.run_stdio_async())

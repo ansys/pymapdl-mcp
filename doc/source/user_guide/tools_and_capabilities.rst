@@ -91,10 +91,10 @@ These sets are exposed through the ``toolsets://definition`` resource.
      - ``screenshot``, ``custom_plot``
    * - ``python_execution``
      - Execute arbitrary Python or PyMAPDL code in the persistent session
-     - ``run_python_code``
+     - ``run_python_code``, ``custom_plot``
 
-The ``list_tool_sets()`` resource function returns the complete tool set definitions,
-allowing client applications to discover and organize available capabilities.
+The ``toolsets://definition`` resource reflects the request's Python policy. When Python is
+disabled, the resource omits the ``python_execution`` tool set and Python-specific guidance.
 
 Using the tools
 ---------------
@@ -137,6 +137,22 @@ native plotting:
    ``custom_plot`` is for plots that MAPDL cannot produce natively. For standard MAPDL plots
    (``APLOT``, ``LPLOT``, ``KPLOT``, ``PLNSOL``, etc.), use the MAPDL commands together with
    the ``screenshot`` tool.
+
+Disabling Python execution
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Python execution and custom plotting are enabled by default. Start the server with
+``--disable-python`` to hide ``run_python_code`` and ``custom_plot`` and prevent the persistent
+Python session from starting:
+
+.. code-block:: bash
+
+   python -m ansys.mapdl.mcp --disable-python
+
+The tools also reject direct calls before accessing the session or running code. This policy
+persists across MAPDL connection changes and applies when you construct ``PyMAPDLMCP`` with
+``need_python=False``. Native ``screenshot`` remains available unless another deployment
+restriction hides it.
 
 Capturing plots
 ~~~~~~~~~~~~~~~
