@@ -111,6 +111,35 @@ method for batch execution. This is significantly faster than running commands o
 
 *"Run these commands: /PREP7, ET,1,SOLID185, MP,EX,1,200E9."*
 
+Direct APDL restrictions
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+APDL is unrestricted by default. Operators can block selected direct command families at
+startup:
+
+.. code-block:: bash
+
+   python -m ansys.mapdl.mcp --block-apdl-command /SYS --block-apdl-command /SYP --block-apdl-command /INPUT
+
+Repeat the option to block any combination of ``/SYS``, ``/SYP``, and ``/INPUT``. The
+checker classifies the first comma-delimited command head after Unicode-aware outer
+trimming, matching PyMAPDL's downstream client boundary. It removes only internal ASCII
+spaces and tabs in unquoted heads. Whole-head matching quotes are accepted only without
+internal whitespace or quote characters. Other ambiguous internal whitespace or malformed
+heads are rejected only while a restriction is active. Allowed dispatch text is unchanged.
+
+The check covers direct commands submitted through single-command, batch, and screenshot
+tools. It also validates filenames interpolated into ``resume_model`` and ``open_results``
+before solver calls. Batches are checked in full before metadata or commands are sent.
+These checks do not scan macro or CDB contents, nested input files, or indirect command
+generation. Restricted mode rejects ambiguous command delimiters and unsafe metadata;
+ordinary argument Unicode is not generically banned.
+
+.. warning::
+   Arbitrary Python, including ``run_python_code`` and ``custom_plot``, can bypass this
+   direct text filter. Use ``--disable-python`` when relying on APDL restrictions.
+   This filter is not an HTTP, filesystem, or solver sandbox.
+
 Custom Python code execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
