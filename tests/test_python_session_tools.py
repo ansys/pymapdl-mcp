@@ -16,8 +16,10 @@
 
 """Tests for tools that use the persistent Python session."""
 
+import asyncio
 import base64
 import json
+import threading
 from unittest.mock import MagicMock, patch
 
 from fastmcp.tools.base import ToolResult
@@ -82,6 +84,24 @@ class TestRunPythonCode:
         assert data["success"] is True
         assert data["stdout"].strip() == "ok"
         assert data["stderr"] == ""
+
+    @pytest.mark.asyncio
+    async def test_does_not_block_event_loop(self, mock_context, mock_python_session):
+        mock_context.request_context.lifespan_context.python_session = mock_python_session
+        mock_python_session.metadata["mapdl"] = MagicMock()
+        release = threading.Event()
+        mock_python_session.execute.side_effect = lambda *a, **k: (
+            release.wait(10) and {"success": True, "stdout": "", "stderr": ""}
+        )
+
+        task = asyncio.create_task(run_python_code(mock_context, code="x=1"))
+        try:
+            await asyncio.sleep(0.2)
+            assert not task.done()  # reaching this line means the loop was not blocked
+        finally:
+            release.set()
+        result = await task
+        assert json.loads(result.content[0].text)["success"] is True
 
     @pytest.mark.asyncio
     async def test_failure_with_error_message(self, mock_context, mock_python_session):

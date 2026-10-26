@@ -26,6 +26,7 @@ from ansys.common.mcp import (
 )
 from ansys.common.mcp.context import PyAnsysBaseAppContext
 from ansys.common.mcp.helpers import PersistentPythonSession, logger
+from fastmcp_tasks import TasksExtension
 
 
 @dataclass
@@ -164,6 +165,9 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
 
 # Pass lifespan to server
 app = PyMAPDLMCP(name="PyMAPDL MCP Server")
+
+# Allow clients supporting MCP background tasks to run long tools (``task=True``) as tasks
+app.add_extension(TasksExtension())
 
 
 @dataclass

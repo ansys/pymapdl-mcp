@@ -28,7 +28,7 @@ from ansys.mapdl.mcp.tools import check_mapdl_status, run_mapdl_command
 class TestErrorHandling:
     """Tests for error handling in various scenarios."""
 
-    def test_mapdl_command_failure(self, mock_context):
+    async def test_mapdl_command_failure(self, mock_context):
         """Test handling of MAPDL command failures."""
         # Make the run method raise an exception
         mock_context.request_context.lifespan_context.mapdl.run.side_effect = RuntimeError(
@@ -36,7 +36,7 @@ class TestErrorHandling:
         )
 
         with pytest.raises(RuntimeError) as exc_info:
-            run_mapdl_command(mock_context, "INVALID_COMMAND")
+            await run_mapdl_command(mock_context, "INVALID_COMMAND")
 
         assert "MAPDL command failed" in str(exc_info.value)
 
@@ -58,7 +58,7 @@ class TestErrorHandling:
         result = check_mapdl_status(invalid_context)
         assert "No MAPDL connection available" in result.content[0].text
 
-    def test_mapdl_timeout(self, mock_context):
+    async def test_mapdl_timeout(self, mock_context):
         """Test handling of MAPDL timeout scenarios."""
         # Simulate a timeout
         mock_context.request_context.lifespan_context.mapdl.run.side_effect = TimeoutError(
@@ -66,22 +66,22 @@ class TestErrorHandling:
         )
 
         with pytest.raises(TimeoutError) as exc_info:
-            run_mapdl_command(mock_context, "/SOLVE")
+            await run_mapdl_command(mock_context, "/SOLVE")
 
         assert "timed out" in str(exc_info.value)
 
-    def test_empty_command_string(self, mock_context):
+    async def test_empty_command_string(self, mock_context):
         """Test handling of empty command string."""
         # This should not raise an error, but pass empty string to MAPDL
-        result = run_mapdl_command(mock_context, "")
+        result = await run_mapdl_command(mock_context, "")
 
         assert "executed successfully" in result.content[0].text
         mock_context.request_context.lifespan_context.mapdl.run.assert_called_once_with("")
 
-    def test_very_long_command(self, mock_context):
+    async def test_very_long_command(self, mock_context):
         """Test handling of very long commands."""
         # MAPDL has line length limits, but our code should pass it through
         long_command = "COMMENT" + "X" * 1000
-        result = run_mapdl_command(mock_context, long_command)
+        result = await run_mapdl_command(mock_context, long_command)
 
         assert "executed successfully" in result.content[0].text

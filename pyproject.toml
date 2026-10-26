@@ -40,7 +40,8 @@ classifiers = [
 
 dependencies = [
     "ansys-common-mcp>=0.3.0",
-    "ansys-mapdl-core>=0.72.0"
+    "ansys-mapdl-core>=0.72.0",
+    "fastmcp[tasks]>=4.0,<5",
 ]
 
 [project.optional-dependencies]
