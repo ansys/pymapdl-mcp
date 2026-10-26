@@ -494,10 +494,9 @@ def run_multiple_mapdl_commands(
 
     except Exception as e:
         error_msg = (
-            f"Error executing commands. Executed {len(valid_commands)} commands "
-            f"but encountered error: {str(e)}\n"
-            f"Commands that were attempted:\n"
-            + "\n".join(f"  {i + 1}. {cmd}" for i, cmd in enumerate(valid_commands))
+            f"Attempted a batch of {len(valid_commands)} commands, but MAPDL reported an error: "
+            f"{e}\nSome commands may not have executed.\nCommands attempted:\n"
+            + "\n".join(f"  {i + 1}. {command}" for i, command in enumerate(valid_commands))
         )
         logger.error(error_msg)
         return ToolResult([TextContent(type="text", text=error_msg)])

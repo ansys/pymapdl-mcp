@@ -274,7 +274,7 @@ class TestMapdlIntegration:
         # Either successful execution or error message
         assert (
             "Successfully executed" in msg
-            or "Error executing commands" in msg
+            or "Attempted a batch of" in msg
             or "error" in msg.lower()
         )
 
