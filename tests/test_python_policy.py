@@ -25,13 +25,16 @@ from fastmcp.exceptions import ToolError
 import pytest
 
 from ansys.mapdl.mcp import app
+from ansys.mapdl.mcp.contexts import get_guidelines_for
 from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python
 from ansys.mapdl.mcp.server import PyMAPDLAppContext, PyMAPDLMCP, launcher
 from ansys.mapdl.mcp.tools import custom_plot, list_tool_sets, run_python_code
 
+PYTHON_GUIDANCE = ("run_python_code", "custom_plot", "persistent Python session")
+
 
 @pytest.mark.unit
-@pytest.mark.parametrize("disabled_by", ["cli", "programmatic"])
+@pytest.mark.parametrize("disabled_by", ["method", "programmatic"])
 @pytest.mark.asyncio
 async def test_disabled_python_never_constructs_a_session(monkeypatch, disabled_by):
     def unexpected_session(**kwargs):
@@ -39,7 +42,8 @@ async def test_disabled_python_never_constructs_a_session(monkeypatch, disabled_
 
     monkeypatch.setattr("ansys.mapdl.mcp.server.PersistentPythonSession", unexpected_session)
     server = PyMAPDLMCP(need_python=disabled_by != "programmatic")
-    server._cli_config = {"disable_python": disabled_by == "cli"}
+    if disabled_by == "method":
+        server.disable_python()
 
     async with server.product_lifespan(server) as context:
         assert context.python_session is None
@@ -48,15 +52,15 @@ async def test_disabled_python_never_constructs_a_session(monkeypatch, disabled_
 
 @pytest.mark.unit
 def test_cli_option_disables_python(monkeypatch):
-    original_config = getattr(app, "_cli_config", None)
-    monkeypatch.setattr(app, "_cli_config", original_config, raising=False)
+    monkeypatch.setattr(app, "_cli_config", getattr(app, "_cli_config", None), raising=False)
+    monkeypatch.setattr(app, "_need_python", app._need_python)
     with (
         patch.object(asyncio, "run", side_effect=lambda coroutine: coroutine.close()),
         patch.object(app, "disable") as disable,
     ):
         launcher(["--disable-python"])
 
-    assert app._cli_config["disable_python"] is True
+    assert app._need_python is False
     assert any(
         "python_execution" in call.kwargs.get("tags", set()) for call in disable.call_args_list
     )
@@ -92,8 +96,14 @@ async def test_python_tools_and_helper_reject_before_accessing_session(mock_cont
 
 
 @pytest.mark.unit
-def test_toolsets_follow_request_python_policy(mock_context):
+def test_toolsets_follow_request_python_policy(mock_context, monkeypatch):
     assert PyMAPDLAppContext().python_enabled is True
+
+    no_request = SimpleNamespace(request_context=None)
+    for need_python in (True, False):
+        monkeypatch.setattr(app, "_need_python", need_python)
+        names = {item["name"] for item in list_tool_sets(no_request)}
+        assert ("python_execution" in names) is need_python
 
     context = mock_context.request_context.lifespan_context
     context.python_enabled = False
@@ -117,6 +127,18 @@ def test_toolsets_follow_request_python_policy(mock_context):
 
 
 @pytest.mark.unit
+def test_guidelines_follow_python_policy(monkeypatch):
+    enabled = get_guidelines_for(content="postprocessing")
+    assert all(text in enabled for text in PYTHON_GUIDANCE)
+
+    monkeypatch.setattr(app, "_need_python", False)
+    disabled = get_guidelines_for(content="postprocessing")
+    assert not any(text in disabled for text in PYTHON_GUIDANCE)
+    assert "screenshot" in disabled
+    assert "Example Postprocessing Workflow" in disabled
+
+
+@pytest.mark.unit
 @pytest.mark.asyncio
 @pytest.mark.parametrize("connection_tool", ["connect_to_mapdl", "launch_mapdl_session"])
 async def test_disabled_python_stays_hidden_across_connection_changes(
@@ -133,6 +155,7 @@ async def test_disabled_python_stays_hidden_across_connection_changes(
         tools.custom_plot,
         tools.run_mapdl_command,
         tools.screenshot,
+        get_guidelines_for,
     ):
         server.add_tool(tool)
     server.resource("toolsets://definition")(tools.list_tool_sets)
@@ -187,6 +210,8 @@ async def test_disabled_python_stays_hidden_across_connection_changes(
                     ("image", "bmF0aXZlLWltYWdl"),
                 ]
 
+        guidelines = await first.call_tool("get_guidelines_for", {"content": "postprocessing"})
+        assert not any(text in guidelines.content[0].text for text in PYTHON_GUIDANCE)
         assert server.context.python_session is None
         assert not marker.exists()
 
@@ -199,7 +224,7 @@ async def test_python_policy_refresh_preserves_other_tool_restrictions(mock_mapd
 
     server = PyMAPDLMCP(need_python=False)
     server._cli_config = {
-        "connect_on_startup": True,
+        "connect_on_startup": restriction == "locked_connection",
         "on_aali": restriction == "aali",
     }
     for tool in (
@@ -210,7 +235,8 @@ async def test_python_policy_refresh_preserves_other_tool_restrictions(mock_mapd
         tools.disconnect_from_mapdl,
     ):
         server.add_tool(tool)
-    server.disable(tags={restriction})
+    server.disable(tags={"requires_mapdl", restriction})
+    mock_mapdl._exited = False
 
     with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
         async with Client(server) as client:
@@ -219,9 +245,12 @@ async def test_python_policy_refresh_preserves_other_tool_restrictions(mock_mapd
                 fastmcp=server,
                 send_notification=AsyncMock(),
             )
-            await tools._refresh_mapdl_tool_visibility(context)
-            names = {tool.name for tool in await client.list_tools()}
-            assert "run_mapdl_command" in names
-            assert {"run_python_code", "custom_plot", "disconnect_from_mapdl"}.isdisjoint(names)
-            assert ("screenshot" in names) == (restriction != "aali")
+            for phase in ("connected", "disconnected", "reconnected"):
+                connected = phase != "disconnected"
+                server.context.mapdl = mock_mapdl if connected else None
+                await tools._refresh_mapdl_tool_visibility(context)
+                names = {tool.name for tool in await client.list_tools()}
+                assert ("run_mapdl_command" in names) is connected
+                assert ("screenshot" in names) is (connected and restriction != "aali")
+                assert {"run_python_code", "custom_plot", "disconnect_from_mapdl"}.isdisjoint(names)
             assert server.context.python_session is None

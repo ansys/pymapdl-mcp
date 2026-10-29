@@ -25,7 +25,10 @@ is itself built on top of FastMCP. The server lifecycle has three phases:
 - Manages dynamic MAPDL connections through the tools.
 - Executes commands in the MAPDL session and, when enabled, the persistent Python session.
 - Provides workflow guidance through the ``get_guidelines_for`` context tool.
-- Dynamically enables and disables tools based on the MAPDL connection state.
+- Dynamically enables and disables tools based on the MAPDL connection state. This visibility is
+  server-wide because every client shares the MAPDL connection in the lifespan context. Only the
+  client that changes the connection receives the tool-list notification; other clients see the
+  change the next time they list tools.
 
 **Shutdown**
 
@@ -43,12 +46,16 @@ The server uses a strongly typed ``PyMAPDLAppContext`` dataclass that holds:
 - Connection settings (IP, port, auto-connect flags)
 - Command history tracking
 
-``python_enabled`` is set from the inherited ``need_python`` option and the CLI
-``--disable-python`` flag. When it is false, ``create_context`` does not construct a
-``PersistentPythonSession``. The Python tools and their resource guidance are hidden, and their
-direct calls check the policy before accessing the session. Connection visibility refreshes
-reapply the Python tool tag after each MAPDL connection change. ``custom_plot`` uses that tag as
-well as ``visualization``.
+``python_enabled`` mirrors the server's Python policy. Construct ``PyMAPDLMCP`` with
+``need_python=False``, call ``PyMAPDLMCP.disable_python()``, or pass the CLI
+``--disable-python`` flag to disable Python. ``disable_python()`` is the single place that hides
+the ``python_execution`` tag and stops the base lifespan from starting the Python session, so
+``create_context`` then does not construct a ``PersistentPythonSession``. The Python tools, their
+resource guidance, and the Python sections of ``get_guidelines_for("postprocessing")`` are
+hidden, and direct tool calls check the policy before accessing the session. Connection
+visibility refreshes reapply the ``aali``, ``locked_connection``, and ``python_execution``
+restrictions after every MAPDL connection change, because later visibility rules override
+earlier ones. ``custom_plot`` carries both the ``python_execution`` and ``visualization`` tags.
 
 Tool context and lifecycle
 --------------------------

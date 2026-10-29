@@ -21,6 +21,8 @@ from typing import TYPE_CHECKING, Any
 from ansys.common.mcp.helpers import logger
 from fastmcp.server import Context
 
+from ansys.mapdl.mcp import app
+
 if TYPE_CHECKING:
     from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
 
@@ -355,6 +357,13 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
         info["post_processing"] = post_info
 
     return info
+
+
+def is_python_enabled(ctx: Context | None) -> bool:
+    """Return the server's Python policy, or the app setting outside a request."""
+    if ctx is not None and ctx.request_context is not None:
+        return bool(ctx.request_context.lifespan_context.python_enabled)
+    return app._need_python
 
 
 def connect_to_mapdl_in_persistent_python(

@@ -93,7 +93,7 @@ These sets are exposed through the ``toolsets://definition`` resource.
      - Execute arbitrary Python or PyMAPDL code in the persistent session
      - ``run_python_code``, ``custom_plot``
 
-The ``toolsets://definition`` resource reflects the request's Python policy. When Python is
+The ``toolsets://definition`` resource reflects the server's Python policy. When Python is
 disabled, the resource omits the ``python_execution`` tool set and Python-specific guidance.
 
 Using the tools
@@ -150,8 +150,9 @@ Python session from starting:
    python -m ansys.mapdl.mcp --disable-python
 
 The tools also reject direct calls before accessing the session or running code. This policy
-persists across MAPDL connection changes and applies when you construct ``PyMAPDLMCP`` with
-``need_python=False``. Native ``screenshot`` remains available unless another deployment
+is server-wide, persists across MAPDL connection changes, and applies when you construct
+``PyMAPDLMCP`` with ``need_python=False``. The ``get_guidelines_for`` tool also omits its
+Python-session guidance. Native ``screenshot`` remains available unless another deployment
 restriction hides it.
 
 Capturing plots

@@ -48,7 +48,11 @@ from fastmcp.tools.base import ToolResult
 # Import MAPDL at module level to avoid import during tool execution
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl.mcp import app
-from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
+from ansys.mapdl.mcp.helpers import (
+    connect_to_mapdl_in_persistent_python,
+    is_python_enabled,
+    logger,
+)
 from mcp.types import ImageContent, TextContent, ToolListChangedNotification
 
 try:
@@ -226,6 +230,14 @@ REQUIRES_MAPDL_TAG = "requires_mapdl"
 
 
 async def _refresh_mapdl_tool_visibility(ctx: Context) -> None:
+    """Toggle MAPDL tools server-wide, then reapply the fixed tool restrictions.
+
+    Visibility is server-wide on purpose: the MAPDL connection lives in the lifespan
+    context, which every client shares. Session-scoped rules would also override the
+    server-level restrictions and are unavailable on sessionless HTTP requests.
+    Later rules win, so the ``aali``, ``locked_connection``, and ``python_execution``
+    restrictions are reapplied after every toggle and are never re-enabled.
+    """
     if ctx.request_context is None:
         return
     lifespan_context = ctx.request_context.lifespan_context
@@ -234,11 +246,10 @@ async def _refresh_mapdl_tool_visibility(ctx: Context) -> None:
         ctx.fastmcp.disable(tags={REQUIRES_MAPDL_TAG})
     else:
         ctx.fastmcp.enable(tags={REQUIRES_MAPDL_TAG})
-        cli_config = getattr(ctx.fastmcp, "_cli_config", {})
-        if cli_config.get("on_aali"):
-            ctx.fastmcp.disable(tags={"aali"})
-        if lifespan_context.connect_on_startup:
-            ctx.fastmcp.disable(tags={"locked_connection"})
+    if getattr(ctx.fastmcp, "_cli_config", {}).get("on_aali"):
+        ctx.fastmcp.disable(tags={"aali"})
+    if lifespan_context.connect_on_startup:
+        ctx.fastmcp.disable(tags={"locked_connection"})
     if not lifespan_context.python_enabled:
         ctx.fastmcp.disable(tags={"python_execution"})
     await ctx.send_notification(ToolListChangedNotification())
@@ -778,9 +789,6 @@ def screenshot(
     - Geometry: ``APLOT``, ``LPLOT``, ``KPLOT``, ``VPLOT``
     - Mesh: ``EPLOT``, ``NPLOT``
     - Post-processing: ``PLNSOL``, ``PLESOL``, ``PLDISP``
-
-    For custom matplotlib or PyVista plots, use the :func:`custom_plot` tool
-    instead.
 
     Parameters
     ----------
@@ -1441,11 +1449,7 @@ def list_tool_sets(ctx: Context) -> list[dict]:
     ]
 
     """
-    python_enabled = (
-        ctx.request_context.lifespan_context.python_enabled
-        if ctx.request_context is not None
-        else False
-    )
+    python_enabled = is_python_enabled(ctx)
     tool_sets = [
         {
             "name": "session_management",

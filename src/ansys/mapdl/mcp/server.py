@@ -86,6 +86,13 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
 
     def __init__(self, name: str = "PyMAPDL MCP Server", *args, **kwargs):
         super().__init__(name=name, *args, **kwargs)
+        if not self._need_python:
+            self.disable_python()
+
+    def disable_python(self) -> None:
+        """Hide the Python tools and skip the persistent Python session."""
+        self._need_python = False
+        self.disable(tags={"python_execution"})
 
     def create_context(self) -> PyMAPDLAppContext:
         """
@@ -96,9 +103,7 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         PyMAPDLAppContext
             The application context for managing MAPDL instances.
         """
-        cli_cfg = getattr(self, "_cli_config", None)
-        python_enabled = self._need_python and not (cli_cfg or {}).get("disable_python", False)
-        self._need_python: bool = python_enabled
+        python_enabled = self._need_python
         python_session = None
         if python_enabled:
             startup_code = "from ansys.mapdl.mcp.python_helper.startup_code import *"
@@ -107,8 +112,6 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
                 working_directory=self.working_directory,
                 startup_code=startup_code,
             )
-        else:
-            self.disable(tags={"python_execution"})
 
         context = PyMAPDLAppContext(
             python_session=python_session,
@@ -117,6 +120,7 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         )
 
         # Populate context from CLI config if available
+        cli_cfg = getattr(self, "_cli_config", None)
         if cli_cfg is not None:
             context.transport_type = cli_cfg.get("transport_type", context.transport_type)
             context.mapdl_ip = cli_cfg.get("mapdl_ip", context.mapdl_ip)
@@ -290,7 +294,6 @@ def launcher(argv: list[str] | None = None) -> None:
             "http_port": args.http_port,
             "cors_origins": cors_origins,
             "on_aali": session.on_aali,
-            "disable_python": args.disable_python,
         },
     )
 
@@ -325,8 +328,8 @@ def launcher(argv: list[str] | None = None) -> None:
         app.disable(tags={"aali"})
     if session.locked_connection:
         app.disable(tags={"locked_connection"})
-    if args.disable_python or not app._need_python:
-        app.disable(tags={"python_execution"})
+    if args.disable_python:
+        app.disable_python()
 
     if args.transport_type == "stdio":
         asyncio.run(app.run_stdio_async())
