@@ -59,3 +59,22 @@ def test_mcp_server_has_tools():
 
     assert callable(check_mapdl_status)
     assert callable(run_mapdl_command)
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+@pytest.mark.parametrize("disabled_by", ["cli", "programmatic"])
+async def test_python_off_lifespan_never_constructs_or_starts_session(monkeypatch, disabled_by):
+    from ansys.mapdl.mcp.server import PyMAPDLMCP
+
+    def unexpected_session(**kwargs):
+        raise AssertionError("Disabled Python constructed a session")
+
+    monkeypatch.setattr("ansys.mapdl.mcp.server.PersistentPythonSession", unexpected_session)
+    server = PyMAPDLMCP(need_python=disabled_by != "programmatic")
+    server._cli_config = {"disable_python": disabled_by == "cli"}
+    async with server.product_lifespan(server) as context:
+        assert context.python_session is None
+        assert context.security_options.python_enabled is False
+        assert context.mapdl is None
+    assert context.command_logs == {}

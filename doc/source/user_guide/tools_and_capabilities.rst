@@ -6,6 +6,8 @@ Tool availability
 
 PyMAPDL-MCP dynamically enables and disables tools based on whether an MAPDL instance is
 connected. This keeps the AI assistant's context small when MAPDL is not in use.
+Connection state is shared by the application. Connecting or disconnecting changes tool
+availability for all clients, not only the client that changes the connection.
 
 **Before connecting to MAPDL**, you can access these tools:
 
@@ -25,9 +27,13 @@ connected. This keeps the AI assistant's context small when MAPDL is not in use.
      - Launch and connect to a new MAPDL instance
    * - ``get_guidelines_for``
      - Workflow guidance and best-practice context tool
+   * - ``list_command_logs``
+     - List native client command log IDs, even after disconnect
+   * - ``read_command_log``
+     - Read a bounded base64 byte page from a known command log
 
-**After connecting to MAPDL**, you gain access to the full set of tools. When you call the
-``disconnect_from_mapdl`` tool, the MAPDL-specific tools become unavailable.
+**After connecting to MAPDL**, you gain access to the tools allowed by startup policy.
+When you call ``disconnect_from_mapdl``, the MAPDL-specific tools become unavailable.
 
 .. list-table::
    :header-rows: 1
@@ -59,9 +65,9 @@ connected. This keeps the AI assistant's context small when MAPDL is not in use.
      - Enter POST1 and set the active results file for post-processing
 
 .. note::
-   When you use ``--connect-on-startup``, MAPDL connects at startup and all tools are immediately
-   available (except ``connect_to_mapdl``, ``launch_mapdl_session``, and ``disconnect_from_mapdl``,
-   which are locked).
+   When you use ``--connect-on-startup``, MAPDL connects at startup and permitted tools
+   are immediately available. ``connect_to_mapdl``, ``launch_mapdl_session``, and
+   ``disconnect_from_mapdl`` are locked. Python-off remains effective after startup.
 
 Tool sets
 ---------
@@ -85,16 +91,18 @@ These sets are exposed through the ``toolsets://definition`` resource.
      - ``upload_file``, ``download_file``, ``resume_model``, ``open_results``
    * - ``command_execution``
      - Execute MAPDL commands and command batches
-     - ``run_mapdl_command``, ``run_multiple_mapdl_commands``, ``run_python_code``
+     - ``run_mapdl_command``, ``run_multiple_mapdl_commands``, ``run_python_code``,
+       ``list_command_logs``, ``read_command_log``
    * - ``visualization``
      - Capture or generate result visualizations
      - ``screenshot``, ``custom_plot``
    * - ``python_execution``
      - Execute arbitrary Python or PyMAPDL code in the persistent session
-     - ``run_python_code``
+     - ``run_python_code``, ``custom_plot``
 
-The ``list_tool_sets()`` resource function returns the complete tool set definitions,
-allowing client applications to discover and organize available capabilities.
+The ``list_tool_sets(ctx)`` resource function reads the request's startup policy.
+With Python disabled, it omits both Python tools, their recommendations, and the empty
+``python_execution`` set. Native screenshot guidance remains available.
 
 Using the tools
 ---------------
@@ -110,6 +118,131 @@ For multiple commands, use ``run_multiple_mapdl_commands``, which uses MAPDL's `
 method for batch execution. This is significantly faster than running commands one by one:
 
 *"Run these commands: /PREP7, ET,1,SOLID185, MP,EX,1,200E9."*
+
+Direct APDL restrictions
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+APDL is unrestricted by default. Operators can block selected direct command families
+at startup without changing command logging or Python capability:
+
+.. code-block:: bash
+
+   python -m ansys.mapdl.mcp --block-apdl-command /SYS --block-apdl-command /SYP --block-apdl-command /INPUT
+
+The repeatable option accepts only ``/SYS``, ``/SYP``, and ``/INPUT``. Each family
+is independent. The checker reads the first comma-delimited command-head field and
+trims its outer Unicode whitespace before quote recognition. This matches PyMAPDL's
+downstream Python ``strip()`` boundary, including nonbreaking and em spaces; it does
+not establish additional solver syntax. For unquoted heads, the checker removes only
+internal ASCII spaces and tabs before case-insensitive significant-prefix matching.
+Other internal head whitespace fails closed when restricted rather than assuming
+the solver ignores it. A matching pair of single or double quotes around a whole head
+is removed for classification only. Quoted heads containing whitespace or further
+quotes, and malformed or mixed head quotes, fail closed in restricted mode.
+Unicode in ordinary arguments or filename data is not generically banned.
+The significant first four label characters match, including ``/INP`` and trailing
+ignored spelling for ``/INPUT``. Shorter guessed abbreviations are not aliases.
+Allowed dispatch text is unchanged apart from the batch tool's existing outer trimming.
+
+The server checks every physical line and ``$`` command chain before dispatch. Unquoted
+``!`` comments end the physical line, including later dollar-separated text. Restricted
+mode rejects a physical line if its executable text contains a quote and the line uses
+a dollar or comment delimiter, even if the quotes match or enclose a command head.
+Quotes inside an actual comment are ignored. Delimiter-free quoted arguments remain
+allowed. Whole-head quote recognition does not grant argument quote or escape protection.
+MAPDL quote and delimiter behavior varies by command and form; this filter can reject
+benign delimiter-bearing text. It is not a complete solver parser.
+
+Single commands include their effective header and comment. Batches check all normalized
+entries and metadata before sending any header or allowed entry. Screenshot commands are
+checked before view changes, temporary files, capture, or restoration. A denied request
+does not change the solver through these tools.
+
+With any family blocked, headers reject line breaks, ``$``, and unsafe controls.
+Comments still support separate physical lines but reject ``$`` and unsafe controls.
+The interpolated ``resume_model.file_name`` and ``open_results.file_name`` reject
+command separators, comma fields, comment delimiters, line breaks, and unsafe controls
+before RESUME, CDREAD, or POST1. Ordinary paths are not whitelisted or scanned.
+These extra boundary checks do not apply when APDL is unrestricted.
+
+Allowed batch execution still uses PyMAPDL's internal temporary input-file transport.
+Binary databases and CDB restoration remain available. The server does not inspect
+macro or CDB contents, follow nested input files, or interpret generated command names.
+A submitted batch error reports attempts because some commands may not have executed.
+
+.. warning::
+   Arbitrary Python, including ``run_python_code`` and ``custom_plot``, can bypass this
+   direct text filter. Use ``--disable-python`` when relying on APDL restrictions.
+   Restrictions add no HTTP authentication, filesystem isolation, or solver sandbox.
+
+Disabling arbitrary Python
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Python is enabled by default. To disable both code execution and custom plotting, start
+the server with ``--disable-python``:
+
+.. code-block:: bash
+
+   python -m ansys.mapdl.mcp --disable-python
+
+The server does not construct or start a persistent Python subprocess. Both
+``run_python_code`` and ``custom_plot`` are hidden and reject direct calls before
+connection bootstrap or code execution. Connect, launch, disconnect, reconnect, and
+startup connections preserve this policy. Native ``screenshot`` remains usable where
+the deployment permits it. AALI retains its separate visualization restrictions.
+
+This option is independent of ``--apdl-log-dir`` and ``--block-apdl-command``.
+Operators can combine all three. Disabling Python does not block internal Python used
+by the server, inspect nested APDL files, or create a solver or OS sandbox.
+
+
+Native command logs
+~~~~~~~~~~~~~~~~~~~
+
+Logging is off by default. Start the server with an operator-owned directory to enable it:
+
+.. code-block:: bash
+
+   python -m ansys.mapdl.mcp --apdl-log-dir /private/mapdl-logs
+
+Each server run has its own directory. Each managed main connection and persistent
+Python connection writes a separate exclusively created native PyMAPDL log file.
+Both ``run_python_code`` and ``custom_plot`` use the managed Python connection.
+A requested logging attachment failure is an error, not a silent fallback to logging off.
+
+``list_command_logs(offset=0, limit=50)`` returns a JSON object with ``success``,
+``enabled``, ``logs``, and ``next_offset``. Each entry has an opaque ``log_id`` and
+``source``, either ``main`` or ``python``. The offset is a nonnegative integer catalogue index.
+The limit is an integer between 1 and 100. ``next_offset`` is null at the end of the catalogue.
+An offset equal to the catalogue size returns an empty final page. A larger offset returns
+``success=false`` with an ``error`` string. When logging is off, ``enabled`` is false and
+``logs`` is empty.
+
+``read_command_log(log_id, offset=0, max_bytes=65536)`` accepts only a returned ID,
+not a filesystem path. Its JSON result has ``success``, ``log_id``, ``source``,
+``data_base64``, ``size_bytes``, and ``next_offset``. Decode ``data_base64`` to obtain
+the exact bytes. The offset is a nonnegative integer byte position and ``max_bytes`` is an
+integer between 1 and 65536. The next offset follows the returned bytes, including at the current end.
+Read again at that offset to see later growth. A byte page can split an encoded character.
+Unknown IDs, missing files, read failures, and invalid ranges return ``success=false``
+with an ``error`` string.
+For both tools, booleans, numeric strings, and floating-point values fail MCP argument
+validation before retrieval. Only the retrieval arguments use this strict integer rule.
+
+Both tools remain available after disconnect. They read a bounded on-disk prefix without
+flushing or executing work in Python. Logs record partial, mutable command attempts,
+not execution receipts or every solver-executed command. Native logging can be suppressed
+by arbitrary Python. Referenced input files, macros, and independently created clients
+are not an exhaustive command history. No order across the main and Python streams is claimed.
+
+Files stay on the MCP host after disconnect and shutdown. ``download_file`` accesses
+MAPDL-host files, not these client-local logs. The operator manages retention and disk
+quota. Files and catalogue metadata grow until operator cleanup. The server does not
+delete or rotate evidence. Process termination can leave an unflushed suffix.
+
+.. warning::
+   Logs can contain sensitive model data and paths. HTTP clients share this application's
+   catalogue. Logging adds no authentication, per-user privacy, or solver sandbox.
 
 Custom Python code execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
