@@ -21,6 +21,8 @@ from typing import TYPE_CHECKING, Any
 from ansys.common.mcp.helpers import logger
 from fastmcp.server import Context
 
+from ansys.mapdl.mcp import app
+
 if TYPE_CHECKING:
     from ansys.mapdl.core import Mapdl  # pyright: ignore[reportMissingTypeStubs]
 
@@ -357,6 +359,13 @@ def get_info(mapdl: "Mapdl") -> dict[str, str | dict[str, Any]]:
     return info
 
 
+def is_python_enabled(ctx: Context | None) -> bool:
+    """Return the server's Python policy, or the app setting outside a request."""
+    if ctx is not None and ctx.request_context is not None:
+        return bool(ctx.request_context.lifespan_context.python_enabled)
+    return app._need_python
+
+
 def connect_to_mapdl_in_persistent_python(
     ctx: Context,
 ) -> Any:
@@ -378,7 +387,10 @@ def connect_to_mapdl_in_persistent_python(
     """
     if ctx.request_context is None:
         return "No request context available."
-    session = ctx.request_context.lifespan_context.python_session
+    context = ctx.request_context.lifespan_context
+    if not context.python_enabled:
+        return "Python execution is disabled by the operator."
+    session = context.python_session
 
     if session is None:
         return "No Python session available. The persistent Python session was not initialized."

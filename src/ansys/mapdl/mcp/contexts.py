@@ -26,8 +26,11 @@ MAPDL simulations.
 
 from typing import Literal
 
+from fastmcp.server import Context
+
 # Import the mcp instance from mcp.py
 from ansys.mapdl.mcp import app
+from ansys.mapdl.mcp.helpers import is_python_enabled
 
 GuidelinesContent = Literal[
     "workflow",
@@ -480,9 +483,9 @@ mapdl.solve()
 """
 
 
-def get_guidelines_for_postprocessing_phase() -> str:
+def get_guidelines_for_postprocessing_phase(python_enabled: bool = True) -> str:
     """Get postprocessing phase guidelines for MAPDL analysis."""
-    return """# Postprocessing Phase
+    guidelines = """# Postprocessing Phase
 
 ## Section Comment Requirement
 
@@ -550,7 +553,9 @@ Use the normal MAPDL session for:
    - `show_plot_on_popup`: set to `True` to also open the captured image in an
      external popup window
 
-#### When to Use Persistent Python Session
+"""
+    if python_enabled:
+        guidelines += """#### When to Use Persistent Python Session
 
 Use the persistent Python session with `run_python_code ` or `custom_plot` tool ONLY for:
 
@@ -595,7 +600,8 @@ If using the persistent Python session for postprocessing, follow these guidelin
 - **USE** `mapdl.post_processing` methods
 - These methods work with the `screenshot`` tool to capture plots
 
-### Plot Types Available in MAPDL
+"""
+    guidelines += """### Plot Types Available in MAPDL
 
 1. **Contour Plots** (Preferred)
    - Show result distribution across model
@@ -617,7 +623,9 @@ If using the persistent Python session for postprocessing, follow these guidelin
 
 If you want to use `*GET` commands to extract specific results, use `mapdl.get_value()` instead and explain what each command does.
 
-### NumPy and Matplotlib Integration (Custom Plots Only)
+"""
+    if python_enabled:
+        guidelines += """### NumPy and Matplotlib Integration (Custom Plots Only)
 
 **NOTE: Use NumPy and Matplotlib ONLY when MAPDL native plots don't meet your needs. These require the persistent Python session.**
 
@@ -652,7 +660,8 @@ When you need custom plots not available in MAPDL, use the `run_python_code ` or
    print(result)
    ```
 
-## Example Postprocessing Workflow
+"""
+    guidelines += """## Example Postprocessing Workflow
 
 ```python
 # Enter postprocessor
@@ -681,6 +690,7 @@ mapdl.plot_element_solution("SEQV")
 - Document key results and findings
 - Create clear, labeled visualizations
 """
+    return guidelines
 
 
 def get_guidelines_for_general_rules() -> str:
@@ -779,7 +789,7 @@ _CONTENT_MAP = {
 
 
 @app.tool()
-def get_guidelines_for(content: GuidelinesContent) -> str:
+def get_guidelines_for(content: GuidelinesContent, ctx: Context | None = None) -> str:
     """Get MAPDL simulation guidelines for a specific topic.
 
     Use this tool before writing any PyMAPDL or MAPDL code to retrieve the
@@ -810,10 +820,15 @@ def get_guidelines_for(content: GuidelinesContent) -> str:
           POST26, plot methods, data extraction.
         - ``"general"``: General rules and best practices: accuracy
           factors, verification steps, code quality.
+    ctx : Context, optional
+        MCP context injected by FastMCP. Python-session guidance is omitted when
+        Python execution is disabled.
 
     Returns
     -------
     str
         Guideline text for the requested topic.
     """
+    if content == "postprocessing":
+        return get_guidelines_for_postprocessing_phase(is_python_enabled(ctx))
     return _CONTENT_MAP[content]()

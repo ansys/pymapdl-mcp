@@ -2642,7 +2642,7 @@ class TestScreenshot:
 
     @pytest.mark.asyncio
     async def test_connect_to_mapdl_enables_requires_mapdl_tools(self, mock_context_no_mapdl):
-        """Successful connect_to_mapdl should call ctx.enable_components for requires_mapdl tag."""
+        """Test that successful connect_to_mapdl enables requires_mapdl."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
         mock_mapdl._ip = "localhost"
@@ -2650,18 +2650,18 @@ class TestScreenshot:
 
         with patch("ansys.mapdl.core.Mapdl", return_value=mock_mapdl):
             await connect_to_mapdl(mock_context_no_mapdl)
-            mock_context_no_mapdl.enable_components.assert_called_once_with(tags={"requires_mapdl"})
+            mock_context_no_mapdl.fastmcp.enable.assert_called_once_with(tags={"requires_mapdl"})
 
     @pytest.mark.asyncio
     async def test_connect_to_mapdl_does_not_enable_on_failure(self, mock_context_no_mapdl):
-        """Failed connect_to_mapdl should not call ctx.enable_components."""
+        """Failed connect_to_mapdl should not enable MAPDL tools."""
         with patch("ansys.mapdl.core.Mapdl", side_effect=Exception("Connection refused")):
             await connect_to_mapdl(mock_context_no_mapdl)
-            mock_context_no_mapdl.enable_components.assert_not_called()
+            mock_context_no_mapdl.fastmcp.enable.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_launch_mapdl_session_enables_requires_mapdl_tools(self, mock_context_no_mapdl):
-        """Successful launch_mapdl_session should call ctx.enable_components for requires_mapdl."""
+        """Successful launch_mapdl_session should enable requires_mapdl."""
         mock_mapdl = MagicMock()
         mock_mapdl.version = "2024 R2"
         mock_mapdl.ip = "127.0.0.1"
@@ -2670,23 +2670,23 @@ class TestScreenshot:
 
         with patch("ansys.mapdl.core.launch_mapdl", return_value=mock_mapdl):
             await launch_mapdl_session(ctx=mock_context_no_mapdl)
-            mock_context_no_mapdl.enable_components.assert_called_once_with(tags={"requires_mapdl"})
+            mock_context_no_mapdl.fastmcp.enable.assert_called_once_with(tags={"requires_mapdl"})
 
     @pytest.mark.asyncio
     async def test_launch_mapdl_session_does_not_enable_on_failure(self, mock_context_no_mapdl):
-        """Failed launch_mapdl_session should not call ctx.enable_components."""
+        """Failed launch_mapdl_session should not enable MAPDL tools."""
         with patch("ansys.mapdl.core.launch_mapdl", side_effect=Exception("Launch failed")):
             await launch_mapdl_session(ctx=mock_context_no_mapdl)
-            mock_context_no_mapdl.enable_components.assert_not_called()
+            mock_context_no_mapdl.fastmcp.enable.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_disconnect_from_mapdl_disables_requires_mapdl_tools(self, mock_context):
-        """Successful disconnect_from_mapdl should call ctx.disable_components."""
+        """Successful disconnect_from_mapdl should disable requires_mapdl."""
         mock_context.request_context.lifespan_context.mapdl._ip = "localhost"
         mock_context.request_context.lifespan_context.mapdl._port = 50052
 
         await disconnect_from_mapdl(mock_context)
-        mock_context.disable_components.assert_called_once_with(tags={"requires_mapdl"})
+        mock_context.fastmcp.disable.assert_called_once_with(tags={"requires_mapdl"})
 
     @pytest.mark.asyncio
     async def test_disconnect_from_mapdl_no_connection_does_not_disable(
@@ -2694,7 +2694,7 @@ class TestScreenshot:
     ):
         """disconnect_from_mapdl with no connection should not change visibility."""
         await disconnect_from_mapdl(mock_context_no_mapdl)
-        mock_context_no_mapdl.disable_components.assert_not_called()
+        mock_context_no_mapdl.fastmcp.disable.assert_not_called()
 
     def test_requires_mapdl_tag_present_on_correct_tools(self):
         """Tools that need MAPDL should have the requires_mapdl tag."""
