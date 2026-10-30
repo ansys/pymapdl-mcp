@@ -1,0 +1,390 @@
+
+
+
+
+
+
+The ``contexts.py`` module
+==========================
+
+.. py:module:: ansys.mapdl.mcp.contexts
+
+
+Summary
+-------
+
+
+
+
+
+
+
+
+.. py:currentmodule:: contexts
+.. tab-set::
+
+
+
+
+
+
+
+    .. tab-item:: Functions
+
+        .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+
+          * - :py:obj:`~get_guidelines_for_workflow_overview`
+            - Get general MAPDL simulation workflow guidelines.
+
+
+          * - :py:obj:`~get_guidelines_for_preprocessing_geometry`
+            - Get geometry and meshing guidelines for MAPDL preprocessing.
+
+
+          * - :py:obj:`~get_guidelines_for_preprocessing_elements`
+            - Get element type selection and definition guidelines.
+
+
+          * - :py:obj:`~get_guidelines_for_preprocessing_materials`
+            - Get material model definition guidelines.
+
+
+          * - :py:obj:`~get_guidelines_for_preprocessing_mesh`
+            - Get mesh generation guidelines.
+
+
+          * - :py:obj:`~get_guidelines_for_preprocessing_boundary_conditions`
+            - Get boundary conditions and loads application guidelines.
+
+
+          * - :py:obj:`~get_guidelines_for_solution_phase`
+            - Get solution phase guidelines for MAPDL analysis.
+
+
+          * - :py:obj:`~get_guidelines_for_postprocessing_phase`
+            - Get postprocessing phase guidelines for MAPDL analysis.
+
+
+          * - :py:obj:`~get_guidelines_for_general_rules`
+            - Get general rules and best practices for MAPDL workflows.
+
+
+          * - :py:obj:`~get_guidelines_for`
+            - Get MAPDL simulation guidelines for a specific topic.
+
+
+
+    .. tab-item:: Attributes
+
+        .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+
+          * - :py:obj:`~GuidelinesContent`
+            - 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Description
+-----------
+
+Context tools for PyMAPDL MCP Server.
+
+This module defines MCP tools that provide context and guidance for
+PyMAPDL and Ansys MAPDL workflows. These tools return context information
+that can be accessed by the LLM to get help with various aspects of
+MAPDL simulations.
+
+..
+    !! processed by numpydoc !!
+
+
+
+
+
+
+Module detail
+-------------
+
+.. py:function:: get_guidelines_for_workflow_overview() -> str
+
+   
+   Get general MAPDL simulation workflow guidelines.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_guidelines_for_preprocessing_geometry() -> str
+
+   
+   Get geometry and meshing guidelines for MAPDL preprocessing.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_guidelines_for_preprocessing_elements() -> str
+
+   
+   Get element type selection and definition guidelines.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_guidelines_for_preprocessing_materials() -> str
+
+   
+   Get material model definition guidelines.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_guidelines_for_preprocessing_mesh() -> str
+
+   
+   Get mesh generation guidelines.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_guidelines_for_preprocessing_boundary_conditions() -> str
+
+   
+   Get boundary conditions and loads application guidelines.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_guidelines_for_solution_phase() -> str
+
+   
+   Get solution phase guidelines for MAPDL analysis.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_guidelines_for_postprocessing_phase() -> str
+
+   
+   Get postprocessing phase guidelines for MAPDL analysis.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_guidelines_for_general_rules() -> str
+
+   
+   Get general rules and best practices for MAPDL workflows.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_guidelines_for(content: GuidelinesContent) -> str
+
+   
+   Get MAPDL simulation guidelines for a specific topic.
+
+   Use this tool before writing any PyMAPDL or MAPDL code to retrieve the
+   relevant guidelines for the workflow step you are about to implement.
+   Call it once per topic needed; it is strongly recommended before every
+   code-generation task.
+
+   :Parameters:
+
+       **content** : :class:`python:str`
+           The guideline topic to retrieve. One of:
+           
+           - ``"workflow"``: Complete simulation workflow overview
+             (preprocessing → solution → postprocessing).
+           - ``"geometry"``: Geometry creation: 2D/3D defaults, primitive
+             shapes, meshing requirement.
+           - ``"elements"``: Element type selection: SOLID186, SHELL181,
+             BEAM189, PLANE183, thermal and contact elements.
+           - ``"materials"``: Material property definition: elastic,
+             plastic, thermal, damping; default steel/aluminum values.
+           - ``"mesh"``: Mesh generation: sizing, quality, VMESH/
+             AMESH commands, smart sizing.
+           - ``"boundary_conditions"``: Boundary conditions and loads: fixed/pinned
+             supports, forces, pressures, beam element constraints.
+           - ``"solution"``: Solution configuration: analysis type
+             (STATIC, MODAL, TRANSIENT, HARMONIC), solver options, SOLVE.
+           - ``"postprocessing"``: Results extraction and visualization: POST1/
+             POST26, plot methods, data extraction.
+           - ``"general"``: General rules and best practices: accuracy
+             factors, verification steps, code quality.
+
+
+
+   :Returns:
+
+       :class:`python:str`
+           Guideline text for the requested topic.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:data:: GuidelinesContent
+
+
+
