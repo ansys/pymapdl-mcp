@@ -948,9 +948,10 @@ class TestRunMultipleCommands:
 
         result = run_multiple_mapdl_commands(mock_context, commands)
 
-        assert "Error executing commands" in result.content[0].text
+        assert "Attempted a batch of 3 commands" in result.content[0].text
         assert "Invalid command syntax" in result.content[0].text
-        assert "Commands that were attempted:" in result.content[0].text
+        assert "Some commands may not have executed." in result.content[0].text
+        assert "Commands attempted:" in result.content[0].text
         assert "/PREP7" in result.content[0].text
         assert "INVALID_COMMAND" in result.content[0].text
         assert "ET,1,SOLID185" in result.content[0].text
