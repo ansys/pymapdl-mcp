@@ -141,3 +141,26 @@ def test_launcher_does_not_disable_requires_mapdl_when_connect_on_startup():
         tag for c in mock_disable.call_args_list for tag in (c.kwargs.get("tags") or set())
     }
     assert "requires_mapdl" not in disabled_tags
+
+
+@pytest.mark.unit
+def test_repeatable_apdl_block_options_reach_flat_context(monkeypatch):
+    from ansys.mapdl.mcp.server import logger
+
+    warnings = []
+    monkeypatch.setattr(logger, "warning", warnings.append)
+    with patch.object(asyncio, "run"):
+        launcher(["--block-apdl-command", "/SYS", "--block-apdl-command", "/INPUT"])
+    server = PyMAPDLMCP()
+    server._cli_config = dict(app._cli_config)
+    context = server.create_context()
+    assert context.blocked_commands == frozenset({"/SYS", "/INPUT"})
+    assert len(warnings) == 1
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("command", ["/INP", "/sys", "/SY", "FINISH"])
+def test_apdl_block_cli_rejects_noncanonical_choices(command):
+    with pytest.raises(SystemExit) as error:
+        launcher(["--block-apdl-command", command])
+    assert error.value.code == 2
