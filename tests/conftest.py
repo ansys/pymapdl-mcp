@@ -22,7 +22,11 @@ from unittest.mock import AsyncMock, MagicMock
 from mcp.server.session import ServerSession
 import pytest
 
-from ansys.mapdl.mcp.server import PyMAPDLAppContext
+from ansys.mapdl.mcp.server import PyMAPDLAppContext, app
+from ansys.mapdl.mcp.tools import REQUIRES_MAPDL_TAG
+
+# Every tag ``launcher()`` may disable on the module-level ``app`` singleton.
+_LAUNCHER_TOGGLED_TAGS = {REQUIRES_MAPDL_TAG, "locked_connection", "aali"}
 
 
 @pytest.fixture
@@ -101,6 +105,21 @@ def mock_mapdl():
     mapdl.get_value = MagicMock(side_effect=_get_value_side_effect)
 
     return mapdl
+
+
+@pytest.fixture(autouse=True)
+def _reset_app_visibility():
+    """Restore the global ``app`` tag visibility before and after each test.
+
+    ``app`` is a module-level singleton that ``launcher()`` mutates through
+    ``app.disable(...)`` (for example ``test_main.py`` runs it with
+    ``--connect-on-startup``, which hides ``locked_connection`` tools and never
+    restores them). Re-enabling every launcher-toggled tag keeps tests
+    independent of execution order.
+    """
+    app.enable(tags=_LAUNCHER_TOGGLED_TAGS)
+    yield
+    app.enable(tags=_LAUNCHER_TOGGLED_TAGS)
 
 
 @pytest.fixture
