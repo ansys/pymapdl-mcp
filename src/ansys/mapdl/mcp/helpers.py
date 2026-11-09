@@ -369,7 +369,22 @@ def is_python_enabled(ctx: Context | None) -> bool:
 
 
 def connect_to_mapdl_in_persistent_python(ctx: Context) -> Any:
-    """Ensure a confirmed child connection for the current main client and process."""
+    """Connect to the MAPDL instance in the persistent Python session.
+
+    This function connects to the MAPDL instance from within the persistent Python session.
+    It assumes that the persistent session has already been created. An existing connection
+    is reused only if it belongs to the current main MAPDL client and Python process.
+
+    Parameters
+    ----------
+    ctx : Context
+        The MCP context containing server session and application context.
+
+    Returns
+    -------
+    Mapdl or str
+        The connected MAPDL instance on success, or an error message on failure.
+    """
     if ctx.request_context is None:
         return "No request context available."
     context = ctx.request_context.lifespan_context
