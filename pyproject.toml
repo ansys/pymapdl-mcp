@@ -47,7 +47,7 @@ dependencies = [
 tests = [
     "ansys-common-mcp==0.3.6",
     "ansys-mapdl-core==0.74.1",
-    "pytest-asyncio==1.4.1",
+    "pytest-asyncio==1.4.1.post1",
     "pytest-cov==7.1.0",
     "pytest-mock==3.17.0",
     "pytest==9.2.0"
