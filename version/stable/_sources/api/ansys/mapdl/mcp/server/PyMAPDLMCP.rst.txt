@@ -1,0 +1,154 @@
+
+
+
+
+
+
+:class:`PyMAPDLMCP`
+===================
+
+
+.. py:class:: ansys.mapdl.mcp.server.PyMAPDLMCP(name: str = 'PyMAPDL MCP Server', *args, **kwargs)
+
+   Bases: :py:obj:`ansys.common.mcp.PyAnsysBaseMCP`
+
+
+   
+   FastMCP server for managing MAPDL instances.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+.. py:currentmodule:: PyMAPDLMCP
+
+Overview
+--------
+
+.. tab-set::
+
+
+
+   .. tab-item:: Methods
+
+      .. list-table::
+          :header-rows: 0
+          :widths: auto
+
+          * - :py:attr:`~create_context`
+            - Create a new application context.
+          * - :py:attr:`~product_startup`
+            - Allow PyMAPDL-MCP specific startup actions.
+          * - :py:attr:`~product_cleanup`
+            - Perform cleanup actions for MAPDL instances on shutdown.
+
+
+
+
+
+
+
+
+Import detail
+-------------
+
+.. code-block:: python
+
+    from ansys.mapdl.mcp.server import PyMAPDLMCP
+
+
+
+Method detail
+-------------
+
+.. py:method:: create_context() -> PyMAPDLAppContext
+
+   
+   Create a new application context.
+
+
+
+
+
+   :Returns:
+
+       :obj:`PyMAPDLAppContext`
+           The application context for managing MAPDL instances.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:method:: product_startup()
+
+   
+   Allow PyMAPDL-MCP specific startup actions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:method:: product_cleanup()
+
+   
+   Perform cleanup actions for MAPDL instances on shutdown.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+
+

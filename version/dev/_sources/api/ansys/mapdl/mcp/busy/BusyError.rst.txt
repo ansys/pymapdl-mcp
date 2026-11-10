@@ -1,0 +1,49 @@
+
+
+
+
+
+
+:class:`BusyError`
+==================
+
+
+.. py:exception:: ansys.mapdl.mcp.busy.BusyError(*args: object, log_level: int = logging.ERROR)
+
+   Bases: :py:obj:`fastmcp.exceptions.ToolError`
+
+
+   
+   Raised when MAPDL is busy running another tool and cannot accept more calls.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+
+Import detail
+-------------
+
+.. code-block:: python
+
+    from ansys.mapdl.mcp.busy import BusyError
+
+
+
+
+
