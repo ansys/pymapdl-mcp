@@ -8,5 +8,6 @@
 
 * [Camille Latapie](https://github.com/clatapie)
 * [Kathy Pippert](https://github.com/PipKat)
+* [Mathis Millot](https://github.com/MathisMillot)
 * [Roberto Pastor Muela](https://github.com/RobPasMue)
 * [Tushar Bana](https://github.com/tusharbana-ansys)

@@ -1,4 +1,4 @@
-# Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
+# Copyright (C) 2025 - 2026 Synopsys, Inc. and ANSYS, Inc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 #
@@ -51,9 +51,14 @@ from fastmcp.tools.base import ToolResult
 # The import happens during server startup, before STDIO transport is active
 from ansys.mapdl.mcp import app
 from ansys.mapdl.mcp.busy import check_not_busy, exclusive, exclusive_sync, run_exclusive
-from ansys.mapdl.mcp.helpers import connect_to_mapdl_in_persistent_python, logger
+from ansys.mapdl.mcp.helpers import (
+    connect_to_mapdl_in_persistent_python,
+    is_python_enabled,
+    logger,
+)
 from ansys.mapdl.mcp.server import PyMAPDLAppContext
-from mcp.types import ImageContent, TextContent
+from mcp.types import ImageContent, TextContent, ToolListChangedNotification
+
 
 try:
     import pyvista  # noqa: F401  # Check if PyVista is available
@@ -263,6 +268,32 @@ def _capture_screenshot(
 # These tools are disabled at startup (before MAPDL is connected) and enabled
 # once a connection is established via connect_to_mapdl or launch_mapdl_session.
 REQUIRES_MAPDL_TAG = "requires_mapdl"
+
+
+async def _refresh_mapdl_tool_visibility(ctx: Context) -> None:
+    """Toggle MAPDL tools server-wide, then reapply the fixed tool restrictions.
+
+    Visibility is server-wide on purpose: the MAPDL connection lives in the lifespan
+    context, which every client shares. Session-scoped rules would also override the
+    server-level restrictions and are unavailable on sessionless HTTP requests.
+    Later rules win, so the ``aali``, ``locked_connection``, and ``python_execution``
+    restrictions are reapplied after every toggle and are never re-enabled.
+    """
+    if ctx.request_context is None:
+        return
+    lifespan_context = ctx.request_context.lifespan_context
+    mapdl = lifespan_context.mapdl
+    if mapdl is None or _is_mapdl_crashed(mapdl):
+        ctx.fastmcp.disable(tags={REQUIRES_MAPDL_TAG})
+    else:
+        ctx.fastmcp.enable(tags={REQUIRES_MAPDL_TAG})
+    if getattr(ctx.fastmcp, "_cli_config", {}).get("on_aali"):
+        ctx.fastmcp.disable(tags={"aali"})
+    if lifespan_context.connect_on_startup:
+        ctx.fastmcp.disable(tags={"locked_connection"})
+    if not lifespan_context.python_enabled:
+        ctx.fastmcp.disable(tags={"python_execution"})
+    await ctx.send_notification(ToolListChangedNotification())
 
 
 # Access type-safe lifespan context in tools
@@ -605,7 +636,7 @@ async def launch_mapdl_session(
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
 
-        await ctx.enable_components(tags={REQUIRES_MAPDL_TAG})
+        await _refresh_mapdl_tool_visibility(ctx)
         logger.info(f"MAPDL launched successfully at {mapdl.ip}:{mapdl.port}!")
         return _text_result(
             f"Successfully launched MAPDL at {mapdl.ip}:{mapdl.port}\n"
@@ -680,7 +711,7 @@ async def connect_to_mapdl(ctx: Context, port: int = 50052, ip: str = "localhost
         # Store in context for later use
         ctx.request_context.lifespan_context.mapdl = mapdl
 
-        await ctx.enable_components(tags={REQUIRES_MAPDL_TAG})
+        await _refresh_mapdl_tool_visibility(ctx)
         logger.info(f"Connected to MAPDL successfully at {ip}:{port}!")
         return _text_result(
             f"Successfully connected to MAPDL at {ip}:{port}\nMAPDL Version: {mapdl.version}\n"
@@ -731,7 +762,7 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
             # Clear from context
             ctx.request_context.lifespan_context.mapdl = None
 
-            await ctx.disable_components(tags={REQUIRES_MAPDL_TAG})
+            await _refresh_mapdl_tool_visibility(ctx)
             logger.info("Disconnected successfully!")
             return _text_result(f"Successfully disconnected from MAPDL at {ip}:{port}")
 
@@ -740,6 +771,7 @@ async def disconnect_from_mapdl(ctx: Context) -> ToolResult:
             logger.error(error_msg)
             # Still clear the reference even if disconnect failed
             ctx.request_context.lifespan_context.mapdl = None
+            await _refresh_mapdl_tool_visibility(ctx)
             return _text_result(error_msg)
 
 
@@ -808,9 +840,6 @@ def screenshot(
     - Geometry: ``APLOT``, ``LPLOT``, ``KPLOT``, ``VPLOT``
     - Mesh: ``EPLOT``, ``NPLOT``
     - Post-processing: ``PLNSOL``, ``PLESOL``, ``PLDISP``
-
-    For custom matplotlib or PyVista plots, use the :func:`custom_plot` tool
-    instead.
 
     Parameters
     ----------
@@ -951,9 +980,17 @@ async def run_python_code(
                 {"success": False, "error": "No request context available."}, ensure_ascii=False
             )
         )
-    if ctx.request_context is None:
-        ctx = cast(Context, _TaskContext(ctx, app_context))
-    session = app_context.python_session
+    if not ctx.request_context.lifespan_context.python_enabled:
+        return _text_result(
+            json.dumps(
+                {
+                    "success": False,
+                    "error": "Python execution is disabled by the operator.",
+                },
+                ensure_ascii=False,
+            )
+        )
+    session = ctx.request_context.lifespan_context.python_session
 
     if session is None:
         return _text_result(
@@ -996,7 +1033,7 @@ async def run_python_code(
     return _text_result(result)
 
 
-@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization"})
+@app.tool(tags={"aali", REQUIRES_MAPDL_TAG, "visualization", "python_execution"})
 def custom_plot(
     ctx: Context,
     plot_code: str,
@@ -1071,6 +1108,8 @@ def custom_plot(
     """
     if ctx.request_context is None:
         return _text_result("No request context available.")
+    if not ctx.request_context.lifespan_context.python_enabled:
+        return _text_result("Python execution is disabled by the operator.")
     session = ctx.request_context.lifespan_context.python_session
 
     if session is None:
@@ -1434,7 +1473,7 @@ def mapdl_db_path() -> str:
 
 
 @app.resource("toolsets://definition")
-def list_tool_sets() -> list[dict]:
+def list_tool_sets(ctx: Context) -> list[dict]:
     """Tool set definition resource that lists available tool sets for PyMAPDL MCP.
 
     Returns
@@ -1449,7 +1488,7 @@ def list_tool_sets() -> list[dict]:
 
     Examples
     --------
-    >>> list_tool_sets()
+    >>> list_tool_sets(ctx)
     [
         {
             "name": "session_management",
@@ -1474,7 +1513,8 @@ def list_tool_sets() -> list[dict]:
     ]
 
     """
-    return [
+    python_enabled = is_python_enabled(ctx)
+    tool_sets = [
         {
             "name": "session_management",
             "description": "Tools for managing MAPDL session connections and instances",
@@ -1502,14 +1542,19 @@ def list_tool_sets() -> list[dict]:
                 "Use these tools to execute MAPDL commands and scripts. "
                 "Use run_mapdl_command for single commands with optional comments and headers. "
                 "Use run_multiple_mapdl_commands for batch execution of multiple commands, which "
-                "is optimized for performance. Alternatively, use run_python_code to execute "
-                "MAPDL commands via PyMAPDL for more complex scripting scenarios. Always ensure "
-                "a MAPDL connection is active before executing commands."
+                "is optimized for performance. "
+                + (
+                    "Alternatively, use run_python_code to execute MAPDL commands via PyMAPDL "
+                    "for more complex scripting scenarios. "
+                    if python_enabled
+                    else ""
+                )
+                + "Always ensure a MAPDL connection is active before executing commands."
             ),
             "tools": [
                 "run_mapdl_command",
                 "run_multiple_mapdl_commands",
-                "run_python_code",
+                *(["run_python_code"] if python_enabled else []),
             ],
         },
         {
@@ -1519,13 +1564,17 @@ def list_tool_sets() -> list[dict]:
                 "Use these tools for visualization and post-processing of MAPDL results. "
                 "Use screenshot to capture MAPDL native plots (``APLOT``, ``EPLOT``, "
                 "``PLNSOL``, etc.). "
-                "Use custom_plot to create custom matplotlib or PyVista visualizations for "
-                "custom analysis. For visualization workflows, use custom_plot rather than "
-                "run_python_code."
+                + (
+                    "Use custom_plot to create custom matplotlib or PyVista visualizations for "
+                    "custom analysis. For visualization workflows, use custom_plot rather than "
+                    "run_python_code."
+                    if python_enabled
+                    else ""
+                )
             ),
             "tools": [
                 "screenshot",
-                "custom_plot",
+                *(["custom_plot"] if python_enabled else []),
             ],
         },
         {
@@ -1538,6 +1587,7 @@ def list_tool_sets() -> list[dict]:
             ),
             "tools": [
                 "run_python_code",
+                "custom_plot",
             ],
         },
         {
@@ -1565,4 +1615,9 @@ def list_tool_sets() -> list[dict]:
                 "open_results",
             ],
         },
+    ]
+    return [
+        tool_set
+        for tool_set in tool_sets
+        if python_enabled or tool_set["name"] != "python_execution"
     ]

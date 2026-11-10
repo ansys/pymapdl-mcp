@@ -1,4 +1,4 @@
-# Copyright (C) 2025 - 2026 ANSYS, Inc. and/or its affiliates.
+# Copyright (C) 2025 - 2026 Synopsys, Inc. and ANSYS, Inc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 #
@@ -345,8 +345,9 @@ class TestLaunchMapdlIntegration:
         context = MagicMock()
         context.request_context = MagicMock()
         context.request_context.lifespan_context = PyMAPDLAppContext(mapdl=None)
-        context.enable_components = AsyncMock()
-        context.disable_components = AsyncMock()
+        context.fastmcp = MagicMock()
+        context.fastmcp._cli_config = {}
+        context.send_notification = AsyncMock()
 
         return context
 
