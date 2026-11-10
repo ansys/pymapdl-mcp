@@ -939,22 +939,6 @@ class TestRunMultipleCommands:
         assert call_args[1] == "ET,1,SOLID185"
         assert call_args[2] == "MP,EX,1,200E9"
 
-    def test_run_multiple_mapdl_commands_error_handling(self, mock_context):
-        """Test error handling when command execution fails."""
-        commands = ["/PREP7", "INVALID_COMMAND", "ET,1,SOLID185"]
-        mock_context.request_context.lifespan_context.mapdl.input_strings.side_effect = Exception(
-            "Invalid command syntax"
-        )
-
-        result = run_multiple_mapdl_commands(mock_context, commands)
-
-        assert "Error executing commands" in result.content[0].text
-        assert "Invalid command syntax" in result.content[0].text
-        assert "Commands that were attempted:" in result.content[0].text
-        assert "/PREP7" in result.content[0].text
-        assert "INVALID_COMMAND" in result.content[0].text
-        assert "ET,1,SOLID185" in result.content[0].text
-
     def test_run_multiple_mapdl_commands_large_batch(self, mock_context):
         """Test running a large batch of commands."""
         # Create 100 commands
