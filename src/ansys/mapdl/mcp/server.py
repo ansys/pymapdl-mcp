@@ -26,6 +26,7 @@ from ansys.common.mcp import (
 )
 from ansys.common.mcp.context import PyAnsysBaseAppContext
 from ansys.common.mcp.helpers import PersistentPythonSession, logger
+from fastmcp_tasks import TasksExtension
 
 
 @dataclass
@@ -86,6 +87,7 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
 
     def __init__(self, name: str = "PyMAPDL MCP Server", *args, **kwargs):
         super().__init__(name=name, *args, **kwargs)
+        self.add_extension(TasksExtension())
         if not self._need_python:
             self.disable_python()
 

@@ -96,6 +96,20 @@ These sets are exposed through the ``toolsets://definition`` resource.
 The ``toolsets://definition`` resource reflects the server's Python policy. When Python is
 disabled, the resource omits the ``python_execution`` tool set and Python-specific guidance.
 
+Long-running operations
+-----------------------
+
+``run_mapdl_command``, ``run_multiple_mapdl_commands``, ``run_python_code``, ``upload_file`` and
+``download_file`` are declared as `FastMCP background tasks
+<https://gofastmcp.com/servers/tasks>`_ (MCP tasks extension). A client that supports background
+tasks starts the call, receives a task ID immediately, and polls the task until the result is
+ready, so long operations such as ``SOLVE`` do not hit client timeouts. Clients without task
+support (or using the legacy protocol) call these tools synchronously, as before.
+
+MAPDL cannot execute commands in parallel, so while one of these tools is running, any other tool
+using the same MAPDL instance raises a *busy* error. Running tasks cannot be cancelled, since a
+running MAPDL command cannot be interrupted without killing MAPDL.
+
 Using the tools
 ---------------
 

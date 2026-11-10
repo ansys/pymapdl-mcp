@@ -704,10 +704,10 @@ class TestCheckMapdlInstalled:
 class TestRunMapdlCommand:
     """Tests for run_mapdl_command tool."""
 
-    def test_run_command_success(self, mock_context):
+    async def test_run_command_success(self, mock_context):
         """Test running a MAPDL command successfully."""
         command = "/PREP7"
-        result = run_mapdl_command(mock_context, command)
+        result = await run_mapdl_command(mock_context, command)
 
         assert isinstance(result, ToolResult)
         assert "MAPDL command executed successfully" in result.content[0].text
@@ -715,39 +715,39 @@ class TestRunMapdlCommand:
         # Verify that MAPDL's run method was called
         mock_context.request_context.lifespan_context.mapdl.run.assert_called_once_with(command)
 
-    def test_run_command_with_arguments(self, mock_context):
+    async def test_run_command_with_arguments(self, mock_context):
         """Test running a MAPDL command with arguments."""
         command = "K,1,0,0,0"
-        result = run_mapdl_command(mock_context, command)
+        result = await run_mapdl_command(mock_context, command)
 
         assert isinstance(result, ToolResult)
         assert "MAPDL command executed successfully" in result.content[0].text
 
-    def test_run_command_without_mapdl(self, mock_context_no_mapdl):
+    async def test_run_command_without_mapdl(self, mock_context_no_mapdl):
         """Test running a command when MAPDL is not available."""
-        result = run_mapdl_command(mock_context_no_mapdl, "/PREP7")
+        result = await run_mapdl_command(mock_context_no_mapdl, "/PREP7")
 
         # Should return helpful error message instead of raising exception
         assert isinstance(result, ToolResult)
         assert "No MAPDL connection available" in result.content[0].text
         assert "connect_to_mapdl" in result.content[0].text
 
-    def test_run_multiple_mapdl_commands(self, mock_context):
+    async def test_run_multiple_mapdl_commands(self, mock_context):
         """Test running multiple MAPDL commands sequentially."""
         commands = ["/PREP7", "ET,1,SOLID185", "MP,EX,1,200E9"]
 
         for cmd in commands:
-            result = run_mapdl_command(mock_context, cmd)
+            result = await run_mapdl_command(mock_context, cmd)
             assert "MAPDL command executed successfully" in result.content[0].text
 
         # Verify all commands were called
         assert mock_context.request_context.lifespan_context.mapdl.run.call_count == len(commands)
 
-    def test_run_command_with_header(self, mock_context):
+    async def test_run_command_with_header(self, mock_context):
         """Test running a MAPDL command with header."""
         command = "/PREP7"
         header = "Preprocessing setup"
-        result = run_mapdl_command(mock_context, command, header=header)
+        result = await run_mapdl_command(mock_context, command, header=header)
 
         assert isinstance(result, ToolResult)
         assert "MAPDL command executed successfully" in result.content[0].text
@@ -757,11 +757,11 @@ class TestRunMapdlCommand:
             f"# {header}", mute=True
         )
 
-    def test_run_command_with_comment(self, mock_context):
+    async def test_run_command_with_comment(self, mock_context):
         """Test running a MAPDL command with comment."""
         command = "/PREP7"
         comment = "Setting up the model"
-        result = run_mapdl_command(mock_context, command, comment=comment)
+        result = await run_mapdl_command(mock_context, command, comment=comment)
 
         assert isinstance(result, ToolResult)
         assert "MAPDL command executed successfully" in result.content[0].text
@@ -771,12 +771,12 @@ class TestRunMapdlCommand:
             comment, mute=True
         )
 
-    def test_run_command_with_header_and_comment(self, mock_context):
+    async def test_run_command_with_header_and_comment(self, mock_context):
         """Test running a MAPDL command with both header and comment."""
         command = "/PREP7"
         header = "Setup Phase"
         comment = "Initializing model parameters"
-        result = run_mapdl_command(mock_context, command, comment=comment, header=header)
+        result = await run_mapdl_command(mock_context, command, comment=comment, header=header)
 
         assert isinstance(result, ToolResult)
         assert "MAPDL command executed successfully" in result.content[0].text
@@ -786,11 +786,11 @@ class TestRunMapdlCommand:
         assert any(f"# {header}" in str(call) for call in calls)
         assert any(comment in str(call) for call in calls)
 
-    def test_run_command_with_multiline_comment(self, mock_context):
+    async def test_run_command_with_multiline_comment(self, mock_context):
         """Test running a MAPDL command with multiline comment."""
         command = "/PREP7"
         comment = "Line 1\nLine 2\nLine 3"
-        result = run_mapdl_command(mock_context, command, comment=comment)
+        result = await run_mapdl_command(mock_context, command, comment=comment)
 
         assert isinstance(result, ToolResult)
         assert "MAPDL command executed successfully" in result.content[0].text
@@ -801,10 +801,10 @@ class TestRunMapdlCommand:
         assert any("Line 2" in str(call) for call in calls)
         assert any("Line 3" in str(call) for call in calls)
 
-    def test_run_command_with_empty_header(self, mock_context):
+    async def test_run_command_with_empty_header(self, mock_context):
         """Test running a MAPDL command with empty header."""
         command = "/PREP7"
-        result = run_mapdl_command(mock_context, command, header="")
+        result = await run_mapdl_command(mock_context, command, header="")
 
         assert isinstance(result, ToolResult)
         assert "MAPDL command executed successfully" in result.content[0].text
@@ -813,10 +813,10 @@ class TestRunMapdlCommand:
         # (since header is empty, it shouldn't call com for header)
         mock_context.request_context.lifespan_context.mapdl.com.assert_not_called()
 
-    def test_run_command_with_empty_comment(self, mock_context):
+    async def test_run_command_with_empty_comment(self, mock_context):
         """Test running a MAPDL command with empty comment."""
         command = "/PREP7"
-        result = run_mapdl_command(mock_context, command, comment="")
+        result = await run_mapdl_command(mock_context, command, comment="")
 
         assert isinstance(result, ToolResult)
         assert "MAPDL command executed successfully" in result.content[0].text
@@ -829,14 +829,14 @@ class TestRunMapdlCommand:
 class TestRunMultipleCommands:
     """Tests for run_multiple_mapdl_commands tool."""
 
-    def test_run_multiple_mapdl_commands_success(self, mock_context):
+    async def test_run_multiple_mapdl_commands_success(self, mock_context):
         """Test running multiple MAPDL commands successfully."""
         commands = ["/PREP7", "ET,1,SOLID185", "MP,EX,1,200E9"]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = (
             "Commands executed"
         )
 
-        result = run_multiple_mapdl_commands(mock_context, commands)
+        result = await run_multiple_mapdl_commands(mock_context, commands)
 
         assert isinstance(result, ToolResult)
         assert "Successfully executed 3 MAPDL commands" in result.content[1].text
@@ -849,36 +849,36 @@ class TestRunMultipleCommands:
             commands
         )
 
-    def test_run_multiple_mapdl_commands_with_output(self, mock_context):
+    async def test_run_multiple_mapdl_commands_with_output(self, mock_context):
         """Test running multiple commands with MAPDL output."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         output = "Element type 1 defined"
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = output
 
-        result = run_multiple_mapdl_commands(mock_context, commands)
+        result = await run_multiple_mapdl_commands(mock_context, commands)
 
         assert "Successfully executed 2 MAPDL commands" in result.content[1].text
         assert "Output:" in result.content[1].text
         assert output in result.content[1].text
 
-    def test_run_multiple_mapdl_commands_empty_list(self, mock_context):
+    async def test_run_multiple_mapdl_commands_empty_list(self, mock_context):
         """Test running multiple commands with an empty list."""
-        result = run_multiple_mapdl_commands(mock_context, [])
+        result = await run_multiple_mapdl_commands(mock_context, [])
 
         assert "No commands provided" in result.content[0].text
 
-    def test_run_multiple_mapdl_commands_not_list(self, mock_context):
+    async def test_run_multiple_mapdl_commands_not_list(self, mock_context):
         """Test running multiple commands with non-list input."""
-        result = run_multiple_mapdl_commands(mock_context, "not a list")
+        result = await run_multiple_mapdl_commands(mock_context, "not a list")
 
         assert "Commands must be provided as a list" in result.content[0].text
 
-    def test_run_multiple_mapdl_commands_with_empty_strings(self, mock_context):
+    async def test_run_multiple_mapdl_commands_with_empty_strings(self, mock_context):
         """Test running multiple commands with some empty strings."""
         commands = ["/PREP7", "", "ET,1,SOLID185", "  ", "MP,EX,1,200E9"]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands)
+        result = await run_multiple_mapdl_commands(mock_context, commands)
 
         # Should only execute non-empty commands
         assert "Successfully executed 3 MAPDL commands" in result.content[1].text
@@ -894,40 +894,40 @@ class TestRunMultipleCommands:
         assert "" not in call_args
         assert "  " not in call_args
 
-    def test_run_multiple_mapdl_commands_all_empty(self, mock_context):
+    async def test_run_multiple_mapdl_commands_all_empty(self, mock_context):
         """Test running multiple commands when all are empty."""
         commands = ["", "  ", "\t", "\n"]
 
-        result = run_multiple_mapdl_commands(mock_context, commands)
+        result = await run_multiple_mapdl_commands(mock_context, commands)
 
         assert "No valid commands found" in result.content[0].text
 
-    def test_run_multiple_mapdl_commands_without_mapdl(self, mock_context_no_mapdl):
+    async def test_run_multiple_mapdl_commands_without_mapdl(self, mock_context_no_mapdl):
         """Test running multiple commands when MAPDL is not available."""
         commands = ["/PREP7", "ET,1,SOLID185"]
-        result = run_multiple_mapdl_commands(mock_context_no_mapdl, commands)
+        result = await run_multiple_mapdl_commands(mock_context_no_mapdl, commands)
 
         # Should return helpful error message instead of raising exception
         assert isinstance(result, ToolResult)
         assert "No MAPDL connection available" in result.content[0].text
         assert "connect_to_mapdl" in result.content[0].text
 
-    def test_run_multiple_mapdl_commands_single_command(self, mock_context):
+    async def test_run_multiple_mapdl_commands_single_command(self, mock_context):
         """Test running a single command through multiple commands."""
         commands = ["/PREP7"]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands)
+        result = await run_multiple_mapdl_commands(mock_context, commands)
 
         assert "Successfully executed 1 MAPDL commands" in result.content[1].text
         assert "/PREP7" in result.content[1].text
 
-    def test_run_multiple_mapdl_commands_with_whitespace(self, mock_context):
+    async def test_run_multiple_mapdl_commands_with_whitespace(self, mock_context):
         """Test running commands with leading/trailing whitespace."""
         commands = ["  /PREP7  ", "\tET,1,SOLID185\n", " MP,EX,1,200E9 "]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands)
+        result = await run_multiple_mapdl_commands(mock_context, commands)
 
         assert "Successfully executed 3 MAPDL commands" in result.content[1].text
 
@@ -939,14 +939,14 @@ class TestRunMultipleCommands:
         assert call_args[1] == "ET,1,SOLID185"
         assert call_args[2] == "MP,EX,1,200E9"
 
-    def test_run_multiple_mapdl_commands_error_handling(self, mock_context):
+    async def test_run_multiple_mapdl_commands_error_handling(self, mock_context):
         """Test error handling when command execution fails."""
         commands = ["/PREP7", "INVALID_COMMAND", "ET,1,SOLID185"]
         mock_context.request_context.lifespan_context.mapdl.input_strings.side_effect = Exception(
             "Invalid command syntax"
         )
 
-        result = run_multiple_mapdl_commands(mock_context, commands)
+        result = await run_multiple_mapdl_commands(mock_context, commands)
 
         assert "Error executing commands" in result.content[0].text
         assert "Invalid command syntax" in result.content[0].text
@@ -955,13 +955,13 @@ class TestRunMultipleCommands:
         assert "INVALID_COMMAND" in result.content[0].text
         assert "ET,1,SOLID185" in result.content[0].text
 
-    def test_run_multiple_mapdl_commands_large_batch(self, mock_context):
+    async def test_run_multiple_mapdl_commands_large_batch(self, mock_context):
         """Test running a large batch of commands."""
         # Create 100 commands
         commands = [f"K,{i},0,0,0" for i in range(1, 101)]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands)
+        result = await run_multiple_mapdl_commands(mock_context, commands)
 
         assert "Successfully executed 100 MAPDL commands" in result.content[1].text
         # Verify input_strings was called with all commands
@@ -970,7 +970,7 @@ class TestRunMultipleCommands:
         ]
         assert len(call_args) == 100
 
-    def test_run_multiple_mapdl_commands_with_comments(self, mock_context):
+    async def test_run_multiple_mapdl_commands_with_comments(self, mock_context):
         """Test running multiple commands including comments."""
         commands = [
             "/COM, Starting analysis",
@@ -980,12 +980,12 @@ class TestRunMultipleCommands:
         ]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands)
+        result = await run_multiple_mapdl_commands(mock_context, commands)
 
         assert "Successfully executed 4 MAPDL commands" in result.content[1].text
         assert all(cmd in result.content[1].text for cmd in commands)
 
-    def test_run_multiple_mapdl_commands_special_characters(self, mock_context):
+    async def test_run_multiple_mapdl_commands_special_characters(self, mock_context):
         """Test running commands with special characters."""
         commands = [
             "/PREP7",
@@ -995,17 +995,17 @@ class TestRunMultipleCommands:
         ]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands)
+        result = await run_multiple_mapdl_commands(mock_context, commands)
 
         assert "Successfully executed 4 MAPDL commands" in result.content[1].text
         assert all(cmd in result.content[1].text for cmd in commands)
 
-    def test_run_multiple_mapdl_commands_sequential_execution(self, mock_context):
+    async def test_run_multiple_mapdl_commands_sequential_execution(self, mock_context):
         """Test that commands are executed in the correct sequence."""
         commands = ["CMD1", "CMD2", "CMD3"]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        run_multiple_mapdl_commands(mock_context, commands)
+        await run_multiple_mapdl_commands(mock_context, commands)
 
         # Verify input_strings was called with commands in correct order
         call_args = mock_context.request_context.lifespan_context.mapdl.input_strings.call_args[0][
@@ -1013,45 +1013,45 @@ class TestRunMultipleCommands:
         ]
         assert call_args == commands
 
-    def test_run_multiple_mapdl_commands_no_output(self, mock_context):
+    async def test_run_multiple_mapdl_commands_no_output(self, mock_context):
         """Test running commands that produce no output."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands)
+        result = await run_multiple_mapdl_commands(mock_context, commands)
 
         assert "Successfully executed 2 MAPDL commands" in result.content[1].text
         # Should not have "Output:" section when result is empty
         assert result.content[1].text.count("Output:") == 0
 
-    def test_run_multiple_mapdl_commands_none_output(self, mock_context):
+    async def test_run_multiple_mapdl_commands_none_output(self, mock_context):
         """Test running commands that return None."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = None
 
-        result = run_multiple_mapdl_commands(mock_context, commands)
+        result = await run_multiple_mapdl_commands(mock_context, commands)
 
         assert "Successfully executed 2 MAPDL commands" in result.content[1].text
         # Should not have "Output:" section when result is None
         assert "Output:" not in result.content[1].text
 
-    def test_run_multiple_mapdl_commands_stderr_logging(self, mock_context):
+    async def test_run_multiple_mapdl_commands_stderr_logging(self, mock_context):
         """Test that run_multiple_mapdl_commands logs messages."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        output = run_multiple_mapdl_commands(mock_context, commands)
+        output = await run_multiple_mapdl_commands(mock_context, commands)
 
         # Verify logging messages
         assert "Successfully executed 2 MAPDL commands" in output.content[1].text
 
-    def test_run_multiple_mapdl_commands_with_header(self, mock_context):
+    async def test_run_multiple_mapdl_commands_with_header(self, mock_context):
         """Test running multiple MAPDL commands with header."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         header = "Model Setup Phase"
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands, header=header)
+        result = await run_multiple_mapdl_commands(mock_context, commands, header=header)
 
         assert isinstance(result, ToolResult)
         assert "Successfully executed 2 MAPDL commands" in result.content[1].text
@@ -1061,13 +1061,13 @@ class TestRunMultipleCommands:
             f"# {header}", mute=True
         )
 
-    def test_run_multiple_mapdl_commands_with_comment(self, mock_context):
+    async def test_run_multiple_mapdl_commands_with_comment(self, mock_context):
         """Test running multiple MAPDL commands with comment."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         comment = "Building finite element model"
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands, comment=comment)
+        result = await run_multiple_mapdl_commands(mock_context, commands, comment=comment)
 
         assert isinstance(result, ToolResult)
         assert "Successfully executed 2 MAPDL commands" in result.content[1].text
@@ -1077,14 +1077,16 @@ class TestRunMultipleCommands:
             comment, mute=True
         )
 
-    def test_run_multiple_mapdl_commands_with_header_and_comment(self, mock_context):
+    async def test_run_multiple_mapdl_commands_with_header_and_comment(self, mock_context):
         """Test running multiple MAPDL commands with both header and comment."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         header = "Initialization"
         comment = "Setting up element types and material properties"
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands, comment=comment, header=header)
+        result = await run_multiple_mapdl_commands(
+            mock_context, commands, comment=comment, header=header
+        )
 
         assert isinstance(result, ToolResult)
         assert "Successfully executed 2 MAPDL commands" in result.content[1].text
@@ -1094,13 +1096,13 @@ class TestRunMultipleCommands:
         assert any(f"# {header}" in str(call) for call in calls)
         assert any(comment in str(call) for call in calls)
 
-    def test_run_multiple_mapdl_commands_with_multiline_comment(self, mock_context):
+    async def test_run_multiple_mapdl_commands_with_multiline_comment(self, mock_context):
         """Test running multiple MAPDL commands with multiline comment."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         comment = "Creating model\nDefining elements\nSetting parameters"
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands, comment=comment)
+        result = await run_multiple_mapdl_commands(mock_context, commands, comment=comment)
 
         assert isinstance(result, ToolResult)
         assert "Successfully executed 2 MAPDL commands" in result.content[1].text
@@ -1111,12 +1113,12 @@ class TestRunMultipleCommands:
         assert any("Defining elements" in str(call) for call in calls)
         assert any("Setting parameters" in str(call) for call in calls)
 
-    def test_run_multiple_mapdl_commands_with_empty_header(self, mock_context):
+    async def test_run_multiple_mapdl_commands_with_empty_header(self, mock_context):
         """Test running multiple commands with empty header."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands, header="")
+        result = await run_multiple_mapdl_commands(mock_context, commands, header="")
 
         assert isinstance(result, ToolResult)
         assert "Successfully executed 2 MAPDL commands" in result.content[1].text
@@ -1124,12 +1126,12 @@ class TestRunMultipleCommands:
         # Verify that com was not called for empty header
         mock_context.request_context.lifespan_context.mapdl.com.assert_not_called()
 
-    def test_run_multiple_mapdl_commands_with_empty_comment(self, mock_context):
+    async def test_run_multiple_mapdl_commands_with_empty_comment(self, mock_context):
         """Test running multiple commands with empty comment."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        result = run_multiple_mapdl_commands(mock_context, commands, comment="")
+        result = await run_multiple_mapdl_commands(mock_context, commands, comment="")
 
         assert isinstance(result, ToolResult)
         assert "Successfully executed 2 MAPDL commands" in result.content[1].text
@@ -1137,13 +1139,15 @@ class TestRunMultipleCommands:
         # Verify that com was not called for empty comment
         mock_context.request_context.lifespan_context.mapdl.com.assert_not_called()
 
-    def test_run_multiple_mapdl_commands_header_called_before_input_strings(self, mock_context):
+    async def test_run_multiple_mapdl_commands_header_called_before_input_strings(
+        self, mock_context
+    ):
         """Test that header/comment are written before input_strings is called."""
         commands = ["/PREP7", "ET,1,SOLID185"]
         header = "Setup"
         mock_context.request_context.lifespan_context.mapdl.input_strings.return_value = ""
 
-        run_multiple_mapdl_commands(mock_context, commands, header=header)
+        await run_multiple_mapdl_commands(mock_context, commands, header=header)
 
         # Verify that com was called before input_strings
         com_call_count = mock_context.request_context.lifespan_context.mapdl.com.call_count
@@ -2027,7 +2031,7 @@ class TestConnectionLifecycle:
         assert "connection" in status_data
         assert status_data["connection"]["version"] == 24.2
 
-        command_result = run_mapdl_command(mock_context_no_mapdl, "/PREP7")
+        command_result = await run_mapdl_command(mock_context_no_mapdl, "/PREP7")
         assert "MAPDL command executed successfully" in command_result.content[0].text
 
         # Step 3: Disconnect
@@ -2074,7 +2078,7 @@ class TestConnectionLifecycle:
         assert "No MAPDL connection available" in status.content[0].text
 
         # Try to run command without connection
-        command_result = run_mapdl_command(mock_context_no_mapdl, "/PREP7")
+        command_result = await run_mapdl_command(mock_context_no_mapdl, "/PREP7")
         assert "No MAPDL connection available" in command_result.content[0].text
 
 
@@ -2132,7 +2136,7 @@ class TestLaunchWorkflow:
         assert "connection" in status_data
         assert status_data["connection"]["version"] == "2024 R2"
 
-        command_result = run_mapdl_command(mock_context_no_mapdl, "/PREP7")
+        command_result = await run_mapdl_command(mock_context_no_mapdl, "/PREP7")
         assert "MAPDL command executed successfully" in command_result.content[0].text
 
         # Step 3: Disconnect
