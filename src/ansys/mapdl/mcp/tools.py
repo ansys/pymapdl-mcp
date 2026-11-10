@@ -59,7 +59,6 @@ from ansys.mapdl.mcp.helpers import (
 from ansys.mapdl.mcp.server import PyMAPDLAppContext
 from mcp.types import ImageContent, TextContent, ToolListChangedNotification
 
-
 try:
     import pyvista  # noqa: F401  # Check if PyVista is available
 
