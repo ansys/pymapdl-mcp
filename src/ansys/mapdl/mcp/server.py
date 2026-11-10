@@ -87,6 +87,7 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
 
     def __init__(self, name: str = "PyMAPDL MCP Server", *args, **kwargs):
         super().__init__(name=name, *args, **kwargs)
+        self.add_extension(TasksExtension())
         if not self._need_python:
             self.disable_python()
 
@@ -178,9 +179,6 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
 
 # Pass lifespan to server
 app = PyMAPDLMCP(name="PyMAPDL MCP Server")
-
-# Allow clients supporting MCP background tasks to run long tools (``task=True``) as tasks
-app.add_extension(TasksExtension())
 
 
 @dataclass

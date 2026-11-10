@@ -26,6 +26,7 @@ import pytest
 
 from ansys.mapdl.mcp import app, tools
 from ansys.mapdl.mcp.busy import BusyError, check_not_busy, exclusive, run_exclusive
+from ansys.mapdl.mcp.server import PyMAPDLMCP
 
 
 @pytest.mark.unit
@@ -122,6 +123,19 @@ class TestGuardedTools:
 
 @pytest.mark.unit
 class TestBackgroundTask:
+    @pytest.mark.parametrize("need_python", [True, False])
+    async def test_new_server_supports_background_tasks(self, need_python):
+        server = PyMAPDLMCP(need_python=need_python)
+
+        @server.tool(task=True)
+        async def example_task() -> str:
+            return "finished"
+
+        async with Client(server) as client:
+            task = await call_tool_task(client, "example_task", {})
+            result = await task.result()
+            assert result.content[0].text == "finished"
+
     @pytest.mark.parametrize("tool", ["run_mapdl_command", "run_multiple_mapdl_commands"])
     async def test_tools_declared_as_tasks(self, tool):
         registered = await app.get_tool(tool)
