@@ -17,15 +17,20 @@
 """Lifespan and CLI entry for the MCP server with startup options."""
 
 import argparse
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from pathlib import Path
 import sys
+from threading import Lock
 from typing import Any, Optional, cast
+from uuid import uuid4
 
 from ansys.common.mcp import (
     PyAnsysBaseMCP,
 )
 from ansys.common.mcp.context import PyAnsysBaseAppContext
 from ansys.common.mcp.helpers import PersistentPythonSession, logger
+
+from ansys.mapdl.mcp._command_logging import _attach_main_log, _LogRef, _retire_native_log
 
 
 @dataclass
@@ -52,6 +57,8 @@ class PyMAPDLAppContext(PyAnsysBaseAppContext):
         List of allowed CORS origins for HTTP transport.
     python_enabled : bool
         Whether Python execution tools are enabled for this application context.
+    apdl_log_dir : Path | None
+        Operator-owned root directory for optional native MAPDL command logs.
     """
 
     mapdl: Any | None = None  # Using Any to avoid type issues with MAPDL variants
@@ -63,6 +70,18 @@ class PyMAPDLAppContext(PyAnsysBaseAppContext):
     http_port: int = 8080
     cors_origins: list[str] | None = None
     python_enabled: bool = True
+    apdl_log_dir: Path | None = None
+    command_log_dir: Path | None = field(default=None, init=False)
+    command_logs: dict[str, _LogRef] = field(default_factory=dict, init=False)
+    command_log_lock: Any = field(default_factory=Lock, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        """Create a per-run directory below the operator-owned log directory."""
+        if self.apdl_log_dir is not None:
+            root = self.apdl_log_dir.expanduser().resolve()
+            root.mkdir(parents=True, exist_ok=True)
+            self.command_log_dir = root / uuid4().hex
+            self.command_log_dir.mkdir()
 
     @property
     def product_instance(self) -> Optional[Any]:
@@ -103,24 +122,24 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         PyMAPDLAppContext
             The application context for managing MAPDL instances.
         """
+        cli_cfg = getattr(self, "_cli_config", None)
+        log_dir = cli_cfg.get("apdl_log_dir") if cli_cfg is not None else None
         python_enabled = self._need_python
         python_session = None
         if python_enabled:
-            startup_code = "from ansys.mapdl.mcp.python_helper.startup_code import *"
             python_session = PersistentPythonSession(
                 python_executable=self.python_executable,
                 working_directory=self.working_directory,
-                startup_code=startup_code,
             )
 
         context = PyMAPDLAppContext(
             python_session=python_session,
             command_history=[],
             python_enabled=python_enabled,
+            apdl_log_dir=Path(log_dir) if log_dir else None,
         )
 
         # Populate context from CLI config if available
-        cli_cfg = getattr(self, "_cli_config", None)
         if cli_cfg is not None:
             context.transport_type = cli_cfg.get("transport_type", context.transport_type)
             context.mapdl_ip = cli_cfg.get("mapdl_ip", context.mapdl_ip)
@@ -154,11 +173,15 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
                     "port": context.mapdl_port,
                     "cleanup_on_exit": False,
                 }
-                context.mapdl = Mapdl(**_connect_kwargs)
+                mapdl = Mapdl(**_connect_kwargs)
+                _attach_main_log(context, mapdl)
+                context.mapdl = mapdl
                 logger.info("Successfully connected to MAPDL on startup.")
 
             except Exception as e:
                 logger.error(f"Failed to connect to MAPDL on startup: {e}")
+                if context.apdl_log_dir is not None:
+                    raise
         else:
             logger.info("MCP Server initialized. Use connect_to_mapdl to establish a connection.")
 
@@ -169,7 +192,11 @@ class PyMAPDLMCP(PyAnsysBaseMCP):
         if context.mapdl is not None:
             try:
                 logger.info("Disconnecting from MAPDL...")
-                context.mapdl.exit()
+                try:
+                    if context.command_log_dir is not None:
+                        _retire_native_log(context.mapdl)
+                finally:
+                    context.mapdl.exit()
                 logger.info("MAPDL disconnect complete")
             except Exception as e:
                 logger.error(f"Error during MAPDL disconnect: {e}")
@@ -264,6 +291,12 @@ def launcher(argv: list[str] | None = None) -> None:
         action="store_true",
         help="To specify whether the MCP server is running on an AALI environment.",
     )
+    parser.add_argument(
+        "--apdl-log-dir",
+        type=Path,
+        default=None,
+        help="Enable native MAPDL command logs in this operator-owned directory.",
+    )
 
     args = parser.parse_args(argv)
 
@@ -294,6 +327,7 @@ def launcher(argv: list[str] | None = None) -> None:
             "http_port": args.http_port,
             "cors_origins": cors_origins,
             "on_aali": session.on_aali,
+            "apdl_log_dir": args.apdl_log_dir,
         },
     )
 
